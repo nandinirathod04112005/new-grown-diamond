@@ -165,6 +165,17 @@ block of `.ngd-story-num` (ghost numeral), `.ngd-story-title`, `.ngd-story-text`
 Alternate sides with Bootstrap `order-lg-*`/`offset-lg-*`. `data-ngd-parallax`
 is powered by `ui.js` — desktop only, skipped under `prefers-reduced-motion`.
 
+### Global footer
+`footer.ngd-footer` — dark band with a champagne top hairline shared by every
+public page (copy the block from `index.html`; keep it byte-identical so the
+footer test's cross-page comparison passes). Pieces: brand block +
+`.ngd-footer-desc`, `.ngd-social` placeholder icon buttons, four link columns
+(`.ngd-footer-heading` + `.ngd-footer-links` with a hover nudge), and
+`.ngd-footer-bottom` (live year via `[data-ngd-year]`, Privacy/Terms links).
+The floating `.ngd-totop` button sits after the footer; `ui.js` shows it past
+480px of scroll and scrolls smoothly to the top (instant under
+`prefers-reduced-motion`).
+
 ### Feedback & misc
 `.ngd-badge` (+ `.ngd-badge-dark`), `.ngd-alert` with `.ngd-alert-info` /
 `.ngd-alert-success` / `.ngd-alert-danger`, `.ngd-stat-value` + `.ngd-stat-label`.

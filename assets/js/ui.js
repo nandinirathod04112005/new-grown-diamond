@@ -159,12 +159,37 @@
     update();
   }
 
+  /* ---------- 6. Footer helpers ----------
+     Live copyright year + the floating back-to-top button
+     (appears after scrolling; smooth scroll unless the visitor
+     prefers reduced motion). */
+  function initFooter() {
+    document.querySelectorAll('[data-ngd-year]').forEach(function (el) {
+      el.textContent = String(new Date().getFullYear());
+    });
+
+    var btn = document.querySelector('.ngd-totop');
+    if (!btn) return;
+
+    function toggle() {
+      btn.classList.toggle('is-visible', window.scrollY > 480);
+    }
+
+    window.addEventListener('scroll', toggle, { passive: true });
+    toggle();
+
+    btn.addEventListener('click', function () {
+      window.scrollTo({ top: 0, behavior: reducedMotion ? 'auto' : 'smooth' });
+    });
+  }
+
   function init() {
     initNavbar();
     initReveal();
     initTilt();
     initMobileMenu();
     initParallax();
+    initFooter();
   }
 
   if (document.readyState === 'loading') {

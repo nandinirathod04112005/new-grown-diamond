@@ -1410,6 +1410,160 @@ code {
 }
 
 /* ------------------------------------------------------------
+   13g. GLOBAL FOOTER (shared by every public page)
+   ------------------------------------------------------------ */
+.ngd-footer {
+  background-color: var(--ngd-black);
+  background-image:
+      radial-gradient(48rem 20rem at 85% 0%, rgba(180, 140, 71, 0.08), transparent 60%),
+      radial-gradient(30rem 16rem at 5% 100%, rgba(255, 255, 255, 0.03), transparent 55%);
+  border-top: 1px solid rgba(217, 192, 138, 0.28);
+  color: rgba(244, 242, 238, 0.72);
+  padding: clamp(3rem, 6vw, 4.5rem) 0 1.6rem;
+}
+
+.ngd-footer-desc {
+  max-width: 20rem;
+  font-size: 0.88rem;
+  line-height: 1.75;
+  color: rgba(244, 242, 238, 0.58);
+}
+
+.ngd-footer-heading {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--ngd-gold-soft);
+  margin-bottom: 1.05rem;
+}
+
+.ngd-footer-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.ngd-footer-links a {
+  display: inline-block;
+  color: rgba(244, 242, 238, 0.66);
+  font-size: 0.86rem;
+  text-decoration: none;
+  transition:
+      color var(--ngd-fast) var(--ngd-ease),
+      padding-left var(--ngd-fast) var(--ngd-ease);
+}
+
+.ngd-footer-links a:hover {
+  color: var(--ngd-gold-soft);
+  padding-left: 0.3rem;
+}
+
+/* Social placeholders — circular hairline buttons */
+.ngd-social {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.ngd-social a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: rgba(244, 242, 238, 0.75);
+  transition:
+      color var(--ngd-fast) var(--ngd-ease),
+      border-color var(--ngd-fast) var(--ngd-ease),
+      background-color var(--ngd-fast) var(--ngd-ease),
+      transform var(--ngd-fast) var(--ngd-ease);
+}
+
+.ngd-social a:hover {
+  color: var(--ngd-gold-soft);
+  border-color: rgba(217, 192, 138, 0.65);
+  background-color: rgba(217, 192, 138, 0.12);
+  transform: translateY(-2px);
+}
+
+.ngd-social svg { width: 1.05rem; height: 1.05rem; }
+
+.ngd-footer-bottom {
+  margin-top: clamp(2rem, 4vw, 2.8rem);
+  padding-top: 1.4rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.10);
+  font-size: 0.78rem;
+  color: rgba(244, 242, 238, 0.5);
+}
+
+.ngd-footer-bottom a {
+  color: rgba(244, 242, 238, 0.62);
+  text-decoration: none;
+  transition: color var(--ngd-fast) var(--ngd-ease);
+}
+
+.ngd-footer-bottom a:hover { color: var(--ngd-gold-soft); }
+
+/* Floating back-to-top */
+.ngd-totop {
+  position: fixed;
+  right: 1.35rem;
+  bottom: 1.35rem;
+  z-index: 1500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.9rem;
+  height: 2.9rem;
+  border-radius: 50%;
+  border: 1px solid rgba(217, 192, 138, 0.55);
+  background-color: rgba(12, 12, 14, 0.82);
+  color: var(--ngd-gold-soft);
+  box-shadow: var(--ngd-shadow-deep);
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(12px);
+  transition:
+      opacity var(--ngd-fast) var(--ngd-ease),
+      transform var(--ngd-fast) var(--ngd-ease),
+      background-color var(--ngd-fast) var(--ngd-ease),
+      color var(--ngd-fast) var(--ngd-ease);
+}
+
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .ngd-totop {
+    background-color: rgba(12, 12, 14, 0.6);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+  }
+}
+
+.ngd-totop.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: none;
+}
+
+.ngd-totop:hover {
+  background: var(--ngd-gold-grad);
+  border-color: transparent;
+  color: #17130a;
+}
+
+.ngd-totop:focus-visible {
+  outline: 2px solid var(--ngd-gold);
+  outline-offset: 3px;
+}
+
+.ngd-totop svg { width: 1.1rem; height: 1.1rem; }
+
+/* ------------------------------------------------------------
    14. ACCESSIBILITY & RESPONSIVE GUARDS
    ------------------------------------------------------------ */
 @media (prefers-reduced-motion: reduce) {
@@ -1427,6 +1581,7 @@ code {
   .ngd-diamond-media::after { transition: none; }
   .ngd-jewel-figure,
   .ngd-card-3d:hover .ngd-jewel-figure { transition: none; transform: none; }
+  .ngd-totop { transition: none; transform: none; }
   .ngd-mobile-menu { transition-duration: 1ms; }
   .ngd-mobile-menu .ngd-menu-item,
   .ngd-mobile-menu.show .ngd-menu-item {

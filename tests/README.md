@@ -28,6 +28,10 @@ tooling only** — the website itself is plain HTML/CSS/JS and has no Node backe
   art and copy, alternating desktop layout, vertical mobile journey, parallax
   drift (plus its reduced-motion and mobile opt-outs), scroll reveal, and the
   Discover Our Manufacturing CTA.
+- `footer.test.cjs` — 10 global-footer scenarios: identical footer on all ten
+  public pages, navigation groups per spec, social placeholders, live year +
+  legal links, every link target resolves, hover nudge, back-to-top (smooth +
+  reduced-motion instant), responsive layout at 1440/768/390.
 - `header-nav.test.cjs` — 12 header/navigation scenarios on every public page:
   sticky glass header, Collections dropdown (open/close/navigate), login button,
   hamburger morph, offcanvas mobile menu (open, stagger, close button, Escape,
