@@ -1564,6 +1564,253 @@ code {
 .ngd-totop svg { width: 1.1rem; height: 1.1rem; }
 
 /* ------------------------------------------------------------
+   13h. DIAMOND INVENTORY (toolbar, filters, table, pagination)
+   ------------------------------------------------------------ */
+.ngd-inv-toolbar { padding: 0.9rem 1rem; }
+
+.ngd-search {
+  position: relative;
+}
+
+.ngd-search svg {
+  position: absolute;
+  left: 0.85rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1rem;
+  height: 1rem;
+  color: var(--ngd-slate);
+  pointer-events: none;
+}
+
+.ngd-search .form-control { padding-left: 2.5rem; }
+
+/* View toggle */
+.ngd-view-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.55rem;
+  height: 2.55rem;
+  border: 1px solid var(--ngd-line);
+  border-radius: var(--ngd-radius-sm);
+  background-color: var(--ngd-white);
+  color: var(--ngd-slate);
+  cursor: pointer;
+  transition:
+      background-color var(--ngd-fast) var(--ngd-ease),
+      color var(--ngd-fast) var(--ngd-ease),
+      border-color var(--ngd-fast) var(--ngd-ease);
+}
+
+.ngd-view-btn:hover { color: var(--ngd-ink); border-color: rgba(12, 12, 14, 0.3); }
+
+.ngd-view-btn.is-active {
+  background-color: var(--ngd-black);
+  border-color: var(--ngd-black);
+  color: var(--ngd-gold-soft);
+}
+
+.ngd-view-btn svg { width: 1.05rem; height: 1.05rem; }
+
+.ngd-view-btn:focus-visible {
+  outline: 2px solid var(--ngd-gold);
+  outline-offset: 2px;
+}
+
+/* Filter panel */
+.ngd-inv-filters { padding: 0.4rem 1.35rem 1.1rem; }
+
+.ngd-filter-group {
+  padding: 0.95rem 0;
+  border-bottom: 1px solid var(--ngd-line);
+}
+
+.ngd-filter-group:last-of-type { border-bottom: 0; }
+
+.ngd-filter-legend {
+  float: none;
+  width: auto;
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ngd-slate);
+  margin-bottom: 0.55rem;
+}
+
+.ngd-filter-group .form-check { margin-bottom: 0.25rem; }
+
+/* Mobile filter offcanvas (light) */
+.ngd-filter-canvas {
+  --bs-offcanvas-width: min(21rem, 88vw);
+  background-color: var(--ngd-ivory);
+  border-right: 1px solid var(--ngd-line);
+}
+
+.ngd-filter-canvas .offcanvas-header {
+  border-bottom: 1px solid var(--ngd-line);
+  padding: 1.05rem 1.4rem;
+}
+
+.ngd-filter-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.3rem;
+  border-radius: 999px;
+  background: var(--ngd-gold-grad);
+  color: #17130a;
+  font-size: 0.66rem;
+  font-weight: 600;
+}
+
+/* Stock number + availability */
+.ngd-stock-no {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  color: rgba(244, 242, 238, 0.5);
+}
+
+.ngd-avail {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.18rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.ngd-avail-stock {
+  border: 1px solid rgba(217, 192, 138, 0.55);
+  background: rgba(217, 192, 138, 0.14);
+  color: var(--ngd-gold-soft);
+}
+
+.ngd-avail-request {
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(244, 242, 238, 0.65);
+}
+
+/* Light-context variants (table + light cards) */
+.ngd-table .ngd-avail-stock { color: var(--ngd-gold-deep); background: rgba(180, 140, 71, 0.12); border-color: rgba(180, 140, 71, 0.45); }
+.ngd-table .ngd-avail-request { color: var(--ngd-slate); background: rgba(12, 12, 14, 0.04); border-color: var(--ngd-line); }
+.ngd-table .ngd-stock-cell { font-weight: 600; letter-spacing: 0.08em; font-size: 0.78rem; color: var(--ngd-ink); }
+
+/* Table view */
+.ngd-table-card {
+  background-color: var(--ngd-white);
+  border: 1px solid var(--ngd-line);
+  border-radius: var(--ngd-radius);
+  box-shadow: var(--ngd-shadow-soft);
+  overflow: hidden;
+}
+
+.ngd-table { margin-bottom: 0; }
+
+.ngd-table thead th {
+  background-color: var(--ngd-pearl);
+  border-bottom: 1px solid var(--ngd-line);
+  font-size: 0.64rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ngd-slate);
+  padding: 0.85rem 1rem;
+  white-space: nowrap;
+}
+
+.ngd-table tbody td {
+  padding: 0.8rem 1rem;
+  font-size: 0.88rem;
+  color: var(--ngd-ink);
+  border-bottom: 1px solid var(--ngd-line);
+  white-space: nowrap;
+}
+
+.ngd-table tbody tr:last-child td { border-bottom: 0; }
+.ngd-table tbody tr { transition: background-color var(--ngd-fast) var(--ngd-ease); }
+.ngd-table tbody tr:hover { background-color: rgba(180, 140, 71, 0.06); }
+
+/* Pagination */
+.ngd-pagination {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0;
+  margin: 0;
+}
+
+.ngd-page-btn {
+  min-width: 2.45rem;
+  height: 2.45rem;
+  padding: 0 0.6rem;
+  border: 1px solid var(--ngd-line);
+  border-radius: 999px;
+  background-color: var(--ngd-white);
+  color: var(--ngd-ink);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+      background-color var(--ngd-fast) var(--ngd-ease),
+      color var(--ngd-fast) var(--ngd-ease),
+      border-color var(--ngd-fast) var(--ngd-ease),
+      transform var(--ngd-fast) var(--ngd-ease);
+}
+
+.ngd-page-btn:hover:not(:disabled):not(.is-active) {
+  border-color: rgba(180, 140, 71, 0.5);
+  color: var(--ngd-gold-deep);
+  transform: translateY(-1px);
+}
+
+.ngd-page-btn.is-active {
+  background: var(--ngd-gold-grad);
+  border-color: transparent;
+  color: #17130a;
+  font-weight: 600;
+}
+
+.ngd-page-btn:disabled { opacity: 0.35; cursor: default; }
+
+.ngd-page-btn:focus-visible {
+  outline: 2px solid var(--ngd-gold);
+  outline-offset: 2px;
+}
+
+.ngd-page-gap { color: var(--ngd-slate); padding: 0 0.2rem; }
+
+/* Details modal */
+.ngd-modal .modal-content {
+  background-color: var(--ngd-charcoal);
+  color: #f4f2ee;
+  border: 1px solid var(--ngd-line-light);
+  border-radius: var(--ngd-radius);
+  overflow: hidden;
+}
+
+.ngd-modal .btn-close {
+  filter: invert(1) grayscale(1);
+  position: absolute;
+  top: 0.9rem;
+  right: 0.9rem;
+  z-index: 5;
+}
+
+.ngd-modal-media { aspect-ratio: 16 / 9; border-radius: 0; }
+
+/* ------------------------------------------------------------
    14. ACCESSIBILITY & RESPONSIVE GUARDS
    ------------------------------------------------------------ */
 @media (prefers-reduced-motion: reduce) {

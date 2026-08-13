@@ -17,6 +17,7 @@ Bootstrap 5 + vanilla JavaScript** frontend backed by **Supabase**
 | Homepage Fine Jewellery section (6 category cards) | ✅ done |
 | Homepage manufacturing story (6-stage journey, parallax) | ✅ done |
 | Global footer + back-to-top (all public pages) | ✅ done |
+| Diamond Inventory page (search, filters, views, pagination) | ✅ done — demo data |
 | Remaining homepage sections, catalogue, admin management, storage, quotes | ⏳ upcoming steps |
 
 ## Quick start
@@ -33,7 +34,8 @@ Bootstrap 5 + vanilla JavaScript** frontend backed by **Supabase**
 | Page | Purpose |
 |---|---|
 | `index.html` | Homepage with 3D diamond hero (Three.js + static SVG fallback) |
-| `diamonds.html` / `jewellery.html` | Collection placeholders ("arriving soon") linked from the header dropdown |
+| `diamonds.html` | Diamond Inventory — search, 8 filters, grid/table views, pagination, details modal (demo data) |
+| `jewellery.html` | Collection placeholder ("arriving soon") linked from the header dropdown |
 | `manufacturing.html` | Manufacturing placeholder linked from the homepage journey CTA |
 | `education.html` / `about.html` / `contact.html` / `privacy.html` / `terms.html` | Placeholder pages behind the footer navigation |
 | `login.html` | Sign in → role-based redirect from `public.profiles` |

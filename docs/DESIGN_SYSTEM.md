@@ -176,6 +176,17 @@ The floating `.ngd-totop` button sits after the footer; `ui.js` shows it past
 480px of scroll and scrolls smoothly to the top (instant under
 `prefers-reduced-motion`).
 
+### Inventory components
+Diamond-inventory building blocks (see `diamonds.html` + `assets/js/inventory.js`):
+`.ngd-inv-toolbar` (search `.ngd-search`, sort select, `.ngd-view-btn` grid/table
+toggle), `.ngd-inv-filters` sidebar card with `.ngd-filter-group`/`-legend`
+fieldsets (the single filter form relocates into the `.ngd-filter-canvas`
+offcanvas below 992px), `.ngd-stock-no` + `.ngd-avail`(`-stock`/`-request`)
+badges, `.ngd-table-card` + `.ngd-table` for the readable table view,
+`.ngd-pagination` + `.ngd-page-btn`, and the dark `.ngd-modal` details dialog.
+Demo data lives in `diamonds-data.js`; gem art in `gem-art.js`; the controller's
+`loadDiamonds()` is the single seam for the future Supabase select.
+
 ### Feedback & misc
 `.ngd-badge` (+ `.ngd-badge-dark`), `.ngd-alert` with `.ngd-alert-info` /
 `.ngd-alert-success` / `.ngd-alert-danger`, `.ngd-stat-value` + `.ngd-stat-label`.

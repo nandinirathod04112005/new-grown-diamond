@@ -56,8 +56,10 @@
     items.forEach(function (el) { observer.observe(el); });
   }
 
-  /* ---------- 3. Pointer tilt (max ~3deg, mouse only) ---------- */
-  function initTilt() {
+  /* ---------- 3. Pointer tilt (max ~3deg, mouse only) ----------
+     Also exported as window.NGDTilt(root) so pages that render
+     cards dynamically (e.g. the inventory) can bind new nodes. */
+  function bindTilt(root) {
     if (reducedMotion) return;
     if (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) {
       return; // no tilt on touch devices
@@ -65,7 +67,10 @@
 
     var MAX_DEG = 3;
 
-    document.querySelectorAll('[data-ngd-tilt]').forEach(function (card) {
+    (root || document).querySelectorAll('[data-ngd-tilt]').forEach(function (card) {
+      if (card.__ngdTiltBound) return;
+      card.__ngdTiltBound = true;
+
       card.addEventListener('pointermove', function (event) {
         var rect = card.getBoundingClientRect();
         var x = (event.clientX - rect.left) / rect.width - 0.5;
@@ -80,6 +85,12 @@
         card.style.transform = '';
       });
     });
+  }
+
+  window.NGDTilt = bindTilt;
+
+  function initTilt() {
+    bindTilt(document);
   }
 
   /* ---------- 4. Mobile menu (Bootstrap offcanvas) ---------- */

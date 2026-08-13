@@ -32,6 +32,10 @@ tooling only** — the website itself is plain HTML/CSS/JS and has no Node backe
   public pages, navigation groups per spec, social placeholders, live year +
   legal links, every link target resolves, hover nudge, back-to-top (smooth +
   reduced-motion instant), responsive layout at 1440/768/390.
+- `inventory.test.cjs` — 13 Diamond-Inventory scenarios: 28 demo stones, search,
+  all eight filter groups (AND-combined), sorting, grid/table switch, pagination,
+  the details modal, URL params (?shape=, legacy ?id=), mobile offcanvas filters
+  and responsive behaviour at 1440/768/390.
 - `header-nav.test.cjs` — 12 header/navigation scenarios on every public page:
   sticky glass header, Collections dropdown (open/close/navigate), login button,
   hamburger morph, offcanvas mobile menu (open, stagger, close button, Escape,
