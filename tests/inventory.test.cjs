@@ -1,7 +1,7 @@
 /* ============================================================
    Diamond Inventory page tests (STEP 9).
    Verifies search, all filter groups, sorting, grid/table view
-   switch, result count, pagination, the details modal, mobile
+   switch, result count, pagination, details-page links, mobile
    offcanvas filters and responsive behaviour at 1440/768/390.
    Run:  node tests/inventory.test.cjs   (see tests/README.md)
    ============================================================ */
@@ -93,7 +93,8 @@ async function countText(page) {
         stock: c.querySelector('.ngd-stock-no').textContent.trim(),
         avail: c.querySelector('.ngd-avail').textContent.trim(),
         labels: [...c.querySelectorAll('.ngd-diamond-specs dt')].map((d) => d.textContent.trim()),
-        btn: c.querySelector('.inv-view-details').textContent.trim(),
+        btn: c.querySelector('a.ngd-btn').textContent.trim(),
+        btnHref: c.querySelector('a.ngd-btn').getAttribute('href'),
       };
     });
     expect(/^NGD-\d{4}$/.test(card.stock), 'stock number shown, got ' + card.stock);
@@ -105,6 +106,8 @@ async function countText(page) {
       'spec labels, got ' + card.labels.join(',')
     );
     expect(card.btn === 'View Details', 'View Details button');
+    expect(card.btnHref === 'diamond-details.html?id=' + card.id,
+      'card links to the details page, got ' + card.btnHref);
   });
 
   await scenario('search narrows by stock number and by shape', {}, async (page) => {
@@ -208,35 +211,29 @@ async function countText(page) {
       document.getElementById('inv-count').textContent.startsWith('Showing 1–'));
   });
 
-  await scenario('View Details opens the modal with full specs', {}, async (page) => {
+  await scenario('View Details navigates to the details page', {}, async (page) => {
     await open(page);
-    await page.click('#inv-grid .inv-view-details');
-    await page.waitForSelector('#invDetailModal.show', { timeout: 5000 });
-    const modal = await page.evaluate(() => ({
-      stock: document.querySelector('#inv-modal-body .ngd-stock-no').textContent.trim(),
-      dts: [...document.querySelectorAll('#inv-modal-body dt')].map((d) => d.textContent.trim()),
-      enquire: !!document.querySelector('#inv-modal-body a[href="contact.html"]'),
-    }));
-    expect(/^NGD-/.test(modal.stock), 'modal shows stock number');
-    expect(modal.dts.includes('Growth') && modal.dts.includes('Availability'),
-      'modal shows full specs incl. growth/availability');
-    expect(modal.enquire, 'enquire CTA present');
-    await page.click('#invDetailModal .btn-close');
-    await page.waitForFunction(() =>
-      !document.querySelector('#invDetailModal').classList.contains('show'));
+    const firstId = await page.$eval('#inv-grid .ngd-diamond-card', (c) =>
+      c.getAttribute('data-diamond-id'));
+    await page.click('#inv-grid .ngd-diamond-card a.ngd-btn');
+    await page.waitForURL(`**/diamond-details.html?id=${firstId}`, { timeout: 8000 });
+    /* table view links there too */
+    await open(page);
+    await page.click('#inv-view-table');
+    await page.waitForSelector('#inv-table-wrap:not(.d-none)');
+    const rowHref = await page.$eval('#inv-table-body tr a', (a) => a.getAttribute('href'));
+    expect(/^diamond-details\.html\?id=NGD-/.test(rowHref), 'table View links to details, got ' + rowHref);
   });
 
-  await scenario('?shape=round preselects the filter; legacy ?id opens modal', {}, async (page) => {
+  await scenario('?shape=round preselects the filter; legacy ?id redirects to details', {}, async (page) => {
     await open(page, '?shape=round');
     const expected = await page.evaluate(() =>
       window.NGD_DEMO_DIAMONDS.filter((d) => d.shape === 'Round').length);
     const checked = await page.$eval('#inv-f-shape-round', (c) => c.checked);
     expect(checked, 'shape checkbox preselected from URL');
     expect((await countText(page)).includes('of ' + expected + ' '), 'results pre-filtered');
-    await open(page, '?id=demo-01');
-    await page.waitForSelector('#invDetailModal.show', { timeout: 5000 });
-    const stock = await page.textContent('#inv-modal-body .ngd-stock-no');
-    expect(stock.trim() === 'NGD-1001', 'legacy featured id mapped to NGD-1001');
+    await page.goto(`${SITE}/diamonds.html?id=demo-01`, { waitUntil: 'domcontentloaded' });
+    await page.waitForURL('**/diamond-details.html?id=NGD-1001', { timeout: 8000 });
   });
 
   await scenario('mobile 390: offcanvas filters work, 1-col grid, no overflow', { viewport: { width: 390, height: 844 } }, async (page) => {

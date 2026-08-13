@@ -28,14 +28,18 @@ tooling only** — the website itself is plain HTML/CSS/JS and has no Node backe
   art and copy, alternating desktop layout, vertical mobile journey, parallax
   drift (plus its reduced-motion and mobile opt-outs), scroll reveal, and the
   Discover Our Manufacturing CTA.
-- `footer.test.cjs` — 10 global-footer scenarios: identical footer on all ten
+- `footer.test.cjs` — 10 global-footer scenarios: identical footer on all eleven
   public pages, navigation groups per spec, social placeholders, live year +
   legal links, every link target resolves, hover nudge, back-to-top (smooth +
   reduced-motion instant), responsive layout at 1440/768/390.
 - `inventory.test.cjs` — 13 Diamond-Inventory scenarios: 28 demo stones, search,
   all eight filter groups (AND-combined), sorting, grid/table switch, pagination,
-  the details modal, URL params (?shape=, legacy ?id=), mobile offcanvas filters
-  and responsive behaviour at 1440/768/390.
+  navigation to the details page, URL params (?shape=, legacy ?id= redirect),
+  mobile offcanvas filters and responsive behaviour at 1440/768/390.
+- `details.test.cjs` — 12 Diamond-Details scenarios: ?id= resolution with
+  fallback and not-found states, three-view gallery, zoom interaction, all 17
+  spec fields, CTAs + favourite toggle, certificate card, grouped spec table,
+  similar stones, inventory integration, sticky mobile CTA at 1440/768/390.
 - `header-nav.test.cjs` — 12 header/navigation scenarios on every public page:
   sticky glass header, Collections dropdown (open/close/navigate), login button,
   hamburger morph, offcanvas mobile menu (open, stagger, close button, Escape,

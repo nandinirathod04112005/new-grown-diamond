@@ -16,6 +16,16 @@
   var grid = document.getElementById('inv-grid');
   if (!grid) return; // inventory page only
 
+  /* Legacy deep links (homepage Featured cards, old bookmarks):
+     diamonds.html?id=… now lives on the details page. */
+  var earlyParams = new URLSearchParams(window.location.search);
+  var earlyId = earlyParams.get('id');
+  if (earlyId) {
+    var mappedId = (window.NGD_LEGACY_IDS || {})[earlyId] || earlyId;
+    window.location.replace('diamond-details.html?id=' + encodeURIComponent(mappedId));
+    return;
+  }
+
   /* ---------- data source ---------- */
   function loadDiamonds() {
     /* Future: return supabase.from('diamonds').select('*') … */
@@ -23,7 +33,6 @@
   }
 
   var DATA = loadDiamonds();
-  var ART = window.NGD_GEM_ART || {};
   var PAGE_SIZE = 9;
 
   var FILTER_GROUPS = [
@@ -63,9 +72,7 @@
     filterHostDesktop: document.getElementById('inv-filter-host'),
     filterHostMobile: document.getElementById('inv-filter-host-mobile'),
     filterBadge: document.getElementById('inv-filter-badge'),
-    results: document.getElementById('inv-results'),
-    modal: document.getElementById('invDetailModal'),
-    modalBody: document.getElementById('inv-modal-body')
+    results: document.getElementById('inv-results')
   };
 
   /* ---------- build the (single) filter form ---------- */
@@ -149,42 +156,10 @@
     return n;
   }
 
-  /* ---------- renderers ---------- */
-  function availBadge(d) {
-    var cls = d.availability === 'In Stock' ? 'ngd-avail-stock' : 'ngd-avail-request';
-    return '<span class="ngd-avail ' + cls + '">' + d.availability + '</span>';
-  }
-
-  function artFor(d) {
-    return ART[d.shape.toLowerCase()] || ART.round || '';
-  }
-
-  function cardHtml(d) {
-    return (
-      '<div class="col-12 col-md-6 col-xl-4">' +
-      '<article class="ngd-card ngd-card-dark ngd-card-3d ngd-diamond-card h-100" data-ngd-tilt data-diamond-id="' + d.id + '">' +
-      '<div class="ngd-diamond-media ngd-depth-1">' + artFor(d) + '</div>' +
-      '<div class="ngd-diamond-body">' +
-      '<div class="d-flex justify-content-between align-items-baseline gap-2">' +
-      '<h3 class="ngd-diamond-title">' + d.shape + '</h3>' +
-      '<span class="ngd-diamond-carat">' + d.carat.toFixed(2) + ' ct</span>' +
-      '</div>' +
-      '<div class="d-flex justify-content-between align-items-center mt-1">' +
-      '<span class="ngd-stock-no">' + d.id + '</span>' + availBadge(d) +
-      '</div>' +
-      '<dl class="ngd-diamond-specs">' +
-      '<div><dt>Shape</dt><dd>' + d.shape + '</dd></div>' +
-      '<div><dt>Carat</dt><dd>' + d.carat.toFixed(2) + '</dd></div>' +
-      '<div><dt>Colour</dt><dd>' + d.colour + '</dd></div>' +
-      '<div><dt>Clarity</dt><dd>' + d.clarity + '</dd></div>' +
-      '<div><dt>Cut</dt><dd>' + d.cut + '</dd></div>' +
-      '<div><dt>Laboratory</dt><dd>' + d.lab + '</dd></div>' +
-      '</dl>' +
-      '<a class="ngd-btn ngd-btn-gold ngd-btn-sm ngd-btn-block inv-view-details" ' +
-      'href="#" data-diamond-id="' + d.id + '">View Details</a>' +
-      '</div></article></div>'
-    );
-  }
+  /* ---------- renderers (shared card lives in diamond-card.js) ---------- */
+  var shared = window.NGDDiamondCard;
+  var availBadge = shared.availBadge;
+  var cardHtml = shared.cardHtml;
 
   function rowHtml(d) {
     return (
@@ -198,8 +173,7 @@
       '<td>' + d.lab + '</td>' +
       '<td>' + d.growth + '</td>' +
       '<td>' + availBadge(d) + '</td>' +
-      '<td class="text-end"><a class="ngd-link small inv-view-details" href="#" ' +
-      'data-diamond-id="' + d.id + '">View</a></td>' +
+      '<td class="text-end"><a class="ngd-link small" href="' + shared.detailsUrl(d) + '">View</a></td>' +
       '</tr>'
     );
   }
@@ -276,39 +250,6 @@
     }
   }
 
-  /* ---------- details modal ---------- */
-  function openDetails(id) {
-    var d = null;
-    for (var i = 0; i < DATA.length; i++) if (DATA[i].id === id) { d = DATA[i]; break; }
-    if (!d || !el.modal) return;
-
-    el.modalBody.innerHTML =
-      '<div class="ngd-diamond-media ngd-modal-media">' + artFor(d) + '</div>' +
-      '<div class="p-4">' +
-      '<div class="d-flex justify-content-between align-items-baseline gap-2">' +
-      '<h3 class="ngd-diamond-title fs-4">' + d.shape + ' · ' + d.carat.toFixed(2) + ' ct</h3>' +
-      availBadge(d) +
-      '</div>' +
-      '<p class="ngd-stock-no mt-1 mb-3">' + d.id + '</p>' +
-      '<dl class="ngd-diamond-specs mb-4">' +
-      '<div><dt>Shape</dt><dd>' + d.shape + '</dd></div>' +
-      '<div><dt>Carat</dt><dd>' + d.carat.toFixed(2) + '</dd></div>' +
-      '<div><dt>Colour</dt><dd>' + d.colour + '</dd></div>' +
-      '<div><dt>Clarity</dt><dd>' + d.clarity + '</dd></div>' +
-      '<div><dt>Cut</dt><dd>' + d.cut + '</dd></div>' +
-      '<div><dt>Laboratory</dt><dd>' + d.lab + '</dd></div>' +
-      '<div><dt>Growth</dt><dd>' + d.growth + '</dd></div>' +
-      '<div><dt>Availability</dt><dd>' + d.availability + '</dd></div>' +
-      '</dl>' +
-      '<div class="d-grid gap-2">' +
-      '<a class="ngd-btn ngd-btn-gold ngd-btn-block" href="contact.html">Enquire about this stone</a>' +
-      '</div></div>';
-
-    if (window.bootstrap && window.bootstrap.Modal) {
-      window.bootstrap.Modal.getOrCreateInstance(el.modal).show();
-    }
-  }
-
   /* ---------- events ---------- */
   var searchTimer = null;
   el.search.addEventListener('input', function () {
@@ -381,14 +322,6 @@
     }
   });
 
-  document.addEventListener('click', function (event) {
-    var link = event.target.closest('.inv-view-details');
-    if (link) {
-      event.preventDefault();
-      openDetails(link.getAttribute('data-diamond-id'));
-    }
-  });
-
   /* ---------- URL params from the homepage ---------- */
   var params = new URLSearchParams(window.location.search);
   var shapeParam = (params.get('shape') || '').toLowerCase();
@@ -402,10 +335,4 @@
   }
 
   apply(false);
-
-  var idParam = params.get('id');
-  if (idParam) {
-    var mapped = (window.NGD_LEGACY_IDS || {})[idParam] || idParam;
-    openDetails(mapped);
-  }
 })();

@@ -18,6 +18,7 @@ Bootstrap 5 + vanilla JavaScript** frontend backed by **Supabase**
 | Homepage manufacturing story (6-stage journey, parallax) | ✅ done |
 | Global footer + back-to-top (all public pages) | ✅ done |
 | Diamond Inventory page (search, filters, views, pagination) | ✅ done — demo data |
+| Diamond Details page (gallery, zoom, specs, certificate) | ✅ done — demo data |
 | Remaining homepage sections, catalogue, admin management, storage, quotes | ⏳ upcoming steps |
 
 ## Quick start
@@ -34,7 +35,8 @@ Bootstrap 5 + vanilla JavaScript** frontend backed by **Supabase**
 | Page | Purpose |
 |---|---|
 | `index.html` | Homepage with 3D diamond hero (Three.js + static SVG fallback) |
-| `diamonds.html` | Diamond Inventory — search, 8 filters, grid/table views, pagination, details modal (demo data) |
+| `diamonds.html` | Diamond Inventory — search, 8 filters, grid/table views, pagination (demo data) |
+| `diamond-details.html` | Diamond Details — gallery + zoom, 17-field specs, certificate, similar stones (`?id=<stock no>`) |
 | `jewellery.html` | Collection placeholder ("arriving soon") linked from the header dropdown |
 | `manufacturing.html` | Manufacturing placeholder linked from the homepage journey CTA |
 | `education.html` / `about.html` / `contact.html` / `privacy.html` / `terms.html` | Placeholder pages behind the footer navigation |

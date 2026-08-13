@@ -11,7 +11,7 @@ const fs = require('fs');
 const { chromium } = require('playwright');
 const { startServer, chromiumOptions, installCdnRoutes } = require('./lib.cjs');
 
-const PAGES = ['index.html', 'diamonds.html', 'jewellery.html', 'manufacturing.html', 'styleguide.html'];
+const PAGES = ['index.html', 'diamonds.html', 'diamond-details.html', 'jewellery.html', 'manufacturing.html', 'styleguide.html'];
 const SCREEN_DIR = path.join(__dirname, 'screens');
 fs.mkdirSync(SCREEN_DIR, { recursive: true });
 

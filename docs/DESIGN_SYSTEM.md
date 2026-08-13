@@ -187,6 +187,18 @@ badges, `.ngd-table-card` + `.ngd-table` for the readable table view,
 Demo data lives in `diamonds-data.js`; gem art in `gem-art.js`; the controller's
 `loadDiamonds()` is the single seam for the future Supabase select.
 
+### Diamond details components
+Details-page building blocks (`diamond-details.html` + `diamond-details.js`):
+`.ngd-detail-stage` (velvet product stage with `.ngd-detail-badge` lab chip,
+zoom via `.is-zoomed` on click with pointer-steered transform-origin, and the
+`.ngd-detail-float` gentle float), `.ngd-thumbs`/`.ngd-thumb` view switcher,
+`.ngd-detail-specs` light spec grid, `.ngd-fav-btn` toggle, `.ngd-cert-card` +
+`.ngd-cert-seal` glass certificate panel, `.ngd-spec-table` with
+`.ngd-spec-group-title`/`.ngd-spec-row`, and the mobile `.ngd-sticky-cta` bar
+(pair with `body.ngd-detail-page` for bottom padding). The shared dark product
+card lives in `assets/js/diamond-card.js` (window.NGDDiamondCard) and is used
+by both the inventory grid and the Similar-stones row.
+
 ### Feedback & misc
 `.ngd-badge` (+ `.ngd-badge-dark`), `.ngd-alert` with `.ngd-alert-info` /
 `.ngd-alert-success` / `.ngd-alert-danger`, `.ngd-stat-value` + `.ngd-stat-label`.

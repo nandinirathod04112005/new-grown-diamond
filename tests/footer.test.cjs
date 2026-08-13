@@ -16,8 +16,9 @@ const { startServer, chromiumOptions, installCdnRoutes } = require('./lib.cjs');
 const SCREEN_DIR = path.join(__dirname, 'screens');
 fs.mkdirSync(SCREEN_DIR, { recursive: true });
 
-const PAGES = ['index.html', 'diamonds.html', 'jewellery.html', 'manufacturing.html',
-  'education.html', 'about.html', 'contact.html', 'privacy.html', 'terms.html', 'styleguide.html'];
+const PAGES = ['index.html', 'diamonds.html', 'diamond-details.html', 'jewellery.html',
+  'manufacturing.html', 'education.html', 'about.html', 'contact.html', 'privacy.html',
+  'terms.html', 'styleguide.html'];
 
 const QUICK = ['Home', 'Diamonds', 'Jewellery', 'Manufacturing', 'Education', 'About', 'Contact'];
 const DIAMOND = ['Diamond Inventory', 'Featured Diamonds', 'Diamond Education'];
@@ -64,7 +65,7 @@ async function scenario(name, opts, fn) {
   SITE = started.origin;
   browser = await chromium.launch(chromiumOptions());
 
-  await scenario('identical footer + back-to-top on all 10 public pages', {}, async (page) => {
+  await scenario('identical footer + back-to-top on all 11 public pages', {}, async (page) => {
     let reference = null;
     for (const p of PAGES) {
       await page.goto(`${SITE}/${p}`, { waitUntil: 'domcontentloaded' });

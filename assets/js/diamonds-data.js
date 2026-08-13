@@ -42,6 +42,35 @@ window.NGD_DEMO_DIAMONDS = [
   { id: 'NGD-1028', shape: 'Round',    carat: 0.52, colour: 'E', clarity: 'IF',   cut: 'Ideal',     lab: 'IGI', growth: 'CVD',  availability: 'In Stock' }
 ];
 
+/* ------------------------------------------------------------
+   Derived laboratory details (deterministic per stone) for the
+   details page. The future Supabase `diamonds` table stores
+   these as real columns — same field names.
+   ------------------------------------------------------------ */
+(function () {
+  'use strict';
+  var POLISH = ['Excellent', 'Excellent', 'Very Good'];
+  var SYMMETRY = ['Excellent', 'Very Good', 'Excellent'];
+  var FLUOR = ['None', 'None', 'Faint', 'None'];
+  var RATIO = { Round: 1.00, Oval: 1.35, Princess: 1.03, Emerald: 1.42, Cushion: 1.08, Radiant: 1.22, Pear: 1.55, Marquise: 1.92 };
+  var DEPTH = { Round: 62.4, Oval: 61.8, Princess: 71.5, Emerald: 66.0, Cushion: 66.8, Radiant: 68.2, Pear: 61.5, Marquise: 60.8 };
+  var TABLE = { Round: 57, Oval: 58, Princess: 73, Emerald: 63, Cushion: 61, Radiant: 65, Pear: 58, Marquise: 57 };
+
+  window.NGD_DEMO_DIAMONDS.forEach(function (d, i) {
+    d.polish = POLISH[i % 3];
+    d.symmetry = SYMMETRY[i % 3];
+    d.fluorescence = FLUOR[i % 4];
+    d.ratio = +(RATIO[d.shape] + (i % 5) * 0.01).toFixed(2);
+    d.depthPct = +(DEPTH[d.shape] + (i % 7) * 0.1).toFixed(1);
+    d.tablePct = +(TABLE[d.shape] + (i % 4) * 0.5).toFixed(1);
+    var width = (6.45 * Math.cbrt(d.carat)) / Math.sqrt(d.ratio);
+    var length = width * d.ratio;
+    var depthMm = width * (d.depthPct / 100);
+    d.measurements = length.toFixed(2) + ' × ' + width.toFixed(2) + ' × ' + depthMm.toFixed(2) + ' mm';
+    d.report = (d.lab === 'IGI' ? 'LG' : '') + String(582400000 + i * 104729 + (d.lab === 'GIA' ? 37 : 0));
+  });
+})();
+
 /* Homepage "Featured" cards link with their original demo ids —
    map them onto the matching inventory stones. */
 window.NGD_LEGACY_IDS = {

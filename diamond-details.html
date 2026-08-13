@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Diamonds — New Grown Diamond</title>
-  <meta name="description" content="Browse certified lab-grown diamonds — search, filter and compare our full inventory.">
+  <title>Diamond Details — New Grown Diamond</title>
+  <meta name="description" content="Full laboratory specification for a certified lab-grown diamond.">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50 8 88 38 50 92 12 38' fill='%23b48c47'/%3E%3C/svg%3E">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -13,7 +13,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="assets/css/main.css" rel="stylesheet">
 </head>
-<body class="ngd-backdrop">
+<body class="ngd-backdrop ngd-detail-page">
 
   <!-- ══════════ SITE HEADER ══════════ -->
   <nav class="navbar navbar-expand-lg sticky-top ngd-navbar" aria-label="Main navigation">
@@ -78,121 +78,109 @@
     </div>
   </div>
 
-  <!-- ══════════ DIAMOND INVENTORY ══════════
-       Static demo data (assets/js/diamonds-data.js). The controller
-       (assets/js/inventory.js) is structured so the future Supabase
-       phase only swaps its loadDiamonds() data source. -->
-  <main class="ngd-section-tight" id="inventory">
+  <!-- ══════════ DIAMOND DETAILS ══════════
+       Static demo data resolved from ?id=<stock id> (future pattern:
+       diamond-details.html?id=DIA-XXXX). assets/js/diamond-details.js
+       renders everything; the future Supabase phase only swaps its
+       data lookup. -->
+  <main class="ngd-section-tight ngd-detail-light" id="diamond-detail">
     <div class="container">
 
-      <div class="row justify-content-center text-center ngd-reveal">
-        <div class="col-lg-8">
-          <span class="ngd-eyebrow">Diamond Inventory</span>
-          <h1 class="ngd-display-2 mt-2">Certified stones, <span class="ngd-italic-accent">ready to set</span></h1>
-          <hr class="ngd-divider ngd-divider-center">
-          <p class="ngd-lead mx-auto" style="max-width: 36rem;">
-            Every stone below is lab-grown, independently certified and
-            available to view on request. Refine by cut, colour and clarity.
-          </p>
-        </div>
+      <nav aria-label="Breadcrumb" class="mb-3 ngd-reveal">
+        <a class="ngd-link small" href="diamonds.html">← Back to Diamond Inventory</a>
+      </nav>
+
+      <!-- Not-found state -->
+      <div id="dd-notfound" class="ngd-card text-center py-5 d-none">
+        <p class="ngd-title mb-2">Stone not found</p>
+        <p class="ngd-text-muted small mb-4">
+          That stock number is not in the current inventory. It may have
+          found its home already.
+        </p>
+        <a class="ngd-btn ngd-btn-gold mx-auto" href="diamonds.html">Browse the inventory</a>
       </div>
 
-      <!-- Toolbar -->
-      <div class="ngd-card ngd-inv-toolbar mt-4">
-        <div class="row g-2 align-items-center ngd-form">
-          <div class="col-12 col-md">
-            <div class="ngd-search">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.8-3.8"/></svg>
-              <input type="search" class="form-control" id="inv-search"
-                     placeholder="Search stock no. or shape…" aria-label="Search diamonds">
+      <div id="dd-product">
+        <div class="row g-4 g-lg-5">
+          <!-- Gallery -->
+          <div class="col-lg-6 ngd-reveal">
+            <div class="ngd-detail-stage" id="dd-stage" role="img" aria-label="Diamond visual">
+              <span class="ngd-detail-badge" id="dd-lab-badge"></span>
+              <span class="ngd-detail-zoomhint" id="dd-zoomhint">Click to zoom</span>
+              <div class="ngd-detail-stage-inner" id="dd-stage-inner"></div>
+            </div>
+            <div class="ngd-thumbs" id="dd-thumbs" role="tablist" aria-label="Diamond views"></div>
+          </div>
+
+          <!-- Information -->
+          <div class="col-lg-6 ngd-reveal ngd-reveal-delay-1">
+            <span class="ngd-eyebrow" id="dd-stock"></span>
+            <h1 class="ngd-display-2 mt-1 mb-2" id="dd-title"></h1>
+            <div class="d-flex align-items-center gap-2 flex-wrap mb-3" id="dd-chips"></div>
+            <p class="ngd-text-muted small mb-4" id="dd-sub"></p>
+
+            <dl class="ngd-diamond-specs ngd-detail-specs pt-3 mb-4" id="dd-specs"></dl>
+
+            <div class="d-grid d-sm-flex flex-wrap gap-2 mb-4" id="dd-ctas">
+              <a class="ngd-btn ngd-btn-gold" id="dd-quote" href="#">Request Quote</a>
+              <a class="ngd-btn ngd-btn-outline" id="dd-inspect" href="#">Request Inspection</a>
+              <button type="button" class="ngd-btn ngd-btn-outline ngd-fav-btn" id="dd-fav" aria-pressed="false">
+                <span class="ngd-fav-icon" aria-hidden="true">♡</span>
+                <span id="dd-fav-label">Add to Favourites</span>
+              </button>
+            </div>
+
+            <!-- Certificate -->
+            <div class="ngd-card ngd-glass ngd-cert-card" id="dd-cert">
+              <div class="d-flex align-items-center gap-3">
+                <span class="ngd-cert-seal" aria-hidden="true">◆</span>
+                <div class="flex-grow-1">
+                  <p class="ngd-eyebrow mb-1">Certificate</p>
+                  <p class="small mb-0">
+                    <span id="dd-cert-lab"></span> ·
+                    Report <strong id="dd-cert-no"></strong>
+                  </p>
+                </div>
+                <button type="button" class="ngd-btn ngd-btn-outline ngd-btn-sm" disabled
+                        title="Certificate PDFs arrive with the live inventory">
+                  View Certificate
+                </button>
+              </div>
             </div>
           </div>
-          <div class="col-6 col-md-auto d-lg-none">
-            <button type="button" class="ngd-btn ngd-btn-outline ngd-btn-sm w-100" data-bs-toggle="offcanvas"
-                    data-bs-target="#invFilterCanvas" aria-controls="invFilterCanvas">
-              Filters <span class="ngd-filter-badge d-none ms-1" id="inv-filter-badge"></span>
-            </button>
-          </div>
-          <div class="col-6 col-md-auto">
-            <select class="form-select" id="inv-sort" aria-label="Sort diamonds">
-              <option value="featured">Sort: Featured</option>
-              <option value="carat-desc">Carat: high to low</option>
-              <option value="carat-asc">Carat: low to high</option>
-              <option value="colour">Colour: D first</option>
-              <option value="stock">Stock number</option>
-            </select>
-          </div>
-          <div class="col-12 col-md-auto d-flex gap-2 justify-content-end">
-            <button type="button" class="ngd-view-btn is-active" id="inv-view-grid"
-                    aria-label="Grid view" aria-pressed="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg>
-            </button>
-            <button type="button" class="ngd-view-btn" id="inv-view-table"
-                    aria-label="Table view" aria-pressed="false">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-            </button>
-          </div>
         </div>
-      </div>
 
-      <div class="row g-4 mt-0" id="inv-results">
-        <!-- Desktop filters -->
-        <aside class="col-lg-3 d-none d-lg-block">
-          <div class="ngd-card ngd-inv-filters" id="inv-filter-host" aria-label="Filters"></div>
-        </aside>
+        <!-- Full specification -->
+        <section class="mt-5 ngd-reveal">
+          <span class="ngd-eyebrow">Laboratory Data</span>
+          <h2 class="ngd-title mt-1 mb-3">Full specification</h2>
+          <div class="ngd-card ngd-spec-table">
+            <div class="row g-4" id="dd-spec-table"></div>
+          </div>
+        </section>
 
-        <!-- Results -->
-        <div class="col-lg-9">
-          <p id="inv-count" class="ngd-text-muted small mb-3" aria-live="polite"></p>
-
-          <div id="inv-grid" class="row g-4"></div>
-
-          <div id="inv-table-wrap" class="ngd-table-card d-none">
-            <div class="table-responsive">
-              <table class="table ngd-table align-middle">
-                <thead>
-                  <tr>
-                    <th scope="col">Stock No.</th>
-                    <th scope="col">Shape</th>
-                    <th scope="col">Carat</th>
-                    <th scope="col">Colour</th>
-                    <th scope="col">Clarity</th>
-                    <th scope="col">Cut</th>
-                    <th scope="col">Laboratory</th>
-                    <th scope="col">Growth</th>
-                    <th scope="col">Availability</th>
-                    <th scope="col"><span class="visually-hidden">Actions</span></th>
-                  </tr>
-                </thead>
-                <tbody id="inv-table-body"></tbody>
-              </table>
+        <!-- Similar stones -->
+        <section class="mt-5 ngd-reveal" id="dd-similar-wrap">
+          <div class="d-flex justify-content-between align-items-baseline flex-wrap gap-2 mb-3">
+            <div>
+              <span class="ngd-eyebrow">You may also like</span>
+              <h2 class="ngd-title mt-1 mb-0">Similar stones</h2>
             </div>
+            <a class="ngd-link small" href="diamonds.html">View full inventory</a>
           </div>
-
-          <div id="inv-empty" class="ngd-card text-center d-none py-5">
-            <p class="ngd-title mb-2">No stones match your filters</p>
-            <p class="ngd-text-muted small mb-4">Try widening the carat range or clearing a few filters.</p>
-            <button type="button" class="ngd-btn ngd-btn-outline ngd-btn-sm mx-auto" id="inv-empty-clear">
-              Clear all filters
-            </button>
-          </div>
-
-          <nav aria-label="Inventory pages" class="mt-4 pt-2">
-            <ul class="ngd-pagination" id="inv-pagination"></ul>
-          </nav>
-        </div>
+          <div class="row g-4" id="dd-similar"></div>
+        </section>
       </div>
     </div>
   </main>
 
-  <!-- Mobile filters -->
-  <div class="offcanvas offcanvas-start ngd-filter-canvas" tabindex="-1" id="invFilterCanvas"
-       aria-labelledby="invFilterCanvasLabel">
-    <div class="offcanvas-header">
-      <span class="ngd-eyebrow" id="invFilterCanvasLabel">Filters</span>
-      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close filters"></button>
-    </div>
-    <div class="offcanvas-body" id="inv-filter-host-mobile"></div>
+  <!-- Mobile quick actions -->
+  <div class="ngd-sticky-cta d-lg-none" id="dd-sticky">
+    <a class="ngd-btn ngd-btn-gold ngd-btn-block flex-grow-1" id="dd-sticky-quote" href="#">Request Quote</a>
+    <button type="button" class="ngd-btn ngd-btn-outline ngd-fav-btn" id="dd-sticky-fav"
+            aria-pressed="false" aria-label="Add to favourites">
+      <span class="ngd-fav-icon" aria-hidden="true">♡</span>
+    </button>
   </div>
 
 
@@ -291,6 +279,6 @@
   <script defer src="assets/js/gem-art.js"></script>
   <script defer src="assets/js/diamonds-data.js"></script>
   <script defer src="assets/js/diamond-card.js"></script>
-  <script defer src="assets/js/inventory.js"></script>
+  <script defer src="assets/js/diamond-details.js"></script>
 </body>
 </html>
