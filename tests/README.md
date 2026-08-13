@@ -24,6 +24,10 @@ tooling only** — the website itself is plain HTML/CSS/JS and has no Node backe
 - `jewellery-section.test.cjs` — 9 Fine-Jewellery scenarios: six category cards
   (Rings…Bangles) with art/description/CTA, tilt + float/zoom hover, links, and
   the 3/2/1 responsive grid at 1440/768/390.
+- `story.test.cjs` — 9 manufacturing-journey scenarios: six numbered stages with
+  art and copy, alternating desktop layout, vertical mobile journey, parallax
+  drift (plus its reduced-motion and mobile opt-outs), scroll reveal, and the
+  Discover Our Manufacturing CTA.
 - `header-nav.test.cjs` — 12 header/navigation scenarios on every public page:
   sticky glass header, Collections dropdown (open/close/navigate), login button,
   hamburger morph, offcanvas mobile menu (open, stagger, close button, Escape,

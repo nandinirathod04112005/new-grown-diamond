@@ -1277,6 +1277,139 @@ code {
 }
 
 /* ------------------------------------------------------------
+   13f. MANUFACTURING STORY (homepage journey timeline)
+   ------------------------------------------------------------ */
+.ngd-story {
+  position: relative;
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(3rem, 7vw, 5.5rem);
+}
+
+/* Gold journey spine — left on mobile, centred from lg up */
+.ngd-story-spine {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 1.15rem;
+  width: 1px;
+  background: linear-gradient(
+      180deg,
+      transparent 0%,
+      rgba(217, 192, 138, 0.45) 6%,
+      rgba(217, 192, 138, 0.45) 94%,
+      transparent 100%);
+  pointer-events: none;
+}
+
+.ngd-story-stage {
+  position: relative;
+  padding-left: 3rem;
+}
+
+/* Numbered node pinned to the spine */
+.ngd-story-node {
+  position: absolute;
+  left: 1.15rem;
+  top: 0.2rem;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 50%;
+  background-color: var(--ngd-charcoal);
+  border: 1px solid rgba(217, 192, 138, 0.55);
+  box-shadow: 0 0 0 6px var(--ngd-black), 0 8px 20px rgba(0, 0, 0, 0.45);
+  font-family: var(--ngd-font-display);
+  font-style: italic;
+  font-size: 0.84rem;
+  color: var(--ngd-gold-soft);
+  z-index: 2;
+}
+
+@media (min-width: 992px) {
+  .ngd-story-spine { left: 50%; }
+  .ngd-story-stage { padding-left: 0; }
+  .ngd-story-node {
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+  }
+}
+
+/* Cinematic stage panel */
+.ngd-story-media {
+  position: relative;
+  aspect-ratio: 16 / 11;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid var(--ngd-line-light);
+  border-radius: var(--ngd-radius);
+  background:
+      radial-gradient(135% 110% at 50% -8%, #27272e 0%, #18181d 55%, #0f0f12 100%);
+  box-shadow: var(--ngd-shadow-deep);
+}
+
+.ngd-story-media::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 8%;
+  width: 58%;
+  height: 14%;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(50% 50% at 50% 50%, rgba(217, 192, 138, 0.22), transparent 72%);
+  pointer-events: none;
+}
+
+.ngd-story-media svg {
+  width: 58%;
+  height: auto;
+  color: var(--ngd-gold-soft);
+  filter: drop-shadow(0 14px 16px rgba(0, 0, 0, 0.5));
+}
+
+[data-ngd-parallax] { will-change: transform; }
+
+/* Ghost numeral + copy */
+.ngd-story-num {
+  display: block;
+  font-family: var(--ngd-font-display);
+  font-style: italic;
+  font-weight: 500;
+  font-size: clamp(2.5rem, 4vw, 3.4rem);
+  line-height: 1;
+  color: rgba(217, 192, 138, 0.30);
+  margin-bottom: 0.45rem;
+}
+
+.ngd-story-title {
+  font-family: var(--ngd-font-display);
+  font-size: clamp(1.3rem, 2vw, 1.65rem);
+  font-weight: 600;
+  color: #f4f2ee;
+  margin-bottom: 0.6rem;
+}
+
+.ngd-story-text {
+  font-size: 0.95rem;
+  line-height: 1.75;
+  color: rgba(244, 242, 238, 0.70);
+  max-width: 30rem;
+  margin-bottom: 0;
+}
+
+@media (max-width: 991.98px) {
+  .ngd-story-text { max-width: none; }
+}
+
+/* ------------------------------------------------------------
    14. ACCESSIBILITY & RESPONSIVE GUARDS
    ------------------------------------------------------------ */
 @media (prefers-reduced-motion: reduce) {

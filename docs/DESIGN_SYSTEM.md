@@ -156,6 +156,15 @@ around a gold line-art SVG drawn with `currentColor`; `.ngd-jewel-name`,
 `.ngd-jewel-desc` and a `.ngd-btn` CTA. `data-category` hooks keep the markup
 ready for the future Supabase jewellery table.
 
+### Manufacturing story timeline
+`.ngd-story` wraps `.ngd-story-stage` articles around a `.ngd-story-spine`
+(gold line — left on mobile, centred from lg). Each stage: `.ngd-story-node`
+(numbered spine badge), `.ngd-story-media` (velvet cinematic panel holding the
+stage SVG; give it `data-ngd-parallax="-0.045"` for scroll drift), and a text
+block of `.ngd-story-num` (ghost numeral), `.ngd-story-title`, `.ngd-story-text`.
+Alternate sides with Bootstrap `order-lg-*`/`offset-lg-*`. `data-ngd-parallax`
+is powered by `ui.js` — desktop only, skipped under `prefers-reduced-motion`.
+
 ### Feedback & misc
 `.ngd-badge` (+ `.ngd-badge-dark`), `.ngd-alert` with `.ngd-alert-info` /
 `.ngd-alert-success` / `.ngd-alert-danger`, `.ngd-stat-value` + `.ngd-stat-label`.

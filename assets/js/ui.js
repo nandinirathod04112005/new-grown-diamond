@@ -114,11 +114,57 @@
     });
   }
 
+  /* ---------- 5. Subtle scroll parallax ----------
+     Elements with data-ngd-parallax="<speed>" drift slightly as
+     the page scrolls (desktop, fine pointers, motion allowed).
+     The untransformed parent is measured so the applied transform
+     never feeds back into the position calculation. */
+  function initParallax() {
+    if (reducedMotion) return;
+    if (window.matchMedia('(max-width: 991.98px)').matches) return;
+
+    var els = document.querySelectorAll('[data-ngd-parallax]');
+    if (!els.length) return;
+
+    var items = Array.prototype.map.call(els, function (el) {
+      return {
+        el: el,
+        anchor: el.parentElement || el,
+        speed: parseFloat(el.getAttribute('data-ngd-parallax')) || -0.05
+      };
+    });
+
+    var ticking = false;
+
+    function update() {
+      ticking = false;
+      var mid = window.innerHeight / 2;
+      items.forEach(function (item) {
+        var rect = item.anchor.getBoundingClientRect();
+        if (rect.bottom < -200 || rect.top > window.innerHeight + 200) return;
+        var offset = (rect.top + rect.height / 2 - mid) * item.speed;
+        item.el.style.transform = 'translate3d(0,' + offset.toFixed(1) + 'px,0)';
+      });
+    }
+
+    function onScroll() {
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(update);
+      }
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+    update();
+  }
+
   function init() {
     initNavbar();
     initReveal();
     initTilt();
     initMobileMenu();
+    initParallax();
   }
 
   if (document.readyState === 'loading') {
