@@ -12,6 +12,10 @@ tooling only** — the website itself is plain HTML/CSS/JS and has no Node backe
   backend** via request interception, so no real credentials are needed.
   Manual testing against your real Supabase project is described in
   `docs/SUPABASE_AUTH_TEST.md`.
+- `header-nav.test.cjs` — 12 header/navigation scenarios on every public page:
+  sticky glass header, Collections dropdown (open/close/navigate), login button,
+  hamburger morph, offcanvas mobile menu (open, stagger, close button, Escape,
+  backdrop tap, link navigation) and no-overflow checks at all three widths.
 
 ## Run
 

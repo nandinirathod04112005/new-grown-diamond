@@ -92,11 +92,27 @@ Use Bootstrap's `container` / `row` / `col-*` for responsive structure.
 Loading state: disable the button and prepend Bootstrap's
 `<span class="spinner-border spinner-border-sm"></span>`.
 
-### Navbar
-`nav.navbar.sticky-top.ngd-navbar` — transparent at top, frosted glass +
-hairline once scrolled (`ui.js` toggles `.is-scrolled`). Use `.ngd-brand` +
-`.ngd-brand-mark` for the logo and `.ngd-nav` on the `navbar-nav` list.
-`.ngd-navbar-dark` variant for dark pages.
+### Site header & navigation
+`nav.navbar.navbar-expand-lg.sticky-top.ngd-navbar` — transparent at top,
+frosted glass + hairline once scrolled (`ui.js` toggles `.is-scrolled`).
+Use `.ngd-brand` + `.ngd-brand-mark` for the logo and `.ngd-nav` on the
+`navbar-nav` list (keep `navbar-expand-lg` — Bootstrap needs it to position
+dropdowns absolutely). `.ngd-navbar-dark` variant for dark pages.
+Copy the full header + mobile menu block from `index.html` for new pages.
+
+- **Desktop nav** — wrap links/buttons in `div.d-none.d-lg-flex`; dropdowns
+  are Bootstrap dropdowns skinned by `.ngd-nav .dropdown-menu` (glass card,
+  fade/slide entrance, rotating chevron). `.ngd-item-note` adds a small
+  description line inside a `.dropdown-item`.
+- **Hamburger** — `button.ngd-burger-btn.d-lg-none` containing
+  `span.ngd-burger > span×3`; the lines morph into an ✕ when the menu is
+  open (`ui.js` syncs `.is-open` + `aria-expanded` with the offcanvas).
+- **Mobile menu** — Bootstrap offcanvas `div.offcanvas.offcanvas-end.ngd-mobile-menu`:
+  dark-glass panel, `.ngd-mobile-link` (serif links), `.ngd-mobile-group` +
+  `.ngd-mobile-sublink` for grouped items, `.ngd-mobile-close` for the ✕.
+  Give each row `.ngd-menu-item` and an inline `--ngd-menu-i: n` for the
+  staggered entrance. Requires `bootstrap.bundle.min.js`; links inside the
+  panel auto-close it. All of it respects `prefers-reduced-motion`.
 
 ### Forms
 Wrap any form in **`.ngd-form`** — labels become small-caps, inputs get soft

@@ -20,30 +20,68 @@
 </head>
 <body class="ngd-backdrop">
 
-  <!-- ══════════ NAVBAR (glass on scroll) ══════════ -->
-  <nav class="navbar navbar-expand-lg sticky-top ngd-navbar">
+  <!-- ══════════ SITE HEADER ══════════ -->
+  <nav class="navbar navbar-expand-lg sticky-top ngd-navbar" aria-label="Main navigation">
     <div class="container">
       <a class="ngd-brand" href="index.html">
         <span class="ngd-brand-mark">◆</span>
         <span>New Grown Diamond</span>
       </a>
-      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#sgNav" aria-controls="sgNav" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="sgNav">
-        <ul class="navbar-nav ms-auto ngd-nav align-items-lg-center">
-          <li class="nav-item"><a class="nav-link active" href="#colours">Colours</a></li>
-          <li class="nav-item"><a class="nav-link" href="#type">Type</a></li>
-          <li class="nav-item"><a class="nav-link" href="#buttons">Buttons</a></li>
-          <li class="nav-item"><a class="nav-link" href="#cards">Cards</a></li>
-          <li class="nav-item"><a class="nav-link" href="#forms">Forms</a></li>
-          <li class="nav-item ms-lg-3 mt-2 mt-lg-0">
-            <a class="ngd-btn ngd-btn-dark ngd-btn-sm" href="login.html">Sign in</a>
+
+      <!-- Desktop navigation -->
+      <div class="d-none d-lg-flex align-items-center gap-3">
+        <ul class="navbar-nav flex-row ngd-nav align-items-center">
+          <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navCollections" role="button"
+               data-bs-toggle="dropdown" aria-expanded="false">Collections</a>
+            <ul class="dropdown-menu" aria-labelledby="navCollections">
+              <li><a class="dropdown-item" href="diamonds.html">Diamonds
+                <span class="ngd-item-note">Certified lab-grown stones</span></a></li>
+              <li><a class="dropdown-item" href="jewellery.html">Jewellery
+                <span class="ngd-item-note">Fine finished pieces</span></a></li>
+            </ul>
           </li>
+          <li class="nav-item"><a class="nav-link active" aria-current="page" href="styleguide.html">Design system</a></li>
         </ul>
+        <a class="ngd-btn ngd-btn-outline ngd-btn-sm" href="login.html">Sign in</a>
+        <a class="ngd-btn ngd-btn-dark ngd-btn-sm" href="register.html">Create account</a>
       </div>
+
+      <!-- Mobile hamburger -->
+      <button class="ngd-burger-btn d-lg-none" type="button" data-bs-toggle="offcanvas"
+              data-bs-target="#ngdMobileMenu" aria-controls="ngdMobileMenu"
+              aria-expanded="false" aria-label="Open menu">
+        <span class="ngd-burger"><span></span><span></span><span></span></span>
+      </button>
     </div>
   </nav>
+
+  <!-- Mobile menu -->
+  <div class="offcanvas offcanvas-end ngd-mobile-menu" tabindex="-1" id="ngdMobileMenu"
+       aria-labelledby="ngdMobileMenuLabel">
+    <div class="offcanvas-header">
+      <a class="ngd-brand" href="index.html" id="ngdMobileMenuLabel" style="color:#f4f2ee;">
+        <span class="ngd-brand-mark">◆</span>
+        <span>New Grown Diamond</span>
+      </a>
+      <button type="button" class="ngd-mobile-close" data-bs-dismiss="offcanvas" aria-label="Close menu">✕</button>
+    </div>
+    <div class="offcanvas-body">
+      <span class="ngd-mobile-group ngd-menu-item mt-0" style="--ngd-menu-i:0;">Menu</span>
+      <a class="ngd-mobile-link ngd-menu-item" style="--ngd-menu-i:1;" href="index.html">Home</a>
+      <div class="ngd-menu-item" style="--ngd-menu-i:2;">
+        <span class="ngd-mobile-group">Collections</span>
+        <a class="ngd-mobile-sublink" href="diamonds.html">Diamonds</a>
+        <a class="ngd-mobile-sublink" href="jewellery.html">Jewellery</a>
+      </div>
+      <a class="ngd-mobile-link ngd-menu-item active" style="--ngd-menu-i:3;" href="styleguide.html">Design system</a>
+      <div class="mt-auto d-grid gap-2 pt-4 ngd-menu-item" style="--ngd-menu-i:4;">
+        <a class="ngd-btn ngd-btn-gold ngd-btn-block" href="login.html">Sign in</a>
+        <a class="ngd-btn ngd-btn-ghost ngd-btn-block" href="register.html">Create account</a>
+      </div>
+    </div>
+  </div>
 
   <!-- ══════════ HERO ══════════ -->
   <header class="ngd-section">
@@ -61,6 +99,13 @@
           <div class="d-flex flex-wrap justify-content-center gap-3 mt-4">
             <a class="ngd-btn ngd-btn-gold" href="#cards">Explore surfaces</a>
             <a class="ngd-btn ngd-btn-outline" href="#type">Typography</a>
+          </div>
+          <div class="d-flex flex-wrap justify-content-center gap-2 mt-4">
+            <a class="ngd-badge" href="#colours" style="text-decoration:none;">Colours</a>
+            <a class="ngd-badge" href="#type" style="text-decoration:none;">Type</a>
+            <a class="ngd-badge" href="#buttons" style="text-decoration:none;">Buttons</a>
+            <a class="ngd-badge" href="#cards" style="text-decoration:none;">Cards</a>
+            <a class="ngd-badge" href="#forms" style="text-decoration:none;">Forms</a>
           </div>
         </div>
       </div>

@@ -73,10 +73,13 @@ function record(name, ok, detail) {
 
     if (vp.name === 'mobile') {
       await page.evaluate(() => window.scrollTo(0, 0));
-      await page.click('.navbar-toggler');
-      await page.waitForTimeout(500);
-      const open = await page.$eval('#sgNav', (n) => n.classList.contains('show'));
-      record('[mobile] navbar collapse opens', open);
+      await page.click('.ngd-burger-btn');
+      await page.waitForSelector('.ngd-mobile-menu.show', { timeout: 4000 });
+      record('[mobile] mobile menu opens', true);
+      await page.click('.ngd-mobile-close');
+      await page.waitForFunction(
+        () => !document.querySelector('.ngd-mobile-menu').classList.contains('show')
+      );
     }
 
     await page.evaluate(() => window.scrollTo(0, 0));

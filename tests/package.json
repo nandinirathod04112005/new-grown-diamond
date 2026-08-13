@@ -3,7 +3,7 @@
   "private": true,
   "description": "Optional automated browser tests for the New Grown Diamond frontend. Dev tooling only — the site itself is plain HTML/CSS/JS and needs no Node backend.",
   "scripts": {
-    "test": "node design-system.test.cjs && node auth-flow.test.cjs"
+    "test": "node design-system.test.cjs && node header-nav.test.cjs && node auth-flow.test.cjs"
   },
   "devDependencies": {
     "@supabase/supabase-js": "^2.112.3",

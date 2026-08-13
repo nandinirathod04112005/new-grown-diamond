@@ -82,10 +82,43 @@
     });
   }
 
+  /* ---------- 4. Mobile menu (Bootstrap offcanvas) ---------- */
+  function initMobileMenu() {
+    var menu = document.querySelector('.ngd-mobile-menu');
+    if (!menu || !menu.id) return;
+
+    var togglers = document.querySelectorAll(
+      '[data-bs-target="#' + menu.id + '"]'
+    );
+
+    function setOpen(open) {
+      togglers.forEach(function (btn) {
+        btn.classList.toggle('is-open', open);
+        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        btn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+      });
+    }
+
+    menu.addEventListener('show.bs.offcanvas', function () { setOpen(true); });
+    menu.addEventListener('hide.bs.offcanvas', function () { setOpen(false); });
+
+    /* Navigating from the menu should close it (matters for
+       same-page anchors; harmless for full navigations). */
+    menu.querySelectorAll('a[href]').forEach(function (link) {
+      link.addEventListener('click', function () {
+        if (window.bootstrap && window.bootstrap.Offcanvas) {
+          var instance = window.bootstrap.Offcanvas.getInstance(menu);
+          if (instance) instance.hide();
+        }
+      });
+    });
+  }
+
   function init() {
     initNavbar();
     initReveal();
     initTilt();
+    initMobileMenu();
   }
 
   if (document.readyState === 'loading') {
