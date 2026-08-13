@@ -21,6 +21,9 @@ tooling only** — the website itself is plain HTML/CSS/JS and has no Node backe
 - `featured.test.cjs` — 9 Featured-Diamonds scenarios: six demo cards with full
   Shape/Carat/Colour/Clarity/Laboratory spec sheets, tilt + sheen hover effects,
   View Details / View All links, 3-2-1 responsive grid at 1440/768/390.
+- `jewellery-section.test.cjs` — 9 Fine-Jewellery scenarios: six category cards
+  (Rings…Bangles) with art/description/CTA, tilt + float/zoom hover, links, and
+  the 3/2/1 responsive grid at 1440/768/390.
 - `header-nav.test.cjs` — 12 header/navigation scenarios on every public page:
   sticky glass header, Collections dropdown (open/close/navigate), login button,
   hamburger morph, offcanvas mobile menu (open, stagger, close button, Escape,

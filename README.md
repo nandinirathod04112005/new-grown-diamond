@@ -14,6 +14,7 @@ Bootstrap 5 + vanilla JavaScript** frontend backed by **Supabase**
 | Homepage 3D hero (Three.js diamond, SVG/WebGL fallback) | ✅ done |
 | Homepage Diamond section (8 cut cards, 3D tilt) | ✅ done |
 | Homepage Featured Diamonds showcase (6 demo stones) | ✅ done |
+| Homepage Fine Jewellery section (6 category cards) | ✅ done |
 | Remaining homepage sections, catalogue, admin management, storage, quotes | ⏳ upcoming steps |
 
 ## Quick start

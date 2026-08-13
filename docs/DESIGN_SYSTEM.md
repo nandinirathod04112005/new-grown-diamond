@@ -148,6 +148,14 @@ with drop-shadow depth), `.ngd-diamond-title` + `.ngd-diamond-carat`, a
 row) and a `.ngd-btn` CTA. Cards carry `data-diamond-id` / `data-shape` hooks so
 the future Supabase catalogue can render the same markup from the diamonds table.
 
+### Jewellery category cards
+`article.ngd-card.ngd-card-3d.ngd-jewel-card[data-ngd-tilt]` — light atelier
+card: `.ngd-jewel-media` (pearl stage) holds `.ngd-jewel-figure`, which floats
+and zooms on hover with its own transform (kept separate from the card tilt),
+around a gold line-art SVG drawn with `currentColor`; `.ngd-jewel-name`,
+`.ngd-jewel-desc` and a `.ngd-btn` CTA. `data-category` hooks keep the markup
+ready for the future Supabase jewellery table.
+
 ### Feedback & misc
 `.ngd-badge` (+ `.ngd-badge-dark`), `.ngd-alert` with `.ngd-alert-info` /
 `.ngd-alert-success` / `.ngd-alert-danger`, `.ngd-stat-value` + `.ngd-stat-label`.
