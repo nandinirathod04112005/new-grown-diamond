@@ -12,6 +12,9 @@ tooling only** — the website itself is plain HTML/CSS/JS and has no Node backe
   backend** via request interception, so no real credentials are needed.
   Manual testing against your real Supabase project is described in
   `docs/SUPABASE_AUTH_TEST.md`.
+- `hero.test.cjs` — 8 homepage 3D-hero scenarios: WebGL diamond renders (canvas,
+  desktop/mobile profiles, parallax flags), reduced-motion still frame, static SVG
+  fallback when WebGL or the three.js CDN is unavailable, content + CTA navigation.
 - `header-nav.test.cjs` — 12 header/navigation scenarios on every public page:
   sticky glass header, Collections dropdown (open/close/navigate), login button,
   hamburger morph, offcanvas mobile menu (open, stagger, close button, Escape,

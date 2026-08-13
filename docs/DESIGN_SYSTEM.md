@@ -119,6 +119,18 @@ Wrap any form in **`.ngd-form`** — labels become small-caps, inputs get soft
 radii and a gold focus ring; checkboxes check in gold. Works with Bootstrap's
 `.form-control`, `.form-select`, `.form-check`, and `.was-validated` states.
 
+### Homepage 3D hero
+`section.ngd-hero.ngd-section-dark` — full-viewport dark hero that slides up
+behind the transparent navbar (`--ngd-nav-height` sets the overlap). Put the
+visual in `div.ngd-hero3d-stage[data-ngd-hero3d]` with the inline SVG fallback
+inside; `assets/js/hero-3d.js` (ES module, Three.js pinned `0.185.1` via the
+import map in `index.html`) mounts the WebGL canvas and adds `.is-3d`, which
+hides the SVG. Pages opening on a dark hero also add `.ngd-navbar-dark` to the
+navbar for light brand/links/burger. The hero module handles: slow rotation,
+sparkle particles, pointer parallax (fine pointers only), mobile profile
+(fewer particles, lower DPR), `prefers-reduced-motion` (single still frame)
+and full static fallback when WebGL or the CDN is unavailable.
+
 ### Feedback & misc
 `.ngd-badge` (+ `.ngd-badge-dark`), `.ngd-alert` with `.ngd-alert-info` /
 `.ngd-alert-success` / `.ngd-alert-danger`, `.ngd-stat-value` + `.ngd-stat-label`.

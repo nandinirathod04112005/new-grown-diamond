@@ -11,7 +11,8 @@ Bootstrap 5 + vanilla JavaScript** frontend backed by **Supabase**
 | Global premium design system (white/black luxury theme) | ✅ done — see `styleguide.html` |
 | Supabase Step 4A — login, customer signup, session guards | ✅ done — needs your credentials |
 | Premium header + mobile navigation (glass, dropdown, offcanvas) | ✅ done |
-| Homepage sections, catalogue, admin management, storage, quotes | ⏳ upcoming steps |
+| Homepage 3D hero (Three.js diamond, SVG/WebGL fallback) | ✅ done |
+| Remaining homepage sections, catalogue, admin management, storage, quotes | ⏳ upcoming steps |
 
 ## Quick start
 
@@ -26,7 +27,7 @@ Bootstrap 5 + vanilla JavaScript** frontend backed by **Supabase**
 
 | Page | Purpose |
 |---|---|
-| `index.html` | Placeholder landing (full homepage designed in a later phase) |
+| `index.html` | Homepage with 3D diamond hero (Three.js + static SVG fallback) |
 | `diamonds.html` / `jewellery.html` | Collection placeholders ("arriving soon") linked from the header dropdown |
 | `login.html` | Sign in → role-based redirect from `public.profiles` |
 | `register.html` | Customer signup (`role` is assigned by the DB trigger, never the browser) |

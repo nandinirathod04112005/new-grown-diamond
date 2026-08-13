@@ -63,6 +63,9 @@
   --ngd-fast: 220ms;
   --ngd-slow: 480ms;
 
+  /* Layout constants */
+  --ngd-nav-height: 72px;
+
   /* Spacing scale */
   --ngd-space-1: 0.25rem;
   --ngd-space-2: 0.5rem;
@@ -926,7 +929,103 @@ code {
 }
 
 /* ------------------------------------------------------------
-   13. ACCESSIBILITY & RESPONSIVE GUARDS
+   13. HOMEPAGE 3D HERO
+   ------------------------------------------------------------
+   Compose: <section class="ngd-hero ngd-section-dark"> — the dark
+   band supplies colours, .ngd-hero supplies the stage layout.
+   The WebGL canvas is injected by assets/js/hero-3d.js; the inline
+   SVG fallback stays visible until .is-3d is added (and forever
+   when WebGL/JS is unavailable). */
+.ngd-hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 100vh;
+  min-height: 100svh;
+  /* Slide up behind the transparent sticky navbar so the dark
+     stage sits under it (the navbar band has no background of
+     its own until it gains .is-scrolled). */
+  margin-top: calc(-1 * var(--ngd-nav-height, 72px));
+  padding-block: calc(clamp(3.5rem, 7vw, 5.5rem) + var(--ngd-nav-height, 72px)) clamp(3.5rem, 7vw, 5.5rem);
+  overflow: hidden;
+}
+
+.ngd-hero3d-stage {
+  position: relative;
+  width: 100%;
+  max-width: 34rem;
+  aspect-ratio: 1 / 1;
+  margin-inline: auto;
+}
+
+/* Champagne aura behind the stone */
+.ngd-hero3d-stage::before {
+  content: "";
+  position: absolute;
+  inset: 6%;
+  border-radius: 50%;
+  background:
+      radial-gradient(circle at 50% 42%, rgba(217, 192, 138, 0.20), transparent 62%),
+      radial-gradient(circle at 50% 60%, rgba(255, 255, 255, 0.05), transparent 70%);
+  pointer-events: none;
+}
+
+.ngd-hero3d-stage canvas {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+
+.ngd-hero-fallback {
+  position: absolute;
+  inset: 12%;
+  width: 76%;
+  height: 76%;
+}
+
+.ngd-hero3d-stage.is-3d .ngd-hero-fallback { display: none; }
+
+@media (max-width: 991.98px) {
+  .ngd-hero { min-height: 0; }
+  .ngd-hero3d-stage { max-width: min(74vw, 23rem); }
+}
+
+/* ------------------------------------------------------------
+   13b. DARK NAVBAR VARIANT — for pages opening on a dark hero
+   ------------------------------------------------------------ */
+.ngd-navbar-dark .ngd-brand,
+.ngd-navbar-dark .ngd-nav .nav-link { color: #f4f2ee; }
+
+.ngd-navbar-dark .ngd-nav .nav-link:hover,
+.ngd-navbar-dark .ngd-nav .nav-link.active { color: var(--ngd-gold-soft); }
+
+.ngd-navbar-dark .ngd-brand-mark {
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.ngd-navbar-dark .ngd-burger span { background-color: #f4f2ee; }
+
+.ngd-navbar-dark .ngd-btn-outline {
+  border-color: rgba(255, 255, 255, 0.42);
+  color: #f4f2ee;
+}
+.ngd-navbar-dark .ngd-btn-outline:hover {
+  background-color: #ffffff;
+  border-color: #ffffff;
+  color: var(--ngd-black);
+}
+
+.ngd-navbar-dark .ngd-btn-dark {
+  background-color: #f4f2ee;
+  color: var(--ngd-black);
+}
+.ngd-navbar-dark .ngd-btn-dark:hover { background-color: #ffffff; color: var(--ngd-black); }
+
+/* ------------------------------------------------------------
+   14. ACCESSIBILITY & RESPONSIVE GUARDS
    ------------------------------------------------------------ */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }

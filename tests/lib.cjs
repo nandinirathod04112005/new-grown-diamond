@@ -76,8 +76,27 @@ async function installCdnRoutes(context) {
     'bootstrap.bundle.min.js': ['bootstrap/dist/js/bootstrap.bundle.min.js', 'application/javascript'],
     'supabase.js': ['@supabase/supabase-js/dist/umd/supabase.js', 'application/javascript'],
   };
+  /* three's package "exports" blocks require.resolve of arbitrary
+     subpaths — resolve its root dir instead and serve files from it. */
+  let threeRoot = null;
+  try {
+    threeRoot = path.join(path.dirname(require.resolve('three')), '..');
+  } catch (_e) { /* three not installed — hero tests will fail loudly */ }
+
   await context.route('https://cdn.jsdelivr.net/**', (route) => {
     const url = route.request().url();
+    const threeMatch = url.match(/cdn\.jsdelivr\.net\/npm\/three@[^/]+\/(.+?)(\?.*)?$/);
+    if (threeMatch && threeRoot) {
+      const file = path.join(threeRoot, threeMatch[1]);
+      if (file.startsWith(threeRoot) && fs.existsSync(file)) {
+        return route.fulfill({
+          status: 200,
+          contentType: 'application/javascript',
+          body: fs.readFileSync(file, 'utf8'),
+        });
+      }
+      return route.abort();
+    }
     for (const [suffix, [spec, type]] of Object.entries(assets)) {
       if (url.endsWith(suffix)) {
         return route.fulfill({
