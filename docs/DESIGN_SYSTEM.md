@@ -199,6 +199,16 @@ zoom via `.is-zoomed` on click with pointer-steered transform-origin, and the
 card lives in `assets/js/diamond-card.js` (window.NGDDiamondCard) and is used
 by both the inventory grid and the Similar-stones row.
 
+### Jewellery listing components
+Listing building blocks (`jewellery.html` + `assets/js/jewellery.js`):
+`.ngd-chip-row`/`.ngd-chip` category pills (gold when `.is-active`),
+`.ngd-jewel-cat` category eyebrow and `.ngd-weight-chip` optional diamond-weight
+tag on the atelier cards, light-context `.ngd-avail` overrides scoped to
+`.ngd-jewel-card`, and a hover sheen on `.ngd-jewel-media::after`. Demo data in
+`jewellery-data.js`; category art in `jewellery-art.js`; the controller's
+`loadJewellery()` is the seam for the future Supabase `jewellery` select.
+Toolbar + pagination reuse the inventory classes.
+
 ### Feedback & misc
 `.ngd-badge` (+ `.ngd-badge-dark`), `.ngd-alert` with `.ngd-alert-info` /
 `.ngd-alert-success` / `.ngd-alert-danger`, `.ngd-stat-value` + `.ngd-stat-label`.
