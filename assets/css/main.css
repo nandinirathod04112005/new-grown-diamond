@@ -1,0 +1,656 @@
+/* ============================================================
+   NEW GROWN DIAMOND — GLOBAL DESIGN SYSTEM
+   ------------------------------------------------------------
+   Premium white / black luxury theme with champagne-gold
+   accents, subtle glassmorphism and 3D card depth.
+
+   Load order (every page):
+     1. Bootstrap 5 CSS
+     2. this file (assets/css/main.css)
+
+   All classes are prefixed with `ngd-` so they never collide
+   with Bootstrap. Reuse these classes — do not copy the rules
+   into page-level stylesheets.
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   1. DESIGN TOKENS
+   ------------------------------------------------------------ */
+:root {
+  /* Palette — white/black luxury */
+  --ngd-white: #ffffff;
+  --ngd-ivory: #faf9f7;          /* default page background   */
+  --ngd-pearl: #f3f1ec;          /* alternate section wash    */
+  --ngd-black: #0c0c0e;          /* near-black surfaces       */
+  --ngd-charcoal: #17171b;       /* dark cards / navbars      */
+  --ngd-ink: #1b1b1f;            /* primary text              */
+  --ngd-slate: #6e6e76;          /* muted text                */
+  --ngd-line: rgba(12, 12, 14, 0.10);        /* hairlines on light */
+  --ngd-line-light: rgba(255, 255, 255, 0.16); /* hairlines on dark */
+
+  /* Champagne gold accent (kept subtle — trim, not paint) */
+  --ngd-gold: #b48c47;
+  --ngd-gold-deep: #8f6d31;      /* AA-friendly on white      */
+  --ngd-gold-soft: #d9c08a;
+  --ngd-gold-grad: linear-gradient(135deg, #cfae6e 0%, #b48c47 55%, #9a763a 100%);
+
+  /* Typography */
+  --ngd-font-display: "Playfair Display", "Georgia", "Times New Roman", serif;
+  --ngd-font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+
+  /* Depth — layered, soft, never harsh */
+  --ngd-shadow-soft:
+      0 1px 2px rgba(12, 12, 14, 0.04),
+      0 10px 28px rgba(12, 12, 14, 0.07);
+  --ngd-shadow-deep:
+      0 2px 6px rgba(12, 12, 14, 0.05),
+      0 18px 44px rgba(12, 12, 14, 0.11),
+      0 34px 90px rgba(12, 12, 14, 0.08);
+  --ngd-shadow-float:
+      0 4px 10px rgba(12, 12, 14, 0.06),
+      0 26px 60px rgba(12, 12, 14, 0.16),
+      0 50px 120px rgba(12, 12, 14, 0.10);
+  --ngd-shadow-gold: 0 10px 30px rgba(180, 140, 71, 0.28);
+
+  /* Shape */
+  --ngd-radius-sm: 0.65rem;
+  --ngd-radius: 1.15rem;
+  --ngd-radius-lg: 1.75rem;
+  --ngd-radius-pill: 999px;
+
+  /* Motion */
+  --ngd-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ngd-fast: 220ms;
+  --ngd-slow: 480ms;
+
+  /* Spacing scale */
+  --ngd-space-1: 0.25rem;
+  --ngd-space-2: 0.5rem;
+  --ngd-space-3: 1rem;
+  --ngd-space-4: 1.5rem;
+  --ngd-space-5: 2.5rem;
+  --ngd-space-6: 4rem;
+  --ngd-space-7: 6rem;
+  --ngd-space-8: 8.5rem;
+}
+
+/* ------------------------------------------------------------
+   2. BASE
+   ------------------------------------------------------------ */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--ngd-font-body);
+  background-color: var(--ngd-ivory);
+  color: var(--ngd-ink);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+::selection {
+  background: rgba(180, 140, 71, 0.25);
+}
+
+/* Inline code — keep it in the luxury palette, not Bootstrap pink */
+code {
+  color: var(--ngd-gold-deep);
+  background: rgba(180, 140, 71, 0.10);
+  border-radius: 0.3rem;
+  padding: 0.1rem 0.35rem;
+  font-size: 0.85em;
+}
+
+.ngd-card-dark code,
+.ngd-section-dark code,
+.ngd-glass-dark code {
+  color: var(--ngd-gold-soft);
+  background: rgba(217, 192, 138, 0.12);
+}
+
+/* Subtle ambient backdrop — faint champagne glow on ivory */
+.ngd-backdrop {
+  background-color: var(--ngd-ivory);
+  background-image:
+      radial-gradient(60rem 34rem at 85% -10%, rgba(180, 140, 71, 0.10), transparent 60%),
+      radial-gradient(46rem 30rem at -10% 110%, rgba(12, 12, 14, 0.05), transparent 55%);
+  background-attachment: fixed;
+}
+
+/* ------------------------------------------------------------
+   3. TYPOGRAPHY
+   ------------------------------------------------------------ */
+.ngd-display-1,
+.ngd-display-2,
+.ngd-title,
+.ngd-serif {
+  font-family: var(--ngd-font-display);
+  color: inherit;
+}
+
+.ngd-display-1 {
+  font-size: clamp(2.6rem, 5.5vw, 4.4rem);
+  font-weight: 600;
+  line-height: 1.08;
+  letter-spacing: -0.015em;
+}
+
+.ngd-display-2 {
+  font-size: clamp(1.9rem, 3.4vw, 2.8rem);
+  font-weight: 600;
+  line-height: 1.14;
+  letter-spacing: -0.01em;
+}
+
+.ngd-title {
+  font-size: clamp(1.25rem, 2vw, 1.55rem);
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.ngd-eyebrow {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--ngd-gold-deep);
+}
+
+.ngd-lead {
+  font-size: clamp(1.02rem, 1.4vw, 1.2rem);
+  font-weight: 400;
+  line-height: 1.75;
+  color: var(--ngd-slate);
+}
+
+.ngd-text-muted { color: var(--ngd-slate); }
+.ngd-text-gold  { color: var(--ngd-gold-deep); }
+
+.ngd-italic-accent {
+  font-family: var(--ngd-font-display);
+  font-style: italic;
+  font-weight: 500;
+  color: var(--ngd-gold-deep);
+}
+
+/* ------------------------------------------------------------
+   4. LAYOUT — sections, containers, dividers
+   ------------------------------------------------------------ */
+.ngd-section {
+  padding-block: clamp(3.5rem, 9vw, 7rem);
+}
+
+.ngd-section-tight {
+  padding-block: clamp(2.25rem, 5vw, 3.75rem);
+}
+
+/* Dark luxury band — near-black with a faint gold aura */
+.ngd-section-dark {
+  background-color: var(--ngd-black);
+  background-image:
+      radial-gradient(50rem 26rem at 78% 0%, rgba(180, 140, 71, 0.14), transparent 60%),
+      radial-gradient(38rem 22rem at 8% 100%, rgba(255, 255, 255, 0.05), transparent 55%);
+  color: #f4f2ee;
+}
+
+.ngd-section-dark .ngd-lead { color: rgba(244, 242, 238, 0.72); }
+.ngd-section-dark .ngd-eyebrow { color: var(--ngd-gold-soft); }
+
+.ngd-section-pearl { background-color: var(--ngd-pearl); }
+
+.ngd-divider {
+  width: 64px;
+  height: 2px;
+  border: 0;
+  margin: 1.25rem 0;
+  opacity: 1;
+  background: var(--ngd-gold-grad);
+}
+
+.ngd-divider-center { margin-left: auto; margin-right: auto; }
+
+.ngd-hairline {
+  border: 0;
+  border-top: 1px solid var(--ngd-line);
+  opacity: 1;
+}
+
+/* ------------------------------------------------------------
+   5. SURFACES — cards, 3D depth, glass
+   ------------------------------------------------------------ */
+.ngd-card {
+  position: relative;
+  background-color: var(--ngd-white);
+  border: 1px solid var(--ngd-line);
+  border-radius: var(--ngd-radius);
+  box-shadow: var(--ngd-shadow-soft);
+  padding: clamp(1.4rem, 2.4vw, 2.25rem);
+}
+
+/* 3D depth: lift + perspective tilt on hover.
+   Add data-ngd-tilt for the pointer-follow tilt (ui.js).      */
+.ngd-card-3d {
+  transform-style: preserve-3d;
+  will-change: transform;
+  transition:
+      transform var(--ngd-slow) var(--ngd-ease),
+      box-shadow var(--ngd-slow) var(--ngd-ease),
+      border-color var(--ngd-fast) var(--ngd-ease);
+}
+
+.ngd-card-3d:hover {
+  transform: translateY(-8px) perspective(900px) rotateX(1.4deg);
+  box-shadow: var(--ngd-shadow-float);
+  border-color: rgba(180, 140, 71, 0.35);
+}
+
+/* Inner elements can float above the card plane on hover */
+.ngd-card-3d .ngd-depth-1 { transition: transform var(--ngd-slow) var(--ngd-ease); }
+.ngd-card-3d:hover .ngd-depth-1 { transform: translateZ(26px); }
+
+.ngd-card-dark {
+  background-color: var(--ngd-charcoal);
+  border-color: var(--ngd-line-light);
+  color: #f4f2ee;
+}
+
+.ngd-card-dark .ngd-text-muted,
+.ngd-card-dark .ngd-lead { color: rgba(244, 242, 238, 0.68); }
+
+/* Glassmorphism — subtle, jewellery-showcase style */
+.ngd-glass {
+  background-color: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow: var(--ngd-shadow-soft);
+}
+
+.ngd-glass-dark {
+  background-color: rgba(18, 18, 22, 0.60);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #f4f2ee;
+  box-shadow: var(--ngd-shadow-deep);
+}
+
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .ngd-glass {
+    background-color: rgba(255, 255, 255, 0.55);
+    -webkit-backdrop-filter: blur(16px) saturate(1.5);
+    backdrop-filter: blur(16px) saturate(1.5);
+  }
+  .ngd-glass-dark {
+    background-color: rgba(18, 18, 22, 0.45);
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+    backdrop-filter: blur(16px) saturate(1.4);
+  }
+}
+
+/* Small square tile for feature icons */
+.ngd-icon-tile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: var(--ngd-radius-sm);
+  border: 1px solid rgba(180, 140, 71, 0.35);
+  background: linear-gradient(160deg, rgba(217, 192, 138, 0.16), rgba(180, 140, 71, 0.05));
+  color: var(--ngd-gold-deep);
+  font-size: 1.15rem;
+}
+
+/* ------------------------------------------------------------
+   6. BUTTONS — slim, uppercase, letter-spaced
+   ------------------------------------------------------------ */
+.ngd-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  padding: 0.78rem 1.7rem;
+  border: 1px solid transparent;
+  border-radius: var(--ngd-radius-pill);
+  font-family: var(--ngd-font-body);
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+      transform var(--ngd-fast) var(--ngd-ease),
+      box-shadow var(--ngd-fast) var(--ngd-ease),
+      background-color var(--ngd-fast) var(--ngd-ease),
+      color var(--ngd-fast) var(--ngd-ease),
+      border-color var(--ngd-fast) var(--ngd-ease);
+}
+
+.ngd-btn:hover { transform: translateY(-2px); }
+.ngd-btn:active { transform: translateY(0); }
+
+.ngd-btn:focus-visible {
+  outline: 2px solid var(--ngd-gold);
+  outline-offset: 3px;
+}
+
+.ngd-btn:disabled,
+.ngd-btn.disabled {
+  opacity: 0.55;
+  pointer-events: none;
+  transform: none;
+}
+
+.ngd-btn-dark {
+  background-color: var(--ngd-black);
+  color: #f7f5f1;
+}
+.ngd-btn-dark:hover {
+  background-color: #1f1f24;
+  color: #ffffff;
+  box-shadow: var(--ngd-shadow-deep);
+}
+
+.ngd-btn-gold {
+  background: var(--ngd-gold-grad);
+  color: #17130a;
+}
+.ngd-btn-gold:hover {
+  color: #0c0a05;
+  box-shadow: var(--ngd-shadow-gold);
+}
+
+.ngd-btn-outline {
+  border-color: rgba(12, 12, 14, 0.35);
+  color: var(--ngd-ink);
+  background-color: transparent;
+}
+.ngd-btn-outline:hover {
+  background-color: var(--ngd-black);
+  border-color: var(--ngd-black);
+  color: #f7f5f1;
+}
+
+/* For use on dark surfaces */
+.ngd-btn-ghost {
+  border-color: rgba(255, 255, 255, 0.38);
+  color: #f4f2ee;
+  background-color: transparent;
+}
+.ngd-btn-ghost:hover {
+  background-color: rgba(255, 255, 255, 0.94);
+  border-color: rgba(255, 255, 255, 0.94);
+  color: var(--ngd-black);
+}
+
+.ngd-btn-lg { padding: 0.95rem 2.2rem; font-size: 0.8rem; }
+.ngd-btn-sm { padding: 0.55rem 1.15rem; font-size: 0.68rem; letter-spacing: 0.18em; }
+.ngd-btn-block { width: 100%; }
+
+/* Understated text link with an animated gold underline */
+.ngd-link {
+  position: relative;
+  display: inline-block;
+  color: var(--ngd-ink);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color var(--ngd-fast) var(--ngd-ease);
+}
+.ngd-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -3px;
+  width: 100%;
+  height: 1px;
+  background: var(--ngd-gold-grad);
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform var(--ngd-slow) var(--ngd-ease);
+}
+.ngd-link:hover { color: var(--ngd-gold-deep); }
+.ngd-link:hover::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+/* ------------------------------------------------------------
+   7. NAVBAR — transparent, turns to glass on scroll
+   ------------------------------------------------------------ */
+.ngd-navbar {
+  transition:
+      background-color var(--ngd-fast) var(--ngd-ease),
+      box-shadow var(--ngd-fast) var(--ngd-ease),
+      border-color var(--ngd-fast) var(--ngd-ease);
+  border-bottom: 1px solid transparent;
+  padding-block: 0.9rem;
+}
+
+.ngd-navbar.is-scrolled {
+  background-color: rgba(255, 255, 255, 0.72);
+  border-bottom-color: var(--ngd-line);
+  box-shadow: 0 8px 30px rgba(12, 12, 14, 0.06);
+}
+
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .ngd-navbar.is-scrolled {
+    background-color: rgba(255, 255, 255, 0.55);
+    -webkit-backdrop-filter: blur(14px) saturate(1.5);
+    backdrop-filter: blur(14px) saturate(1.5);
+  }
+}
+
+.ngd-navbar-dark.is-scrolled {
+  background-color: rgba(12, 12, 14, 0.62);
+  border-bottom-color: var(--ngd-line-light);
+}
+
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .ngd-navbar-dark.is-scrolled {
+    background-color: rgba(12, 12, 14, 0.5);
+    -webkit-backdrop-filter: blur(14px) saturate(1.4);
+    backdrop-filter: blur(14px) saturate(1.4);
+  }
+}
+
+.ngd-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: var(--ngd-font-display);
+  font-size: 1.18rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--ngd-ink);
+  text-decoration: none;
+}
+.ngd-brand:hover { color: var(--ngd-ink); }
+
+.ngd-brand-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: var(--ngd-radius-sm);
+  background: var(--ngd-black);
+  color: var(--ngd-gold-soft);
+  font-size: 0.95rem;
+  box-shadow: var(--ngd-shadow-soft);
+}
+
+.ngd-nav .nav-link {
+  color: var(--ngd-ink);
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding-inline: 0.9rem;
+  transition: color var(--ngd-fast) var(--ngd-ease);
+}
+.ngd-nav .nav-link:hover,
+.ngd-nav .nav-link.active { color: var(--ngd-gold-deep); }
+
+/* ------------------------------------------------------------
+   8. FORMS — premium inputs (wrap the form in .ngd-form)
+   ------------------------------------------------------------ */
+.ngd-form .form-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ngd-slate);
+  margin-bottom: 0.45rem;
+}
+
+.ngd-form .form-control,
+.ngd-form .form-select {
+  border-radius: var(--ngd-radius-sm);
+  border: 1px solid var(--ngd-line);
+  background-color: var(--ngd-white);
+  color: var(--ngd-ink);
+  padding: 0.72rem 0.95rem;
+  font-size: 0.95rem;
+  transition:
+      border-color var(--ngd-fast) var(--ngd-ease),
+      box-shadow var(--ngd-fast) var(--ngd-ease);
+}
+
+.ngd-form .form-control::placeholder { color: #a6a6ad; }
+
+.ngd-form .form-control:focus,
+.ngd-form .form-select:focus {
+  border-color: var(--ngd-gold);
+  box-shadow: 0 0 0 0.22rem rgba(180, 140, 71, 0.18);
+}
+
+.ngd-form .form-check-input:checked {
+  background-color: var(--ngd-gold-deep);
+  border-color: var(--ngd-gold-deep);
+}
+
+.ngd-form .form-check-input:focus {
+  border-color: var(--ngd-gold);
+  box-shadow: 0 0 0 0.22rem rgba(180, 140, 71, 0.18);
+}
+
+.ngd-form .form-text { color: var(--ngd-slate); }
+
+/* ------------------------------------------------------------
+   9. SMALL PIECES — badges, alerts, stats
+   ------------------------------------------------------------ */
+.ngd-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.34rem 0.85rem;
+  border-radius: var(--ngd-radius-pill);
+  border: 1px solid rgba(180, 140, 71, 0.45);
+  background: rgba(217, 192, 138, 0.14);
+  color: var(--ngd-gold-deep);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.ngd-badge-dark {
+  border-color: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.08);
+  color: #f4f2ee;
+}
+
+.ngd-alert {
+  border: 1px solid var(--ngd-line);
+  border-left: 3px solid var(--ngd-gold);
+  border-radius: var(--ngd-radius-sm);
+  background-color: var(--ngd-white);
+  box-shadow: var(--ngd-shadow-soft);
+  padding: 0.9rem 1.1rem;
+  font-size: 0.92rem;
+}
+
+.ngd-alert-danger  { border-left-color: #b04343; color: #7d2f2f; }
+.ngd-alert-success { border-left-color: #4e7d51; color: #38573a; }
+.ngd-alert-info    { border-left-color: var(--ngd-gold); color: var(--ngd-ink); }
+
+.ngd-stat-value {
+  font-family: var(--ngd-font-display);
+  font-size: clamp(1.9rem, 3vw, 2.6rem);
+  font-weight: 600;
+  line-height: 1;
+}
+
+.ngd-stat-label {
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ngd-slate);
+}
+
+/* ------------------------------------------------------------
+   10. UTILITIES — depth, hover, motion
+   ------------------------------------------------------------ */
+.ngd-shadow-soft  { box-shadow: var(--ngd-shadow-soft); }
+.ngd-shadow-deep  { box-shadow: var(--ngd-shadow-deep); }
+.ngd-shadow-float { box-shadow: var(--ngd-shadow-float); }
+
+.ngd-hover-lift {
+  transition:
+      transform var(--ngd-fast) var(--ngd-ease),
+      box-shadow var(--ngd-fast) var(--ngd-ease);
+}
+.ngd-hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--ngd-shadow-deep);
+}
+
+.ngd-radius     { border-radius: var(--ngd-radius); }
+.ngd-radius-lg  { border-radius: var(--ngd-radius-lg); }
+
+/* Scroll reveal — ui.js adds .is-visible via IntersectionObserver */
+.ngd-reveal {
+  opacity: 0;
+  transform: translateY(22px);
+  transition:
+      opacity 700ms var(--ngd-ease),
+      transform 700ms var(--ngd-ease);
+}
+.ngd-reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+.ngd-reveal-delay-1 { transition-delay: 90ms; }
+.ngd-reveal-delay-2 { transition-delay: 180ms; }
+.ngd-reveal-delay-3 { transition-delay: 270ms; }
+
+/* ------------------------------------------------------------
+   11. ACCESSIBILITY & RESPONSIVE GUARDS
+   ------------------------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .ngd-reveal { opacity: 1; transform: none; transition: none; }
+  .ngd-card-3d,
+  .ngd-card-3d:hover,
+  .ngd-btn,
+  .ngd-btn:hover,
+  .ngd-hover-lift,
+  .ngd-hover-lift:hover {
+    transition: none;
+    transform: none;
+  }
+}
+
+/* Tablet & below — soften the depth, tighten rhythm */
+@media (max-width: 991.98px) {
+  .ngd-card-3d:hover { transform: translateY(-4px); }
+}
+
+/* Phones — no hover-dependent motion, comfortable tap targets */
+@media (max-width: 575.98px) {
+  .ngd-btn { padding: 0.8rem 1.4rem; }
+  .ngd-btn-block-sm { width: 100%; }
+  .ngd-card { padding: 1.25rem; }
+}

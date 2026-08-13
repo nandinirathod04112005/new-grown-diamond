@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Design System — New Grown Diamond</title>
+  <meta name="description" content="Global premium design system reference for the New Grown Diamond frontend.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50 8 88 38 50 92 12 38' fill='%23b48c47'/%3E%3C/svg%3E">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Global design system -->
+  <link href="assets/css/main.css" rel="stylesheet">
+</head>
+<body class="ngd-backdrop">
+
+  <!-- ══════════ NAVBAR (glass on scroll) ══════════ -->
+  <nav class="navbar navbar-expand-lg sticky-top ngd-navbar">
+    <div class="container">
+      <a class="ngd-brand" href="index.html">
+        <span class="ngd-brand-mark">◆</span>
+        <span>New Grown Diamond</span>
+      </a>
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#sgNav" aria-controls="sgNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="sgNav">
+        <ul class="navbar-nav ms-auto ngd-nav align-items-lg-center">
+          <li class="nav-item"><a class="nav-link active" href="#colours">Colours</a></li>
+          <li class="nav-item"><a class="nav-link" href="#type">Type</a></li>
+          <li class="nav-item"><a class="nav-link" href="#buttons">Buttons</a></li>
+          <li class="nav-item"><a class="nav-link" href="#cards">Cards</a></li>
+          <li class="nav-item"><a class="nav-link" href="#forms">Forms</a></li>
+          <li class="nav-item ms-lg-3 mt-2 mt-lg-0">
+            <a class="ngd-btn ngd-btn-dark ngd-btn-sm" href="login.html">Sign in</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ══════════ HERO ══════════ -->
+  <header class="ngd-section">
+    <div class="container">
+      <div class="row justify-content-center text-center">
+        <div class="col-lg-9 ngd-reveal">
+          <span class="ngd-eyebrow">Design System · Reference</span>
+          <h1 class="ngd-display-1 mt-3">Quiet luxury,<br>engineered in <span class="ngd-italic-accent">light</span>.</h1>
+          <hr class="ngd-divider ngd-divider-center">
+          <p class="ngd-lead mx-auto" style="max-width: 42rem;">
+            The global visual language for New Grown Diamond — a white &amp; black
+            palette trimmed with champagne gold, soft glass, and restrained 3D depth.
+            Every element on this page is a reusable class.
+          </p>
+          <div class="d-flex flex-wrap justify-content-center gap-3 mt-4">
+            <a class="ngd-btn ngd-btn-gold" href="#cards">Explore surfaces</a>
+            <a class="ngd-btn ngd-btn-outline" href="#type">Typography</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ══════════ COLOURS ══════════ -->
+  <section id="colours" class="ngd-section-tight">
+    <div class="container">
+      <div class="ngd-reveal">
+        <span class="ngd-eyebrow">01 — Palette</span>
+        <h2 class="ngd-display-2 mt-2">Colours</h2>
+        <hr class="ngd-divider">
+      </div>
+      <div class="row g-4 mt-1">
+        <div class="col-6 col-md-4 col-lg-2 ngd-reveal">
+          <div class="ngd-card ngd-hover-lift p-3 h-100">
+            <div class="ngd-radius mb-3" style="height:72px;background:var(--ngd-ivory);border:1px solid var(--ngd-line);"></div>
+            <strong class="d-block small">Ivory</strong>
+            <span class="ngd-text-muted small">--ngd-ivory</span>
+          </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2 ngd-reveal ngd-reveal-delay-1">
+          <div class="ngd-card ngd-hover-lift p-3 h-100">
+            <div class="ngd-radius mb-3" style="height:72px;background:var(--ngd-white);border:1px solid var(--ngd-line);"></div>
+            <strong class="d-block small">White</strong>
+            <span class="ngd-text-muted small">--ngd-white</span>
+          </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2 ngd-reveal ngd-reveal-delay-1">
+          <div class="ngd-card ngd-hover-lift p-3 h-100">
+            <div class="ngd-radius mb-3" style="height:72px;background:var(--ngd-black);"></div>
+            <strong class="d-block small">Noir</strong>
+            <span class="ngd-text-muted small">--ngd-black</span>
+          </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2 ngd-reveal ngd-reveal-delay-2">
+          <div class="ngd-card ngd-hover-lift p-3 h-100">
+            <div class="ngd-radius mb-3" style="height:72px;background:var(--ngd-charcoal);"></div>
+            <strong class="d-block small">Charcoal</strong>
+            <span class="ngd-text-muted small">--ngd-charcoal</span>
+          </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2 ngd-reveal ngd-reveal-delay-2">
+          <div class="ngd-card ngd-hover-lift p-3 h-100">
+            <div class="ngd-radius mb-3" style="height:72px;background:var(--ngd-gold-grad);"></div>
+            <strong class="d-block small">Champagne</strong>
+            <span class="ngd-text-muted small">--ngd-gold-grad</span>
+          </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2 ngd-reveal ngd-reveal-delay-3">
+          <div class="ngd-card ngd-hover-lift p-3 h-100">
+            <div class="ngd-radius mb-3" style="height:72px;background:var(--ngd-slate);"></div>
+            <strong class="d-block small">Slate</strong>
+            <span class="ngd-text-muted small">--ngd-slate</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ TYPOGRAPHY ══════════ -->
+  <section id="type" class="ngd-section-tight">
+    <div class="container">
+      <div class="ngd-reveal">
+        <span class="ngd-eyebrow">02 — Typography</span>
+        <h2 class="ngd-display-2 mt-2">Type scale</h2>
+        <hr class="ngd-divider">
+      </div>
+      <div class="ngd-card ngd-reveal mt-3">
+        <p class="ngd-eyebrow mb-4">.ngd-eyebrow — Eyebrow label</p>
+        <p class="ngd-display-1 mb-3">Display One <span class="ngd-italic-accent">Aa</span></p>
+        <p class="ngd-display-2 mb-3">Display Two — section headings</p>
+        <p class="ngd-title mb-3">Title — card and panel headings</p>
+        <p class="ngd-lead mb-3">Lead — long-form introductions set in a relaxed, generous line height for effortless reading.</p>
+        <p class="mb-1">Body — Inter, the workhorse for interface copy and paragraphs.</p>
+        <p class="ngd-text-muted mb-0">Muted — secondary information and captions.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ BUTTONS ══════════ -->
+  <section id="buttons" class="ngd-section-tight">
+    <div class="container">
+      <div class="ngd-reveal">
+        <span class="ngd-eyebrow">03 — Actions</span>
+        <h2 class="ngd-display-2 mt-2">Buttons &amp; links</h2>
+        <hr class="ngd-divider">
+      </div>
+      <div class="ngd-card ngd-reveal mt-3">
+        <div class="d-flex flex-wrap align-items-center gap-3">
+          <button type="button" class="ngd-btn ngd-btn-gold">Gold — primary</button>
+          <button type="button" class="ngd-btn ngd-btn-dark">Dark — secondary</button>
+          <button type="button" class="ngd-btn ngd-btn-outline">Outline</button>
+          <button type="button" class="ngd-btn ngd-btn-gold" disabled>Disabled</button>
+          <button type="button" class="ngd-btn ngd-btn-dark" disabled>
+            <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+            Working…
+          </button>
+        </div>
+        <hr class="ngd-hairline my-4">
+        <div class="d-flex flex-wrap align-items-center gap-3">
+          <button type="button" class="ngd-btn ngd-btn-gold ngd-btn-lg">Large</button>
+          <button type="button" class="ngd-btn ngd-btn-outline ngd-btn-sm">Small</button>
+          <a href="#buttons" class="ngd-link">Text link with gold underline</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ CARDS & DEPTH ══════════ -->
+  <section id="cards" class="ngd-section-tight">
+    <div class="container">
+      <div class="ngd-reveal">
+        <span class="ngd-eyebrow">04 — Surfaces</span>
+        <h2 class="ngd-display-2 mt-2">Cards, depth &amp; glass</h2>
+        <hr class="ngd-divider">
+      </div>
+      <div class="row g-4 mt-1 align-items-stretch">
+        <div class="col-md-6 col-lg-4 ngd-reveal">
+          <div class="ngd-card ngd-card-3d h-100" data-ngd-tilt>
+            <span class="ngd-icon-tile ngd-depth-1 mb-3">◆</span>
+            <h3 class="ngd-title">3D card</h3>
+            <p class="ngd-text-muted mb-0">
+              <code>.ngd-card .ngd-card-3d</code> — lifts on hover with layered
+              shadows; add <code>data-ngd-tilt</code> for a gentle pointer-follow tilt.
+            </p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4 ngd-reveal ngd-reveal-delay-1">
+          <div class="ngd-card ngd-card-3d ngd-card-dark h-100" data-ngd-tilt>
+            <span class="ngd-badge ngd-badge-dark ngd-depth-1 mb-3">Noir</span>
+            <h3 class="ngd-title">Dark card</h3>
+            <p class="mb-0" style="color:rgba(244,242,238,.68);">
+              <code class="text-white-50">.ngd-card-dark</code> — charcoal surface
+              for contrast moments and premium framing.
+            </p>
+          </div>
+        </div>
+        <div class="col-lg-4 ngd-reveal ngd-reveal-delay-2">
+          <!-- Glass needs something behind it to blur -->
+          <div class="h-100 ngd-radius p-3 d-flex align-items-stretch"
+               style="background:
+                        radial-gradient(18rem 12rem at 20% 15%, rgba(217,192,138,.75), transparent 60%),
+                        radial-gradient(20rem 14rem at 85% 90%, rgba(180,140,71,.5), transparent 65%),
+                        linear-gradient(150deg, #23232a, #0c0c0e);">
+            <div class="ngd-card ngd-glass-dark ngd-card-3d w-100 my-auto" data-ngd-tilt>
+              <h3 class="ngd-title">Glass panel</h3>
+              <p class="mb-0" style="color:rgba(244,242,238,.72);">
+                <code class="text-white-50">.ngd-glass / .ngd-glass-dark</code> —
+                frosted panels with graceful fallbacks.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ DARK BAND ══════════ -->
+  <section class="ngd-section ngd-section-dark mt-4">
+    <div class="container">
+      <div class="row align-items-center g-4 g-lg-5">
+        <div class="col-lg-6 ngd-reveal">
+          <span class="ngd-eyebrow">05 — Dark sections</span>
+          <h2 class="ngd-display-2 mt-2 text-white">Grown by science.<br>Finished like heritage.</h2>
+          <hr class="ngd-divider">
+          <p class="ngd-lead">
+            <code class="text-white-50">.ngd-section-dark</code> pairs a near-black
+            canvas with a faint champagne aura — the stage for hero and closing bands.
+          </p>
+          <a href="#top" class="ngd-btn ngd-btn-ghost mt-2">Ghost button</a>
+        </div>
+        <div class="col-lg-6">
+          <div class="row g-4">
+            <div class="col-6 ngd-reveal">
+              <div class="ngd-card ngd-card-dark ngd-hover-lift text-center">
+                <div class="ngd-stat-value ngd-text-gold">100%</div>
+                <div class="ngd-stat-label mt-2">Lab grown</div>
+              </div>
+            </div>
+            <div class="col-6 ngd-reveal ngd-reveal-delay-1">
+              <div class="ngd-card ngd-card-dark ngd-hover-lift text-center">
+                <div class="ngd-stat-value ngd-text-gold">IGI</div>
+                <div class="ngd-stat-label mt-2">Certified</div>
+              </div>
+            </div>
+            <div class="col-6 ngd-reveal ngd-reveal-delay-2">
+              <div class="ngd-card ngd-card-dark ngd-hover-lift text-center">
+                <div class="ngd-stat-value ngd-text-gold">D–VS</div>
+                <div class="ngd-stat-label mt-2">Colour · Clarity</div>
+              </div>
+            </div>
+            <div class="col-6 ngd-reveal ngd-reveal-delay-3">
+              <div class="ngd-card ngd-card-dark ngd-hover-lift text-center">
+                <div class="ngd-stat-value ngd-text-gold">∞</div>
+                <div class="ngd-stat-label mt-2">Brilliance</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ FORMS ══════════ -->
+  <section id="forms" class="ngd-section-tight mt-3">
+    <div class="container">
+      <div class="ngd-reveal">
+        <span class="ngd-eyebrow">06 — Forms</span>
+        <h2 class="ngd-display-2 mt-2">Form elements</h2>
+        <hr class="ngd-divider">
+      </div>
+      <div class="row g-4 mt-1">
+        <div class="col-lg-7 ngd-reveal">
+          <form class="ngd-card ngd-form" onsubmit="return false;">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label" for="sg-name">Full name</label>
+                <input type="text" class="form-control" id="sg-name" placeholder="Aarav Shah">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label" for="sg-email">Email</label>
+                <input type="email" class="form-control" id="sg-email" placeholder="you@example.com">
+              </div>
+              <div class="col-12">
+                <label class="form-label" for="sg-msg">Message</label>
+                <textarea class="form-control" id="sg-msg" rows="3" placeholder="Wrap any form in .ngd-form to inherit this styling."></textarea>
+              </div>
+              <div class="col-12 d-flex align-items-center justify-content-between flex-wrap gap-3">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="sg-check" checked>
+                  <label class="form-check-label small" for="sg-check">Gold-checked control</label>
+                </div>
+                <button class="ngd-btn ngd-btn-gold" type="submit">Submit</button>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="col-lg-5 ngd-reveal ngd-reveal-delay-1">
+          <div class="d-flex flex-column gap-3 h-100 justify-content-center">
+            <span class="ngd-badge align-self-start">Badge — Lab certified</span>
+            <div class="ngd-alert ngd-alert-info" role="alert">Info alert — <code>.ngd-alert.ngd-alert-info</code></div>
+            <div class="ngd-alert ngd-alert-success" role="alert">Success alert — request completed.</div>
+            <div class="ngd-alert ngd-alert-danger" role="alert">Danger alert — something needs attention.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ FOOTER ══════════ -->
+  <footer class="ngd-section-tight">
+    <div class="container">
+      <hr class="ngd-hairline mb-4">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <span class="ngd-text-muted small">© New Grown Diamond — Global design system v1</span>
+        <span class="ngd-eyebrow">White · Noir · Champagne</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="assets/js/ui.js"></script>
+</body>
+</html>
