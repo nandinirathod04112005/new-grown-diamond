@@ -1,0 +1,220 @@
+/* ============================================================
+   NEW GROWN DIAMOND — CUSTOMER SIGNUP (Supabase Auth)
+   ------------------------------------------------------------
+   - Validates the form, then supabase.auth.signUp()
+   - Sends ONLY safe metadata: full_name, company_name, phone.
+     The role is NEVER sent from the browser — the database
+     trigger creates the profiles row with role = 'customer'.
+   - Email confirmation ON  → success message, stay on page
+   - Email confirmation OFF → session returned → customer dashboard
+   ============================================================ */
+(function () {
+  'use strict';
+
+  var GENERIC_ERROR = 'Sign up failed. Please try again later.';
+  var NETWORK_ERROR =
+    'Unable to reach the sign-up service. Please check your connection and try again.';
+  var ALREADY_REGISTERED =
+    'An account with this email already exists. Please sign in instead.';
+  var WEAK_PASSWORD =
+    'Please choose a stronger password (at least 8 characters).';
+  var RATE_LIMITED = 'Too many attempts. Please wait a moment and try again.';
+  var SERVICE_DOWN =
+    'The sign-up service is temporarily unavailable. Please try again shortly.';
+  var NOT_CONFIGURED =
+    'Supabase is not configured yet — add your project details in assets/js/supabase-config.js.';
+  var CONFIRM_EMAIL_MSG =
+    'Account created. Please verify your email before signing in.';
+
+  function $(id) {
+    return document.getElementById(id);
+  }
+
+  function showAlert(type, message) {
+    var box = $('register-alert');
+    if (!box) return;
+    box.innerHTML = '';
+    var div = document.createElement('div');
+    div.className = 'ngd-alert ngd-alert-' + type;
+    div.setAttribute('role', 'alert');
+    div.textContent = message;
+    box.appendChild(div);
+    box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function clearAlert() {
+    var box = $('register-alert');
+    if (box) box.innerHTML = '';
+  }
+
+  function setLoading(loading) {
+    var btn = $('register-submit');
+    if (!btn) return;
+    if (loading) {
+      btn.disabled = true;
+      btn.innerHTML =
+        '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span>' +
+        '<span>Creating account…</span>';
+    } else {
+      btn.disabled = false;
+      btn.textContent = 'Create account';
+    }
+  }
+
+  function mapSignupError(error) {
+    if (!error) return GENERIC_ERROR;
+    console.error('[NGD Signup] auth error:', error);
+
+    var code = error.code || '';
+    var msg = error.message || '';
+    var status = typeof error.status === 'number' ? error.status : -1;
+
+    if (
+      error.name === 'AuthRetryableFetchError' ||
+      status === 0 ||
+      /failed to fetch|networkerror|load failed|fetch failed/i.test(msg)
+    ) {
+      return NETWORK_ERROR;
+    }
+    if (code === 'user_already_exists' || /already registered/i.test(msg)) {
+      return ALREADY_REGISTERED;
+    }
+    if (code === 'weak_password' || /password/i.test(msg) && status === 422) {
+      return WEAK_PASSWORD;
+    }
+    if (status === 429 || /rate limit/i.test(code + ' ' + msg)) {
+      return RATE_LIMITED;
+    }
+    if (status >= 500) {
+      return SERVICE_DOWN;
+    }
+    return GENERIC_ERROR;
+  }
+
+  /** Keep the confirm-password field's validity in sync. */
+  function syncConfirmValidity() {
+    var password = $('reg-password');
+    var confirm = $('reg-confirm');
+    if (!password || !confirm) return;
+    confirm.setCustomValidity(
+      password.value === confirm.value ? '' : 'Passwords do not match.'
+    );
+  }
+
+  async function onSubmit(event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    var form = $('ngd-register-form');
+    clearAlert();
+    syncConfirmValidity();
+
+    if (!form.checkValidity()) {
+      form.classList.add('was-validated');
+      return;
+    }
+    form.classList.add('was-validated');
+
+    if (!window.ngdSupabase) {
+      showAlert(
+        'warning',
+        window.ngdSupabaseState === 'unconfigured' ? NOT_CONFIGURED : SERVICE_DOWN
+      );
+      return;
+    }
+
+    var email = $('reg-email').value.trim();
+    var password = $('reg-password').value;
+
+    /* ONLY safe metadata. Never send a role from the browser — the
+       database trigger assigns role = 'customer' on its own. */
+    var metadata = {
+      full_name: $('reg-full-name').value.trim(),
+      company_name: $('reg-company').value.trim() || null,
+      phone: $('reg-phone').value.trim()
+    };
+
+    setLoading(true);
+    try {
+      var res = await window.ngdSupabase.auth.signUp({
+        email: email,
+        password: password,
+        options: { data: metadata }
+      });
+
+      if (res.error) {
+        showAlert('danger', mapSignupError(res.error));
+        setLoading(false);
+        return;
+      }
+
+      var user = res.data && res.data.user;
+      var session = res.data && res.data.session;
+
+      if (session) {
+        /* Email confirmation is disabled — we are signed in.
+           Load the fresh customer profile (best effort), then go
+           to the customer dashboard; its guard re-checks everything. */
+        try {
+          await window.NGDAuth.getCurrentProfile(user);
+        } catch (err) {
+          console.warn('[NGD Signup] profile not readable yet:', err);
+        }
+        window.location.replace(
+          (window.NGD_SITE_ROOT || './') + 'account/dashboard.html'
+        );
+        return;
+      }
+
+      /* Supabase obfuscates existing accounts: a "user" with an
+         empty identities array means the email is already in use. */
+      if (user && Array.isArray(user.identities) && user.identities.length === 0) {
+        showAlert('info', ALREADY_REGISTERED);
+        setLoading(false);
+        return;
+      }
+
+      /* Email confirmation required */
+      showAlert('success', CONFIRM_EMAIL_MSG);
+      form.reset();
+      form.classList.remove('was-validated');
+      setLoading(false);
+    } catch (err) {
+      console.error('[NGD Signup] unexpected failure:', err);
+      showAlert('danger', NETWORK_ERROR);
+      setLoading(false);
+    }
+  }
+
+  /** Signed-in visitors don't belong on the signup page either. */
+  async function redirectIfSignedIn() {
+    if (!window.ngdSupabase || !window.NGDAuth) return;
+    var auth = window.NGDAuth;
+    var user = await auth.getCurrentUser();
+    if (!user) return;
+    var result = await auth.getCurrentProfile(user);
+    if (result.error || auth.isBlockedStatus(result.profile)) return;
+    auth.goToDashboard(result.profile);
+  }
+
+  function init() {
+    var form = $('ngd-register-form');
+    if (!form) return;
+    form.addEventListener('submit', onSubmit);
+
+    var confirm = $('reg-confirm');
+    var password = $('reg-password');
+    if (confirm && password) {
+      confirm.addEventListener('input', syncConfirmValidity);
+      password.addEventListener('input', syncConfirmValidity);
+    }
+
+    redirectIfSignedIn();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>My account — New Grown Diamond</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50 8 88 38 50 92 12 38' fill='%23b48c47'/%3E%3C/svg%3E">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="../assets/css/main.css" rel="stylesheet">
+</head>
+<!-- Hidden until the customer guard passes (fail closed) -->
+<body class="ngd-backdrop" style="visibility:hidden">
+
+  <nav class="navbar sticky-top ngd-navbar">
+    <div class="container">
+      <a class="ngd-brand" href="../index.html">
+        <span class="ngd-brand-mark">◆</span>
+        <span>New Grown Diamond</span>
+      </a>
+      <div class="d-flex align-items-center gap-3">
+        <span class="ngd-badge d-none d-sm-inline-flex">Customer</span>
+        <button type="button" class="ngd-btn ngd-btn-outline ngd-btn-sm" data-ngd-logout>
+          Sign out
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="ngd-section-tight">
+    <div class="container">
+      <span class="ngd-eyebrow">Customer account</span>
+      <h1 class="ngd-display-2 mt-2">
+        Welcome, <span class="ngd-italic-accent" data-ngd-field="first_name">there</span>
+      </h1>
+      <hr class="ngd-divider">
+
+      <div class="row g-4 mt-1">
+        <div class="col-lg-7">
+          <div class="ngd-card ngd-card-3d h-100">
+            <h2 class="ngd-title mb-4">Profile details</h2>
+            <dl class="row mb-0 small">
+              <dt class="col-sm-4 ngd-stat-label py-2">Full name</dt>
+              <dd class="col-sm-8 py-2 mb-0" data-ngd-field="full_name">—</dd>
+              <dt class="col-sm-4 ngd-stat-label py-2">Email</dt>
+              <dd class="col-sm-8 py-2 mb-0" data-ngd-field="email">—</dd>
+              <dt class="col-sm-4 ngd-stat-label py-2">Company</dt>
+              <dd class="col-sm-8 py-2 mb-0" data-ngd-field="company_name">—</dd>
+              <dt class="col-sm-4 ngd-stat-label py-2">Mobile</dt>
+              <dd class="col-sm-8 py-2 mb-0" data-ngd-field="phone">—</dd>
+            </dl>
+          </div>
+        </div>
+
+        <div class="col-lg-5">
+          <div class="d-flex flex-column gap-4 h-100">
+            <div class="ngd-card ngd-card-dark">
+              <h2 class="ngd-title mb-3">Account</h2>
+              <div class="d-flex flex-wrap gap-2">
+                <span class="ngd-badge ngd-badge-dark">Role: <span data-ngd-field="role">—</span></span>
+                <span class="ngd-badge ngd-badge-dark">Status: <span data-ngd-field="account_status">—</span></span>
+              </div>
+            </div>
+            <div class="ngd-card flex-grow-1">
+              <h2 class="ngd-title mb-2">Coming soon</h2>
+              <p class="ngd-text-muted small mb-0">
+                The diamond catalogue, jewellery collections, quotes and
+                enquiries arrive in the next phase of your account.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.js"></script>
+  <script defer src="../assets/js/supabase-config.js"></script>
+  <script defer src="../assets/js/supabase-client.js"></script>
+  <script defer src="../assets/js/auth.js"></script>
+  <script defer src="../assets/js/ui.js"></script>
+  <script defer src="../assets/js/customer-dashboard.js"></script>
+</body>
+</html>

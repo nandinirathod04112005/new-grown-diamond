@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sign in — New Grown Diamond</title>
+  <meta name="description" content="Sign in to your New Grown Diamond account.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50 8 88 38 50 92 12 38' fill='%23b48c47'/%3E%3C/svg%3E">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/css/main.css" rel="stylesheet">
+</head>
+<body class="ngd-backdrop">
+
+  <div class="ngd-auth-wrap">
+    <div class="ngd-auth-card">
+
+      <!-- Brand panel -->
+      <aside class="ngd-auth-side">
+        <a class="ngd-brand" href="index.html" style="color:#f4f2ee;">
+          <span class="ngd-brand-mark">◆</span>
+          <span>New Grown Diamond</span>
+        </a>
+        <div>
+          <span class="ngd-eyebrow">Lab-grown brilliance</span>
+          <h2 class="ngd-display-2 mt-2 text-white">Every facet,<br>fully <span class="ngd-italic-accent">yours</span>.</h2>
+          <hr class="ngd-divider">
+          <ul class="ngd-auth-points mt-4">
+            <li>Certified lab-grown diamonds</li>
+            <li>Bespoke jewellery enquiries</li>
+            <li>Private client dashboard</li>
+          </ul>
+        </div>
+        <p class="small mb-0" style="color:rgba(244,242,238,.55);">Grown by science. Finished like heritage.</p>
+      </aside>
+
+      <!-- Sign-in form -->
+      <main class="ngd-auth-main">
+        <span class="ngd-eyebrow">Welcome back</span>
+        <h1 class="ngd-display-2 mt-2">Sign in</h1>
+        <hr class="ngd-divider">
+
+        <div id="login-alert" aria-live="polite"></div>
+
+        <!-- Supabase Auth handles this form — no server-side action -->
+        <form id="ngd-login-form" class="ngd-form mt-3" novalidate>
+          <div class="mb-3">
+            <label class="form-label" for="login-email">Email</label>
+            <input type="email" class="form-control" id="login-email" name="email"
+                   placeholder="you@example.com" autocomplete="email" required>
+            <div class="invalid-feedback">Please enter a valid email address.</div>
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label" for="login-password">Password</label>
+            <input type="password" class="form-control" id="login-password" name="password"
+                   placeholder="Your password" autocomplete="current-password" required>
+            <div class="invalid-feedback">Please enter your password.</div>
+          </div>
+
+          <button type="submit" id="login-submit" class="ngd-btn ngd-btn-gold ngd-btn-block">
+            Sign in
+          </button>
+        </form>
+
+        <hr class="ngd-hairline my-4">
+        <p class="ngd-text-muted small mb-1">
+          New to New Grown Diamond?
+          <a class="ngd-link" href="register.html">Create an account</a>
+        </p>
+        <p class="small mb-0">
+          <a class="ngd-link ngd-text-muted" href="index.html">← Back to home</a>
+        </p>
+      </main>
+
+    </div>
+  </div>
+
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.js"></script>
+  <script defer src="assets/js/supabase-config.js"></script>
+  <script defer src="assets/js/supabase-client.js"></script>
+  <script defer src="assets/js/auth.js"></script>
+  <script defer src="assets/js/login.js"></script>
+</body>
+</html>

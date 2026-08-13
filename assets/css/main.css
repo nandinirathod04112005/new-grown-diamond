@@ -627,7 +627,81 @@ code {
 .ngd-reveal-delay-3 { transition-delay: 270ms; }
 
 /* ------------------------------------------------------------
-   11. ACCESSIBILITY & RESPONSIVE GUARDS
+   11. AUTH LAYOUT — split card shared by login / register
+   ------------------------------------------------------------ */
+.ngd-auth-wrap {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(1rem, 4vw, 3rem) clamp(0.9rem, 3vw, 2rem);
+}
+
+.ngd-auth-card {
+  width: 100%;
+  max-width: 1040px;
+  display: grid;
+  grid-template-columns: 1fr;
+  overflow: hidden;
+  background-color: var(--ngd-white);
+  border: 1px solid var(--ngd-line);
+  border-radius: var(--ngd-radius-lg);
+  box-shadow: var(--ngd-shadow-deep);
+}
+
+/* Dark brand panel — visible from lg up */
+.ngd-auth-side {
+  display: none;
+  position: relative;
+  background-color: var(--ngd-black);
+  background-image:
+      radial-gradient(30rem 20rem at 90% -10%, rgba(180, 140, 71, 0.20), transparent 60%),
+      radial-gradient(24rem 16rem at 0% 110%, rgba(255, 255, 255, 0.06), transparent 55%);
+  color: #f4f2ee;
+  padding: clamp(2rem, 3.2vw, 3rem);
+}
+
+.ngd-auth-main {
+  padding: clamp(1.9rem, 4.5vw, 3.4rem);
+}
+
+@media (min-width: 992px) {
+  .ngd-auth-card { grid-template-columns: 5fr 7fr; }
+  .ngd-auth-side {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: var(--ngd-space-5);
+  }
+}
+
+.ngd-auth-side .ngd-eyebrow { color: var(--ngd-gold-soft); }
+
+.ngd-auth-points {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.ngd-auth-points li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7rem;
+  color: rgba(244, 242, 238, 0.78);
+  font-size: 0.92rem;
+}
+
+.ngd-auth-points li::before {
+  content: "◆";
+  font-size: 0.55rem;
+  color: var(--ngd-gold-soft);
+}
+
+/* ------------------------------------------------------------
+   12. ACCESSIBILITY & RESPONSIVE GUARDS
    ------------------------------------------------------------ */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
