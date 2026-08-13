@@ -13,6 +13,7 @@ Bootstrap 5 + vanilla JavaScript** frontend backed by **Supabase**
 | Premium header + mobile navigation (glass, dropdown, offcanvas) | ✅ done |
 | Homepage 3D hero (Three.js diamond, SVG/WebGL fallback) | ✅ done |
 | Homepage Diamond section (8 cut cards, 3D tilt) | ✅ done |
+| Homepage Featured Diamonds showcase (6 demo stones) | ✅ done |
 | Remaining homepage sections, catalogue, admin management, storage, quotes | ⏳ upcoming steps |
 
 ## Quick start

@@ -139,6 +139,15 @@ hover-revealed `.ngd-shape-cta` (always visible on touch devices via
 `@media (hover: none)`). The tilt + hover float come from the existing
 `.ngd-card-3d` / `data-ngd-tilt` / `.ngd-depth-1` mechanics.
 
+### Featured diamond cards
+`article.ngd-card.ngd-card-dark.ngd-card-3d.ngd-diamond-card[data-ngd-tilt]` —
+dark showcase product card: `.ngd-diamond-media.ngd-depth-1` (velvet stage with a
+floor-glow `::before`, hover sheen-sweep `::after`, and a filled-facet SVG stone
+with drop-shadow depth), `.ngd-diamond-title` + `.ngd-diamond-carat`, a
+`.ngd-diamond-specs` definition-list grid (use `.ngd-spec-wide` for a full-width
+row) and a `.ngd-btn` CTA. Cards carry `data-diamond-id` / `data-shape` hooks so
+the future Supabase catalogue can render the same markup from the diamonds table.
+
 ### Feedback & misc
 `.ngd-badge` (+ `.ngd-badge-dark`), `.ngd-alert` with `.ngd-alert-info` /
 `.ngd-alert-success` / `.ngd-alert-danger`, `.ngd-stat-value` + `.ngd-stat-label`.

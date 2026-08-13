@@ -1106,6 +1106,119 @@ code {
 }
 
 /* ------------------------------------------------------------
+   13d. FEATURED DIAMOND CARDS (homepage showcase)
+   ------------------------------------------------------------ */
+.ngd-diamond-card {
+  padding: 0;
+  overflow: hidden;
+  box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.06),
+      var(--ngd-shadow-soft);
+}
+
+.ngd-diamond-card:hover {
+  border-color: rgba(217, 192, 138, 0.55);
+}
+
+/* Velvet stage the stone floats on */
+.ngd-diamond-media {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background:
+      radial-gradient(130% 105% at 50% -5%, #2a2a31 0%, #1a1a1f 52%, #101013 100%);
+  border-bottom: 1px solid var(--ngd-line-light);
+}
+
+/* Soft realistic floor shadow / glow beneath the stone */
+.ngd-diamond-media::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 9%;
+  width: 56%;
+  height: 13%;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(50% 50% at 50% 50%, rgba(217, 192, 138, 0.30), transparent 72%);
+  pointer-events: none;
+}
+
+/* Reflection sheen that sweeps across on hover */
+.ngd-diamond-media::after {
+  content: "";
+  position: absolute;
+  inset: -2%;
+  background: linear-gradient(112deg, transparent 40%, rgba(255, 255, 255, 0.13) 50%, transparent 60%);
+  transform: translateX(-130%);
+  transition: transform 750ms var(--ngd-ease);
+  pointer-events: none;
+}
+
+.ngd-diamond-card:hover .ngd-diamond-media::after { transform: translateX(130%); }
+
+.ngd-diamond-media svg {
+  width: 56%;
+  height: auto;
+  filter: drop-shadow(0 16px 20px rgba(0, 0, 0, 0.5));
+}
+
+.ngd-diamond-body { padding: 1.3rem 1.35rem 1.45rem; }
+
+.ngd-diamond-title {
+  font-family: var(--ngd-font-display);
+  font-size: 1.16rem;
+  font-weight: 600;
+  color: #f4f2ee;
+  margin-bottom: 0;
+}
+
+.ngd-diamond-carat {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--ngd-gold-soft);
+  white-space: nowrap;
+}
+
+/* Spec sheet — definition list in a two-column grid */
+.ngd-diamond-specs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem 1.1rem;
+  margin: 1rem 0 1.2rem;
+  padding-top: 0.95rem;
+  border-top: 1px solid var(--ngd-line-light);
+}
+
+.ngd-diamond-specs > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+
+.ngd-diamond-specs .ngd-spec-wide { grid-column: 1 / -1; }
+
+.ngd-diamond-specs dt {
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(244, 242, 238, 0.5);
+}
+
+.ngd-diamond-specs dd {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #f4f2ee;
+}
+
+/* ------------------------------------------------------------
    14. ACCESSIBILITY & RESPONSIVE GUARDS
    ------------------------------------------------------------ */
 @media (prefers-reduced-motion: reduce) {
@@ -1120,6 +1233,7 @@ code {
     transition: none;
     transform: none;
   }
+  .ngd-diamond-media::after { transition: none; }
   .ngd-mobile-menu { transition-duration: 1ms; }
   .ngd-mobile-menu .ngd-menu-item,
   .ngd-mobile-menu.show .ngd-menu-item {
