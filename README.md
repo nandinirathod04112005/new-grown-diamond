@@ -12,6 +12,7 @@ Bootstrap 5 + vanilla JavaScript** frontend backed by **Supabase**
 | Supabase Step 4A — login, customer signup, session guards | ✅ done — needs your credentials |
 | Premium header + mobile navigation (glass, dropdown, offcanvas) | ✅ done |
 | Homepage 3D hero (Three.js diamond, SVG/WebGL fallback) | ✅ done |
+| Homepage Diamond section (8 cut cards, 3D tilt) | ✅ done |
 | Remaining homepage sections, catalogue, admin management, storage, quotes | ⏳ upcoming steps |
 
 ## Quick start

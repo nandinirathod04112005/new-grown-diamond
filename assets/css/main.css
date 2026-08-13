@@ -1025,6 +1025,87 @@ code {
 .ngd-navbar-dark .ngd-btn-dark:hover { background-color: #ffffff; color: var(--ngd-black); }
 
 /* ------------------------------------------------------------
+   13c. DIAMOND SHAPE CARDS (homepage cut collection)
+   ------------------------------------------------------------ */
+.ngd-shape-card {
+  display: block;
+  height: 100%;
+  padding: 1.5rem 1rem 1.6rem;
+  text-align: center;
+  text-decoration: none;
+  color: inherit;
+}
+
+.ngd-shape-card:hover { color: inherit; }
+
+/* Layered medallion the shape floats on (pairs with .ngd-depth-1) */
+.ngd-shape-media {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 5.6rem;
+  height: 5.6rem;
+  margin: 0 auto 1.05rem;
+  border-radius: 50%;
+  border: 1px solid rgba(180, 140, 71, 0.28);
+  background:
+      radial-gradient(circle at 36% 28%, #ffffff 0%, var(--ngd-pearl) 62%, #ece7dd 100%);
+  box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.9),
+      inset 0 -8px 16px rgba(143, 109, 49, 0.08);
+  color: var(--ngd-gold-deep);
+  transition: color var(--ngd-fast) var(--ngd-ease);
+}
+
+.ngd-shape-media svg {
+  width: 3.2rem;
+  height: 3.2rem;
+  filter: drop-shadow(0 7px 9px rgba(143, 109, 49, 0.28));
+}
+
+.ngd-shape-card:hover .ngd-shape-media { color: var(--ngd-gold); }
+
+.ngd-shape-name {
+  font-family: var(--ngd-font-display);
+  font-size: 1.14rem;
+  font-weight: 600;
+  margin-bottom: 0.2rem;
+}
+
+.ngd-shape-note {
+  font-size: 0.8rem;
+  color: var(--ngd-slate);
+  margin-bottom: 0;
+}
+
+/* Micro-CTA revealed on hover (whole card is the link) */
+.ngd-shape-cta {
+  display: inline-block;
+  margin-top: 0.6rem;
+  font-size: 0.64rem;
+  font-weight: 600;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--ngd-gold-deep);
+  opacity: 0;
+  transform: translateY(5px);
+  transition:
+      opacity var(--ngd-fast) var(--ngd-ease),
+      transform var(--ngd-fast) var(--ngd-ease);
+}
+
+.ngd-shape-card:hover .ngd-shape-cta,
+.ngd-shape-card:focus-visible .ngd-shape-cta {
+  opacity: 1;
+  transform: none;
+}
+
+@media (hover: none) {
+  /* Touch devices: no hover — keep the hint visible */
+  .ngd-shape-cta { opacity: 1; transform: none; }
+}
+
+/* ------------------------------------------------------------
    14. ACCESSIBILITY & RESPONSIVE GUARDS
    ------------------------------------------------------------ */
 @media (prefers-reduced-motion: reduce) {

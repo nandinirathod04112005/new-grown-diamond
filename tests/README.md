@@ -15,6 +15,9 @@ tooling only** — the website itself is plain HTML/CSS/JS and has no Node backe
 - `hero.test.cjs` — 8 homepage 3D-hero scenarios: WebGL diamond renders (canvas,
   desktop/mobile profiles, parallax flags), reduced-motion still frame, static SVG
   fallback when WebGL or the three.js CDN is unavailable, content + CTA navigation.
+- `shapes.test.cjs` — 8 homepage Diamond-section scenarios: heading + all eight
+  cut cards in order, pointer tilt applies/resets, shape links + View-all CTA
+  navigate, scroll reveal, 4-per-row desktop / 2-per-row mobile with no overflow.
 - `header-nav.test.cjs` — 12 header/navigation scenarios on every public page:
   sticky glass header, Collections dropdown (open/close/navigate), login button,
   hamburger morph, offcanvas mobile menu (open, stagger, close button, Escape,

@@ -131,6 +131,14 @@ sparkle particles, pointer parallax (fine pointers only), mobile profile
 (fewer particles, lower DPR), `prefers-reduced-motion` (single still frame)
 and full static fallback when WebGL or the CDN is unavailable.
 
+### Diamond shape cards
+`a.ngd-card.ngd-card-3d.ngd-shape-card[data-ngd-tilt]` — homepage cut-collection
+card: `.ngd-shape-media.ngd-depth-1` (pearl medallion holding an inline SVG cut
+outline drawn with `currentColor`), `.ngd-shape-name`, `.ngd-shape-note`, and a
+hover-revealed `.ngd-shape-cta` (always visible on touch devices via
+`@media (hover: none)`). The tilt + hover float come from the existing
+`.ngd-card-3d` / `data-ngd-tilt` / `.ngd-depth-1` mechanics.
+
 ### Feedback & misc
 `.ngd-badge` (+ `.ngd-badge-dark`), `.ngd-alert` with `.ngd-alert-info` /
 `.ngd-alert-success` / `.ngd-alert-danger`, `.ngd-stat-value` + `.ngd-stat-label`.
