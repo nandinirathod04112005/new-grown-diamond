@@ -177,8 +177,8 @@ async function openDashboard(page) {
     expect(JSON.stringify(state.routes) === JSON.stringify(
       ['dashboard', 'favourites', 'quotes', 'holds', 'inspections', 'enquiries', 'profile']),
       'sidebar routes in order, got ' + state.routes.join(','));
-    expect(JSON.stringify(state.soon) === JSON.stringify(['holds', 'inspections']),
-      'holds + inspections marked Soon, got ' + state.soon.join(','));
+    expect(state.soon.length === 0,
+      'no Soon items left — quotes/holds/inspections are real pages, got ' + state.soon.join(','));
     expect(state.navLogout, 'sidebar logout button wired');
     expect(/Welcome, Chetan/.test(state.welcome), 'first-name greeting, got ' + state.welcome);
     expect(state.fields.name === 'Chetan Customer' && state.fields.company === 'Chetan Gems LLP',
@@ -276,19 +276,27 @@ async function openDashboard(page) {
 
   await scenario('sidebar anchors move the active state and scroll to sections', {}, async (page) => {
     await openDashboard(page);
-    await page.click('.ngd-dash-nav a[data-dash-route="quotes"]');
-    await page.waitForFunction(() => location.hash === '#dash-quotes');
-    /* the page scrolls smoothly — wait for the section to settle */
+    await page.click('.ngd-dash-nav a[data-dash-route="enquiries"]');
+    await page.waitForFunction(() => location.hash === '#dash-enquiries');
+    /* the page scrolls smoothly; the enquiries panel sits near the page
+       bottom, so it cannot reach the very top — assert it lands in view */
     await page.waitForFunction(() => {
-      const top = document.getElementById('dash-quotes').getBoundingClientRect().top;
-      return top > -60 && top < 220;
+      const top = document.getElementById('dash-enquiries').getBoundingClientRect().top;
+      return top > -60 && top < window.innerHeight * 0.7;
     }, null, { timeout: 5000 });
     const active = await page.evaluate(() =>
       document.querySelector('.ngd-dash-nav a.is-active').getAttribute('data-dash-route'));
-    expect(active === 'quotes', 'active route follows the click');
-    /* Favourites is a real page link since STEP 21 */
-    const favHref = await page.getAttribute('.ngd-dash-nav a[data-dash-route="favourites"]', 'href');
-    expect(favHref === 'favourites.html', 'favourites routes to its page, got ' + favHref);
+    expect(active === 'enquiries', 'active route follows the click');
+    /* real account pages route from the sidebar since STEPs 21–22 */
+    const hrefs = await page.evaluate(() => ({
+      favourites: document.querySelector('.ngd-dash-nav a[data-dash-route="favourites"]').getAttribute('href'),
+      quotes: document.querySelector('.ngd-dash-nav a[data-dash-route="quotes"]').getAttribute('href'),
+      holds: document.querySelector('.ngd-dash-nav a[data-dash-route="holds"]').getAttribute('href'),
+      inspections: document.querySelector('.ngd-dash-nav a[data-dash-route="inspections"]').getAttribute('href'),
+    }));
+    expect(hrefs.favourites === 'favourites.html' && hrefs.quotes === 'quotes.html' &&
+      hrefs.holds === 'holds.html' && hrefs.inspections === 'inspections.html',
+      'account pages routed, got ' + JSON.stringify(hrefs));
   });
 
   await scenario('logout signs out and returns to the login page', {}, async (page) => {

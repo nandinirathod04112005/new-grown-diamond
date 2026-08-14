@@ -288,6 +288,17 @@ honest toast). `loadFavourites()` / `removeFavourite()` are the seams for
 the future Supabase `favourites` table (user_id, item_type, item_id,
 created_at).
 
+`account/quotes.html` / `holds.html` / `inspections.html` share one
+controller (`assets/js/account-requests.js`, selected by
+`body[data-requests-page]`): demo rows resolved from the catalogue render
+as a `.ngd-req-table` (≥992px) and stacked `.ngd-req-card`s below, with
+`.ngd-req-thumb` art, `.ngd-status-chip` variants (+ `.is-dim` for
+closed/expired/cancelled), a `[data-req-toggle]` drawer per row
+(`.ngd-req-detail`, chipped “Demo record”, catalogue link), search +
+status + date-range filters and the labelled loading/empty/error
+previews. `loadRequests()` is the seam for the future Supabase
+quotes/holds/inspections tables.
+
 ### Contact page
 `contact.html` reuses the `.ngd-form` skin (Bootstrap `.is-invalid` +
 `.invalid-feedback` like the auth pages) on a `.ngd-glass` card, four

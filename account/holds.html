@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>My Favourites — New Grown Diamond</title>
+  <title>Holds — New Grown Diamond</title>
   <meta name="robots" content="noindex">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50 8 88 38 50 92 12 38' fill='%23b48c47'/%3E%3C/svg%3E">
 
@@ -14,7 +14,7 @@
   <link href="../assets/css/main.css" rel="stylesheet">
 </head>
 <!-- Hidden until the customer guard passes (fail closed) -->
-<body class="ngd-backdrop" style="visibility:hidden">
+<body class="ngd-backdrop" style="visibility:hidden" data-requests-page="holds">
 
   <!-- ══════════ TOP HEADER (shared dashboard shell) ══════════ -->
   <header class="ngd-dash-topbar">
@@ -56,7 +56,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg>
             Dashboard
           </a>
-          <a href="favourites.html" class="is-active" data-dash-route="favourites" aria-current="page">
+          <a href="favourites.html" data-dash-route="favourites">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.5s-7.5-4.7-7.5-10A4.3 4.3 0 0 1 12 7.6a4.3 4.3 0 0 1 7.5 2.9c0 5.3-7.5 10-7.5 10Z"/></svg>
             Favourites
           </a>
@@ -64,7 +64,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h9l3.5 3.5v13.5H6Z"/><path d="M15 3.5V7h3.5M9 11h6M9 14.5h6M9 18h3.5"/></svg>
             Quote History
           </a>
-          <a href="holds.html" data-dash-route="holds">
+          <a href="holds.html" class="is-active" data-dash-route="holds" aria-current="page">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>
             Holds
           </a>
@@ -95,96 +95,101 @@
     <!-- ══════════ MAIN ══════════ -->
     <main class="ngd-dash-main">
 
-      <!-- Title -->
-      <section class="d-flex flex-wrap align-items-end justify-content-between gap-3" data-dash-section="fav-head">
+      <!-- Title + UI-state preview -->
+      <section class="d-flex flex-wrap align-items-end justify-content-between gap-3" data-dash-section="req-head">
         <div>
           <span class="ngd-eyebrow">Customer account</span>
-          <h1 class="ngd-display-2 mt-2 mb-1">My Favourites</h1>
-          <p class="ngd-text-muted small mb-0">
-            The stones and pieces you save, waiting quietly in one place.
-          </p>
+          <h1 class="ngd-display-2 mt-2 mb-1">Holds</h1>
+          <p class="ngd-text-muted small mb-0">Stones and pieces set aside while you decide.</p>
+        </div>
+        <!-- Demo-only preview control for the loading/empty/error designs.
+             Nothing is loaded from anywhere in any of these states. -->
+        <div class="text-lg-end">
+          <span class="ngd-dash-metric-note d-block mb-1">UI preview (demo only)</span>
+          <div class="ngd-dash-state-switch" id="req-state-switch" role="group" aria-label="Preview a UI state">
+            <button type="button" class="is-on" data-req-state="demo">Demo rows</button>
+            <button type="button" data-req-state="loading">Loading</button>
+            <button type="button" data-req-state="empty">Empty</button>
+            <button type="button" data-req-state="error">Error</button>
+          </div>
         </div>
       </section>
 
-      <!-- Demo notice: this page previews the favourites UI with sample
-           items resolved from the public demo catalogue. Nothing here is
-           stored anywhere — the future Supabase `favourites` table
-           (user_id, item_type, item_id, created_at) replaces
-           loadFavourites() in assets/js/favourites.js. -->
-      <aside class="ngd-edu-note mt-4" id="fav-demo-note">
+      <!-- Demo notice; the future Supabase phase replaces loadRequests()
+           in assets/js/account-requests.js with real per-user selects. -->
+      <aside class="ngd-edu-note mt-4" id="req-demo-note">
         <span class="ngd-edu-bullet" aria-hidden="true">&#9670;</span>
-        <p class="mb-0"><strong>Demo preview.</strong> These favourites are
-        sample items showing how your saved stones and pieces will appear
-        once favourites sync with your account. Removing one only updates
-        this preview — nothing is saved or deleted anywhere, and the samples
-        return on reload.</p>
+        <p class="mb-0"><strong>Demo preview.</strong> These holds are sample records showing how your holds will appear once the account backend arrives. Nothing here was submitted anywhere and nothing is stored.</p>
       </aside>
 
-      <!-- Toolbar: tabs, search, sort -->
-      <section class="mt-4" data-dash-section="fav-toolbar">
-        <div class="d-flex flex-wrap align-items-center gap-2">
-          <div class="ngd-chip-row" id="fav-tabs" role="tablist" aria-label="Filter favourites by type">
-            <button type="button" class="ngd-chip is-active" data-fav-tab="all" aria-pressed="true">All</button>
-            <button type="button" class="ngd-chip" data-fav-tab="diamond" aria-pressed="false">Diamonds</button>
-            <button type="button" class="ngd-chip" data-fav-tab="jewellery" aria-pressed="false">Jewellery</button>
+      <!-- Toolbar: search, status filter, date range -->
+      <section class="mt-4 ngd-form" data-dash-section="req-toolbar">
+        <div class="row g-2 align-items-end">
+          <div class="col-12 col-lg-4">
+            <label class="form-label" for="req-search">Search</label>
+            <input type="search" class="form-control" id="req-search"
+                   placeholder="ID, stock number, product or status…">
           </div>
-          <span class="ngd-text-muted small ms-auto" id="fav-count" aria-live="polite">—</span>
-          <span class="ngd-demo-chip">Demo</span>
-        </div>
-        <div class="row g-2 mt-1 ngd-form">
-          <div class="col-12 col-md-7 col-lg-8">
-            <label class="visually-hidden" for="fav-search">Search favourites</label>
-            <input type="search" class="form-control" id="fav-search"
-                   placeholder="Search by stock number, name, shape or category…">
-          </div>
-          <div class="col-12 col-md-5 col-lg-4">
-            <label class="visually-hidden" for="fav-sort">Sort favourites</label>
-            <select class="form-select" id="fav-sort">
-              <option value="recent" selected>Recently saved</option>
-              <option value="name">Name / stock number</option>
-              <option value="carat-desc">Carat weight · high to low</option>
-              <option value="carat-asc">Carat weight · low to high</option>
+          <div class="col-6 col-md-4 col-lg-2">
+            <label class="form-label" for="req-status">Status</label>
+            <select class="form-select" id="req-status">
+              <option value="all" selected>All statuses</option>
             </select>
           </div>
-        </div>
-      </section>
-
-      <!-- Honest inline toast for demo removals -->
-      <div id="fav-toast" class="mt-3" aria-live="polite"></div>
-
-      <!-- Cards grid (rendered by favourites.js) -->
-      <section class="mt-3" data-dash-section="fav-grid">
-        <div class="row g-4" id="fav-grid"></div>
-
-        <!-- No-match state (search/tab yields nothing, list not empty) -->
-        <div id="fav-no-match" class="ngd-dash-panel mt-1" hidden>
-          <div class="ngd-dash-empty">
-            <span class="ngd-icon-tile ngd-depth-1 mb-3">◌</span>
-            <h2 class="ngd-title fs-6">No favourites match</h2>
-            <p class="ngd-text-muted small mb-3">
-              Nothing in this view matches your search — try another term or
-              switch tabs.
-            </p>
-            <button type="button" class="ngd-btn ngd-btn-outline ngd-btn-sm" id="fav-clear-search">Clear search</button>
+          <div class="col-6 col-md-3 col-lg-2">
+            <label class="form-label" for="req-from">From</label>
+            <input type="date" class="form-control" id="req-from">
+          </div>
+          <div class="col-6 col-md-3 col-lg-2">
+            <label class="form-label" for="req-to">To</label>
+            <input type="date" class="form-control" id="req-to">
+          </div>
+          <div class="col-6 col-md-2 col-lg-2 d-grid">
+            <button type="button" class="ngd-btn ngd-btn-outline ngd-btn-sm" id="req-clear">Clear</button>
           </div>
         </div>
-
-        <!-- True empty state (no favourites at all) -->
-        <div id="fav-empty" class="ngd-dash-panel mt-1" hidden>
-          <div class="ngd-dash-empty">
-            <span class="ngd-icon-tile ngd-depth-1 mb-3">♡</span>
-            <h2 class="ngd-title fs-5">You haven&rsquo;t saved any favourites yet.</h2>
-            <p class="ngd-text-muted small mb-3">
-              Tap the heart on any diamond or jewellery piece and it will
-              wait for you here.
-            </p>
-            <div class="d-flex flex-wrap justify-content-center gap-2">
-              <a class="ngd-btn ngd-btn-gold ngd-btn-sm" href="../diamonds.html">Explore Diamonds</a>
-              <a class="ngd-btn ngd-btn-outline ngd-btn-sm" href="../jewellery.html">Explore Jewellery</a>
-            </div>
-          </div>
-        </div>
+        <p class="ngd-dash-metric-note mt-2 mb-0" id="req-count" aria-live="polite">—</p>
       </section>
+
+      <!-- Desktop table (≥992px) -->
+      <section class="mt-3 d-none d-lg-block" id="req-table-wrap" data-dash-section="req-table"></section>
+
+      <!-- Stacked cards (<992px) -->
+      <section class="mt-3 d-lg-none ngd-req-cards" id="req-cards-wrap" data-dash-section="req-cards"></section>
+
+      <!-- No-match (filters active, list not empty) -->
+      <div id="req-no-match" class="ngd-dash-panel mt-3" hidden>
+        <div class="ngd-dash-empty">
+          <span class="ngd-icon-tile ngd-depth-1 mb-3">◌</span>
+          <h2 class="ngd-title fs-6">Nothing matches those filters</h2>
+          <p class="ngd-text-muted small mb-3">Try a different term, status or date range.</p>
+          <button type="button" class="ngd-btn ngd-btn-outline ngd-btn-sm"
+                  onclick="document.getElementById('req-clear').click()">Clear filters</button>
+        </div>
+      </div>
+
+      <!-- UI state stages (previewed via the switcher above) -->
+      <div id="req-stage-loading" class="ngd-dash-panel mt-3" hidden>
+        <div class="ngd-dash-row"><span class="ngd-skeleton w-100"></span></div>
+        <div class="ngd-dash-row"><span class="ngd-skeleton w-75"></span></div>
+        <div class="ngd-dash-row"><span class="ngd-skeleton w-50"></span></div>
+      </div>
+      <div id="req-stage-empty" class="ngd-dash-panel mt-3" hidden>
+        <div class="ngd-dash-empty">
+          <span class="ngd-icon-tile ngd-depth-1 mb-3">◔</span>
+          <h2 class="ngd-title fs-6">No holds yet</h2>
+          <p class="ngd-text-muted small mb-3">Ask us to hold a stone while you decide — holds you request will be tracked here once your account backend arrives.</p>
+          <a class="ngd-btn ngd-btn-outline ngd-btn-sm" href="../diamonds.html">Browse diamonds</a>
+        </div>
+      </div>
+      <div id="req-stage-error" class="ngd-dash-panel mt-3" hidden>
+        <div class="ngd-dash-error">
+          <span class="ngd-icon-tile mb-3">!</span>
+          <h2 class="ngd-title fs-6">We couldn&rsquo;t load this list</h2>
+          <p class="ngd-text-muted small mb-3">Check your connection and try again.</p>
+          <button type="button" class="ngd-btn ngd-btn-outline ngd-btn-sm" id="req-retry">Retry</button>
+        </div>
+      </div>
 
     </main>
   </div>
@@ -199,6 +204,6 @@
   <script defer src="../assets/js/jewellery-art.js"></script>
   <script defer src="../assets/js/diamonds-data.js"></script>
   <script defer src="../assets/js/jewellery-data.js"></script>
-  <script defer src="../assets/js/favourites.js"></script>
+  <script defer src="../assets/js/account-requests.js"></script>
 </body>
 </html>

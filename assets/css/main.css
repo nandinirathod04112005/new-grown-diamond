@@ -2756,6 +2756,77 @@ a.ngd-chip {
 
 .ngd-status-chip.is-gold { border-color: rgba(180, 140, 71, 0.5); background: rgba(217, 192, 138, 0.14); color: var(--ngd-gold-deep); }
 .ngd-status-chip.is-good { border-color: rgba(78, 125, 81, 0.45); background: rgba(78, 125, 81, 0.08); color: #38573a; }
+.ngd-status-chip.is-dim { opacity: 0.6; }
+
+/* Request lists (quotes / holds / inspections) */
+.ngd-req-product {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-width: 0;
+}
+
+.ngd-req-thumb {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: var(--ngd-radius-sm);
+  border: 1px solid var(--ngd-line);
+  background: linear-gradient(160deg, var(--ngd-pearl), var(--ngd-white));
+  color: var(--ngd-gold-deep);
+  overflow: hidden;
+}
+
+.ngd-req-thumb svg { width: 74%; height: 74%; }
+
+.ngd-req-table tbody td { white-space: normal; vertical-align: middle; }
+.ngd-req-table tbody tr[data-req-row]:hover { background-color: rgba(180, 140, 71, 0.06); }
+.ngd-req-table .ngd-req-detail-row,
+.ngd-req-table .ngd-req-detail-row td { border-bottom: 0; }
+.ngd-req-table .ngd-req-detail-row:hover { background: none; }
+
+.ngd-req-detail {
+  padding: 1rem 1.2rem 1.2rem;
+  border-top: 1px dashed var(--ngd-line);
+  background-color: var(--ngd-pearl);
+}
+
+.ngd-req-cards { display: flex; flex-direction: column; gap: 0.9rem; }
+
+.ngd-req-card {
+  background-color: var(--ngd-white);
+  border: 1px solid var(--ngd-line);
+  border-radius: var(--ngd-radius);
+  box-shadow: var(--ngd-shadow-soft);
+  padding: 1.1rem 1.2rem;
+}
+
+.ngd-req-card .ngd-req-detail {
+  margin: 0.9rem -1.2rem -1.1rem;
+  border-radius: 0 0 var(--ngd-radius) var(--ngd-radius);
+}
+
+.ngd-req-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 1.6rem;
+  margin: 0.7rem 0 0;
+}
+
+.ngd-req-meta > div { display: flex; gap: 0.5rem; align-items: baseline; }
+
+.ngd-req-meta dt {
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ngd-slate);
+}
+
+.ngd-req-meta dd { margin: 0; font-size: 0.85rem; }
 
 /* UI states: loading skeleton, empty, error */
 .ngd-skeleton {

@@ -148,7 +148,7 @@ async function openFavourites(page) {
       topbar: !!document.querySelector('.ngd-dash-topbar [data-ngd-logout]'),
       active: document.querySelector('.ngd-dash-nav .is-active').getAttribute('data-dash-route'),
       dashboardHref: document.querySelector('.ngd-dash-nav a[data-dash-route="dashboard"]').getAttribute('href'),
-      soon: document.querySelectorAll('.ngd-dash-nav .is-soon').length,
+      holdsHref: document.querySelector('.ngd-dash-nav a[data-dash-route="holds"]').getAttribute('href'),
       title: document.querySelector('h1').textContent.trim(),
       notice: document.getElementById('fav-demo-note').textContent,
       visible: getComputedStyle(document.body).visibility === 'visible',
@@ -157,7 +157,7 @@ async function openFavourites(page) {
     expect(state.topbar, 'shared topbar present');
     expect(state.active === 'favourites', 'Favourites route active, got ' + state.active);
     expect(state.dashboardHref === 'dashboard.html', 'sidebar routes back to the dashboard');
-    expect(state.soon === 2, 'Soon items preserved');
+    expect(state.holdsHref === 'holds.html', 'holds is a real route since STEP 22');
     expect(state.title === 'My Favourites', 'page title, got ' + state.title);
     expect(/demo preview/i.test(state.notice) && /nothing is saved or deleted/i.test(state.notice),
       'honest demo notice present');

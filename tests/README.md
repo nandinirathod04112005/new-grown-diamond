@@ -102,6 +102,12 @@ tooling only** — the website itself is plain HTML/CSS/JS and has no Node backe
   tabs, search with no-match vs true-empty distinction, carat sort, the
   demo-only removal with Undo, the exact empty-state copy with both CTAs,
   guard redirect and 1/2/4-per-row layouts at 390/768/1440.
+- `account-requests-ui.test.cjs` — 10 scenarios across the three request
+  pages (mocked auth): per-page shell/fields/statuses checks, search +
+  status + date-range filtering, the holds expiry and inspections
+  preferred-type columns, the honest detail drawer with its catalogue link,
+  loading/empty/error previews with retry, guard redirects, and the
+  desktop-table vs stacked-cards behaviour at 1440/768/390.
 - `header-nav.test.cjs` — 12 header/navigation scenarios on every public page:
   sticky glass header, Collections dropdown (open/close/navigate), login button,
   hamburger morph, offcanvas mobile menu (open, stagger, close button, Escape,
