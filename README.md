@@ -26,6 +26,7 @@ Bootstrap 5 + vanilla JavaScript** frontend backed by **Supabase**
 | About page (story, mission/vision, journey, trust, responsibility) | ✅ done |
 | Contact page (7-field enquiry form, info cards, trade desk, map slot) | ✅ done — connect your inbox |
 | Login page premium UI (split card, show/hide, remember me) | ✅ done |
+| Signup page premium UI (country, strength meter, terms, toggles) | ✅ done |
 | Admin management, storage, quotes, enquiries backend | ⏳ upcoming steps |
 
 ## Quick start

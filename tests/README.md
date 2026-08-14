@@ -79,6 +79,12 @@ tooling only** — the website itself is plain HTML/CSS/JS and has no Node backe
   password), the honest forgot-password notice, validation states, the
   no-fake-success guarantee, signup link and single-column mobile layout at
   1440/768/390.
+- `signup-ui.test.cjs` — 10 Signup-UI scenarios: split card with ring art,
+  all eight labelled fields (incl. country) with no role selector anywhere,
+  both show/hide toggles, the live password strength meter, the full
+  validation matrix (required/email/mobile/min-8/match/terms — including a
+  regression guard for the v-flag HTML pattern pitfall), the honest
+  no-backend submit and 1440/768/390 layouts.
 - `header-nav.test.cjs` — 12 header/navigation scenarios on every public page:
   sticky glass header, Collections dropdown (open/close/navigate), login button,
   hamburger morph, offcanvas mobile menu (open, stagger, close button, Escape,

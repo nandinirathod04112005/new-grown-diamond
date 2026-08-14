@@ -71,7 +71,11 @@ pinned `2.112.3`) → config → client → auth → page script.
 2. Fill in full name, company (optional), email, mobile, password (min 8),
    confirm password, and accept the terms.
 3. Submit. The browser calls `supabase.auth.signUp()` sending **only** the
-   safe metadata `full_name`, `company_name`, `phone` — never a role.
+   safe metadata `full_name`, `company_name`, `phone`, `country` — never a role.
+   The signup UI (STEP 18) adds show/hide password toggles and a
+   four-segment strength hint; `minlength=8`, the confirm-match check and
+   the required Terms & Privacy checkbox all validate before Supabase is
+   ever called.
 4. Your existing database trigger creates the `public.profiles` row with
    `role = 'customer'` and the default `account_status`.
 

@@ -410,6 +410,7 @@ async function alertText(page, boxId) {
     await page.fill('#reg-full-name', 'Nia New');
     await page.fill('#reg-email', 'nia@ngd.test');
     await page.fill('#reg-phone', '+919876543210');
+    await page.selectOption('#reg-country', 'India');
     await page.fill('#reg-password', 'Password#123');
     await page.fill('#reg-confirm', 'Different#123');
     await page.check('#reg-terms');
@@ -427,6 +428,7 @@ async function alertText(page, boxId) {
     await page.fill('#reg-company', 'Nia Jewels');
     await page.fill('#reg-email', 'nia@ngd.test');
     await page.fill('#reg-phone', '+919876543210');
+    await page.selectOption('#reg-country', 'India');
     await page.fill('#reg-password', 'Password#123');
     await page.fill('#reg-confirm', 'Password#123');
     await page.check('#reg-terms');
@@ -440,8 +442,8 @@ async function alertText(page, boxId) {
     const sent = backend.signups[0];
     const keys = Object.keys(sent.data || {}).sort();
     expect(
-      JSON.stringify(keys) === JSON.stringify(['company_name', 'full_name', 'phone']),
-      'metadata keys exactly full_name/company_name/phone, got ' + keys.join(',')
+      JSON.stringify(keys) === JSON.stringify(['company_name', 'country', 'full_name', 'phone']),
+      'metadata keys exactly full_name/company_name/phone/country, got ' + keys.join(',')
     );
     expect(!('role' in (sent.data || {})), 'no role in metadata');
     expect(!('role' in sent), 'no role at top level');
@@ -453,6 +455,7 @@ async function alertText(page, boxId) {
     await page.fill('#reg-full-name', 'Chetan Again');
     await page.fill('#reg-email', 'customer@ngd.test');
     await page.fill('#reg-phone', '+912222222222');
+    await page.selectOption('#reg-country', 'Belgium');
     await page.fill('#reg-password', 'Password#123');
     await page.fill('#reg-confirm', 'Password#123');
     await page.check('#reg-terms');
@@ -466,6 +469,7 @@ async function alertText(page, boxId) {
     await page.fill('#reg-full-name', 'Auto Confirmed');
     await page.fill('#reg-email', 'auto@ngd.test');
     await page.fill('#reg-phone', '+911234567890');
+    await page.selectOption('#reg-country', 'Singapore');
     await page.fill('#reg-password', 'Password#123');
     await page.fill('#reg-confirm', 'Password#123');
     await page.check('#reg-terms');

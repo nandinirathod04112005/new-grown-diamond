@@ -251,10 +251,17 @@ chapters for future CMS hydration. In-prose links inside `.ngd-lead`,
 split layout: a dark `.ngd-auth-side` brand panel (with `.ngd-auth-points`
 and the `.ngd-auth-art` diamond line art) beside the white `.ngd-auth-main`
 form. `.ngd-pass-wrap` + `.ngd-pass-toggle` add the show/hide password eye
-(two SVGs switched purely by the button's `aria-pressed` state). The login
-remember-me stores the **email only** under `ngd_login_email` — never the
-password, session or role — and the forgot-password link shows an honest
-"reset arrives later" notice because no reset flow exists yet.
+(two SVGs switched purely by the button's `aria-pressed` state; the signup
+page carries one on both password fields). `.ngd-strength` is the signup
+four-segment strength hint driven by `data-level="0…4"` — palette colours
+only, and `minlength=8` remains the real gate. The login remember-me stores
+the **email only** under `ngd_login_email` — never the password, session or
+role — and the forgot-password link shows an honest "reset arrives later"
+notice because no reset flow exists yet. Signup metadata is limited to
+`full_name` / `company_name` / `phone` / `country` — there is no role
+selector, and the tests enforce that. NB: HTML `pattern` attributes compile
+with the regex v-flag — escape `(` `)` `-` inside character classes or the
+whole pattern is silently ignored.
 
 ### Contact page
 `contact.html` reuses the `.ngd-form` skin (Bootstrap `.is-invalid` +

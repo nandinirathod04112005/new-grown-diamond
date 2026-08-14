@@ -2,9 +2,9 @@
    NEW GROWN DIAMOND — CUSTOMER SIGNUP (Supabase Auth)
    ------------------------------------------------------------
    - Validates the form, then supabase.auth.signUp()
-   - Sends ONLY safe metadata: full_name, company_name, phone.
-     The role is NEVER sent from the browser — the database
-     trigger creates the profiles row with role = 'customer'.
+   - Sends ONLY safe metadata: full_name, company_name, phone,
+     country. The role is NEVER sent from the browser — the
+     database trigger creates the profiles row with role = 'customer'.
    - Email confirmation ON  → success message, stay on page
    - Email confirmation OFF → session returned → customer dashboard
    ============================================================ */
@@ -91,6 +91,45 @@
     return GENERIC_ERROR;
   }
 
+  /** Rough strength hint (UI only — minlength 8 is the real gate).
+      0 empty · 1 weak · 2 fair · 3 good · 4 strong */
+  function scorePassword(value) {
+    if (!value) return 0;
+    if (value.length < 8) return 1;
+    var score = 2;
+    if (value.length >= 12) score++;
+    if (/[a-z]/.test(value) && /[A-Z]/.test(value)) score++;
+    if (/\d/.test(value) && /[^A-Za-z0-9]/.test(value)) score++;
+    return Math.min(4, score);
+  }
+
+  var STRENGTH_LABELS = ['', 'Weak', 'Fair', 'Good', 'Strong'];
+
+  function updateStrength() {
+    var meter = $('reg-strength');
+    var password = $('reg-password');
+    if (!meter || !password) return;
+    var level = scorePassword(password.value);
+    meter.setAttribute('data-level', String(level));
+    meter.querySelector('.ngd-strength-label').textContent = STRENGTH_LABELS[level];
+  }
+
+  /** Show/hide toggles — one per password field, wired by aria-controls. */
+  function initPasswordToggles() {
+    var toggles = document.querySelectorAll('.ngd-pass-toggle');
+    Array.prototype.forEach.call(toggles, function (toggle) {
+      var field = $(toggle.getAttribute('aria-controls'));
+      if (!field) return;
+      toggle.addEventListener('click', function () {
+        var show = field.type === 'password';
+        field.type = show ? 'text' : 'password';
+        toggle.setAttribute('aria-pressed', show ? 'true' : 'false');
+        toggle.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+        field.focus({ preventScroll: true });
+      });
+    });
+  }
+
   /** Keep the confirm-password field's validity in sync. */
   function syncConfirmValidity() {
     var password = $('reg-password');
@@ -131,7 +170,8 @@
     var metadata = {
       full_name: $('reg-full-name').value.trim(),
       company_name: $('reg-company').value.trim() || null,
-      phone: $('reg-phone').value.trim()
+      phone: $('reg-phone').value.trim(),
+      country: $('reg-country').value
     };
 
     setLoading(true);
@@ -207,7 +247,10 @@
     if (confirm && password) {
       confirm.addEventListener('input', syncConfirmValidity);
       password.addEventListener('input', syncConfirmValidity);
+      password.addEventListener('input', updateStrength);
     }
+    initPasswordToggles();
+    updateStrength();
 
     redirectIfSignedIn();
   }
