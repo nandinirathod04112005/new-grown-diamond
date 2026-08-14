@@ -59,6 +59,12 @@ tooling only** — the website itself is plain HTML/CSS/JS and has no Node backe
   inventory, certification, the eight-line report guide, care cards, the
   single-open FAQ accordion, tilt/reveal behaviour and the Explore Certified
   Diamonds CTA at 1440/768/390.
+- `about.test.cjs` — 15 About-page scenarios: dark split hero with parallax
+  visual, all nine sections in order, story copy, mission/vision glass cards,
+  the four-movement journey with desktop alternation, six why-choose-us cards,
+  quality & trust naming IGI/GIA, innovation and responsible sections with
+  their cross-links, parallax + reduced-motion behaviour, reveal, the Explore
+  Our Diamonds CTA and no-overflow checks at 1440/768/390.
 - `header-nav.test.cjs` — 12 header/navigation scenarios on every public page:
   sticky glass header, Collections dropdown (open/close/navigate), login button,
   hamburger morph, offcanvas mobile menu (open, stagger, close button, Escape,

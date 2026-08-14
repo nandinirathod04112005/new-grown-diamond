@@ -23,7 +23,8 @@ Bootstrap 5 + vanilla JavaScript** frontend backed by **Supabase**
 | Jewellery Details page (gallery, zoom, 15-field specs, 360° slot) | ✅ done — demo data |
 | Manufacturing page (9-stage cinematic journey) | ✅ done |
 | Education page (comparison, 4Cs, shapes, certification, FAQ) | ✅ done |
-| About/contact pages, admin management, storage, quotes | ⏳ upcoming steps |
+| About page (story, mission/vision, journey, trust, responsibility) | ✅ done |
+| Contact page, admin management, storage, quotes | ⏳ upcoming steps |
 
 ## Quick start
 
@@ -45,7 +46,8 @@ Bootstrap 5 + vanilla JavaScript** frontend backed by **Supabase**
 | `jewellery-details.html` | Jewellery Details — gallery + zoom + prepared 360° slot, 15-field specs, certificate, similar pieces (`?id=<sku>`) |
 | `manufacturing.html` | Manufacturing — cinematic 9-stage journey, quality control, certification, inventory CTA |
 | `education.html` | Diamond Education — natural vs lab-grown, CVD vs HPHT, the 4Cs, shapes, certification, report guide, care, FAQ |
-| `about.html` / `contact.html` / `privacy.html` / `terms.html` | Placeholder pages behind the footer navigation |
+| `about.html` | About — story, mission & vision, four-movement journey, why choose us, quality & trust, innovation, responsibility |
+| `contact.html` / `privacy.html` / `terms.html` | Placeholder pages behind the footer navigation |
 | `login.html` | Sign in → role-based redirect from `public.profiles` |
 | `register.html` | Customer signup (`role` is assigned by the DB trigger, never the browser) |
 | `account/dashboard.html` | Customer dashboard (guarded) |

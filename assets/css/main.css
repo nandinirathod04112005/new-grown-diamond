@@ -2355,7 +2355,8 @@ a.ngd-chip {
 }
 
 /* Anchored chapters land below the sticky navbar */
-[data-edu-section] { scroll-margin-top: 84px; }
+[data-edu-section],
+[data-about-section] { scroll-margin-top: 84px; }
 
 /* Fixed-height visual band inside each 4C card */
 .ngd-4c-visual {
@@ -2421,6 +2422,24 @@ a.ngd-chip {
   font-size: 0.72rem;
   line-height: 1.9;
 }
+
+/* In-prose links (section leads, asides) pick up the gold trim */
+.ngd-lead a,
+.ngd-text-muted a,
+.ngd-edu-note a {
+  color: var(--ngd-gold-deep);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: rgba(180, 140, 71, 0.5);
+  transition: color var(--ngd-fast) var(--ngd-ease);
+}
+
+.ngd-lead a:hover,
+.ngd-text-muted a:hover,
+.ngd-edu-note a:hover { color: var(--ngd-gold); }
+
+.ngd-section-dark .ngd-lead a { color: var(--ngd-gold-soft); }
+.ngd-section-dark .ngd-lead a:hover { color: #f4f2ee; }
 
 /* Natural vs lab-grown comparison table: prose cells wrap,
    row headers match the body-cell skin */

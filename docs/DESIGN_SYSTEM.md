@@ -235,6 +235,17 @@ how-to-read-a-report lines; `.ngd-edu-note` is the soft gold aside and
 chips as chapter anchor links (`[data-edu-section]` adds `scroll-margin-top`
 so anchors clear the sticky navbar).
 
+### About page
+`about.html` is assembled entirely from existing pieces: a dark split hero
+pairing copy with a `.ngd-story-media` visual (parallax + `[data-ngd-tilt]`),
+`.ngd-glass` mission/vision cards, a four-stage `.ngd-story` timeline on a
+dark band (the story timeline is designed for `.ngd-section-dark` — its
+titles are near-white), `.ngd-icon-tile` reason/responsibility cards and the
+`.ngd-edu-note` aside. `[data-about-section]` hooks mirror the education
+chapters for future CMS hydration. In-prose links inside `.ngd-lead`,
+`.ngd-text-muted` and `.ngd-edu-note` pick up the gold trim automatically
+(gold-soft variant inside `.ngd-section-dark`).
+
 ### Feedback & misc
 `.ngd-badge` (+ `.ngd-badge-dark`), `.ngd-alert` with `.ngd-alert-info` /
 `.ngd-alert-success` / `.ngd-alert-danger`, `.ngd-stat-value` + `.ngd-stat-label`.
