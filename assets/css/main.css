@@ -2798,6 +2798,24 @@ a.ngd-chip {
   color: #b04343;
 }
 
+/* Favourites cards: demo chip overlay + paired action buttons */
+.ngd-fav-card .ngd-diamond-media,
+.ngd-fav-card .ngd-jewel-media { position: relative; }
+
+.ngd-fav-chip {
+  position: absolute;
+  top: 0.7rem;
+  right: 0.7rem;
+  z-index: 2;
+}
+
+.ngd-fav-actions {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.ngd-fav-actions .ngd-btn { flex: 1 1 0; }
+
 /* Demo-state switcher (clearly a preview control, not data) */
 .ngd-dash-state-switch {
   display: inline-flex;

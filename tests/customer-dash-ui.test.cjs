@@ -276,16 +276,19 @@ async function openDashboard(page) {
 
   await scenario('sidebar anchors move the active state and scroll to sections', {}, async (page) => {
     await openDashboard(page);
-    await page.click('.ngd-dash-nav a[data-dash-route="favourites"]');
-    await page.waitForFunction(() => location.hash === '#dash-favourites');
+    await page.click('.ngd-dash-nav a[data-dash-route="quotes"]');
+    await page.waitForFunction(() => location.hash === '#dash-quotes');
     /* the page scrolls smoothly — wait for the section to settle */
     await page.waitForFunction(() => {
-      const top = document.getElementById('dash-favourites').getBoundingClientRect().top;
+      const top = document.getElementById('dash-quotes').getBoundingClientRect().top;
       return top > -60 && top < 220;
     }, null, { timeout: 5000 });
     const active = await page.evaluate(() =>
       document.querySelector('.ngd-dash-nav a.is-active').getAttribute('data-dash-route'));
-    expect(active === 'favourites', 'active route follows the click');
+    expect(active === 'quotes', 'active route follows the click');
+    /* Favourites is a real page link since STEP 21 */
+    const favHref = await page.getAttribute('.ngd-dash-nav a[data-dash-route="favourites"]', 'href');
+    expect(favHref === 'favourites.html', 'favourites routes to its page, got ' + favHref);
   });
 
   await scenario('logout signs out and returns to the login page', {}, async (page) => {

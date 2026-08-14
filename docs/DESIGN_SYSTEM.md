@@ -278,6 +278,16 @@ preview: Live shows honest “—” metrics and empty states because no account
 backend exists; Demo rows/values are always chipped DEMO.
 `loadDashboardData()` is the seam the Supabase phase replaces.
 
+`account/favourites.html` reuses the same shell (sidebar Favourites route
+active). Cards reuse the inventory/jewellery card skins with a
+`.ngd-fav-card` modifier: `.ngd-fav-chip` DEMO overlay on the media and
+`.ngd-fav-actions` paired View/Remove buttons. `assets/js/favourites.js`
+resolves a sample list from the public demo catalogue, runs tabs/search/
+sort, and its Remove edits only the in-memory preview (with Undo + an
+honest toast). `loadFavourites()` / `removeFavourite()` are the seams for
+the future Supabase `favourites` table (user_id, item_type, item_id,
+created_at).
+
 ### Contact page
 `contact.html` reuses the `.ngd-form` skin (Bootstrap `.is-invalid` +
 `.invalid-feedback` like the auth pages) on a `.ngd-glass` card, four

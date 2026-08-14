@@ -96,6 +96,12 @@ tooling only** — the website itself is plain HTML/CSS/JS and has no Node backe
   rows, quick actions, anchor navigation, the sub-992px offcanvas drawer
   with touch-sized targets, the no-session guard and layouts at
   1440/768/390.
+- `favourites-ui.test.cjs` — 11 Customer-Favourites scenarios (mocked auth):
+  shared dashboard shell with the Favourites route active, the honest demo
+  notice, mixed diamond/jewellery cards with spec fields + View/Remove,
+  tabs, search with no-match vs true-empty distinction, carat sort, the
+  demo-only removal with Undo, the exact empty-state copy with both CTAs,
+  guard redirect and 1/2/4-per-row layouts at 390/768/1440.
 - `header-nav.test.cjs` — 12 header/navigation scenarios on every public page:
   sticky glass header, Collections dropdown (open/close/navigate), login button,
   hamburger morph, offcanvas mobile menu (open, stagger, close button, Escape,
