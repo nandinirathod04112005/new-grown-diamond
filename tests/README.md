@@ -49,6 +49,10 @@ tooling only** — the website itself is plain HTML/CSS/JS and has no Node backe
   tilt, all 15 product fields, CTAs + favourite sync, certificate vs all-metal
   hallmark states, descriptions, grouped spec table, similar pieces, sticky
   mobile CTAs at 1440/768/390.
+- `manufacturing.test.cjs` — 11 Manufacturing-page scenarios: dark cinematic
+  hero, nine numbered stages with art/copy/parallax, alternating desktop layout,
+  reduced-motion opt-out, quality-control and certification sections, the
+  Explore Our Diamonds CTA, and vertical journeys at 768/390 with no overflow.
 - `header-nav.test.cjs` — 12 header/navigation scenarios on every public page:
   sticky glass header, Collections dropdown (open/close/navigate), login button,
   hamburger morph, offcanvas mobile menu (open, stagger, close button, Escape,

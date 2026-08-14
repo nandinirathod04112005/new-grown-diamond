@@ -21,6 +21,7 @@ Bootstrap 5 + vanilla JavaScript** frontend backed by **Supabase**
 | Diamond Details page (gallery, zoom, specs, certificate) | ✅ done — demo data |
 | Jewellery Listing page (search, category chips, sort, pagination) | ✅ done — demo data |
 | Jewellery Details page (gallery, zoom, 15-field specs, 360° slot) | ✅ done — demo data |
+| Manufacturing page (9-stage cinematic journey) | ✅ done |
 | Remaining homepage sections, catalogue, admin management, storage, quotes | ⏳ upcoming steps |
 
 ## Quick start
@@ -41,7 +42,7 @@ Bootstrap 5 + vanilla JavaScript** frontend backed by **Supabase**
 | `diamond-details.html` | Diamond Details — gallery + zoom, 17-field specs, certificate, similar stones (`?id=<stock no>`) |
 | `jewellery.html` | Jewellery Listing — search, category chips, sort, pagination (demo data) |
 | `jewellery-details.html` | Jewellery Details — gallery + zoom + prepared 360° slot, 15-field specs, certificate, similar pieces (`?id=<sku>`) |
-| `manufacturing.html` | Manufacturing placeholder linked from the homepage journey CTA |
+| `manufacturing.html` | Manufacturing — cinematic 9-stage journey, quality control, certification, inventory CTA |
 | `education.html` / `about.html` / `contact.html` / `privacy.html` / `terms.html` | Placeholder pages behind the footer navigation |
 | `login.html` | Sign in → role-based redirect from `public.profiles` |
 | `register.html` | Customer signup (`role` is assigned by the DB trigger, never the browser) |

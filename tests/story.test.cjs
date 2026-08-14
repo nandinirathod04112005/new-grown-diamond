@@ -208,7 +208,8 @@ async function scenario(name, opts, fn) {
       scrollW: document.documentElement.scrollWidth,
       clientW: document.documentElement.clientWidth,
     }));
-    expect(/Manufacturing/.test(state.heading), 'manufacturing page heading');
+    expect(/growth/i.test(state.heading) && /brilliance/i.test(state.heading),
+      'manufacturing hero headline, got ' + state.heading);
     expect(state.header, 'site header present');
     expect(state.scrollW <= state.clientW + 1, 'manufacturing page no overflow');
   });
