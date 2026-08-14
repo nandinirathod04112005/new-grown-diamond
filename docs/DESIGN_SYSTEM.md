@@ -263,6 +263,21 @@ selector, and the tests enforce that. NB: HTML `pattern` attributes compile
 with the regex v-flag — escape `(` `)` `-` inside character classes or the
 whole pattern is silently ignored.
 
+### Customer dashboard
+`account/dashboard.html` (guarded) uses the `.ngd-dash-*` shell:
+`.ngd-dash-topbar` sticky glass bar, `.ngd-dash-shell` grid with the
+`.ngd-dash-sidebar` (static ≥992px via Bootstrap's `offcanvas-lg`, a drawer
+below), `.ngd-dash-nav` routes with `.is-active` / `.is-soon` +
+`.ngd-soon-chip`, `.ngd-dash-metric` summary cards (`data-dash-metric`
+hooks, `.ngd-demo-chip` labels), `.ngd-dash-panel` previews whose
+`[data-dash-show="loading|empty|error|data"]` blocks are switched by the
+state machine in `customer-dashboard.js` (`.ngd-skeleton` shimmer,
+`.ngd-dash-empty` / `.ngd-dash-error` designs, `.ngd-status-chip`
+variants). The `#dash-state-switch` control is a clearly-labelled demo
+preview: Live shows honest “—” metrics and empty states because no account
+backend exists; Demo rows/values are always chipped DEMO.
+`loadDashboardData()` is the seam the Supabase phase replaces.
+
 ### Contact page
 `contact.html` reuses the `.ngd-form` skin (Bootstrap `.is-invalid` +
 `.invalid-feedback` like the auth pages) on a `.ngd-glass` card, four

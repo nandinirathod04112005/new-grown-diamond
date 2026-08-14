@@ -28,6 +28,7 @@ Bootstrap 5 + vanilla JavaScript** frontend backed by **Supabase**
 | Login page premium UI (split card, show/hide, remember me) | ✅ done |
 | Signup page premium UI (country, strength meter, terms, toggles) | ✅ done |
 | Forgot Password page UI (honest no-send, reset-seam ready) | ✅ done |
+| Customer Dashboard UI (sidebar shell, metrics, UI states) | ✅ done — demo/preview data only |
 | Admin management, storage, quotes, enquiries backend | ⏳ upcoming steps |
 
 ## Quick start
@@ -56,7 +57,7 @@ Bootstrap 5 + vanilla JavaScript** frontend backed by **Supabase**
 | `login.html` | Sign in → role-based redirect from `public.profiles` |
 | `register.html` | Customer signup (`role` is assigned by the DB trigger, never the browser) |
 | `forgot-password.html` | Reset-request UI — honest “not connected yet” notice; `requestReset()` seam awaits `resetPasswordForEmail()` |
-| `account/dashboard.html` | Customer dashboard (guarded) |
+| `account/dashboard.html` | Customer dashboard (guarded) — sidebar shell, summary metrics, previews with designed empty/loading/error states; demo values clearly chipped |
 | `admin/dashboard.html` | Admin console shell (guarded) |
 | `styleguide.html` | Living reference for the design system |
 

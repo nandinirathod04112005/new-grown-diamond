@@ -16,72 +16,421 @@
 <!-- Hidden until the customer guard passes (fail closed) -->
 <body class="ngd-backdrop" style="visibility:hidden">
 
-  <nav class="navbar sticky-top ngd-navbar">
-    <div class="container">
-      <a class="ngd-brand" href="../index.html">
-        <span class="ngd-brand-mark">◆</span>
-        <span>New Grown Diamond</span>
-      </a>
-      <div class="d-flex align-items-center gap-3">
-        <span class="ngd-badge d-none d-sm-inline-flex">Customer</span>
-        <button type="button" class="ngd-btn ngd-btn-outline ngd-btn-sm" data-ngd-logout>
-          Sign out
-        </button>
-      </div>
+  <!-- ══════════ TOP HEADER ══════════ -->
+  <header class="ngd-dash-topbar">
+    <button class="ngd-burger-btn d-lg-none" type="button" data-bs-toggle="offcanvas"
+            data-bs-target="#dashSidebar" aria-controls="dashSidebar" aria-label="Open account menu">
+      <span class="ngd-burger"><span></span><span></span><span></span></span>
+    </button>
+    <a class="ngd-brand" href="../index.html">
+      <span class="ngd-brand-mark">◆</span>
+      <span class="d-none d-sm-inline">New Grown Diamond</span>
+    </a>
+    <span class="ngd-eyebrow d-none d-md-inline ms-2">Customer account</span>
+    <div class="d-flex align-items-center gap-3 ms-auto">
+      <span class="ngd-badge d-none d-sm-inline-flex">
+        <span data-ngd-field="first_name">there</span>
+      </span>
+      <button type="button" class="ngd-btn ngd-btn-outline ngd-btn-sm" data-ngd-logout>
+        Sign out
+      </button>
     </div>
-  </nav>
+  </header>
 
-  <main class="ngd-section-tight">
-    <div class="container">
-      <span class="ngd-eyebrow">Customer account</span>
-      <h1 class="ngd-display-2 mt-2">
-        Welcome, <span class="ngd-italic-accent" data-ngd-field="first_name">there</span>
-      </h1>
-      <hr class="ngd-divider">
+  <div class="ngd-dash-shell">
 
-      <div class="row g-4 mt-1">
-        <div class="col-lg-7">
-          <div class="ngd-card ngd-card-3d h-100">
-            <h2 class="ngd-title mb-4">Profile details</h2>
-            <dl class="row mb-0 small">
-              <dt class="col-sm-4 ngd-stat-label py-2">Full name</dt>
-              <dd class="col-sm-8 py-2 mb-0" data-ngd-field="full_name">—</dd>
-              <dt class="col-sm-4 ngd-stat-label py-2">Email</dt>
-              <dd class="col-sm-8 py-2 mb-0" data-ngd-field="email">—</dd>
-              <dt class="col-sm-4 ngd-stat-label py-2">Company</dt>
-              <dd class="col-sm-8 py-2 mb-0" data-ngd-field="company_name">—</dd>
-              <dt class="col-sm-4 ngd-stat-label py-2">Mobile</dt>
-              <dd class="col-sm-8 py-2 mb-0" data-ngd-field="phone">—</dd>
-            </dl>
+    <!-- ══════════ SIDEBAR (static ≥992px, offcanvas below) ══════════ -->
+    <aside class="offcanvas-lg offcanvas-start ngd-dash-sidebar" tabindex="-1" id="dashSidebar"
+           aria-labelledby="dashSidebarLabel">
+      <div class="offcanvas-header d-lg-none">
+        <a class="ngd-brand" href="../index.html" id="dashSidebarLabel">
+          <span class="ngd-brand-mark">◆</span>
+          <span>New Grown Diamond</span>
+        </a>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas"
+                data-bs-target="#dashSidebar" aria-label="Close menu"></button>
+      </div>
+      <div class="offcanvas-body d-block p-0">
+        <!-- Routes carry data-dash-route hooks; Holds and Inspections
+             become real destinations in the account backend phase. -->
+        <nav class="ngd-dash-nav" aria-label="Account navigation">
+          <a href="#dash-home" class="is-active" data-dash-route="dashboard">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg>
+            Dashboard
+          </a>
+          <a href="#dash-favourites" data-dash-route="favourites">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.5s-7.5-4.7-7.5-10A4.3 4.3 0 0 1 12 7.6a4.3 4.3 0 0 1 7.5 2.9c0 5.3-7.5 10-7.5 10Z"/></svg>
+            Favourites
+          </a>
+          <a href="#dash-quotes" data-dash-route="quotes">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h9l3.5 3.5v13.5H6Z"/><path d="M15 3.5V7h3.5M9 11h6M9 14.5h6M9 18h3.5"/></svg>
+            Quote History
+          </a>
+          <span class="ngd-dash-nav-item is-soon" data-dash-route="holds" aria-disabled="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>
+            Holds <em class="ngd-soon-chip">Soon</em>
+          </span>
+          <span class="ngd-dash-nav-item is-soon" data-dash-route="inspections" aria-disabled="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 4.5 4.5"/></svg>
+            Inspections <em class="ngd-soon-chip">Soon</em>
+          </span>
+          <a href="#dash-enquiries" data-dash-route="enquiries">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+            Enquiries
+          </a>
+          <a href="#dash-profile" data-dash-route="profile">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>
+            Profile
+          </a>
+          <hr class="ngd-hairline my-2">
+          <button type="button" class="ngd-dash-nav-logout" data-ngd-logout>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-2"/><path d="M9 12h11M17 9l3 3-3 3"/></svg>
+            Logout
+          </button>
+        </nav>
+        <div class="px-3 pb-4 pt-2">
+          <a class="ngd-link ngd-text-muted small" href="../diamonds.html">← Back to the inventory</a>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ══════════ MAIN ══════════ -->
+    <main class="ngd-dash-main" id="dash-home">
+
+      <!-- Welcome -->
+      <section class="d-flex flex-wrap align-items-end justify-content-between gap-3" data-dash-section="welcome">
+        <div>
+          <span class="ngd-eyebrow">Customer account</span>
+          <h1 class="ngd-display-2 mt-2 mb-1">
+            Welcome, <span class="ngd-italic-accent" data-ngd-field="first_name">there</span>
+          </h1>
+          <p class="ngd-text-muted small mb-0">
+            Your saved stones, quotes and enquiries — all in one quiet place.
+          </p>
+        </div>
+        <!-- Demo-only preview control: switches the UI state designs
+             below. It never pretends data exists — demo rows are
+             labelled, and Live simply shows today's honest empty
+             states until the account backend arrives. -->
+        <div class="text-lg-end">
+          <span class="ngd-dash-metric-note d-block mb-1">UI preview (demo only)</span>
+          <div class="ngd-dash-state-switch" id="dash-state-switch" role="group" aria-label="Preview a UI state">
+            <button type="button" class="is-on" data-dash-state="live">Live</button>
+            <button type="button" data-dash-state="demo">Demo data</button>
+            <button type="button" data-dash-state="loading">Loading</button>
+            <button type="button" data-dash-state="empty">Empty</button>
+            <button type="button" data-dash-state="error">Error</button>
           </div>
         </div>
+      </section>
 
-        <div class="col-lg-5">
-          <div class="d-flex flex-column gap-4 h-100">
-            <div class="ngd-card ngd-card-dark">
+      <!-- Summary cards -->
+      <section class="mt-4" id="dash-summary" data-dash-section="summary">
+        <div class="row g-3">
+          <!-- Values are filled by customer-dashboard.js: “—” while no
+               backend exists; clearly-chipped demo numbers in Demo
+               preview. Each card keeps a data-dash-metric hook for the
+               future Supabase binding. -->
+          <div class="col-6 col-lg-4 col-xl-2">
+            <div class="ngd-dash-metric" data-dash-metric="saved_diamonds">
+              <span class="ngd-icon-tile ngd-depth-1">◆</span>
+              <div>
+                <span class="ngd-dash-value" data-dash-value>—</span>
+                <span class="ngd-dash-metric-label">Saved Diamonds</span>
+                <span class="ngd-demo-chip d-none" data-dash-demo-chip>Demo</span>
+              </div>
+            </div>
+          </div>
+          <div class="col-6 col-lg-4 col-xl-2">
+            <div class="ngd-dash-metric" data-dash-metric="saved_jewellery">
+              <span class="ngd-icon-tile ngd-depth-1">✦</span>
+              <div>
+                <span class="ngd-dash-value" data-dash-value>—</span>
+                <span class="ngd-dash-metric-label">Saved Jewellery</span>
+                <span class="ngd-demo-chip d-none" data-dash-demo-chip>Demo</span>
+              </div>
+            </div>
+          </div>
+          <div class="col-6 col-lg-4 col-xl-2">
+            <div class="ngd-dash-metric" data-dash-metric="quotes">
+              <span class="ngd-icon-tile ngd-depth-1">❐</span>
+              <div>
+                <span class="ngd-dash-value" data-dash-value>—</span>
+                <span class="ngd-dash-metric-label">Quotes</span>
+                <span class="ngd-demo-chip d-none" data-dash-demo-chip>Demo</span>
+              </div>
+            </div>
+          </div>
+          <div class="col-6 col-lg-4 col-xl-2">
+            <div class="ngd-dash-metric" data-dash-metric="holds">
+              <span class="ngd-icon-tile ngd-depth-1">◔</span>
+              <div>
+                <span class="ngd-dash-value" data-dash-value>—</span>
+                <span class="ngd-dash-metric-label">Holds</span>
+                <span class="ngd-demo-chip d-none" data-dash-demo-chip>Demo</span>
+              </div>
+            </div>
+          </div>
+          <div class="col-6 col-lg-4 col-xl-2">
+            <div class="ngd-dash-metric" data-dash-metric="inspections">
+              <span class="ngd-icon-tile ngd-depth-1">◎</span>
+              <div>
+                <span class="ngd-dash-value" data-dash-value>—</span>
+                <span class="ngd-dash-metric-label">Inspections</span>
+                <span class="ngd-demo-chip d-none" data-dash-demo-chip>Demo</span>
+              </div>
+            </div>
+          </div>
+          <div class="col-6 col-lg-4 col-xl-2">
+            <div class="ngd-dash-metric" data-dash-metric="enquiries">
+              <span class="ngd-icon-tile ngd-depth-1">✉</span>
+              <div>
+                <span class="ngd-dash-value" data-dash-value>—</span>
+                <span class="ngd-dash-metric-label">Enquiries</span>
+                <span class="ngd-demo-chip d-none" data-dash-demo-chip>Demo</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="ngd-dash-metric-note mt-2 mb-0" data-dash-metric-note>
+          Counts connect to your account in the Supabase phase — nothing here is live data yet.
+        </p>
+      </section>
+
+      <!-- Quick actions -->
+      <section class="mt-4" id="dash-actions" data-dash-section="actions">
+        <div class="d-flex flex-wrap gap-2">
+          <a class="ngd-btn ngd-btn-gold ngd-btn-sm" href="../diamonds.html">Browse diamonds</a>
+          <a class="ngd-btn ngd-btn-outline ngd-btn-sm" href="../jewellery.html">Browse jewellery</a>
+          <a class="ngd-btn ngd-btn-outline ngd-btn-sm" href="../contact.html">Send an enquiry</a>
+          <a class="ngd-btn ngd-btn-outline ngd-btn-sm" href="../education.html">Diamond education</a>
+        </div>
+      </section>
+
+      <!-- Recent previews -->
+      <div class="row g-4 mt-2">
+        <div class="col-xl-6">
+          <section class="ngd-dash-panel h-100" id="dash-favourites" data-dash-preview="favourites" data-dash-section="favourites">
+            <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+              <h2 class="ngd-title fs-5 mb-0">Recent Favourites</h2>
+              <span class="ngd-demo-chip d-none" data-dash-panel-chip>Demo data</span>
+            </div>
+            <div data-dash-show="loading" hidden>
+              <div class="ngd-dash-row"><span class="ngd-skeleton w-100"></span></div>
+              <div class="ngd-dash-row"><span class="ngd-skeleton w-75"></span></div>
+              <div class="ngd-dash-row"><span class="ngd-skeleton w-50"></span></div>
+            </div>
+            <div data-dash-show="empty" hidden>
+              <div class="ngd-dash-empty">
+                <span class="ngd-icon-tile ngd-depth-1 mb-3">♡</span>
+                <h3 class="ngd-title fs-6">Nothing saved yet</h3>
+                <p class="ngd-text-muted small mb-3">
+                  Tap the heart on any diamond or piece and it will wait for
+                  you here once favourites sync with your account.
+                </p>
+                <a class="ngd-btn ngd-btn-outline ngd-btn-sm" href="../diamonds.html">Browse diamonds</a>
+              </div>
+            </div>
+            <div data-dash-show="error" hidden>
+              <div class="ngd-dash-error">
+                <span class="ngd-icon-tile mb-3">!</span>
+                <h3 class="ngd-title fs-6">We couldn’t load this panel</h3>
+                <p class="ngd-text-muted small mb-3">Check your connection and try again.</p>
+                <button type="button" class="ngd-btn ngd-btn-outline ngd-btn-sm" data-dash-retry>Retry</button>
+              </div>
+            </div>
+            <div data-dash-show="data" hidden>
+              <!-- Demo rows reference the public demo catalogue so the
+                   links genuinely work; every row is chipped DEMO. -->
+              <div class="ngd-dash-row">
+                <span class="ngd-icon-tile">◆</span>
+                <div class="flex-grow-1 min-w-0">
+                  <strong>NGD-1007</strong>
+                  <span class="ngd-text-muted d-block small">Oval · lab-grown diamond</span>
+                </div>
+                <span class="ngd-demo-chip">Demo</span>
+                <a class="ngd-link small" href="../diamond-details.html?id=NGD-1007">View</a>
+              </div>
+              <div class="ngd-dash-row">
+                <span class="ngd-icon-tile">◆</span>
+                <div class="flex-grow-1 min-w-0">
+                  <strong>NGD-1015</strong>
+                  <span class="ngd-text-muted d-block small">Princess · lab-grown diamond</span>
+                </div>
+                <span class="ngd-demo-chip">Demo</span>
+                <a class="ngd-link small" href="../diamond-details.html?id=NGD-1015">View</a>
+              </div>
+              <div class="ngd-dash-row">
+                <span class="ngd-icon-tile">✦</span>
+                <div class="flex-grow-1 min-w-0">
+                  <strong>JW-1003</strong>
+                  <span class="ngd-text-muted d-block small">Fine jewellery piece</span>
+                </div>
+                <span class="ngd-demo-chip">Demo</span>
+                <a class="ngd-link small" href="../jewellery-details.html?id=JW-1003">View</a>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <div class="col-xl-6">
+          <section class="ngd-dash-panel h-100" id="dash-quotes" data-dash-preview="quotes" data-dash-section="quotes">
+            <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+              <h2 class="ngd-title fs-5 mb-0">Recent Quote Requests</h2>
+              <span class="ngd-demo-chip d-none" data-dash-panel-chip>Demo data</span>
+            </div>
+            <div data-dash-show="loading" hidden>
+              <div class="ngd-dash-row"><span class="ngd-skeleton w-100"></span></div>
+              <div class="ngd-dash-row"><span class="ngd-skeleton w-75"></span></div>
+              <div class="ngd-dash-row"><span class="ngd-skeleton w-50"></span></div>
+            </div>
+            <div data-dash-show="empty" hidden>
+              <div class="ngd-dash-empty">
+                <span class="ngd-icon-tile ngd-depth-1 mb-3">❐</span>
+                <h3 class="ngd-title fs-6">No quote requests yet</h3>
+                <p class="ngd-text-muted small mb-0">
+                  The Request Quote buttons across the site will file
+                  requests here once your account backend arrives.
+                </p>
+              </div>
+            </div>
+            <div data-dash-show="error" hidden>
+              <div class="ngd-dash-error">
+                <span class="ngd-icon-tile mb-3">!</span>
+                <h3 class="ngd-title fs-6">We couldn’t load this panel</h3>
+                <p class="ngd-text-muted small mb-3">Check your connection and try again.</p>
+                <button type="button" class="ngd-btn ngd-btn-outline ngd-btn-sm" data-dash-retry>Retry</button>
+              </div>
+            </div>
+            <div data-dash-show="data" hidden>
+              <div class="ngd-dash-row">
+                <div class="flex-grow-1 min-w-0">
+                  <strong>Q-0104</strong>
+                  <span class="ngd-text-muted d-block small">NGD-1012 · loose stone</span>
+                </div>
+                <span class="ngd-demo-chip">Demo</span>
+                <span class="ngd-status-chip is-gold">Quoted</span>
+              </div>
+              <div class="ngd-dash-row">
+                <div class="flex-grow-1 min-w-0">
+                  <strong>Q-0103</strong>
+                  <span class="ngd-text-muted d-block small">NGD-1001 · loose stone</span>
+                </div>
+                <span class="ngd-demo-chip">Demo</span>
+                <span class="ngd-status-chip">Awaiting reply</span>
+              </div>
+              <div class="ngd-dash-row">
+                <div class="flex-grow-1 min-w-0">
+                  <strong>Q-0101</strong>
+                  <span class="ngd-text-muted d-block small">JW-1006 · jewellery</span>
+                </div>
+                <span class="ngd-demo-chip">Demo</span>
+                <span class="ngd-status-chip is-good">Accepted</span>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <div class="col-12">
+          <section class="ngd-dash-panel" id="dash-enquiries" data-dash-preview="enquiries" data-dash-section="enquiries">
+            <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+              <h2 class="ngd-title fs-5 mb-0">Recent Enquiries</h2>
+              <span class="ngd-demo-chip d-none" data-dash-panel-chip>Demo data</span>
+            </div>
+            <div data-dash-show="loading" hidden>
+              <div class="ngd-dash-row"><span class="ngd-skeleton w-100"></span></div>
+              <div class="ngd-dash-row"><span class="ngd-skeleton w-75"></span></div>
+            </div>
+            <div data-dash-show="empty" hidden>
+              <div class="ngd-dash-empty">
+                <span class="ngd-icon-tile ngd-depth-1 mb-3">✉</span>
+                <h3 class="ngd-title fs-6">No enquiries on record</h3>
+                <p class="ngd-text-muted small mb-3">
+                  Write to us any time — enquiries you send will be tracked
+                  here once the account backend arrives.
+                </p>
+                <a class="ngd-btn ngd-btn-outline ngd-btn-sm" href="../contact.html">Contact us</a>
+              </div>
+            </div>
+            <div data-dash-show="error" hidden>
+              <div class="ngd-dash-error">
+                <span class="ngd-icon-tile mb-3">!</span>
+                <h3 class="ngd-title fs-6">We couldn’t load this panel</h3>
+                <p class="ngd-text-muted small mb-3">Check your connection and try again.</p>
+                <button type="button" class="ngd-btn ngd-btn-outline ngd-btn-sm" data-dash-retry>Retry</button>
+              </div>
+            </div>
+            <div data-dash-show="data" hidden>
+              <div class="ngd-dash-row">
+                <div class="flex-grow-1 min-w-0">
+                  <strong>Certification question — NGD-1019</strong>
+                  <span class="ngd-text-muted d-block small">“Could you confirm the report number matches…”</span>
+                </div>
+                <span class="ngd-demo-chip">Demo</span>
+                <span class="ngd-status-chip is-good">Answered</span>
+              </div>
+              <div class="ngd-dash-row">
+                <div class="flex-grow-1 min-w-0">
+                  <strong>Custom pendant enquiry</strong>
+                  <span class="ngd-text-muted d-block small">“We are looking for a pear-shaped centre stone…”</span>
+                </div>
+                <span class="ngd-demo-chip">Demo</span>
+                <span class="ngd-status-chip is-gold">Open</span>
+              </div>
+              <div class="ngd-dash-row">
+                <div class="flex-grow-1 min-w-0">
+                  <strong>Trade terms</strong>
+                  <span class="ngd-text-muted d-block small">“Please share your wholesale onboarding…”</span>
+                </div>
+                <span class="ngd-demo-chip">Demo</span>
+                <span class="ngd-status-chip is-good">Answered</span>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <!-- Profile -->
+      <section class="mt-4" id="dash-profile" data-dash-section="profile">
+        <div class="row g-4">
+          <div class="col-lg-7">
+            <div class="ngd-dash-panel h-100">
+              <h2 class="ngd-title fs-5 mb-4">Profile details</h2>
+              <dl class="row mb-0 small">
+                <dt class="col-sm-4 ngd-stat-label py-2">Full name</dt>
+                <dd class="col-sm-8 py-2 mb-0" data-ngd-field="full_name">—</dd>
+                <dt class="col-sm-4 ngd-stat-label py-2">Email</dt>
+                <dd class="col-sm-8 py-2 mb-0" data-ngd-field="email">—</dd>
+                <dt class="col-sm-4 ngd-stat-label py-2">Company</dt>
+                <dd class="col-sm-8 py-2 mb-0" data-ngd-field="company_name">—</dd>
+                <dt class="col-sm-4 ngd-stat-label py-2">Mobile</dt>
+                <dd class="col-sm-8 py-2 mb-0" data-ngd-field="phone">—</dd>
+              </dl>
+            </div>
+          </div>
+          <div class="col-lg-5">
+            <div class="ngd-card ngd-card-dark h-100">
               <h2 class="ngd-title mb-3">Account</h2>
-              <div class="d-flex flex-wrap gap-2">
+              <div class="d-flex flex-wrap gap-2 mb-3">
                 <span class="ngd-badge ngd-badge-dark">Role: <span data-ngd-field="role">—</span></span>
                 <span class="ngd-badge ngd-badge-dark">Status: <span data-ngd-field="account_status">—</span></span>
               </div>
-            </div>
-            <div class="ngd-card flex-grow-1">
-              <h2 class="ngd-title mb-2">Coming soon</h2>
-              <p class="ngd-text-muted small mb-0">
-                The diamond catalogue, jewellery collections, quotes and
-                enquiries arrive in the next phase of your account.
+              <p class="ngd-text-muted small mb-0" style="color: rgba(244,242,238,0.6);">
+                Profile editing arrives with the account backend phase.
               </p>
             </div>
           </div>
         </div>
-      </div>
-    </div>
-  </main>
+      </section>
+
+    </main>
+  </div>
 
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.js"></script>
   <script defer src="../assets/js/supabase-config.js"></script>
   <script defer src="../assets/js/supabase-client.js"></script>
   <script defer src="../assets/js/auth.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script defer src="../assets/js/ui.js"></script>
   <script defer src="../assets/js/customer-dashboard.js"></script>
 </body>

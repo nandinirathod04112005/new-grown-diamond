@@ -89,6 +89,13 @@ tooling only** — the website itself is plain HTML/CSS/JS and has no Node backe
   loupe art, instruction copy, email validation, the honest no-send submit
   (no email sent, no fake "check your inbox", value preserved), back-to-login
   and login-page integration, and single-column mobile at 1440/768/390.
+- `customer-dash-ui.test.cjs` — 10 Customer-Dashboard scenarios against a
+  compact mocked Supabase login: topbar + sidebar routes (incl. the Soon
+  items and both logout buttons), welcome/profile fill, six honest metric
+  cards, the empty/loading/error/demo state machine with its chipped demo
+  rows, quick actions, anchor navigation, the sub-992px offcanvas drawer
+  with touch-sized targets, the no-session guard and layouts at
+  1440/768/390.
 - `header-nav.test.cjs` — 12 header/navigation scenarios on every public page:
   sticky glass header, Collections dropdown (open/close/navigate), login button,
   hamburger morph, offcanvas mobile menu (open, stagger, close button, Escape,

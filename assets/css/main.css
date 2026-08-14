@@ -2440,9 +2440,10 @@ a.ngd-chip {
   text-decoration: none;
 }
 
-/* Anchored chapters land below the sticky navbar */
+/* Anchored chapters land below the sticky navbar / dashboard topbar */
 [data-edu-section],
-[data-about-section] { scroll-margin-top: 84px; }
+[data-about-section],
+[data-dash-section] { scroll-margin-top: 84px; }
 
 /* Fixed-height visual band inside each 4C card */
 .ngd-4c-visual {
@@ -2554,6 +2555,280 @@ a.ngd-chip {
 }
 
 .ngd-compare-table tbody tr:last-child th { border-bottom: 0; }
+
+/* ------------------------------------------------------------
+   13m. CUSTOMER DASHBOARD (shell, sidebar, metrics, UI states)
+   ------------------------------------------------------------ */
+.ngd-dash-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 1030;
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.75rem clamp(1rem, 3vw, 1.6rem);
+  background-color: rgba(253, 252, 248, 0.94);
+  border-bottom: 1px solid var(--ngd-line);
+  box-shadow: var(--ngd-shadow-soft);
+}
+
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .ngd-dash-topbar {
+    background-color: rgba(253, 252, 248, 0.78);
+    -webkit-backdrop-filter: blur(14px) saturate(1.4);
+    backdrop-filter: blur(14px) saturate(1.4);
+  }
+}
+
+.ngd-dash-shell {
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: start;
+}
+
+@media (min-width: 992px) {
+  .ngd-dash-shell { grid-template-columns: 264px minmax(0, 1fr); }
+}
+
+.ngd-dash-sidebar {
+  background-color: var(--ngd-white);
+  border-right: 1px solid var(--ngd-line);
+}
+
+@media (min-width: 992px) {
+  .ngd-dash-sidebar {
+    position: sticky;
+    top: 64px;
+    height: calc(100vh - 64px);
+    overflow-y: auto;
+  }
+}
+
+.ngd-dash-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 1.2rem 0.85rem;
+}
+
+.ngd-dash-nav a,
+.ngd-dash-nav button,
+.ngd-dash-nav .ngd-dash-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  width: 100%;
+  padding: 0.68rem 0.95rem;
+  border: 0;
+  border-radius: var(--ngd-radius-sm);
+  background: none;
+  color: var(--ngd-ink);
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-align: left;
+  text-decoration: none;
+  transition:
+      background-color var(--ngd-fast) var(--ngd-ease),
+      color var(--ngd-fast) var(--ngd-ease);
+}
+
+.ngd-dash-nav a:hover,
+.ngd-dash-nav button:hover {
+  background-color: rgba(180, 140, 71, 0.08);
+  color: var(--ngd-gold-deep);
+}
+
+.ngd-dash-nav .is-active {
+  background: linear-gradient(160deg, rgba(217, 192, 138, 0.22), rgba(217, 192, 138, 0.08));
+  color: var(--ngd-gold-deep);
+  font-weight: 600;
+}
+
+.ngd-dash-nav svg { width: 17px; height: 17px; flex-shrink: 0; opacity: 0.75; }
+
+.ngd-dash-nav .is-soon {
+  color: var(--ngd-slate);
+  cursor: default;
+}
+
+.ngd-soon-chip {
+  margin-left: auto;
+  padding: 0.14rem 0.5rem;
+  border: 1px solid var(--ngd-line);
+  border-radius: 999px;
+  font-size: 0.56rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ngd-slate);
+}
+
+.ngd-dash-nav-logout:hover { color: #b04343 !important; background-color: rgba(176, 67, 67, 0.07) !important; }
+
+.ngd-dash-main {
+  min-width: 0;
+  padding: clamp(1.3rem, 3vw, 2.3rem);
+}
+
+/* Metric cards */
+.ngd-dash-metric {
+  height: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9rem;
+  padding: 1.1rem 1.2rem;
+  background-color: var(--ngd-white);
+  border: 1px solid var(--ngd-line);
+  border-radius: var(--ngd-radius);
+  box-shadow: var(--ngd-shadow-soft);
+  transition: transform var(--ngd-fast) var(--ngd-ease), box-shadow var(--ngd-fast) var(--ngd-ease);
+}
+
+.ngd-dash-metric:hover { transform: translateY(-2px); box-shadow: var(--ngd-shadow-deep); }
+
+.ngd-dash-value {
+  display: block;
+  font-family: var(--ngd-font-display);
+  font-size: 1.75rem;
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--ngd-ink);
+}
+
+.ngd-dash-metric-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ngd-slate);
+}
+
+.ngd-dash-metric-note { font-size: 0.72rem; color: var(--ngd-slate); }
+
+.ngd-demo-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.14rem 0.5rem;
+  border: 1px solid rgba(180, 140, 71, 0.5);
+  border-radius: 999px;
+  background: rgba(217, 192, 138, 0.14);
+  font-size: 0.56rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ngd-gold-deep);
+}
+
+/* Preview panels + rows */
+.ngd-dash-panel {
+  background-color: var(--ngd-white);
+  border: 1px solid var(--ngd-line);
+  border-radius: var(--ngd-radius);
+  box-shadow: var(--ngd-shadow-soft);
+  padding: 1.35rem 1.5rem;
+}
+
+.ngd-dash-row {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--ngd-line-light);
+  font-size: 0.9rem;
+}
+
+.ngd-dash-row:last-child { border-bottom: 0; padding-bottom: 0; }
+
+.ngd-dash-row > div { min-width: 0; }
+.ngd-dash-row strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.ngd-status-chip {
+  padding: 0.2rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border: 1px solid var(--ngd-line);
+  color: var(--ngd-slate);
+  white-space: nowrap;
+}
+
+.ngd-status-chip.is-gold { border-color: rgba(180, 140, 71, 0.5); background: rgba(217, 192, 138, 0.14); color: var(--ngd-gold-deep); }
+.ngd-status-chip.is-good { border-color: rgba(78, 125, 81, 0.45); background: rgba(78, 125, 81, 0.08); color: #38573a; }
+
+/* UI states: loading skeleton, empty, error */
+.ngd-skeleton {
+  position: relative;
+  overflow: hidden;
+  height: 14px;
+  border-radius: 7px;
+  background-color: rgba(12, 12, 14, 0.06);
+}
+
+.ngd-skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.75), transparent);
+  animation: ngd-shimmer 1.5s var(--ngd-ease) infinite;
+}
+
+@keyframes ngd-shimmer {
+  to { transform: translateX(100%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ngd-skeleton::after { animation: none; }
+}
+
+.ngd-dash-empty,
+.ngd-dash-error {
+  padding: 1.6rem 1rem;
+  text-align: center;
+}
+
+.ngd-dash-empty .ngd-icon-tile,
+.ngd-dash-error .ngd-icon-tile { width: 2.6rem; height: 2.6rem; }
+
+.ngd-dash-error .ngd-icon-tile {
+  border-color: rgba(176, 67, 67, 0.4);
+  background: rgba(176, 67, 67, 0.08);
+  color: #b04343;
+}
+
+/* Demo-state switcher (clearly a preview control, not data) */
+.ngd-dash-state-switch {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  padding: 0.3rem;
+  border: 1px solid var(--ngd-line);
+  border-radius: 999px;
+  background-color: var(--ngd-white);
+}
+
+.ngd-dash-state-switch button {
+  border: 0;
+  background: none;
+  padding: 0.32rem 0.8rem;
+  border-radius: 999px;
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ngd-slate);
+  cursor: pointer;
+  transition: background-color var(--ngd-fast) var(--ngd-ease), color var(--ngd-fast) var(--ngd-ease);
+}
+
+.ngd-dash-state-switch button:hover { color: var(--ngd-gold-deep); }
+
+.ngd-dash-state-switch button.is-on {
+  background-color: var(--ngd-black);
+  color: var(--ngd-gold-soft);
+}
 
 /* ------------------------------------------------------------
    14. ACCESSIBILITY & RESPONSIVE GUARDS
