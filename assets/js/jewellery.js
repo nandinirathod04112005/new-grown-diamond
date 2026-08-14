@@ -22,7 +22,6 @@
   }
 
   var DATA = loadJewellery();
-  var ART = window.NGD_JEWEL_ART || {};
   var PAGE_SIZE = 8;
   var CATEGORIES = ['Rings', 'Earrings', 'Pendants', 'Necklaces', 'Bracelets', 'Bangles'];
 
@@ -89,39 +88,9 @@
     }
   };
 
-  /* ---------- renderers ---------- */
-  function availBadge(p) {
-    var cls = p.availability === 'In Stock' ? 'ngd-avail-stock' : 'ngd-avail-request';
-    return '<span class="ngd-avail ' + cls + '">' + p.availability + '</span>';
-  }
-
-  function artFor(p) {
-    return ART[p.category.toLowerCase()] || '';
-  }
-
-  function cardHtml(p) {
-    var weight = p.weightCt !== null
-      ? '<span class="ngd-weight-chip">' + p.weightCt.toFixed(2) + ' ct diamonds</span>'
-      : '';
-    return (
-      '<div class="col-12 col-sm-6 col-lg-4 col-xl-3">' +
-      '<article class="ngd-card ngd-card-3d ngd-jewel-card h-100" data-ngd-tilt ' +
-      'data-jewellery-id="' + p.id + '" data-category="' + p.category.toLowerCase() + '">' +
-      '<div class="ngd-jewel-media">' +
-      '<div class="ngd-jewel-figure">' + artFor(p) + '</div>' +
-      '</div>' +
-      '<div class="ngd-jewel-body">' +
-      '<p class="ngd-jewel-cat">' + p.category + '</p>' +
-      '<h3 class="ngd-jewel-name">' + p.name + '</h3>' +
-      '<p class="ngd-jewel-desc">' + p.description + '</p>' +
-      '<div class="d-flex align-items-center gap-2 flex-wrap mb-3">' +
-      availBadge(p) + weight +
-      '</div>' +
-      '<a class="ngd-btn ngd-btn-outline ngd-btn-sm ngd-btn-block" ' +
-      'href="jewellery-details.html?id=' + encodeURIComponent(p.id) + '">View Details</a>' +
-      '</div></article></div>'
-    );
-  }
+  /* ---------- renderers (shared card lives in jewellery-card.js) ---------- */
+  var shared = window.NGDJewelCard;
+  var cardHtml = shared.cardHtml;
 
   function renderPagination(totalPages) {
     if (totalPages <= 1) { el.pagination.innerHTML = ''; return; }

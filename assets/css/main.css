@@ -2142,6 +2142,123 @@ code {
 .ngd-jewel-card:hover .ngd-jewel-media::after { transform: translateX(130%); }
 
 /* ------------------------------------------------------------
+   13k. JEWELLERY DETAILS PAGE
+   ------------------------------------------------------------ */
+/* Light pearl product stage (dark twin: .ngd-detail-stage) */
+.ngd-jd-stage {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid var(--ngd-line);
+  border-radius: var(--ngd-radius);
+  background:
+      radial-gradient(120% 100% at 50% 0%, #ffffff 0%, var(--ngd-pearl) 62%, #eae4d8 100%);
+  box-shadow: var(--ngd-shadow-deep);
+  cursor: zoom-in;
+}
+
+.ngd-jd-stage.is-zoomed { cursor: zoom-out; }
+.ngd-jd-stage.is-static { cursor: default; }
+
+/* Realistic product floor shadow */
+.ngd-jd-stage::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 9%;
+  width: 52%;
+  height: 10%;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(50% 50% at 50% 50%, rgba(87, 68, 34, 0.28), transparent 72%);
+  pointer-events: none;
+}
+
+/* Metallic reflection — sheen sweeping on hover */
+.ngd-jd-stage::after {
+  content: "";
+  position: absolute;
+  inset: -2%;
+  background: linear-gradient(112deg, transparent 42%, rgba(255, 255, 255, 0.65) 50%, transparent 58%);
+  transform: translateX(-130%);
+  transition: transform 800ms var(--ngd-ease);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.ngd-jd-stage:hover::after { transform: translateX(130%); }
+.ngd-jd-stage.is-zoomed::after { display: none; }
+
+.ngd-jd-stage-inner {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 420ms var(--ngd-ease);
+  will-change: transform;
+}
+
+.ngd-jd-stage.is-zoomed .ngd-jd-stage-inner { transform: scale(2.1); }
+
+.ngd-jd-stage-inner svg {
+  width: 60%;
+  height: auto;
+  color: var(--ngd-gold-deep);
+  filter: drop-shadow(0 16px 18px rgba(87, 68, 34, 0.30));
+}
+
+/* 360° placeholder panel shown when the spin view is selected */
+.ngd-jd-360 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.9rem;
+  color: var(--ngd-slate);
+  text-align: center;
+  padding: 1rem;
+}
+
+.ngd-jd-360 svg { width: 3rem; height: 3rem; color: var(--ngd-gold-deep); }
+
+.ngd-jd-360 .ngd-badge { pointer-events: none; }
+
+/* Light thumbnails (dark twin: .ngd-thumb) */
+.ngd-thumb-light {
+  background: radial-gradient(120% 100% at 50% 0%, #ffffff 0%, var(--ngd-pearl) 70%, #eae4d8 100%);
+  color: var(--ngd-gold-deep);
+}
+
+.ngd-thumb-light svg { color: var(--ngd-gold-deep); }
+
+/* 360° thumbnail carries a "soon" tag */
+.ngd-thumb .ngd-thumb-tag {
+  position: absolute;
+  bottom: 0.2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.5rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ngd-slate);
+  pointer-events: none;
+}
+
+.ngd-thumb { position: relative; }
+
+/* Long-form description block */
+.ngd-jd-desc p {
+  font-size: 0.95rem;
+  line-height: 1.85;
+  color: var(--ngd-ink);
+  max-width: 46rem;
+}
+
+/* ------------------------------------------------------------
    14. ACCESSIBILITY & RESPONSIVE GUARDS
    ------------------------------------------------------------ */
 @media (prefers-reduced-motion: reduce) {
@@ -2162,7 +2279,9 @@ code {
   .ngd-card-3d:hover .ngd-jewel-figure { transition: none; transform: none; }
   .ngd-totop { transition: none; transform: none; }
   .ngd-detail-float { animation: none; }
-  .ngd-detail-stage-inner { transition: none; }
+  .ngd-detail-stage-inner,
+  .ngd-jd-stage-inner { transition: none; }
+  .ngd-jd-stage::after { transition: none; }
   .ngd-mobile-menu { transition-duration: 1ms; }
   .ngd-mobile-menu .ngd-menu-item,
   .ngd-mobile-menu.show .ngd-menu-item {

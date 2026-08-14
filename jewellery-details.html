@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Jewellery Details — New Grown Diamond</title>
-  <meta name="description" content="Full jewellery piece details — arriving in the next release.">
+  <meta name="description" content="Full specification for a hand-finished lab-grown diamond jewellery piece.">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50 8 88 38 50 92 12 38' fill='%23b48c47'/%3E%3C/svg%3E">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -13,7 +13,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="assets/css/main.css" rel="stylesheet">
 </head>
-<body class="ngd-backdrop">
+<body class="ngd-backdrop ngd-detail-page">
 
   <!-- ══════════ SITE HEADER ══════════ -->
   <nav class="navbar navbar-expand-lg sticky-top ngd-navbar" aria-label="Main navigation">
@@ -78,27 +78,115 @@
     </div>
   </div>
 
-  <!-- Placeholder — the full jewellery details page is built in the next step -->
-  <header class="ngd-section">
+  <!-- ══════════ JEWELLERY DETAILS ══════════
+       Static demo data resolved from ?id=<sku> (future pattern:
+       jewellery-details.html?id=JEW-XXXX). assets/js/jewellery-details.js
+       renders everything; the future Supabase phase only swaps its
+       data lookup. The 360° gallery slot is UI structure only. -->
+  <main class="ngd-section-tight ngd-detail-light" id="jewellery-detail">
     <div class="container">
-      <div class="row justify-content-center text-center">
-        <div class="col-lg-8 ngd-reveal">
-          <span class="ngd-eyebrow" id="jd-eyebrow">Jewellery</span>
-          <h1 class="ngd-display-1 mt-3">Piece details,<br><span class="ngd-italic-accent">arriving soon</span>.</h1>
-          <hr class="ngd-divider ngd-divider-center">
-          <p class="ngd-lead mx-auto" style="max-width: 36rem;">
-            The full page for <strong id="jd-piece">this piece</strong> is
-            built in the next step. Browse the collection meanwhile, or ask
-            us about it directly.
-          </p>
-          <div class="d-flex flex-wrap justify-content-center gap-3 mt-4">
-            <a class="ngd-btn ngd-btn-gold" href="jewellery.html">Back to the collection</a>
-            <a class="ngd-btn ngd-btn-outline" href="contact.html">Ask about this piece</a>
+
+      <nav aria-label="Breadcrumb" class="mb-3 ngd-reveal">
+        <a class="ngd-link small" href="jewellery.html">← Back to Jewellery</a>
+      </nav>
+
+      <!-- Not-found state -->
+      <div id="jd-notfound" class="ngd-card text-center py-5 d-none">
+        <p class="ngd-title mb-2">Piece not found</p>
+        <p class="ngd-text-muted small mb-4">
+          That reference is not in the current collection. It may have
+          been retired or renamed.
+        </p>
+        <a class="ngd-btn ngd-btn-gold mx-auto" href="jewellery.html">Browse the collection</a>
+      </div>
+
+      <div id="jd-product">
+        <div class="row g-4 g-lg-5">
+          <!-- Gallery -->
+          <div class="col-lg-6 ngd-reveal">
+            <div data-ngd-tilt>
+              <div class="ngd-jd-stage" id="jd-stage" role="img" aria-label="Jewellery visual">
+                <span class="ngd-detail-zoomhint" id="jd-zoomhint" style="color:rgba(110,110,118,.75);">Click to zoom</span>
+                <div class="ngd-jd-stage-inner" id="jd-stage-inner"></div>
+              </div>
+            </div>
+            <div class="ngd-thumbs" id="jd-thumbs" role="tablist" aria-label="Product views"></div>
+          </div>
+
+          <!-- Information -->
+          <div class="col-lg-6 ngd-reveal ngd-reveal-delay-1">
+            <span class="ngd-eyebrow" id="jd-sku"></span>
+            <h1 class="ngd-display-2 mt-1 mb-2" id="jd-name"></h1>
+            <div class="d-flex align-items-center gap-2 flex-wrap mb-3" id="jd-chips"></div>
+            <p class="ngd-text-muted small mb-4" id="jd-short"></p>
+
+            <dl class="ngd-diamond-specs ngd-detail-specs pt-3 mb-4" id="jd-specs"></dl>
+
+            <div class="d-grid d-sm-flex flex-wrap gap-2 mb-4" id="jd-ctas">
+              <a class="ngd-btn ngd-btn-gold" id="jd-quote" href="#">Request Quote</a>
+              <a class="ngd-btn ngd-btn-outline" id="jd-enquire" href="#">Enquire Now</a>
+              <button type="button" class="ngd-btn ngd-btn-outline ngd-fav-btn" id="jd-fav" aria-pressed="false">
+                <span class="ngd-fav-icon" aria-hidden="true">♡</span>
+                <span id="jd-fav-label">Add to Favourites</span>
+              </button>
+            </div>
+
+            <!-- Certificate / quality -->
+            <div class="ngd-card ngd-glass ngd-cert-card" id="jd-cert">
+              <div class="d-flex align-items-center gap-3">
+                <span class="ngd-cert-seal" aria-hidden="true">◆</span>
+                <div class="flex-grow-1">
+                  <p class="ngd-eyebrow mb-1">Certified Quality</p>
+                  <p class="small mb-0" id="jd-cert-text"></p>
+                </div>
+                <button type="button" class="ngd-btn ngd-btn-outline ngd-btn-sm" id="jd-cert-btn" disabled
+                        title="Certificate PDFs arrive with the live catalogue">
+                  View Certificate
+                </button>
+              </div>
+            </div>
           </div>
         </div>
+
+        <!-- Full description -->
+        <section class="mt-5 ngd-reveal ngd-jd-desc">
+          <span class="ngd-eyebrow">The Piece</span>
+          <h2 class="ngd-title mt-1 mb-3">About this design</h2>
+          <p id="jd-fulldesc" class="mb-0"></p>
+        </section>
+
+        <!-- Full specification -->
+        <section class="mt-5 ngd-reveal">
+          <span class="ngd-eyebrow">Atelier Data</span>
+          <h2 class="ngd-title mt-1 mb-3">Full specification</h2>
+          <div class="ngd-card ngd-spec-table">
+            <div class="row g-4" id="jd-spec-table"></div>
+          </div>
+        </section>
+
+        <!-- Similar pieces -->
+        <section class="mt-5 ngd-reveal" id="jd-similar-wrap">
+          <div class="d-flex justify-content-between align-items-baseline flex-wrap gap-2 mb-3">
+            <div>
+              <span class="ngd-eyebrow">You may also like</span>
+              <h2 class="ngd-title mt-1 mb-0">Similar pieces</h2>
+            </div>
+            <a class="ngd-link small" href="jewellery.html">View full collection</a>
+          </div>
+          <div class="row g-4" id="jd-similar"></div>
+        </section>
       </div>
     </div>
-  </header>
+  </main>
+
+  <!-- Mobile quick actions -->
+  <div class="ngd-sticky-cta d-lg-none" id="jd-sticky">
+    <a class="ngd-btn ngd-btn-gold ngd-btn-block flex-grow-1" id="jd-sticky-quote" href="#">Request Quote</a>
+    <button type="button" class="ngd-btn ngd-btn-outline ngd-fav-btn" id="jd-sticky-fav"
+            aria-pressed="false" aria-label="Add to favourites">
+      <span class="ngd-fav-icon" aria-hidden="true">♡</span>
+    </button>
+  </div>
 
   <!-- ══════════ GLOBAL FOOTER (identical on every public page) ══════════ -->
   <footer class="ngd-footer" id="site-footer">
@@ -192,17 +280,9 @@
 
   <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script defer src="assets/js/ui.js"></script>
-  <script>
-    /* Echo the requested piece so deep links feel alive until the
-       full details page ships (future: Supabase lookup by id). */
-    (function () {
-      var id = new URLSearchParams(window.location.search).get('id');
-      if (id) {
-        var target = document.getElementById('jd-piece');
-        if (target) target.textContent = id;
-        document.getElementById('jd-eyebrow').textContent = 'Jewellery · ' + id;
-      }
-    })();
-  </script>
+  <script defer src="assets/js/jewellery-art.js"></script>
+  <script defer src="assets/js/jewellery-data.js"></script>
+  <script defer src="assets/js/jewellery-card.js"></script>
+  <script defer src="assets/js/jewellery-details.js"></script>
 </body>
 </html>

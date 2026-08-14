@@ -43,7 +43,12 @@ tooling only** — the website itself is plain HTML/CSS/JS and has no Node backe
 - `jewellery-listing.test.cjs` — 11 Jewellery-Listing scenarios: 18 demo pieces,
   search, category chips with ?category= deep links, sorting (name / diamond
   weight), pagination, card contents incl. optional weight chip, tilt + zoom
-  hover, links to the details placeholder, 4/2/1 grid at 1440/768/390.
+  hover, links to the details page, 4/2/1 grid at 1440/768/390.
+- `jewellery-details.test.cjs` — 11 Jewellery-Details scenarios: ?id= resolution
+  with fallback/not-found, four-view gallery incl. the prepared 360° slot, zoom +
+  tilt, all 15 product fields, CTAs + favourite sync, certificate vs all-metal
+  hallmark states, descriptions, grouped spec table, similar pieces, sticky
+  mobile CTAs at 1440/768/390.
 - `header-nav.test.cjs` — 12 header/navigation scenarios on every public page:
   sticky glass header, Collections dropdown (open/close/navigate), login button,
   hamburger morph, offcanvas mobile menu (open, stagger, close button, Escape,

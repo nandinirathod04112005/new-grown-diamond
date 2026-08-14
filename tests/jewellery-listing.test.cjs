@@ -221,15 +221,15 @@ async function cardsPerRow(page) {
     expect(before !== after && after !== 'none', 'figure zooms on hover');
   });
 
-  await scenario('View Details lands on the details placeholder with the piece id', {}, async (page) => {
+  await scenario('View Details lands on the details page with the piece rendered', {}, async (page) => {
     await open(page);
     const firstId = await page.$eval('#jw-grid .ngd-jewel-card',
       (c) => c.getAttribute('data-jewellery-id'));
     await page.click('#jw-grid .ngd-jewel-card a.ngd-btn');
     await page.waitForURL(`**/jewellery-details.html?id=${firstId}`, { timeout: 8000 });
     await page.waitForFunction((id) =>
-      document.getElementById('jd-piece').textContent === id, firstId);
-    const back = await page.$('a[href="jewellery.html"]');
+      document.getElementById('jd-sku').textContent.trim() === id, firstId);
+    const back = await page.$('nav[aria-label="Breadcrumb"] a[href="jewellery.html"]');
     expect(!!back, 'back to collection link present');
   });
 

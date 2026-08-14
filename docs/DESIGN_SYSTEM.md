@@ -209,6 +209,19 @@ tag on the atelier cards, light-context `.ngd-avail` overrides scoped to
 `loadJewellery()` is the seam for the future Supabase `jewellery` select.
 Toolbar + pagination reuse the inventory classes.
 
+### Jewellery details components
+Details-page building blocks (`jewellery-details.html` + `jewellery-details.js`):
+`.ngd-jd-stage` — light pearl product stage (dark twin: `.ngd-detail-stage`)
+with a realistic floor shadow, hover metallic sheen, click-to-zoom via
+`.is-zoomed`, and `.is-static` for non-zoomable views; wrap it in a
+`div[data-ngd-tilt]` for the subtle gallery tilt. `.ngd-thumb-light` skins the
+shared `.ngd-thumb` for light stages, `.ngd-thumb-tag` marks the prepared 360°
+slot, and `.ngd-jd-360` is its coming-soon panel. `.ngd-jd-desc` styles the
+long-form description. The shared light product card lives in
+`assets/js/jewellery-card.js` (window.NGDJewelCard) and is used by both the
+listing grid and the Similar-pieces row. Spec table, sticky CTAs and favourite
+button reuse the diamond-details classes.
+
 ### Feedback & misc
 `.ngd-badge` (+ `.ngd-badge-dark`), `.ngd-alert` with `.ngd-alert-info` /
 `.ngd-alert-success` / `.ngd-alert-danger`, `.ngd-stat-value` + `.ngd-stat-label`.

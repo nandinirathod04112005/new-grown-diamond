@@ -30,3 +30,80 @@ window.NGD_DEMO_JEWELLERY = [
   { id: 'JW-1017', name: 'Aura Plain Bangle',               category: 'Bangles',   description: 'Polished gold with nothing to prove.',                 weightCt: null, availability: 'In Stock' },
   { id: 'JW-1018', name: 'Gemini Stacking Bangles',         category: 'Bangles',   description: 'A mirrored pair made to stack.',                       weightCt: 0.60, availability: 'Made to Order' }
 ];
+
+/* ------------------------------------------------------------
+   Extended product details (deterministic per piece) for the
+   jewellery details page. The future Supabase `jewellery` table
+   stores these as real columns — same field names.
+   ------------------------------------------------------------ */
+(function () {
+  'use strict';
+
+  var METALS = [
+    { metal: 'Gold', karat: '18K', colour: 'White' },
+    { metal: 'Gold', karat: '18K', colour: 'Yellow' },
+    { metal: 'Gold', karat: '14K', colour: 'Rose' },
+    { metal: 'Platinum', karat: '950', colour: 'Platinum' }
+  ];
+  var QUALITY = ['D–E / VVS', 'E–F / VVS–VS', 'F–G / VS'];
+
+  /* per piece: [subcategory, diamond shape, size, diamond pieces] */
+  var DETAILS = {
+    'JW-1001': ['Solitaire', 'Round', 'Ring size 48–62 (resizable)', 1],
+    'JW-1002': ['Halo', 'Cushion', 'Ring size 48–62 (resizable)', 25],
+    'JW-1003': ['Eternity Band', 'Round', 'Ring size 48–62 (made to size)', 32],
+    'JW-1004': ['Studs', 'Round', 'One size', 2],
+    'JW-1005': ['Drops', 'Pear', 'One size', 14],
+    'JW-1006': ['Halo Studs', 'Round', 'One size', 26],
+    'JW-1007': ['Solitaire Pendant', 'Oval', 'Chain 45 cm', 1],
+    'JW-1008': ['Halo Pendant', 'Round', 'Chain 45 cm', 19],
+    'JW-1009': ['Bezel Pendant', 'Round', 'Chain 42 + 3 cm', 1],
+    'JW-1010': ['Rivière', 'Round', '42 cm', 56],
+    'JW-1011': ['Station', 'Round', '45 cm', 9],
+    'JW-1012': ['Layered', 'Round', '40 + 45 cm', 12],
+    'JW-1013': ['Tennis', 'Round', '16.5 cm', 42],
+    'JW-1014': ['Chain', 'Round', '17 cm (adjustable)', 1],
+    'JW-1015': ['Tennis', 'Round', '17 cm', 38],
+    'JW-1016': ['Hinged Bangle', 'Round', '57 × 47 mm oval', 21],
+    'JW-1017': ['Plain Bangle', null, '57 × 47 mm oval', 0],
+    'JW-1018': ['Stacking Pair', 'Round', '55 mm round', 16]
+  };
+
+  var GROSS_BASE = { Rings: 3.4, Earrings: 2.6, Pendants: 2.2, Necklaces: 9.5, Bracelets: 6.8, Bangles: 14.2 };
+
+  var STORY = {
+    Rings: 'is shaped and finished entirely in our atelier, its band polished to a mirror before the setting is raised by hand.',
+    Earrings: 'is matched stone-for-stone under the loupe so both ears catch exactly the same light.',
+    Pendants: 'hangs from a hand-finished bail on our finest cable chain, sitting precisely where light gathers.',
+    Necklaces: 'is assembled link by link, every stone seated and checked before the clasp is fitted.',
+    Bracelets: 'is articulated so it moves like fabric, each setting angled to keep the line of light unbroken.',
+    Bangles: 'is formed from a single bar of metal, sculpted, hinged and polished until the surface reads like water.'
+  };
+
+  window.NGD_DEMO_JEWELLERY.forEach(function (p, i) {
+    var d = DETAILS[p.id] || ['Signature', 'Round', 'One size', 1];
+    var m = METALS[i % 4];
+    var metalName = m.metal === 'Platinum'
+      ? 'Platinum 950'
+      : m.karat + ' ' + m.colour + ' Gold';
+
+    p.sku = p.id;
+    p.subcategory = d[0];
+    p.metal = m.metal;
+    p.metalKarat = m.karat;
+    p.metalColour = m.colour;
+    p.diamondShape = d[1];
+    p.diamondPieces = d[3];
+    p.diamondQuality = p.weightCt === null ? null : QUALITY[i % 3];
+    p.certificateNo = p.weightCt === null ? null : 'NGDJ-' + (582300 + i * 37);
+    p.grossWeight = +(GROSS_BASE[p.category] + (p.weightCt || 0) * 0.55 + (i % 5) * 0.3).toFixed(2);
+    p.size = d[2];
+    p.fullDesc =
+      'The ' + p.name + ' ' + STORY[p.category] + ' Cast in ' + metalName +
+      (p.weightCt !== null
+        ? ', it carries ' + p.weightCt.toFixed(2) + ' carats of our own certified lab-grown diamonds' +
+          (p.diamondPieces > 1 ? ' across ' + p.diamondPieces + ' stones' : ' in a single stone') + '.'
+        : ', it needs no stones to hold the eye.') +
+      ' Every piece leaves the atelier with its papers, presentation case and a lifetime of care.';
+  });
+})();
