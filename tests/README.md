@@ -85,6 +85,10 @@ tooling only** — the website itself is plain HTML/CSS/JS and has no Node backe
   validation matrix (required/email/mobile/min-8/match/terms — including a
   regression guard for the v-flag HTML pattern pitfall), the honest
   no-backend submit and 1440/768/390 layouts.
+- `forgot-ui.test.cjs` — 7 Forgot-Password scenarios: split card with the
+  loupe art, instruction copy, email validation, the honest no-send submit
+  (no email sent, no fake "check your inbox", value preserved), back-to-login
+  and login-page integration, and single-column mobile at 1440/768/390.
 - `header-nav.test.cjs` — 12 header/navigation scenarios on every public page:
   sticky glass header, Collections dropdown (open/close/navigate), login button,
   hamburger morph, offcanvas mobile menu (open, stagger, close button, Escape,

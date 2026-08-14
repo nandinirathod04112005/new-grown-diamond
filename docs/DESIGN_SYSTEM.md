@@ -247,8 +247,8 @@ chapters for future CMS hydration. In-prose links inside `.ngd-lead`,
 (gold-soft variant inside `.ngd-section-dark`).
 
 ### Auth split card
-`login.html` / `register.html` share the `.ngd-auth-wrap` → `.ngd-auth-card`
-split layout: a dark `.ngd-auth-side` brand panel (with `.ngd-auth-points`
+`login.html` / `register.html` / `forgot-password.html` share the
+`.ngd-auth-wrap` → `.ngd-auth-card` split layout: a dark `.ngd-auth-side` brand panel (with `.ngd-auth-points`
 and the `.ngd-auth-art` diamond line art) beside the white `.ngd-auth-main`
 form. `.ngd-pass-wrap` + `.ngd-pass-toggle` add the show/hide password eye
 (two SVGs switched purely by the button's `aria-pressed` state; the signup

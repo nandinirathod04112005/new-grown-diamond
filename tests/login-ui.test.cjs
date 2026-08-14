@@ -155,19 +155,12 @@ async function open(page) {
     expect(stored === null, 'stored email cleared, got ' + stored);
   });
 
-  await scenario('forgot password: honest notice, no fake reset, no navigation', {}, async (page) => {
+  await scenario('forgot password link opens the dedicated reset page', {}, async (page) => {
     await open(page);
     await page.click('#login-forgot');
-    const state = await page.evaluate(() => ({
-      alert: (document.querySelector('#login-alert .ngd-alert') || { textContent: '' }).textContent,
-      info: !!document.querySelector('#login-alert .ngd-alert-info'),
-      url: location.pathname,
-    }));
-    expect(state.info, 'informational notice shown');
-    expect(/upcoming release/i.test(state.alert) && /contact/i.test(state.alert),
-      'notice says the reset flow is coming and offers the contact route, got: ' + state.alert);
-    expect(!/reset link sent|check your inbox/i.test(state.alert), 'no fake reset behaviour');
-    expect(/login\.html$/.test(state.url), 'stays on the login page');
+    await page.waitForURL('**/forgot-password.html', { timeout: 8000 });
+    const ok = await page.evaluate(() => !!document.getElementById('ngd-forgot-form'));
+    expect(ok, 'reset-request form renders');
   });
 
   await scenario('validation: empty and malformed input flagged, no fake success', {}, async (page) => {

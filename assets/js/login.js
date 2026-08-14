@@ -21,11 +21,6 @@
     'The sign-in service is temporarily unavailable. Please try again shortly.';
   var NOT_CONFIGURED =
     'Supabase is not configured yet — add your project details in assets/js/supabase-config.js.';
-  var FORGOT_NOTICE =
-    'Password reset arrives in an upcoming release. If you are locked out ' +
-    'in the meantime, write to us through the contact page and we will ' +
-    'verify you personally.';
-
   /* "Remember me" stores ONLY the email address on this device so the
      field is pre-filled next time. It never stores the password, the
      session or any role information. */
@@ -243,14 +238,8 @@
       rememberBox.checked = true;
     }
 
-    var forgot = $('login-forgot');
-    if (forgot) {
-      forgot.addEventListener('click', function (event) {
-        /* No reset flow exists yet — never pretend one does. */
-        event.preventDefault();
-        showAlert('info', FORGOT_NOTICE);
-      });
-    }
+    /* The forgot-password link is a plain navigation to
+       forgot-password.html — no handler needed (STEP 19). */
   }
 
   function init() {

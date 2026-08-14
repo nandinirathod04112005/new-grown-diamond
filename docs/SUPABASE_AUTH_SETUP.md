@@ -117,9 +117,14 @@ forwarded to the dashboard matching your role — no redirect loops.
 Login-page UI extras (STEP 17): the password field has a show/hide eye
 toggle; **Remember me** stores only the email address (key
 `ngd_login_email`) so it can be pre-filled next visit — never the
-password, session or role; **Forgot password?** currently shows an honest
-"reset arrives in an upcoming release" notice because no reset flow has
-been built yet.
+password, session or role.
+
+**Forgot password?** (STEP 19) links to `forgot-password.html` — a
+UI-only reset-request page that says honestly that no reset email is sent
+yet. When you are ready to enable resets, replace `requestReset()` in
+`assets/js/forgot-password.js` with
+`supabase.auth.resetPasswordForEmail(email, { redirectTo })` and add the
+standard auth script stack to that page (see the comment in the file).
 
 ## 6. Page protection
 
