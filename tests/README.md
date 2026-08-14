@@ -73,6 +73,12 @@ tooling only** — the website itself is plain HTML/CSS/JS and has no Node backe
   business-enquiry section with its subject shortcut and ?subject= deep link,
   the map placeholder, next-steps column, reveal, the support CTA and
   responsive checks at 1440/768/390.
+- `login-ui.test.cjs` — 10 Login-UI scenarios: premium split card with the
+  brand-panel diamond art, show/hide password toggle (aria states, no
+  accidental submit), remember-me email prefill (email only — never the
+  password), the honest forgot-password notice, validation states, the
+  no-fake-success guarantee, signup link and single-column mobile layout at
+  1440/768/390.
 - `header-nav.test.cjs` — 12 header/navigation scenarios on every public page:
   sticky glass header, Collections dropdown (open/close/navigate), login button,
   hamburger morph, offcanvas mobile menu (open, stagger, close button, Escape,

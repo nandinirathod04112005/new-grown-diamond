@@ -110,6 +110,13 @@ there is no role dropdown, and nothing trusts `localStorage`.
 Already signed in and visiting `login.html` (or `register.html`)? You are
 forwarded to the dashboard matching your role — no redirect loops.
 
+Login-page UI extras (STEP 17): the password field has a show/hide eye
+toggle; **Remember me** stores only the email address (key
+`ngd_login_email`) so it can be pre-filled next visit — never the
+password, session or role; **Forgot password?** currently shows an honest
+"reset arrives in an upcoming release" notice because no reset flow has
+been built yet.
+
 ## 6. Page protection
 
 - `account/dashboard.html` runs `requireCustomer()`; `admin/dashboard.html`

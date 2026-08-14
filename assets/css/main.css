@@ -703,6 +703,55 @@ code {
   color: var(--ngd-gold-soft);
 }
 
+/* Diamond line art on the brand panel */
+.ngd-auth-art { margin-top: 1.5rem; }
+
+.ngd-auth-art svg {
+  width: min(62%, 230px);
+  height: auto;
+  color: var(--ngd-gold-soft);
+  filter: drop-shadow(0 16px 18px rgba(0, 0, 0, 0.5));
+}
+
+/* Password field with show/hide toggle */
+.ngd-pass-wrap { position: relative; }
+
+.ngd-pass-wrap .form-control { padding-right: 3rem; }
+
+/* keep Bootstrap's validation icon clear of the toggle */
+.ngd-pass-wrap .form-control:invalid,
+.ngd-pass-wrap .form-control.is-invalid { background-position: right 3rem center; }
+
+.ngd-pass-toggle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: 2.9rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--ngd-slate);
+  cursor: pointer;
+  transition: color var(--ngd-fast) var(--ngd-ease);
+}
+
+.ngd-pass-toggle:hover { color: var(--ngd-gold-deep); }
+
+.ngd-pass-toggle:focus-visible {
+  outline: 2px solid rgba(180, 140, 71, 0.55);
+  outline-offset: -4px;
+  border-radius: var(--ngd-radius-sm);
+}
+
+.ngd-pass-toggle svg { width: 20px; height: 20px; }
+.ngd-pass-toggle .ngd-eye-off { display: none; }
+.ngd-pass-toggle[aria-pressed="true"] .ngd-eye { display: none; }
+.ngd-pass-toggle[aria-pressed="true"] .ngd-eye-off { display: inline; }
+
 /* ------------------------------------------------------------
    12. SITE HEADER — desktop dropdown, burger, mobile menu
    ------------------------------------------------------------ */

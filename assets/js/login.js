@@ -21,6 +21,35 @@
     'The sign-in service is temporarily unavailable. Please try again shortly.';
   var NOT_CONFIGURED =
     'Supabase is not configured yet — add your project details in assets/js/supabase-config.js.';
+  var FORGOT_NOTICE =
+    'Password reset arrives in an upcoming release. If you are locked out ' +
+    'in the meantime, write to us through the contact page and we will ' +
+    'verify you personally.';
+
+  /* "Remember me" stores ONLY the email address on this device so the
+     field is pre-filled next time. It never stores the password, the
+     session or any role information. */
+  var REMEMBER_KEY = 'ngd_login_email';
+
+  function readRememberedEmail() {
+    try {
+      return window.localStorage.getItem(REMEMBER_KEY) || '';
+    } catch (err) {
+      return '';
+    }
+  }
+
+  function writeRememberedEmail(email) {
+    try {
+      if (email) {
+        window.localStorage.setItem(REMEMBER_KEY, email);
+      } else {
+        window.localStorage.removeItem(REMEMBER_KEY);
+      }
+    } catch (err) {
+      /* private-mode storage failures are non-fatal */
+    }
+  }
 
   function $(id) {
     return document.getElementById(id);
@@ -152,6 +181,11 @@
     }
     form.classList.add('was-validated');
 
+    var rememberBox = $('login-remember');
+    if (rememberBox) {
+      writeRememberedEmail(rememberBox.checked ? $('login-email').value.trim() : '');
+    }
+
     if (!window.ngdSupabase) {
       showAlert(
         'warning',
@@ -187,10 +221,43 @@
     }
   }
 
+  /** UI-only extras: show/hide password, remembered email, reset notice. */
+  function initUiExtras() {
+    var toggle = $('login-toggle-password');
+    var password = $('login-password');
+    if (toggle && password) {
+      toggle.addEventListener('click', function () {
+        var show = password.type === 'password';
+        password.type = show ? 'text' : 'password';
+        toggle.setAttribute('aria-pressed', show ? 'true' : 'false');
+        toggle.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+        password.focus({ preventScroll: true });
+      });
+    }
+
+    var rememberBox = $('login-remember');
+    var email = $('login-email');
+    var remembered = readRememberedEmail();
+    if (rememberBox && email && remembered) {
+      email.value = remembered;
+      rememberBox.checked = true;
+    }
+
+    var forgot = $('login-forgot');
+    if (forgot) {
+      forgot.addEventListener('click', function (event) {
+        /* No reset flow exists yet — never pretend one does. */
+        event.preventDefault();
+        showAlert('info', FORGOT_NOTICE);
+      });
+    }
+  }
+
   function init() {
     var form = $('ngd-login-form');
     if (!form) return;
     form.addEventListener('submit', onSubmit);
+    initUiExtras();
 
     /* One-shot notice from logout / guard redirects */
     var notice = window.NGDAuth && window.NGDAuth.consumeNotice();
