@@ -65,6 +65,14 @@ tooling only** — the website itself is plain HTML/CSS/JS and has no Node backe
   quality & trust naming IGI/GIA, innovation and responsible sections with
   their cross-links, parallax + reduced-motion behaviour, reveal, the Explore
   Our Diamonds CTA and no-overflow checks at 1440/768/390.
+- `contact.test.cjs` — 14 Contact-page scenarios: hero + the four information
+  cards with CMS slots (and a no-invented-details guard), the seven-field
+  enquiry form on the glass card with labels and live counter, empty/format
+  validation with aria flags, the honest no-backend submit (nothing sent,
+  nothing cleared, no fake success), the configured mailto-draft seam, the
+  business-enquiry section with its subject shortcut and ?subject= deep link,
+  the map placeholder, next-steps column, reveal, the support CTA and
+  responsive checks at 1440/768/390.
 - `header-nav.test.cjs` — 12 header/navigation scenarios on every public page:
   sticky glass header, Collections dropdown (open/close/navigate), login button,
   hamburger morph, offcanvas mobile menu (open, stagger, close button, Escape,

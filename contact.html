@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Contact — New Grown Diamond</title>
-  <meta name="description" content="Contact New Grown Diamond — enquiries desk opening soon.">
+  <meta name="description" content="Contact New Grown Diamond — send an enquiry about certified lab-grown diamonds, fine jewellery, certification or partnerships.">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50 8 88 38 50 92 12 38' fill='%23b48c47'/%3E%3C/svg%3E">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -78,26 +78,288 @@
     </div>
   </div>
 
-  <!-- Placeholder — the full contact page is built in an upcoming phase -->
-  <header class="ngd-section">
+  <!-- ══════════ CONTACT (STEP 16) ══════════
+       Frontend-only enquiry desk. The form validates client-side and
+       never fakes a send: with no backend it either prepares a mailto
+       draft (when an inbox is configured in assets/js/contact.js) or
+       says so honestly. Sections carry data-contact-section hooks and
+       the channel cards carry data-contact-slot hooks so the future
+       Supabase/CMS phase can hydrate real details without layout
+       changes. -->
+  <header id="contact-hero" class="ngd-section" data-contact-section="hero" style="padding-bottom: clamp(2.5rem, 5vw, 4rem);">
     <div class="container">
       <div class="row justify-content-center text-center">
         <div class="col-lg-8 ngd-reveal">
           <span class="ngd-eyebrow">Get In Touch</span>
-          <h1 class="ngd-display-1 mt-3">Our enquiries desk<br><span class="ngd-italic-accent">opens soon</span>.</h1>
+          <h1 class="ngd-display-1 mt-3">Let&rsquo;s talk <span class="ngd-italic-accent">diamonds</span>.</h1>
           <hr class="ngd-divider ngd-divider-center">
-          <p class="ngd-lead mx-auto" style="max-width: 36rem;">
-            Direct enquiries, quotes and appointments arrive with the next
-            release. Create an account to be first in line when they do.
+          <p class="ngd-lead mx-auto" style="max-width: 38rem;">
+            A stone you&rsquo;d like held, a piece you&rsquo;d like made, a
+            certificate you&rsquo;d like explained — write to us and a person
+            who works with the diamonds will answer.
           </p>
-          <div class="d-flex flex-wrap justify-content-center gap-3 mt-4">
-            <a class="ngd-btn ngd-btn-gold" href="register.html">Create account</a>
-            <a class="ngd-btn ngd-btn-outline" href="index.html">Back to home</a>
-          </div>
         </div>
       </div>
     </div>
   </header>
+
+  <!-- Ways to reach us -->
+  <section id="contact-channels" class="ngd-section-tight" data-contact-section="channels">
+    <div class="container">
+      <div class="row g-4 justify-content-center">
+        <div class="col-6 col-lg-3 ngd-reveal">
+          <div class="ngd-card ngd-card-3d h-100 text-center" data-ngd-tilt>
+            <span class="ngd-icon-tile ngd-depth-1 mb-3 mx-auto" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+            </span>
+            <h2 class="ngd-title fs-6">Email us</h2>
+            <p class="ngd-text-muted small mb-0" data-contact-slot="email">
+              The form below is the fastest route — it prepares your enquiry
+              in one click while our public inbox is being finalised.
+            </p>
+          </div>
+        </div>
+        <div class="col-6 col-lg-3 ngd-reveal ngd-reveal-delay-1">
+          <div class="ngd-card ngd-card-3d h-100 text-center" data-ngd-tilt>
+            <span class="ngd-icon-tile ngd-depth-1 mb-3 mx-auto" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h4l2 5-2.5 1.5a12 12 0 0 0 5 5L16 12l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 4 5a2 2 0 0 1 2-2Z"/></svg>
+            </span>
+            <h2 class="ngd-title fs-6">Call or message</h2>
+            <p class="ngd-text-muted small mb-0" data-contact-slot="phone">
+              Phone and WhatsApp lines open with our launch — leave a number
+              in the form and we&rsquo;ll ring you back instead.
+            </p>
+          </div>
+        </div>
+        <div class="col-6 col-lg-3 ngd-reveal ngd-reveal-delay-2">
+          <div class="ngd-card ngd-card-3d h-100 text-center" data-ngd-tilt>
+            <span class="ngd-icon-tile ngd-depth-1 mb-3 mx-auto" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-5.1 7-11a7 7 0 1 0-14 0c0 5.9 7 11 7 11Z"/><circle cx="12" cy="10" r="2.6"/></svg>
+            </span>
+            <h2 class="ngd-title fs-6">Office &amp; location</h2>
+            <p class="ngd-text-muted small mb-0" data-contact-slot="address">
+              Private viewings are by appointment once our showroom opens —
+              tell us in the form and you&rsquo;ll be first to know.
+            </p>
+          </div>
+        </div>
+        <div class="col-6 col-lg-3 ngd-reveal ngd-reveal-delay-3">
+          <div class="ngd-card ngd-card-3d h-100 text-center" data-ngd-tilt>
+            <span class="ngd-icon-tile ngd-depth-1 mb-3 mx-auto" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.2 2"/></svg>
+            </span>
+            <h2 class="ngd-title fs-6">Business hours</h2>
+            <p class="ngd-text-muted small mb-0" data-contact-slot="hours">
+              Desk hours are published at launch — meanwhile, enquiries from
+              the form reach us every business day.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Enquiry form -->
+  <section id="contact-form-section" class="ngd-section ngd-section-pearl" data-contact-section="form">
+    <div class="container">
+      <div class="row g-4 g-lg-5">
+        <div class="col-lg-7 ngd-reveal">
+          <div class="ngd-card ngd-glass h-100">
+            <span class="ngd-eyebrow">Write To Us</span>
+            <h2 class="ngd-title fs-4 mt-2 mb-4">Send an enquiry</h2>
+            <form id="ngd-contact-form" class="ngd-form" novalidate>
+              <!-- Field names mirror the future Supabase `enquiries`
+                   columns (full_name, company_name, email, mobile,
+                   country, subject, message) so the backend phase only
+                   swaps submitEnquiry() in assets/js/contact.js. -->
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label" for="contact-name">Full name</label>
+                  <input type="text" class="form-control" id="contact-name" name="full_name"
+                         placeholder="Your name" autocomplete="name" required>
+                  <div class="invalid-feedback">Please tell us your name.</div>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label" for="contact-company">Company name <span class="ngd-text-muted">(optional)</span></label>
+                  <input type="text" class="form-control" id="contact-company" name="company_name"
+                         placeholder="Your company" autocomplete="organization">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label" for="contact-email">Email</label>
+                  <input type="email" class="form-control" id="contact-email" name="email"
+                         placeholder="you@example.com" autocomplete="email" required>
+                  <div class="invalid-feedback">Please enter a valid email address.</div>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label" for="contact-mobile">Mobile</label>
+                  <input type="tel" class="form-control" id="contact-mobile" name="mobile"
+                         placeholder="+00 00000 00000" autocomplete="tel" required>
+                  <div class="invalid-feedback">That mobile number doesn&rsquo;t look right — digits, spaces and + only.</div>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label" for="contact-country">Country</label>
+                  <select class="form-select" id="contact-country" name="country" required>
+                    <option value="" selected>Choose your country&hellip;</option>
+                    <option>India</option>
+                    <option>United Arab Emirates</option>
+                    <option>United States</option>
+                    <option>United Kingdom</option>
+                    <option>Belgium</option>
+                    <option>Israel</option>
+                    <option>Hong Kong</option>
+                    <option>Singapore</option>
+                    <option>Australia</option>
+                    <option>Canada</option>
+                    <option>Germany</option>
+                    <option>France</option>
+                    <option>Japan</option>
+                    <option value="other">Other</option>
+                  </select>
+                  <div class="invalid-feedback">Please choose your country.</div>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label" for="contact-subject">Subject</label>
+                  <select class="form-select" id="contact-subject" name="subject" required>
+                    <option value="" selected>Choose a subject&hellip;</option>
+                    <option value="general">General enquiry</option>
+                    <option value="diamond">Diamond enquiry</option>
+                    <option value="jewellery">Jewellery enquiry</option>
+                    <option value="certification">Certification question</option>
+                    <option value="partnership">Business / trade enquiry</option>
+                  </select>
+                  <div class="invalid-feedback">Please choose a subject.</div>
+                </div>
+                <div class="col-12">
+                  <label class="form-label" for="contact-message">Message</label>
+                  <textarea class="form-control" id="contact-message" name="message" rows="6"
+                            maxlength="1000" placeholder="Tell us about the stone, piece or question on your mind — a few sentences is perfect." required></textarea>
+                  <div class="invalid-feedback">A few sentences (at least 20 characters) helps us reply properly.</div>
+                  <div class="form-text d-flex justify-content-between gap-3">
+                    <span>Include a stock number (e.g. NGD-1001) if you have one.</span>
+                    <span id="contact-message-count" class="text-nowrap" aria-hidden="true"></span>
+                  </div>
+                </div>
+              </div>
+              <div id="contact-alert" class="mt-4" aria-live="polite"></div>
+              <div class="d-flex flex-wrap align-items-center gap-3 mt-4">
+                <button type="submit" id="contact-submit" class="ngd-btn ngd-btn-gold">Send enquiry</button>
+                <span class="ngd-text-muted small">
+                  Nothing is sent silently — you&rsquo;ll always see exactly
+                  what happens.
+                </span>
+              </div>
+            </form>
+          </div>
+        </div>
+        <div class="col-lg-4 offset-lg-1 ngd-reveal ngd-reveal-delay-1">
+          <span class="ngd-eyebrow">What Happens Next</span>
+          <h2 class="ngd-title fs-4 mt-2 mb-4">Three quiet steps</h2>
+          <ol class="ngd-report-list mb-4">
+            <li><span>Your enquiry lands with a person, not a queue — no bots, no auto-replies.</span></li>
+            <li><span>A gemmologist or designer who actually handles the stones writes back to your email.</span></li>
+            <li><span>If a diamond or piece fits, we prepare options and certificates before you decide anything.</span></li>
+          </ol>
+          <aside class="ngd-edu-note">
+            <span class="ngd-edu-bullet" aria-hidden="true">&#9670;</span>
+            <p class="mb-0"><strong>Browsing first?</strong> The
+            <a href="diamonds.html">inventory</a> shows every certified stone,
+            and the <a href="education.html">education page</a> explains the
+            grades you&rsquo;ll see there.</p>
+          </aside>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Business enquiries -->
+  <section id="contact-business" class="ngd-section ngd-section-dark" data-contact-section="business">
+    <div class="container">
+      <div class="row align-items-center g-4 g-lg-5">
+        <div class="col-lg-6 ngd-reveal">
+          <span class="ngd-eyebrow">For The Trade</span>
+          <h2 class="ngd-display-2 mt-2 text-white">Business <span class="ngd-italic-accent">enquiries</span></h2>
+          <hr class="ngd-divider">
+          <p class="ngd-lead">
+            Jewellers, designers and retailers work directly with the house
+            that grows the stones — one partner from reactor to report.
+          </p>
+          <ul class="list-unstyled d-flex flex-column gap-2 mb-0">
+            <li class="d-flex gap-2"><span class="ngd-edu-bullet" aria-hidden="true">&#9670;</span>
+              <span>Certified loose stones across the shapes and sizes you sell most.</span></li>
+            <li class="d-flex gap-2"><span class="ngd-edu-bullet" aria-hidden="true">&#9670;</span>
+              <span>Finished jewellery and made-to-order production in one atelier.</span></li>
+            <li class="d-flex gap-2"><span class="ngd-edu-bullet" aria-hidden="true">&#9670;</span>
+              <span>One grading standard on every parcel, IGI/GIA paper included.</span></li>
+          </ul>
+        </div>
+        <div class="col-lg-5 offset-lg-1 ngd-reveal ngd-reveal-delay-1">
+          <div class="ngd-card ngd-glass-dark h-100">
+            <span class="ngd-icon-tile ngd-depth-1 mb-3" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M3 12h18"/></svg>
+            </span>
+            <h3 class="ngd-title fs-5" style="color: #f4f2ee;">Start a trade conversation</h3>
+            <p class="ngd-text-muted small" style="color: rgba(244,242,238,0.68);">
+              Use the enquiry form with the <em>Business / trade</em> subject —
+              this button sets it up for you. Tell us your market, the goods
+              you need and the volumes you work in.
+            </p>
+            <a class="ngd-btn ngd-btn-gold" href="#contact-form-section" data-contact-subject="partnership">
+              Start a business enquiry
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Map / location placeholder -->
+  <section id="contact-map" class="ngd-section" data-contact-section="map">
+    <div class="container">
+      <div class="row justify-content-center text-center ngd-reveal">
+        <div class="col-lg-8">
+          <span class="ngd-eyebrow">Find Us</span>
+          <h2 class="ngd-display-2 mt-2">On the map <span class="ngd-italic-accent">soon</span></h2>
+          <hr class="ngd-divider ngd-divider-center">
+        </div>
+      </div>
+      <div class="row justify-content-center mt-2">
+        <div class="col-lg-10 ngd-reveal">
+          <!-- Placeholder only — a real embedded map and the atelier
+               address arrive with launch (data-contact-slot="map"). -->
+          <div class="ngd-story-media ngd-map-panel" data-contact-slot="map" data-ngd-parallax="-0.03" role="img"
+               aria-label="Stylised map placeholder — the atelier location is published at launch">
+            <svg viewBox="0 0 320 110" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M0 28 H320 M0 62 H320 M0 92 H320" opacity="0.22"/><path d="M46 0 V110 M118 0 V110 M196 0 V110 M268 0 V110" opacity="0.22"/><path d="M0 78 C60 70 90 96 150 88 C210 80 240 100 320 84" opacity="0.35" stroke-width="2"/><rect x="58" y="36" width="22" height="14" rx="2" opacity="0.3"/><rect x="130" y="12" width="30" height="10" rx="2" opacity="0.3"/><rect x="206" y="38" width="26" height="12" rx="2" opacity="0.3"/><rect x="238" y="12" width="18" height="14" rx="2" opacity="0.3"/><rect x="86" y="66" width="20" height="12" rx="2" opacity="0.3"/><circle cx="160" cy="48" r="17" opacity="0.4" stroke-dasharray="3 4"/><path d="M160 30 C168 30 173 36 173 43 C173 52 160 64 160 64 C160 64 147 52 147 43 C147 36 152 30 160 30 Z" fill="rgba(217,192,138,0.35)" stroke-width="2"/><circle cx="160" cy="43" r="4.5" fill="rgba(253,252,248,0.85)" stroke="none"/><path d="M296 14 l1.52 3.84 3.84 1.52 -3.84 1.52 -1.52 3.84 -1.52 -3.84 -3.84 -1.52 3.84 -1.52 Z" fill="rgba(217,192,138,0.5)" stroke="none"/></svg>
+          </div>
+          <p class="ngd-text-muted small text-center mt-3 mb-0">
+            The atelier&rsquo;s address and an interactive map are published
+            at launch — until then, every enquiry starts right here.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Support / final CTA -->
+  <section id="contact-cta" class="ngd-section-tight ngd-section-pearl" data-contact-section="cta">
+    <div class="container">
+      <div class="row justify-content-center text-center ngd-reveal">
+        <div class="col-lg-7 py-4">
+          <span class="ngd-eyebrow">Here To Help</span>
+          <h2 class="ngd-display-2 mt-2">Support that knows the <span class="ngd-italic-accent">stones</span></h2>
+          <hr class="ngd-divider ngd-divider-center">
+          <p class="ngd-lead mx-auto" style="max-width: 34rem;">
+            Aftercare, certificates, resizing or a question halfway through a
+            decision — write any time, and browse while you wait.
+          </p>
+          <div class="d-flex flex-wrap justify-content-center gap-3 mt-4">
+            <a class="ngd-btn ngd-btn-gold" href="diamonds.html">Explore Our Diamonds</a>
+            <a class="ngd-btn ngd-btn-outline" href="education.html">Read the education guides</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
 
   <!-- ══════════ GLOBAL FOOTER (identical on every public page) ══════════ -->
   <footer class="ngd-footer" id="site-footer">
@@ -191,5 +453,6 @@
 
   <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script defer src="assets/js/ui.js"></script>
+  <script defer src="assets/js/contact.js"></script>
 </body>
 </html>

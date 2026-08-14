@@ -246,6 +246,22 @@ chapters for future CMS hydration. In-prose links inside `.ngd-lead`,
 `.ngd-text-muted` and `.ngd-edu-note` pick up the gold trim automatically
 (gold-soft variant inside `.ngd-section-dark`).
 
+### Contact page
+`contact.html` reuses the `.ngd-form` skin (Bootstrap `.is-invalid` +
+`.invalid-feedback` like the auth pages) on a `.ngd-glass` card, four
+`.ngd-icon-tile` information cards with `[data-contact-slot]` CMS hooks
+(email/phone/address/hours), a `.ngd-glass-dark` trade card in the dark
+business section, the `.ngd-map-panel` placeholder strip (a wide
+`.ngd-story-media` variant with stylised map art — no real embed), the
+`.ngd-report-list` next-steps and the `.ngd-edu-note` aside.
+`assets/js/contact.js` owns validation (seven fields, company optional),
+subject shortcuts (`?subject=` deep link + `[data-contact-subject]`
+triggers) and the honest no-backend submit: it never fakes a send — it
+either prepares a `mailto:` draft (one constant to configure, mirroring
+`supabase-config.js`) or says plainly that nothing was sent. The enquiry
+keys mirror the future Supabase `enquiries` columns and `submitEnquiry()`
+is the single seam that phase replaces.
+
 ### Feedback & misc
 `.ngd-badge` (+ `.ngd-badge-dark`), `.ngd-alert` with `.ngd-alert-info` /
 `.ngd-alert-success` / `.ngd-alert-danger`, `.ngd-stat-value` + `.ngd-stat-label`.

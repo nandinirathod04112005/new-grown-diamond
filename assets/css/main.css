@@ -2441,6 +2441,15 @@ a.ngd-chip {
 .ngd-section-dark .ngd-lead a { color: var(--ngd-gold-soft); }
 .ngd-section-dark .ngd-lead a:hover { color: #f4f2ee; }
 
+/* Wide map placeholder strip on the contact page */
+.ngd-map-panel { aspect-ratio: 32 / 11; }
+.ngd-map-panel svg { width: 92%; }
+
+@media (max-width: 767.98px) {
+  .ngd-map-panel { aspect-ratio: 16 / 11; }
+  .ngd-map-panel svg { width: 100%; }
+}
+
 /* Natural vs lab-grown comparison table: prose cells wrap,
    row headers match the body-cell skin */
 .ngd-compare-table tbody td,
