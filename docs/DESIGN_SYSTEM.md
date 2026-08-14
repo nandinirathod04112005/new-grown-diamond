@@ -299,6 +299,18 @@ status + date-range filters and the labelled loading/empty/error
 previews. `loadRequests()` is the seam for the future Supabase
 quotes/holds/inspections tables.
 
+### Admin dashboard
+`admin/dashboard.html` (guarded by `requireAdmin`) reuses the same
+`.ngd-dash-*` shell: topbar with the admin profile area, a 13-route
+`data-admin-route` sidebar where every unbuilt management page is an
+honest `.is-soon` item, `[data-admin-kpi]` metric cards (diamond and
+jewellery counts computed from the demo catalogue, the rest static
+samples — every value chipped Demo), Soon-chipped quick-action buttons
+that navigate nowhere plus a live storefront link, and a `[data-admin-feed]`
+sample activity list. `loadAdminData()` in `assets/js/admin-dashboard.js`
+is the seam the Supabase phase replaces with real counts and an activity
+query.
+
 ### Contact page
 `contact.html` reuses the `.ngd-form` skin (Bootstrap `.is-invalid` +
 `.invalid-feedback` like the auth pages) on a `.ngd-glass` card, four

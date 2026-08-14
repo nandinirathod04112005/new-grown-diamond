@@ -3,7 +3,7 @@
   "private": true,
   "description": "Optional automated browser tests for the New Grown Diamond frontend. Dev tooling only \u2014 the site itself is plain HTML/CSS/JS and needs no Node backend.",
   "scripts": {
-    "test": "node design-system.test.cjs && node header-nav.test.cjs && node hero.test.cjs && node shapes.test.cjs && node featured.test.cjs && node jewellery-section.test.cjs && node story.test.cjs && node footer.test.cjs && node inventory.test.cjs && node details.test.cjs && node jewellery-listing.test.cjs && node jewellery-details.test.cjs && node manufacturing.test.cjs && node education.test.cjs && node about.test.cjs && node contact.test.cjs && node login-ui.test.cjs && node signup-ui.test.cjs && node forgot-ui.test.cjs && node customer-dash-ui.test.cjs && node favourites-ui.test.cjs && node account-requests-ui.test.cjs && node auth-flow.test.cjs"
+    "test": "node design-system.test.cjs && node header-nav.test.cjs && node hero.test.cjs && node shapes.test.cjs && node featured.test.cjs && node jewellery-section.test.cjs && node story.test.cjs && node footer.test.cjs && node inventory.test.cjs && node details.test.cjs && node jewellery-listing.test.cjs && node jewellery-details.test.cjs && node manufacturing.test.cjs && node education.test.cjs && node about.test.cjs && node contact.test.cjs && node login-ui.test.cjs && node signup-ui.test.cjs && node forgot-ui.test.cjs && node customer-dash-ui.test.cjs && node favourites-ui.test.cjs && node account-requests-ui.test.cjs && node admin-dash-ui.test.cjs && node auth-flow.test.cjs"
   },
   "devDependencies": {
     "@supabase/supabase-js": "^2.112.3",

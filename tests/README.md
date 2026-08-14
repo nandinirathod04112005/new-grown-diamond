@@ -108,6 +108,13 @@ tooling only** — the website itself is plain HTML/CSS/JS and has no Node backe
   preferred-type columns, the honest detail drawer with its catalogue link,
   loading/empty/error previews with retry, guard redirects, and the
   desktop-table vs stacked-cards behaviour at 1440/768/390.
+- `admin-dash-ui.test.cjs` — 8 Admin-Dashboard scenarios (mocked auth, role
+  parameterised): topbar profile area, the 13-route sidebar with its twelve
+  honest Soon items and logout, KPI cards whose inventory counts mirror the
+  demo catalogue (everything chipped Demo), the five Soon quick actions +
+  live storefront link, the demo activity feed with catalogue links, role
+  and session guards, logout, and offcanvas/single-column layouts at
+  1440/768/390.
 - `header-nav.test.cjs` — 12 header/navigation scenarios on every public page:
   sticky glass header, Collections dropdown (open/close/navigate), login button,
   hamburger morph, offcanvas mobile menu (open, stagger, close button, Escape,

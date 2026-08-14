@@ -31,6 +31,7 @@ Bootstrap 5 + vanilla JavaScript** frontend backed by **Supabase**
 | Customer Dashboard UI (sidebar shell, metrics, UI states) | ✅ done — demo/preview data only |
 | Customer Favourites UI (tabs, search, sort, demo removal) | ✅ done — demo/preview data only |
 | Customer Quotes / Holds / Inspections UI (shared list shell) | ✅ done — demo/preview data only |
+| Admin Dashboard UI (13-route sidebar, KPIs, activity feed) | ✅ done — demo figures only |
 | Admin management, storage, quotes, enquiries backend | ⏳ upcoming steps |
 
 ## Quick start
@@ -62,7 +63,7 @@ Bootstrap 5 + vanilla JavaScript** frontend backed by **Supabase**
 | `account/dashboard.html` | Customer dashboard (guarded) — sidebar shell, summary metrics, previews with designed empty/loading/error states; demo values clearly chipped |
 | `account/favourites.html` | My Favourites (guarded) — All/Diamonds/Jewellery tabs, search, sort, honest demo-only removal with Undo; ready for the Supabase `favourites` table |
 | `account/quotes.html` / `holds.html` / `inspections.html` | Request lists (guarded) — one shared controller: demo rows, search + status + date filters, state previews, detail drawers; ready for the Supabase request tables |
-| `admin/dashboard.html` | Admin console shell (guarded) |
+| `admin/dashboard.html` | Admin Dashboard (guarded) — 13-route sidebar (management routes marked Soon), KPI cards with demo-catalogue counts, quick actions, demo activity feed |
 | `styleguide.html` | Living reference for the design system |
 
 ## Documentation
