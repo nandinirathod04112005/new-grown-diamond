@@ -180,7 +180,8 @@ const ROUTES = ['dashboard', 'diamonds', 'jewellery', 'customers', 'quotes', 'ho
     expect(state.topbarLogout && state.navLogout, 'sign-out in topbar and sidebar');
     expect(JSON.stringify(state.routes) === JSON.stringify(ROUTES),
       'all 13 sidebar routes in order, got ' + state.routes.join(','));
-    expect(state.soonCount === 12, 'twelve honest Soon items, got ' + state.soonCount);
+    expect(state.soonCount === 11,
+      'eleven Soon items — Diamonds is a real page since STEP 24, got ' + state.soonCount);
     expect(state.active === 'dashboard', 'Dashboard route active');
     expect(state.title === 'Admin Dashboard', 'page title, got ' + state.title);
     expect(/Welcome, Asha/.test(state.welcome), 'first-name welcome');

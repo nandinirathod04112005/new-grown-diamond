@@ -2828,6 +2828,64 @@ a.ngd-chip {
 
 .ngd-req-meta dd { margin: 0; font-size: 0.85rem; }
 
+/* Admin inventory table: dense cells, compact icon actions,
+   muted inactive rows — 12 columns must fit at 1440px */
+.ngd-admin-table thead th { padding: 0.7rem 0.55rem; }
+.ngd-admin-table tbody td {
+  white-space: nowrap;
+  padding: 0.55rem;
+  font-size: 0.82rem;
+}
+.ngd-admin-table .ngd-req-thumb { width: 2.15rem; height: 2.15rem; }
+.ngd-admin-table .ngd-status-chip { font-size: 0.56rem; padding: 0.16rem 0.5rem; }
+.ngd-admin-table tbody tr.is-inactive td { opacity: 0.55; }
+.ngd-admin-table tbody tr.is-inactive .ngd-adm-actions { opacity: 1; }
+
+.ngd-adm-actions {
+  display: inline-flex;
+  gap: 0.3rem;
+  justify-content: flex-end;
+}
+
+.ngd-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.05rem;
+  height: 2.05rem;
+  border: 1px solid var(--ngd-line);
+  border-radius: var(--ngd-radius-sm);
+  background-color: var(--ngd-white);
+  color: var(--ngd-slate);
+  cursor: pointer;
+  text-decoration: none;
+  transition:
+      color var(--ngd-fast) var(--ngd-ease),
+      border-color var(--ngd-fast) var(--ngd-ease),
+      background-color var(--ngd-fast) var(--ngd-ease);
+}
+
+.ngd-icon-btn svg { width: 15px; height: 15px; }
+
+.ngd-icon-btn:hover {
+  color: var(--ngd-gold-deep);
+  border-color: rgba(180, 140, 71, 0.5);
+}
+
+.ngd-icon-btn.is-on {
+  color: var(--ngd-gold-deep);
+  border-color: rgba(180, 140, 71, 0.5);
+  background: rgba(217, 192, 138, 0.16);
+}
+
+.ngd-icon-btn.is-off { color: #b7b7bd; }
+
+.ngd-icon-btn.is-danger:hover {
+  color: #b04343;
+  border-color: rgba(176, 67, 67, 0.45);
+  background: rgba(176, 67, 67, 0.06);
+}
+
 /* UI states: loading skeleton, empty, error */
 .ngd-skeleton {
   position: relative;

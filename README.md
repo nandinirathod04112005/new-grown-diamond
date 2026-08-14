@@ -32,6 +32,7 @@ Bootstrap 5 + vanilla JavaScript** frontend backed by **Supabase**
 | Customer Favourites UI (tabs, search, sort, demo removal) | ✅ done — demo/preview data only |
 | Customer Quotes / Holds / Inspections UI (shared list shell) | ✅ done — demo/preview data only |
 | Admin Dashboard UI (13-route sidebar, KPIs, activity feed) | ✅ done — demo figures only |
+| Admin Diamond Inventory UI (12-col table, 10 filters, demo actions) | ✅ done — demo/preview data only |
 | Admin management, storage, quotes, enquiries backend | ⏳ upcoming steps |
 
 ## Quick start
@@ -64,6 +65,8 @@ Bootstrap 5 + vanilla JavaScript** frontend backed by **Supabase**
 | `account/favourites.html` | My Favourites (guarded) — All/Diamonds/Jewellery tabs, search, sort, honest demo-only removal with Undo; ready for the Supabase `favourites` table |
 | `account/quotes.html` / `holds.html` / `inspections.html` | Request lists (guarded) — one shared controller: demo rows, search + status + date filters, state previews, detail drawers; ready for the Supabase request tables |
 | `admin/dashboard.html` | Admin Dashboard (guarded) — 13-route sidebar (management routes marked Soon), KPI cards with demo-catalogue counts, quick actions, demo activity feed |
+| `admin/diamonds.html` | Admin Diamond Inventory (guarded) — 12-column table over the demo catalogue, search, ten filters, sort, pagination, honest demo feature/activate/archive actions |
+| `admin/add-diamond.html` / `edit-diamond.html` | Guarded placeholders for the future diamond builder/editor — nothing can be submitted yet |
 | `styleguide.html` | Living reference for the design system |
 
 ## Documentation

@@ -311,6 +311,19 @@ sample activity list. `loadAdminData()` in `assets/js/admin-dashboard.js`
 is the seam the Supabase phase replaces with real counts and an activity
 query.
 
+`admin/diamonds.html` is the inventory manager: a dense `.ngd-admin-table`
+(12 columns fitting 1440px; any tablet overflow scrolls inside the table
+card, never the page) with `.ngd-icon-btn` compact actions
+(`.is-on` featured star, `.is-danger` archive) and `.is-inactive` muted
+rows; below 768px the rows become stacked `.ngd-req-card`s. Search, ten
+filters (selects + carat range + active + featured with a count badge on
+the collapse toggle), sort and pagination all run client-side over the
+demo catalogue augmented with deterministic featured/active/updated
+fields. Feature/activate/archive edit only the preview with truthful
+toasts (+ Undo for archive). View → the public details page; Add/Edit →
+guarded placeholder pages (`admin-page.js` runs their guard).
+`loadAdminDiamonds()` is the Supabase seam.
+
 ### Contact page
 `contact.html` reuses the `.ngd-form` skin (Bootstrap `.is-invalid` +
 `.invalid-feedback` like the auth pages) on a `.ngd-glass` card, four

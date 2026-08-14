@@ -115,6 +115,13 @@ tooling only** — the website itself is plain HTML/CSS/JS and has no Node backe
   live storefront link, the demo activity feed with catalogue links, role
   and session guards, logout, and offcanvas/single-column layouts at
   1440/768/390.
+- `admin-diamonds-ui.test.cjs` — 10 Admin-Diamond-Inventory scenarios
+  (mocked admin): the 12-column table over the augmented demo catalogue,
+  search + the ten filters (incl. carat range, active state and featured)
+  + sort + pagination, the honest demo actions (feature/activate toggles,
+  archive with Undo — truthful toasts, no fake success), Add/Edit
+  placeholder navigation, loading/empty/error previews, guards and the
+  cards-vs-contained-scrolling-table behaviour at 390/768/1440.
 - `header-nav.test.cjs` — 12 header/navigation scenarios on every public page:
   sticky glass header, Collections dropdown (open/close/navigate), login button,
   hamburger morph, offcanvas mobile menu (open, stagger, close button, Escape,
