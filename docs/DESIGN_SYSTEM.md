@@ -222,6 +222,19 @@ long-form description. The shared light product card lives in
 listing grid and the Similar-pieces row. Spec table, sticky CTAs and favourite
 button reuse the diamond-details classes.
 
+### Education components
+Learning-page building blocks (`education.html`): `.ngd-accordion` skins the
+Bootstrap accordion (Playfair questions, gold active state and chevron) for the
+FAQ; `.ngd-compare-table` relaxes the `.ngd-table` skin for the prose
+natural-vs-lab-grown comparison (wrapping cells, styled row headers);
+`.ngd-4c-visual` is the fixed-height art band inside each 4C card with
+`.ngd-colour-scale` (+ `-labels`) for the D→K gradient and `.ngd-carat-dots`
+for the size comparison; `.ngd-report-list` renders the numbered
+how-to-read-a-report lines; `.ngd-edu-note` is the soft gold aside and
+`.ngd-edu-bullet` its small diamond marker; `a.ngd-chip` reuses the listing
+chips as chapter anchor links (`[data-edu-section]` adds `scroll-margin-top`
+so anchors clear the sticky navbar).
+
 ### Feedback & misc
 `.ngd-badge` (+ `.ngd-badge-dark`), `.ngd-alert` with `.ngd-alert-info` /
 `.ngd-alert-success` / `.ngd-alert-danger`, `.ngd-stat-value` + `.ngd-stat-label`.

@@ -53,6 +53,12 @@ tooling only** — the website itself is plain HTML/CSS/JS and has no Node backe
   hero, nine numbered stages with art/copy/parallax, alternating desktop layout,
   reduced-motion opt-out, quality-control and certification sections, the
   Explore Our Diamonds CTA, and vertical journeys at 768/390 with no overflow.
+- `education.test.cjs` — 15 Education-page scenarios: chapter chips + all eight
+  chapters in order, the natural-vs-lab-grown comparison table, CVD/HPHT method
+  cards, the four 4C cards with visuals, the shape gallery deep-linking the
+  inventory, certification, the eight-line report guide, care cards, the
+  single-open FAQ accordion, tilt/reveal behaviour and the Explore Certified
+  Diamonds CTA at 1440/768/390.
 - `header-nav.test.cjs` — 12 header/navigation scenarios on every public page:
   sticky glass header, Collections dropdown (open/close/navigate), login button,
   hamburger morph, offcanvas mobile menu (open, stagger, close button, Escape,

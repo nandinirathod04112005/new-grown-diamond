@@ -2259,6 +2259,189 @@ code {
 }
 
 /* ------------------------------------------------------------
+   13l. EDUCATION PAGE (accordion, colour scale, report list)
+   ------------------------------------------------------------ */
+.ngd-accordion .accordion-item {
+  background-color: var(--ngd-white);
+  border: 1px solid var(--ngd-line);
+  border-radius: var(--ngd-radius-sm) !important;
+  margin-bottom: 0.65rem;
+  box-shadow: var(--ngd-shadow-soft);
+  overflow: hidden;
+}
+
+.ngd-accordion .accordion-button {
+  font-family: var(--ngd-font-display);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--ngd-ink);
+  background-color: var(--ngd-white);
+  padding: 1.05rem 1.3rem;
+  box-shadow: none;
+}
+
+.ngd-accordion .accordion-button:focus {
+  box-shadow: 0 0 0 0.2rem rgba(180, 140, 71, 0.18);
+}
+
+.ngd-accordion .accordion-button:not(.collapsed) {
+  color: var(--ngd-gold-deep);
+  background-color: rgba(180, 140, 71, 0.06);
+}
+
+.ngd-accordion .accordion-button::after {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%238f6d31' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4 6 4 4 4-4'/%3E%3C/svg%3E");
+}
+
+.ngd-accordion .accordion-body {
+  font-size: 0.94rem;
+  line-height: 1.75;
+  color: var(--ngd-ink);
+  padding: 0.55rem 1.3rem 1.2rem;
+}
+
+/* D→H colour scale for the Colour card */
+.ngd-colour-scale {
+  height: 14px;
+  border-radius: 999px;
+  border: 1px solid var(--ngd-line);
+  background: linear-gradient(90deg, #ffffff 0%, #fdfaf0 40%, #f7efd2 72%, #efe2ae 100%);
+}
+
+.ngd-colour-scale-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.4rem;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  color: var(--ngd-slate);
+}
+
+/* Numbered how-to-read-a-report list */
+.ngd-report-list {
+  list-style: none;
+  counter-reset: rep;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.ngd-report-list li {
+  counter-increment: rep;
+  display: flex;
+  gap: 0.9rem;
+  align-items: baseline;
+  font-size: 0.93rem;
+  line-height: 1.65;
+}
+
+.ngd-report-list li::before {
+  content: counter(rep, decimal-leading-zero);
+  font-family: var(--ngd-font-display);
+  font-style: italic;
+  font-size: 0.95rem;
+  color: var(--ngd-gold-deep);
+  min-width: 1.7rem;
+}
+
+/* Chapter chips reused as anchor links */
+a.ngd-chip {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+/* Anchored chapters land below the sticky navbar */
+[data-edu-section] { scroll-margin-top: 84px; }
+
+/* Fixed-height visual band inside each 4C card */
+.ngd-4c-visual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 92px;
+  margin-bottom: 1.1rem;
+  padding: 0.9rem 1.1rem;
+  border: 1px solid var(--ngd-line-light);
+  border-radius: var(--ngd-radius-sm);
+  background: linear-gradient(170deg, var(--ngd-pearl), var(--ngd-white) 75%);
+  color: var(--ngd-gold-deep);
+}
+
+.ngd-4c-visual > svg { height: 100%; width: auto; max-width: 100%; }
+.ngd-4c-visual > div { width: 100%; }
+
+/* Carat comparison dots (sizes set inline per dot) */
+.ngd-carat-dots {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 1.15rem;
+}
+
+.ngd-carat-dots span {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: var(--ngd-slate);
+}
+
+.ngd-carat-dots i {
+  display: block;
+  border-radius: 50%;
+  border: 1px solid rgba(180, 140, 71, 0.55);
+  background: radial-gradient(circle at 35% 30%, #fdfcf8, #efe4c6 70%, #e2d2a6);
+  box-shadow: 0 3px 8px rgba(12, 12, 14, 0.14);
+}
+
+/* Soft gold aside for "both methods are real diamonds" notes */
+.ngd-edu-note {
+  display: flex;
+  gap: 0.85rem;
+  align-items: flex-start;
+  padding: 1.05rem 1.3rem;
+  border: 1px solid rgba(180, 140, 71, 0.35);
+  border-radius: var(--ngd-radius-sm);
+  background: linear-gradient(160deg, rgba(217, 192, 138, 0.14), rgba(217, 192, 138, 0.04));
+  font-size: 0.92rem;
+  line-height: 1.65;
+}
+
+/* Small gold diamond used as a list / aside marker */
+.ngd-edu-bullet {
+  flex-shrink: 0;
+  color: var(--ngd-gold);
+  font-size: 0.72rem;
+  line-height: 1.9;
+}
+
+/* Natural vs lab-grown comparison table: prose cells wrap,
+   row headers match the body-cell skin */
+.ngd-compare-table tbody td,
+.ngd-compare-table tbody th {
+  white-space: normal;
+}
+
+.ngd-compare-table tbody th {
+  padding: 0.8rem 1rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--ngd-slate);
+  border-bottom: 1px solid var(--ngd-line);
+  min-width: 9rem;
+}
+
+.ngd-compare-table tbody tr:last-child th { border-bottom: 0; }
+
+/* ------------------------------------------------------------
    14. ACCESSIBILITY & RESPONSIVE GUARDS
    ------------------------------------------------------------ */
 @media (prefers-reduced-motion: reduce) {
