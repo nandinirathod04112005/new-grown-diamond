@@ -226,17 +226,20 @@ const ROUTES = ['dashboard', 'diamonds', 'jewellery', 'customers', 'quotes', 'ho
       labels: [...document.querySelectorAll('#admin-action-buttons [data-admin-action]')]
         .map((b) => b.textContent.replace(/Soon/i, '').trim()),
       soonChips: document.querySelectorAll('#admin-action-buttons [data-admin-action] .ngd-soon-chip').length,
-      disabled: [...document.querySelectorAll('#admin-action-buttons [data-admin-action]')]
+      disabled: [...document.querySelectorAll('#admin-action-buttons button[data-admin-action]')]
         .every((b) => b.getAttribute('aria-disabled') === 'true'),
+      addHref: document.querySelector('[data-admin-action="add-diamond"]').getAttribute('href'),
       store: document.querySelector('#admin-action-buttons a.ngd-btn-gold').getAttribute('href'),
     }));
     expect(JSON.stringify(state.labels) === JSON.stringify(
       ['Add Diamond', 'Add Jewellery', 'View Customers', 'Review Quotes', 'View Enquiries']),
       'action labels per spec, got ' + state.labels.join(','));
-    expect(state.soonChips === 5 && state.disabled, 'all five visibly Soon and disabled');
+    expect(state.soonChips === 4 && state.disabled,
+      'four actions still Soon; Add Diamond is real since STEP 25');
+    expect(state.addHref === 'add-diamond.html', 'Add Diamond links its page');
     /* aria-disabled makes Playwright refuse a normal click — dispatch one
-       directly to prove the button still navigates nowhere */
-    await page.$eval('#admin-action-buttons [data-admin-action="add-diamond"]', (el) => el.click());
+       directly to prove a Soon button still navigates nowhere */
+    await page.$eval('#admin-action-buttons [data-admin-action="add-jewellery"]', (el) => el.click());
     await page.waitForTimeout(300);
     const stayed = await page.evaluate(() => /admin\/dashboard\.html$/.test(location.pathname));
     expect(stayed, 'Soon action navigates nowhere');

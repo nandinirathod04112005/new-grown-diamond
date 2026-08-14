@@ -298,23 +298,29 @@ async function openInventory(page) {
     expect(hrefs.edit === 'edit-diamond.html?id=NGD-1002', 'Edit targets the future editor with the id');
     await page.click('[data-adm-row="NGD-1002"] [data-adm-act="edit"]');
     await page.waitForURL('**/admin/edit-diamond.html?id=NGD-1002', { timeout: 8000 });
-    /* the guard reveals the fail-closed body asynchronously */
+    /* the guard reveals the fail-closed body asynchronously; the STEP-25
+       form then prefills from the demo record */
     await page.waitForFunction(() =>
       getComputedStyle(document.body).visibility === 'visible', null, { timeout: 8000 });
-    let placeholder = await page.evaluate(() => ({
-      text: document.body.textContent.replace(/\s+/g, ' '),
+    await page.waitForFunction(() =>
+      (document.querySelector('[name="stock_number"]') || {}).value === 'NGD-1002',
+      null, { timeout: 8000 });
+    let formPage = await page.evaluate(() => ({
+      title: document.querySelector('h1').textContent.trim(),
     }));
-    expect(/arrives in an upcoming phase/i.test(placeholder.text) &&
-      /nothing is saved/i.test(placeholder.text), 'edit placeholder is honest');
-    await page.click('a[href="diamonds.html"].ngd-btn');
+    expect(formPage.title === 'Edit Diamond', 'edit form reached, got ' + formPage.title);
+    await page.click('#dia-cancel');
     await page.waitForURL('**/admin/diamonds.html', { timeout: 8000 });
     await page.waitForFunction(() => document.querySelectorAll('#adm-table-body tr').length > 0);
     await page.click('#adm-add');
     await page.waitForURL('**/admin/add-diamond.html', { timeout: 8000 });
-    placeholder = await page.evaluate(() => ({
+    await page.waitForFunction(() =>
+      getComputedStyle(document.body).visibility === 'visible', null, { timeout: 8000 });
+    formPage = await page.evaluate(() => ({
       title: document.querySelector('h1').textContent.trim(),
+      form: !!document.getElementById('ngd-diamond-form'),
     }));
-    expect(placeholder.title === 'Add Diamond', 'Add Diamond placeholder reached');
+    expect(formPage.title === 'Add Diamond' && formPage.form, 'Add Diamond form reached');
   });
 
   await scenario('UI states: loading, empty and error with retry', {}, async (page) => {

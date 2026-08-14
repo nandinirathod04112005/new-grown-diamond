@@ -2886,6 +2886,90 @@ a.ngd-chip {
   background: rgba(176, 67, 67, 0.06);
 }
 
+/* Admin add/edit forms: numbered section headings, required stars,
+   image drop zone, preview and the sticky action bar */
+.ngd-form-sec-title {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+  font-family: var(--ngd-font-display);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--ngd-ink);
+}
+
+.ngd-form-sec-title em {
+  font-style: italic;
+  font-size: 0.9rem;
+  color: var(--ngd-gold-deep);
+}
+
+.ngd-req-star { color: #b04343; font-weight: 600; }
+
+.ngd-drop {
+  padding: 1.9rem 1.2rem;
+  border: 1.5px dashed var(--ngd-line);
+  border-radius: var(--ngd-radius-sm);
+  background: linear-gradient(170deg, var(--ngd-pearl), var(--ngd-white) 80%);
+  color: var(--ngd-slate);
+  text-align: center;
+  transition: border-color var(--ngd-fast) var(--ngd-ease), background-color var(--ngd-fast) var(--ngd-ease);
+}
+
+.ngd-drop.is-drag {
+  border-color: var(--ngd-gold);
+  background: rgba(217, 192, 138, 0.12);
+  color: var(--ngd-gold-deep);
+}
+
+.ngd-dia-preview {
+  max-width: 100%;
+  max-height: 230px;
+  border: 1px solid var(--ngd-line);
+  border-radius: var(--ngd-radius-sm);
+  box-shadow: var(--ngd-shadow-soft);
+}
+
+.ngd-current-art-frame {
+  width: 6.5rem;
+  height: 6.5rem;
+  border-radius: var(--ngd-radius-sm);
+}
+
+.ngd-form-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 20;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 1rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--ngd-line);
+  border-radius: var(--ngd-radius);
+  background-color: rgba(253, 252, 248, 0.94);
+  box-shadow: var(--ngd-shadow-deep);
+}
+
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .ngd-form-actions {
+    background-color: rgba(253, 252, 248, 0.8);
+    -webkit-backdrop-filter: blur(12px) saturate(1.4);
+    backdrop-filter: blur(12px) saturate(1.4);
+  }
+}
+
+.ngd-btn-danger-soft {
+  border-color: rgba(176, 67, 67, 0.45) !important;
+  color: #b04343 !important;
+}
+
+.ngd-btn-danger-soft:hover {
+  background-color: rgba(176, 67, 67, 0.08) !important;
+}
+
 /* UI states: loading skeleton, empty, error */
 .ngd-skeleton {
   position: relative;

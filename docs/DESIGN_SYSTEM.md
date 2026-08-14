@@ -324,6 +324,18 @@ toasts (+ Undo for archive). View → the public details page; Add/Edit →
 guarded placeholder pages (`admin-page.js` runs their guard).
 `loadAdminDiamonds()` is the Supabase seam.
 
+`admin/add-diamond.html` / `edit-diamond.html` share one generated form
+(`assets/js/admin-diamond-form.js`, mode from `body[data-diamond-form]`):
+eight numbered `.ngd-form-sec-title` sections, `.ngd-req-star` required
+markers, the `.ngd-drop` drag/drop zone (`.is-drag` state) with the
+`.ngd-dia-preview` local preview and replace/remove controls
+(JPG/JPEG/PNG/WEBP ≤ 10 MB, validated client-side, never uploaded), and
+the sticky `.ngd-form-actions` bar (`.ngd-btn-danger-soft` for the
+UI-only Archive). Field names are the future Supabase `diamonds` columns;
+a valid submit exposes the exact payload as `data-ngd-payload` and states
+honestly that nothing was saved — `saveDiamond()` is the single seam.
+A dirty form warns via `beforeunload` before leaving.
+
 ### Contact page
 `contact.html` reuses the `.ngd-form` skin (Bootstrap `.is-invalid` +
 `.invalid-feedback` like the auth pages) on a `.ngd-glass` card, four

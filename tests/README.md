@@ -122,6 +122,14 @@ tooling only** — the website itself is plain HTML/CSS/JS and has no Node backe
   archive with Undo — truthful toasts, no fake success), Add/Edit
   placeholder navigation, loading/empty/error previews, guards and the
   cards-vs-contained-scrolling-table behaviour at 390/768/1440.
+- `admin-diamond-form-ui.test.cjs` — 10 Add/Edit-Diamond scenarios (mocked
+  admin): the eight sections with all 27 snake_case fields and required
+  stars, empty/number/range validation, the honest no-save submits with
+  their exposed payloads, Save & Add Another, the image picker (preview,
+  replace/remove, JPG/PNG/WEBP + 10 MB rules — no upload), the
+  unsaved-changes beforeunload warning, edit prefill + UI-only Archive +
+  not-found, and 2-col→1-col responsive checks with the sticky action bar
+  at 1440/768/390.
 - `header-nav.test.cjs` — 12 header/navigation scenarios on every public page:
   sticky glass header, Collections dropdown (open/close/navigate), login button,
   hamburger morph, offcanvas mobile menu (open, stagger, close button, Escape,

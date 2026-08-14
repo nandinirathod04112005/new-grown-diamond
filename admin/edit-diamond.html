@@ -15,7 +15,7 @@
 </head>
 <!-- Hidden until the admin guard passes (fail closed).
      RLS in the database remains the real security layer. -->
-<body class="ngd-backdrop" style="visibility:hidden">
+<body class="ngd-backdrop" style="visibility:hidden" data-diamond-form="edit">
 
   <!-- ══════════ ADMIN TOP HEADER (shared dashboard shell) ══════════ -->
   <header class="ngd-dash-topbar">
@@ -123,28 +123,332 @@
     </aside>
 
     <!-- ══════════ MAIN ══════════ -->
-    <main class="ngd-dash-main">
+    <main class="ngd-dash-main ngd-admin-form">
+
       <section class="d-flex flex-wrap align-items-end justify-content-between gap-3">
         <div>
-          <span class="ngd-eyebrow">Admin console</span>
+          <span class="ngd-eyebrow">Admin console &middot; Diamonds</span>
           <h1 class="ngd-display-2 mt-2 mb-1">Edit Diamond</h1>
-          <p class="ngd-text-muted small mb-0">Update a stone&rsquo;s details.</p>
+          <p class="ngd-text-muted small mb-0">Update <strong id="dia-editing-id">…</strong> — changes preview the form only until the backend phase.</p>
         </div>
+        <span class="ngd-demo-chip">UI only — nothing saves yet</span>
       </section>
 
-      <!-- Placeholder — the full edit diamond builder is a dedicated upcoming
-           phase (form fields, validation, media and Supabase writes). -->
-      <div class="ngd-dash-panel mt-4">
+      <div id="dia-alert" class="mt-3" aria-live="polite"></div>
+
+      <div id="dia-notfound" class="ngd-dash-panel mt-4" hidden>
         <div class="ngd-dash-empty">
-          <span class="ngd-icon-tile ngd-depth-1 mb-3">◆</span>
-          <h2 class="ngd-title fs-5">The Edit Diamond form arrives in an upcoming phase</h2>
-          <p class="ngd-text-muted small mb-3" style="max-width: 34rem; margin-inline: auto;">
-            This page will load the selected stone by its ?id= parameter, let you amend every field and save the changes to Supabase. Nothing can be submitted from this page yet — no form is
-            wired and nothing is saved.
+          <span class="ngd-icon-tile ngd-depth-1 mb-3">◌</span>
+          <h2 class="ngd-title fs-6">Diamond not found</h2>
+          <p class="ngd-text-muted small mb-3">
+            No demo stone matches <strong id="dia-notfound-id">—</strong>.
+            Pick one from the inventory list.
           </p>
           <a class="ngd-btn ngd-btn-outline ngd-btn-sm" href="diamonds.html">← Back to Diamond Inventory</a>
         </div>
       </div>
+      <div id="dia-form-wrap">
+        <!-- Field names mirror the future Supabase `diamonds` columns.
+             saveDiamond() in assets/js/admin-diamond-form.js is the single
+             seam the backend phase replaces — no fake saves meanwhile. -->
+        <form id="ngd-diamond-form" novalidate class="ngd-form">
+          <section class="ngd-dash-panel mt-3" data-form-section="1">
+            <h2 class="ngd-form-sec-title"><em>01</em> Basic Information</h2>
+            <div class="row g-3">
+              <div class="col-md-6 col-xl-4">
+                <label class="form-label" for="dia-stock_number">Stock Number <span class="ngd-req-star" aria-hidden="true">*</span></label>
+                <input type="text" class="form-control" id="dia-stock_number" name="stock_number"
+                       placeholder="NGD-1029" required>
+                <div class="invalid-feedback">Please enter a valid stock number.</div>
+              </div>
+              <div class="col-md-6 col-xl-4">
+                <label class="form-label" for="dia-shape">Shape <span class="ngd-req-star" aria-hidden="true">*</span></label>
+                <select class="form-select" id="dia-shape" name="shape" required>
+                  <option value="" selected>Choose&hellip;</option>
+                  <option value="Round">Round</option>
+                  <option value="Oval">Oval</option>
+                  <option value="Emerald">Emerald</option>
+                  <option value="Pear">Pear</option>
+                  <option value="Princess">Princess</option>
+                  <option value="Cushion">Cushion</option>
+                  <option value="Radiant">Radiant</option>
+                  <option value="Marquise">Marquise</option>
+                </select>
+                <div class="invalid-feedback">Please choose shape.</div>
+              </div>
+              <div class="col-md-6 col-xl-4">
+                <label class="form-label" for="dia-growth_method">Growth Method</label>
+                <select class="form-select" id="dia-growth_method" name="growth_method">
+                  <option value="" selected>Choose&hellip;</option>
+                  <option value="CVD">CVD</option>
+                  <option value="HPHT">HPHT</option>
+                </select>
+                <div class="invalid-feedback">Please choose growth method.</div>
+              </div>
+              <div class="col-md-6 col-xl-4">
+                <label class="form-label" for="dia-location">Location</label>
+                <input type="text" class="form-control" id="dia-location" name="location"
+                       placeholder="Surat atelier">
+                <div class="invalid-feedback">Please enter a valid location.</div>
+              </div>
+            </div>
+          </section>
+          <section class="ngd-dash-panel mt-3" data-form-section="2">
+            <h2 class="ngd-form-sec-title"><em>02</em> Grading Details</h2>
+            <div class="row g-3">
+              <div class="col-md-6 col-xl-4">
+                <label class="form-label" for="dia-carat">Carat <span class="ngd-req-star" aria-hidden="true">*</span></label>
+                <input type="number" class="form-control" id="dia-carat" name="carat"
+                       placeholder="1.00" min="0.01" step="0.01" max="30" required>
+                <div class="invalid-feedback">Please enter a valid carat.</div>
+              </div>
+              <div class="col-md-6 col-xl-4">
+                <label class="form-label" for="dia-colour">Colour <span class="ngd-req-star" aria-hidden="true">*</span></label>
+                <select class="form-select" id="dia-colour" name="colour" required>
+                  <option value="" selected>Choose&hellip;</option>
+                  <option value="D">D</option>
+                  <option value="E">E</option>
+                  <option value="F">F</option>
+                  <option value="G">G</option>
+                  <option value="H">H</option>
+                  <option value="I">I</option>
+                  <option value="J">J</option>
+                </select>
+                <div class="invalid-feedback">Please choose colour.</div>
+              </div>
+              <div class="col-md-6 col-xl-4">
+                <label class="form-label" for="dia-clarity">Clarity <span class="ngd-req-star" aria-hidden="true">*</span></label>
+                <select class="form-select" id="dia-clarity" name="clarity" required>
+                  <option value="" selected>Choose&hellip;</option>
+                  <option value="FL">FL</option>
+                  <option value="IF">IF</option>
+                  <option value="VVS1">VVS1</option>
+                  <option value="VVS2">VVS2</option>
+                  <option value="VS1">VS1</option>
+                  <option value="VS2">VS2</option>
+                  <option value="SI1">SI1</option>
+                  <option value="SI2">SI2</option>
+                </select>
+                <div class="invalid-feedback">Please choose clarity.</div>
+              </div>
+              <div class="col-md-6 col-xl-4">
+                <label class="form-label" for="dia-cut">Cut <span class="ngd-req-star" aria-hidden="true">*</span></label>
+                <select class="form-select" id="dia-cut" name="cut" required>
+                  <option value="" selected>Choose&hellip;</option>
+                  <option value="Ideal">Ideal</option>
+                  <option value="Excellent">Excellent</option>
+                  <option value="Very Good">Very Good</option>
+                  <option value="Good">Good</option>
+                </select>
+                <div class="invalid-feedback">Please choose cut.</div>
+              </div>
+              <div class="col-md-6 col-xl-4">
+                <label class="form-label" for="dia-polish">Polish</label>
+                <select class="form-select" id="dia-polish" name="polish">
+                  <option value="" selected>Choose&hellip;</option>
+                  <option value="Excellent">Excellent</option>
+                  <option value="Very Good">Very Good</option>
+                  <option value="Good">Good</option>
+                </select>
+                <div class="invalid-feedback">Please choose polish.</div>
+              </div>
+              <div class="col-md-6 col-xl-4">
+                <label class="form-label" for="dia-symmetry">Symmetry</label>
+                <select class="form-select" id="dia-symmetry" name="symmetry">
+                  <option value="" selected>Choose&hellip;</option>
+                  <option value="Excellent">Excellent</option>
+                  <option value="Very Good">Very Good</option>
+                  <option value="Good">Good</option>
+                </select>
+                <div class="invalid-feedback">Please choose symmetry.</div>
+              </div>
+              <div class="col-md-6 col-xl-4">
+                <label class="form-label" for="dia-fluorescence">Fluorescence</label>
+                <select class="form-select" id="dia-fluorescence" name="fluorescence">
+                  <option value="" selected>Choose&hellip;</option>
+                  <option value="None">None</option>
+                  <option value="Faint">Faint</option>
+                  <option value="Medium">Medium</option>
+                  <option value="Strong">Strong</option>
+                </select>
+                <div class="invalid-feedback">Please choose fluorescence.</div>
+              </div>
+            </div>
+          </section>
+          <section class="ngd-dash-panel mt-3" data-form-section="3">
+            <h2 class="ngd-form-sec-title"><em>03</em> Certificate</h2>
+            <div class="row g-3">
+              <div class="col-md-6 col-xl-4">
+                <label class="form-label" for="dia-laboratory">Laboratory <span class="ngd-req-star" aria-hidden="true">*</span></label>
+                <select class="form-select" id="dia-laboratory" name="laboratory" required>
+                  <option value="" selected>Choose&hellip;</option>
+                  <option value="IGI">IGI</option>
+                  <option value="GIA">GIA</option>
+                  <option value="HRD">HRD</option>
+                </select>
+                <div class="invalid-feedback">Please choose laboratory.</div>
+              </div>
+              <div class="col-md-6 col-xl-4">
+                <label class="form-label" for="dia-report_number">Report Number</label>
+                <input type="text" class="form-control" id="dia-report_number" name="report_number"
+                       placeholder="LG582400123">
+                <div class="invalid-feedback">Please enter a valid report number.</div>
+              </div>
+              <div class="col-md-6 col-xl-4">
+                <label class="form-label" for="dia-certificate_number">Certificate Number</label>
+                <input type="text" class="form-control" id="dia-certificate_number" name="certificate_number"
+                       placeholder="LG582400123">
+                <div class="invalid-feedback">Please enter a valid certificate number.</div>
+              </div>
+              <div class="col-md-6 col-xl-8">
+                <label class="form-label" for="dia-certificate_url">Certificate URL</label>
+                <input type="url" class="form-control" id="dia-certificate_url" name="certificate_url"
+                       placeholder="https://…">
+                <div class="invalid-feedback">Please enter a valid certificate url.</div>
+              </div>
+            </div>
+          </section>
+          <section class="ngd-dash-panel mt-3" data-form-section="4">
+            <h2 class="ngd-form-sec-title"><em>04</em> Measurements</h2>
+            <div class="row g-3">
+              <div class="col-md-6 col-xl-4">
+                <label class="form-label" for="dia-measurements">Measurements</label>
+                <input type="text" class="form-control" id="dia-measurements" name="measurements"
+                       placeholder="6.45 × 6.42 × 3.98 mm">
+                <div class="invalid-feedback">Please enter a valid measurements.</div>
+              </div>
+              <div class="col-6 col-md-3 col-xl-2">
+                <label class="form-label" for="dia-depth_pct">Depth %</label>
+                <input type="number" class="form-control" id="dia-depth_pct" name="depth_pct"
+                       placeholder="62.4" min="0" step="0.1" max="100">
+                <div class="invalid-feedback">Please enter a valid depth percentage.</div>
+              </div>
+              <div class="col-6 col-md-3 col-xl-2">
+                <label class="form-label" for="dia-table_pct">Table %</label>
+                <input type="number" class="form-control" id="dia-table_pct" name="table_pct"
+                       placeholder="57.0" min="0" step="0.1" max="100">
+                <div class="invalid-feedback">Please enter a valid table percentage.</div>
+              </div>
+              <div class="col-6 col-md-3 col-xl-2">
+                <label class="form-label" for="dia-ratio">Ratio</label>
+                <input type="number" class="form-control" id="dia-ratio" name="ratio"
+                       placeholder="1.00" min="0.5" step="0.01" max="3">
+                <div class="invalid-feedback">Please enter a valid ratio.</div>
+              </div>
+            </div>
+          </section>
+          <section class="ngd-dash-panel mt-3" data-form-section="5">
+            <h2 class="ngd-form-sec-title"><em>05</em> Pricing</h2>
+            <p class="ngd-text-muted small mb-3">Prices stay internal until Price Visibility says otherwise.</p>
+            <div class="row g-3">
+              <div class="col-6 col-md-3 col-xl-3">
+                <label class="form-label" for="dia-price_per_carat">Price Per Carat</label>
+                <input type="number" class="form-control" id="dia-price_per_carat" name="price_per_carat"
+                       placeholder="1200" min="0" step="1">
+                <div class="invalid-feedback">Please enter a valid price per carat.</div>
+              </div>
+              <div class="col-6 col-md-3 col-xl-3">
+                <label class="form-label" for="dia-total_price">Total Price</label>
+                <input type="number" class="form-control" id="dia-total_price" name="total_price"
+                       placeholder="1800" min="0" step="1">
+                <div class="invalid-feedback">Please enter a valid total price.</div>
+              </div>
+              <div class="col-6 col-md-3 col-xl-3">
+                <label class="form-label" for="dia-currency">Currency</label>
+                <select class="form-select" id="dia-currency" name="currency">
+                  <option value="" selected>Choose&hellip;</option>
+                  <option value="USD">USD</option>
+                  <option value="EUR">EUR</option>
+                  <option value="INR">INR</option>
+                  <option value="AED">AED</option>
+                </select>
+                <div class="invalid-feedback">Please choose currency.</div>
+              </div>
+              <div class="col-6 col-md-3 col-xl-3">
+                <label class="form-label" for="dia-price_visibility">Price Visibility</label>
+                <select class="form-select" id="dia-price_visibility" name="price_visibility">
+                  <option value="" selected>Choose&hellip;</option>
+                  <option value="visible">visible</option>
+                  <option value="on_request">on_request</option>
+                  <option value="hidden">hidden</option>
+                </select>
+                <div class="invalid-feedback">Please choose price visibility.</div>
+              </div>
+            </div>
+          </section>
+          <section class="ngd-dash-panel mt-3" data-form-section="6">
+            <h2 class="ngd-form-sec-title"><em>06</em> Availability</h2>
+            <div class="row g-3">
+              <div class="col-md-6 col-xl-4">
+                <label class="form-label" for="dia-availability">Availability <span class="ngd-req-star" aria-hidden="true">*</span></label>
+                <select class="form-select" id="dia-availability" name="availability" required>
+                  <option value="" selected>Choose&hellip;</option>
+                  <option value="In Stock">In Stock</option>
+                  <option value="On Request">On Request</option>
+                  <option value="Reserved">Reserved</option>
+                  <option value="Sold">Sold</option>
+                </select>
+                <div class="invalid-feedback">Please choose availability.</div>
+              </div>
+            </div>
+          </section>
+          <section class="ngd-dash-panel mt-3" data-form-section="7">
+            <h2 class="ngd-form-sec-title"><em>07</em> Image</h2>
+            <p class="ngd-text-muted small mb-3">
+              JPG, JPEG, PNG or WEBP up to 10&nbsp;MB. Preview only — files
+              upload to Supabase Storage in a later phase; nothing leaves
+              your browser today.
+            </p>
+            <div class="ngd-current-art mb-3" id="dia-current">
+              <span class="ngd-dash-metric-note d-block mb-2">Current artwork (demo — stones use generated art until real photography uploads arrive)</span>
+              <div class="ngd-req-thumb ngd-current-art-frame" id="dia-current-art" aria-hidden="true"></div>
+            </div>
+            <div class="ngd-drop" id="dia-drop">
+              <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V5M7.5 9.5 12 5l4.5 4.5"/><path d="M4 16.5V18a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1.5"/></svg>
+              <p class="mb-1 mt-2"><strong>Drag &amp; drop</strong> the main diamond image here</p>
+              <p class="ngd-text-muted small mb-2">or</p>
+              <button type="button" class="ngd-btn ngd-btn-outline ngd-btn-sm" id="dia-browse">Browse files</button>
+              <input type="file" id="dia-file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" hidden>
+            </div>
+            <div id="dia-preview" hidden>
+              <img id="dia-preview-img" class="ngd-dia-preview" alt="Selected diamond image preview">
+              <p class="ngd-text-muted small mt-2 mb-2" id="dia-preview-name"></p>
+              <div class="d-flex flex-wrap gap-2">
+                <button type="button" class="ngd-btn ngd-btn-outline ngd-btn-sm" id="dia-replace">Replace image</button>
+                <button type="button" class="ngd-btn ngd-btn-outline ngd-btn-sm" id="dia-remove">Remove</button>
+              </div>
+            </div>
+            <p class="small mt-2 mb-0" id="dia-image-error" style="color:#b04343;" hidden></p>
+          </section>
+          <section class="ngd-dash-panel mt-3" data-form-section="8">
+            <h2 class="ngd-form-sec-title"><em>08</em> Internal / Admin Settings</h2>
+            <div class="row g-3">
+              <div class="col-12 col-md-6">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="dia-featured" name="featured">
+                  <label class="form-check-label" for="dia-featured">Featured on the storefront</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="dia-active" name="active" checked>
+                  <label class="form-check-label" for="dia-active">Active (visible to customers)</label>
+                </div>
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label" for="dia-internal_notes">Internal Notes</label>
+                <textarea class="form-control" id="dia-internal_notes" name="internal_notes" rows="3"
+                          placeholder="Visible to admins only — sourcing, memo terms, remarks…"></textarea>
+              </div>
+            </div>
+          </section>
+
+          <div class="ngd-form-actions">
+            <button type="submit" class="ngd-btn ngd-btn-gold" id="dia-submit">Update Diamond</button>
+            <a class="ngd-btn ngd-btn-outline" href="diamonds.html" id="dia-cancel">Cancel</a>
+            <button type="button" class="ngd-btn ngd-btn-outline ngd-btn-danger-soft ms-auto" id="dia-archive">Archive Diamond</button>
+          </div>
+        </form>
+      </div>
+
     </main>
   </div>
 
@@ -154,6 +458,8 @@
   <script defer src="../assets/js/auth.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script defer src="../assets/js/ui.js"></script>
-  <script defer src="../assets/js/admin-page.js"></script>
+  <script defer src="../assets/js/gem-art.js"></script>
+  <script defer src="../assets/js/diamonds-data.js"></script>
+  <script defer src="../assets/js/admin-diamond-form.js"></script>
 </body>
 </html>
