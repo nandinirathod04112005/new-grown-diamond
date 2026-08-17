@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Supabase Status — New Grown Diamond</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50 8 88 38 50 92 12 38' fill='%23b48c47'/%3E%3C/svg%3E">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/css/main.css" rel="stylesheet">
+</head>
+<body class="ngd-backdrop">
+
+  <main class="container py-5" style="max-width: 46rem;">
+    <a class="ngd-brand mb-4 d-inline-flex" href="index.html">
+      <span class="ngd-brand-mark">◆</span>
+      <span>New Grown Diamond</span>
+    </a>
+
+    <span class="ngd-eyebrow d-block">Developer tools</span>
+    <h1 class="ngd-display-2 mt-2 mb-2">Supabase Connection Status</h1>
+    <p class="ngd-text-muted mb-4">
+      Four safe, read-only checks of the shared Supabase client. This page
+      never displays your keys or any secret — it only reports whether the
+      pieces respond.
+    </p>
+
+    <!-- The four checks; supabase-status.js fills the chips + notes -->
+    <section class="ngd-dash-panel" aria-live="polite" id="sb-checks">
+      <div class="ngd-dash-row" data-sb-check="client">
+        <div class="flex-grow-1 min-w-0">
+          <strong>Supabase client</strong>
+          <span class="ngd-text-muted d-block small" data-sb-note="client"></span>
+        </div>
+        <span class="ngd-status-chip is-dim" data-sb-chip="client">Checking…</span>
+      </div>
+      <div class="ngd-dash-row" data-sb-check="db">
+        <div class="flex-grow-1 min-w-0">
+          <strong>Database API</strong>
+          <span class="ngd-text-muted d-block small" data-sb-note="db"></span>
+        </div>
+        <span class="ngd-status-chip is-dim" data-sb-chip="db">Checking…</span>
+      </div>
+      <div class="ngd-dash-row" data-sb-check="auth">
+        <div class="flex-grow-1 min-w-0">
+          <strong>Auth service</strong>
+          <span class="ngd-text-muted d-block small" data-sb-note="auth"></span>
+        </div>
+        <span class="ngd-status-chip is-dim" data-sb-chip="auth">Checking…</span>
+      </div>
+      <div class="ngd-dash-row" data-sb-check="session">
+        <div class="flex-grow-1 min-w-0">
+          <strong>Current session</strong>
+          <span class="ngd-text-muted d-block small" data-sb-note="session"></span>
+        </div>
+        <span class="ngd-status-chip is-dim" data-sb-chip="session">Checking…</span>
+      </div>
+      <div class="d-flex flex-wrap align-items-center gap-2 pt-3">
+        <button type="button" class="ngd-btn ngd-btn-outline ngd-btn-sm" id="sb-rerun">Re-run checks</button>
+        <span class="ngd-dash-metric-note">Read-only — nothing is written anywhere.</span>
+      </div>
+    </section>
+
+    <aside class="ngd-edu-note mt-4">
+      <span class="ngd-edu-bullet" aria-hidden="true">&#9670;</span>
+      <p class="mb-0"><strong>Where the keys live.</strong> Both values are
+      pasted once, in <code>assets/js/supabase-config.js</code> — the
+      Project&nbsp;URL into <code>SUPABASE_URL</code> and the Publishable
+      key into <code>SUPABASE_PUBLISHABLE_KEY</code>. Never put a
+      service_role key, secret key or database password in any frontend
+      file; Row Level Security in the database is the real protection.
+      An empty table on this page is not an error — RLS hiding rows from
+      anonymous visitors is exactly what should happen.</p>
+    </aside>
+
+    <p class="mt-4 mb-0">
+      <a class="ngd-link ngd-text-muted small" href="index.html">← Back to the storefront</a>
+    </p>
+  </main>
+
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.js"></script>
+  <script defer src="assets/js/supabase-config.js"></script>
+  <script defer src="assets/js/supabase-client.js"></script>
+  <script defer src="assets/js/supabase-status.js"></script>
+</body>
+</html>

@@ -50,6 +50,19 @@ not by double-clicking files:
 
 GitHub Pages / any static host works the same way.
 
+### Verify the connection first
+
+After pasting both values, open **`supabase-status.html`**
+(e.g. http://localhost:8080/supabase-status.html). It runs four safe,
+read-only checks — Supabase client, Database API, Auth service and the
+current session — and never displays a key. Two things to know:
+
+- An **empty or blocked table read still shows “Reachable”** — Row Level
+  Security hiding rows from anonymous visitors is correct behaviour, not
+  a broken connection.
+- If the placeholders are still in `supabase-config.js`, the page (and a
+  site-wide banner) says exactly which file to edit instead of crashing.
+
 ## 3. How the pieces fit
 
 | File | Responsibility |

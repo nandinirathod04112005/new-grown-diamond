@@ -38,6 +38,7 @@ Bootstrap 5 + vanilla JavaScript** frontend backed by **Supabase**
 | Admin Add/Edit Jewellery forms (9 sections, multi-image UI, honest no-save) | ✅ done — payload seam ready |
 | Admin Customers UI (9-col table, details panel, honest demo toggle) | ✅ done — demo/preview data only |
 | Admin Enquiries UI (10-col inbox, status actions, details + notes area) | ✅ done — demo/preview data only |
+| Supabase client connection + `supabase-status.html` diagnostics | ✅ done — paste keys in `supabase-config.js` |
 | Admin quotes/holds/inspections consoles, storage, backend | ⏳ upcoming steps |
 
 ## Quick start
@@ -47,7 +48,10 @@ Bootstrap 5 + vanilla JavaScript** frontend backed by **Supabase**
    [`docs/SUPABASE_AUTH_SETUP.md`](docs/SUPABASE_AUTH_SETUP.md).
 2. Serve the folder over HTTP (VS Code Live Server, or
    `python -m http.server 8080`).
-3. Open `register.html` to create a customer account, `login.html` to sign in.
+3. Open `supabase-status.html` to confirm the connection — four safe,
+   read-only checks; an RLS-protected empty table correctly shows as
+   Reachable, and no key is ever displayed.
+4. Open `register.html` to create a customer account, `login.html` to sign in.
 
 ## Pages
 
@@ -76,6 +80,7 @@ Bootstrap 5 + vanilla JavaScript** frontend backed by **Supabase**
 | `admin/add-jewellery.html` / `edit-jewellery.html` | Add/Edit Jewellery forms (guarded) — 9 sections, 23 Supabase-ready fields, multi-image gallery (drag/drop, previews, primary badge, set-primary, reorder, remove — no upload), inline validation, unsaved-changes warning; honest no-save submits expose the payload for the future `saveJewellery()` |
 | `admin/customers.html` | Admin Customers (guarded) — 9-column table over invented demo accounts, search, status/country filters, sort, pagination, honest demo activate/deactivate, details panel with recent quotes/holds/inspections/enquiries (all chipped Demo) and a deep link into the Enquiries console |
 | `admin/enquiries.html` | Admin Enquiries (guarded) — 10-column inbox joined to the demo accounts (guests flagged), search, status/type/date filters, honest status actions (New → In Progress → Responded → Closed, no email sent), details panel with message + not-saved internal notes area; supports `?customer=` deep links |
+| `supabase-status.html` | Connection diagnostics — Supabase client / Database API / Auth service / session, RLS-aware and secret-free |
 | `styleguide.html` | Living reference for the design system |
 
 ## Documentation

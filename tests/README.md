@@ -169,6 +169,14 @@ tooling only** — the website itself is plain HTML/CSS/JS and has no Node backe
   notes that survive re-renders but honestly save nothing, status
   actions), the ?customer= deep link, loading/empty/error previews,
   guards and the table-vs-cards behaviour at 390/768/1440.
+- `supabase-status.test.cjs` — 8 connection-status scenarios: the four
+  checks on supabase-status.html against a mocked project (client
+  Connected, Database API Reachable, Auth Available, session Signed
+  out/in), no key or project URL ever rendered, an RLS permission error
+  still classified Reachable while a true network failure reads Failed,
+  missing URL / missing publishable key handled safely (honest rows +
+  config banner, no JS errors), a blocked Supabase library reported, and
+  a 390px overflow check.
 - `header-nav.test.cjs` — 12 header/navigation scenarios on every public page:
   sticky glass header, Collections dropdown (open/close/navigate), login button,
   hamburger morph, offcanvas mobile menu (open, stagger, close button, Escape,

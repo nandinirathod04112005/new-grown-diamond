@@ -2756,6 +2756,7 @@ a.ngd-chip {
 
 .ngd-status-chip.is-gold { border-color: rgba(180, 140, 71, 0.5); background: rgba(217, 192, 138, 0.14); color: var(--ngd-gold-deep); }
 .ngd-status-chip.is-good { border-color: rgba(78, 125, 81, 0.45); background: rgba(78, 125, 81, 0.08); color: #38573a; }
+.ngd-status-chip.is-bad { border-color: rgba(176, 67, 67, 0.45); background: rgba(176, 67, 67, 0.07); color: #b04343; }
 .ngd-status-chip.is-dim { opacity: 0.6; }
 
 /* Request lists (quotes / holds / inspections) */
