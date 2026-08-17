@@ -30,9 +30,9 @@
    ============================================================ */
 
 window.NGD_SUPABASE_CONFIG = {
-  /* 👉 Paste your Project URL between the quotes below */
-  SUPABASE_URL: 'YOUR_SUPABASE_PROJECT_URL',
+  /* 👉 Your Project URL (replace if you move projects) */
+  SUPABASE_URL: 'https://lkokikjyiohpodhcmjzw.supabase.co',
 
-  /* 👉 Paste your Publishable key between the quotes below */
-  SUPABASE_PUBLISHABLE_KEY: 'YOUR_SUPABASE_PUBLISHABLE_KEY'
+  /* 👉 Your Publishable key (browser-safe by design — RLS protects the data) */
+  SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_Ytuv1G6Ga0zqIP3DrCnINw_lTR57e3c'
 };
