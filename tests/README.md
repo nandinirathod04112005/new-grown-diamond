@@ -112,8 +112,8 @@ tooling only** — the website itself is plain HTML/CSS/JS and has no Node backe
   parameterised): topbar profile area, the 13-route sidebar with its ten
   honest Soon items and logout, KPI cards whose inventory counts mirror the
   demo catalogue (everything chipped Demo), the quick actions (Add Diamond
-  live, the rest honestly Soon) + live storefront link, the demo activity
-  feed with catalogue links, role
+  + Add Jewellery live, the rest honestly Soon) + live storefront link,
+  the demo activity feed with catalogue links, role
   and session guards, logout, and offcanvas/single-column layouts at
   1440/768/390.
 - `admin-diamonds-ui.test.cjs` — 10 Admin-Diamond-Inventory scenarios
@@ -137,9 +137,20 @@ tooling only** — the website itself is plain HTML/CSS/JS and has no Node backe
   (category with the six spec options, availability, active state,
   featured) + weight sort with nulls last + pagination, the honest demo
   actions (feature/activate toggles, archive with Undo — truthful toasts,
-  no fake success), Add/Edit placeholder navigation, loading/empty/error
-  previews, guards (inventory + placeholders) and the
+  no fake success), Add/Edit form navigation, loading/empty/error
+  previews, guards (inventory + form pages) and the
   cards-vs-contained-scrolling-table behaviour at 390/768/1440.
+- `admin-jewellery-form-ui.test.cjs` — 10 Add/Edit-Jewellery scenarios
+  (mocked admin): the nine sections with all 23 snake_case fields,
+  required stars and the seven categories (incl. Other), empty/number
+  validation, the honest no-save submits with their exposed payloads
+  (incl. the ordered `images` array), Save & Add Another, the multi-image
+  gallery (multiple previews, primary badge, set-primary, reorder with
+  edge-disabled arrows, remove, type + 10 MB rules — no upload), the
+  unsaved-changes beforeunload warning, edit prefill from the demo record
+  with its three-tile demo gallery (+ the null-weight all-metal piece),
+  the UI-only Archive, not-found, and 2-col→1-col responsive checks with
+  the sticky action bar at 1440/768/390.
 - `header-nav.test.cjs` — 12 header/navigation scenarios on every public page:
   sticky glass header, Collections dropdown (open/close/navigate), login button,
   hamburger morph, offcanvas mobile menu (open, stagger, close button, Escape,

@@ -4,8 +4,8 @@
    parameterised per scenario) and verifies the admin shell:
    topbar profile area, the 13-route sidebar (Dashboard active,
    ten honest Soon items) + logout, KPI cards with
-   demo-catalogue counts and chipped demo figures, the five
-   Soon quick actions + live storefront link, the demo activity
+   demo-catalogue counts and chipped demo figures, the quick
+   actions (two live, three Soon) + storefront link, the demo activity
    feed, role/guard redirects, logout and responsive layouts at
    1440/768/390.
    Run:  node tests/admin-dash-ui.test.cjs
@@ -220,7 +220,7 @@ const ROUTES = ['dashboard', 'diamonds', 'jewellery', 'customers', 'quotes', 'ho
     expect(/Nothing here is live business data/i.test(state.note), 'honest KPI note');
   });
 
-  await scenario('quick actions: five Soon buttons that go nowhere, one live storefront link', {}, async (page, user) => {
+  await scenario('quick actions: two live add links, three honest Soon buttons, storefront link', {}, async (page, user) => {
     await openAdmin(page, user);
     const state = await page.evaluate(() => ({
       labels: [...document.querySelectorAll('#admin-action-buttons [data-admin-action]')]
@@ -229,17 +229,19 @@ const ROUTES = ['dashboard', 'diamonds', 'jewellery', 'customers', 'quotes', 'ho
       disabled: [...document.querySelectorAll('#admin-action-buttons button[data-admin-action]')]
         .every((b) => b.getAttribute('aria-disabled') === 'true'),
       addHref: document.querySelector('[data-admin-action="add-diamond"]').getAttribute('href'),
+      addJwHref: document.querySelector('[data-admin-action="add-jewellery"]').getAttribute('href'),
       store: document.querySelector('#admin-action-buttons a.ngd-btn-gold').getAttribute('href'),
     }));
     expect(JSON.stringify(state.labels) === JSON.stringify(
       ['Add Diamond', 'Add Jewellery', 'View Customers', 'Review Quotes', 'View Enquiries']),
       'action labels per spec, got ' + state.labels.join(','));
-    expect(state.soonChips === 4 && state.disabled,
-      'four actions still Soon; Add Diamond is real since STEP 25');
+    expect(state.soonChips === 3 && state.disabled,
+      'three actions still Soon; Add Diamond and Add Jewellery are real since STEPS 25/27');
     expect(state.addHref === 'add-diamond.html', 'Add Diamond links its page');
+    expect(state.addJwHref === 'add-jewellery.html', 'Add Jewellery links its page');
     /* aria-disabled makes Playwright refuse a normal click — dispatch one
        directly to prove a Soon button still navigates nowhere */
-    await page.$eval('#admin-action-buttons [data-admin-action="add-jewellery"]', (el) => el.click());
+    await page.$eval('#admin-action-buttons [data-admin-action="view-customers"]', (el) => el.click());
     await page.waitForTimeout(300);
     const stayed = await page.evaluate(() => /admin\/dashboard\.html$/.test(location.pathname));
     expect(stayed, 'Soon action navigates nowhere');

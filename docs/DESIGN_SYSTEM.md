@@ -321,8 +321,7 @@ the collapse toggle), sort and pagination all run client-side over the
 demo catalogue augmented with deterministic featured/active/updated
 fields. Feature/activate/archive edit only the preview with truthful
 toasts (+ Undo for archive). View → the public details page; Add/Edit →
-guarded placeholder pages (`admin-page.js` runs their guard).
-`loadAdminDiamonds()` is the Supabase seam.
+the shared diamond form pages. `loadAdminDiamonds()` is the Supabase seam.
 
 `admin/add-diamond.html` / `edit-diamond.html` share one generated form
 (`assets/js/admin-diamond-form.js`, mode from `body[data-diamond-form]`):
@@ -345,9 +344,26 @@ category–availability–active–featured filters / sort (product name, SKU,
 diamond weight with nulls last) / pagination over the demo collection
 augmented with the same deterministic featured/active/updated formulas
 the diamond console uses. Category thumbnails come from
-`window.NGD_JEWEL_ART`. Add/Edit navigate to guarded placeholder pages
-(`admin-page.js`); `loadAdminJewellery()` in
+`window.NGD_JEWEL_ART`. Add/Edit navigate to the shared jewellery form
+pages; `loadAdminJewellery()` in
 `assets/js/admin-jewellery.js` is the Supabase seam.
+
+`admin/add-jewellery.html` / `edit-jewellery.html` share one generated
+form (`assets/js/admin-jewellery-form.js`, mode from
+`body[data-jewellery-form]`): nine numbered `.ngd-form-sec-title`
+sections with 23 snake_case fields (the future `jewellery` columns) and
+the same required-star / inline-validation / sticky `.ngd-form-actions`
+patterns as the diamond form. Product Images is a multi-image gallery:
+the `.ngd-drop` zone accepts several files (JPG/JPEG/PNG/WEBP ≤ 10 MB
+each, validated client-side, never uploaded) and renders `.ngd-img-tile`
+cards in a `.ngd-img-gallery` grid — each tile has a local preview (or
+category artwork on the edit page's demo gallery), a gold `Primary`
+`.ngd-status-chip` (`.is-primary` border), and `.ngd-icon-btn` actions to
+move earlier/later, set as primary and remove. The payload's `images`
+array carries `{filename, position, is_primary}` for the future
+`jewellery_images` table; `saveJewellery()` is the single seam and every
+submit says honestly that nothing was saved. Archive on the edit page is
+UI-only and says so; a dirty form warns via `beforeunload`.
 
 ### Contact page
 `contact.html` reuses the `.ngd-form` skin (Bootstrap `.is-invalid` +

@@ -15,7 +15,7 @@
 </head>
 <!-- Hidden until the admin guard passes (fail closed).
      RLS in the database remains the real security layer. -->
-<body class="ngd-backdrop" style="visibility:hidden">
+<body class="ngd-backdrop" style="visibility:hidden" data-jewellery-form="add">
 
   <!-- ══════════ ADMIN TOP HEADER (shared dashboard shell) ══════════ -->
   <header class="ngd-dash-topbar">
@@ -123,29 +123,282 @@
     </aside>
 
     <!-- ══════════ MAIN ══════════ -->
-    <main class="ngd-dash-main">
+    <main class="ngd-dash-main ngd-admin-form">
+
       <section class="d-flex flex-wrap align-items-end justify-content-between gap-3">
         <div>
-          <span class="ngd-eyebrow">Admin console</span>
+          <span class="ngd-eyebrow">Admin console &middot; Jewellery</span>
           <h1 class="ngd-display-2 mt-2 mb-1">Add Jewellery</h1>
-          <p class="ngd-text-muted small mb-0">Bring a new piece into the collection.</p>
+          <p class="ngd-text-muted small mb-0">Bring a new piece into the collection — the form is fully wired, the database arrives with Supabase.</p>
         </div>
+        <span class="ngd-demo-chip">UI only — nothing saves yet</span>
       </section>
 
-      <!-- Placeholder — the full add jewellery builder is a dedicated
-           upcoming phase (product fields, validation, media and Supabase
-           writes). -->
-      <div class="ngd-dash-panel mt-4">
-        <div class="ngd-dash-empty">
-          <span class="ngd-icon-tile ngd-depth-1 mb-3">◆</span>
-          <h2 class="ngd-title fs-5">The Add Jewellery form arrives in an upcoming phase</h2>
-          <p class="ngd-text-muted small mb-3" style="max-width: 34rem; margin-inline: auto;">
-            Product details, metal, diamond specifications, media and pricing will be entered here and written to Supabase with full validation. Nothing can be submitted from this page yet — no form is
-            wired and nothing is saved.
-          </p>
-          <a class="ngd-btn ngd-btn-outline ngd-btn-sm" href="jewellery.html">← Back to Jewellery Inventory</a>
-        </div>
+      <div id="jw-alert" class="mt-3" aria-live="polite"></div>
+
+      <div id="jw-form-wrap">
+        <!-- Field names mirror the future Supabase `jewellery` columns
+             (images → the jewellery_images table with position +
+             is_primary). saveJewellery() in assets/js/admin-jewellery-form.js
+             is the single seam the backend phase replaces — no fake saves
+             meanwhile. -->
+        <form id="ngd-jewellery-form" novalidate class="ngd-form">
+          <section class="ngd-dash-panel mt-3" data-form-section="1">
+            <h2 class="ngd-form-sec-title"><em>01</em> Basic Information</h2>
+            <div class="row g-3">
+              <div class="col-md-6 col-xl-4">
+                <label class="form-label" for="jw-sku">SKU <span class="ngd-req-star" aria-hidden="true">*</span></label>
+                <input type="text" class="form-control" id="jw-sku" name="sku"
+                       placeholder="JW-1019" required>
+                <div class="invalid-feedback">Please enter a valid sku.</div>
+              </div>
+              <div class="col-md-6 col-xl-4">
+                <label class="form-label" for="jw-product_name">Product Name <span class="ngd-req-star" aria-hidden="true">*</span></label>
+                <input type="text" class="form-control" id="jw-product_name" name="product_name"
+                       placeholder="Aurora Solitaire Ring" required>
+                <div class="invalid-feedback">Please enter a valid product name.</div>
+              </div>
+              <div class="col-md-6 col-xl-4">
+                <label class="form-label" for="jw-size">Size</label>
+                <input type="text" class="form-control" id="jw-size" name="size"
+                       placeholder="Ring size 48–62 (resizable)">
+                <div class="invalid-feedback">Please enter a valid size.</div>
+              </div>
+              <div class="col-12 col-xl-8">
+                <label class="form-label" for="jw-short_description">Short Description <span class="ngd-req-star" aria-hidden="true">*</span></label>
+                <input type="text" class="form-control" id="jw-short_description" name="short_description"
+                       placeholder="One line for listing cards…" required>
+                <div class="invalid-feedback">Please enter a valid short description.</div>
+              </div>
+              <div class="col-12">
+                <label class="form-label" for="jw-full_description">Full Description</label>
+                <textarea class="form-control" id="jw-full_description" name="full_description" rows="4"
+                          placeholder="The longer story shown on the product page…"></textarea>
+              </div>
+            </div>
+          </section>
+          <section class="ngd-dash-panel mt-3" data-form-section="2">
+            <h2 class="ngd-form-sec-title"><em>02</em> Category</h2>
+            <div class="row g-3">
+              <div class="col-md-6 col-xl-4">
+                <label class="form-label" for="jw-category">Category <span class="ngd-req-star" aria-hidden="true">*</span></label>
+                <select class="form-select" id="jw-category" name="category" required>
+                  <option value="" selected>Choose&hellip;</option>
+                  <option value="Rings">Rings</option>
+                  <option value="Earrings">Earrings</option>
+                  <option value="Pendants">Pendants</option>
+                  <option value="Necklaces">Necklaces</option>
+                  <option value="Bracelets">Bracelets</option>
+                  <option value="Bangles">Bangles</option>
+                  <option value="Other">Other</option>
+                </select>
+                <div class="invalid-feedback">Please choose category.</div>
+              </div>
+              <div class="col-md-6 col-xl-4">
+                <label class="form-label" for="jw-subcategory">Subcategory</label>
+                <input type="text" class="form-control" id="jw-subcategory" name="subcategory"
+                       placeholder="Solitaire, Halo, Tennis…">
+                <div class="invalid-feedback">Please enter a valid subcategory.</div>
+              </div>
+            </div>
+          </section>
+          <section class="ngd-dash-panel mt-3" data-form-section="3">
+            <h2 class="ngd-form-sec-title"><em>03</em> Metal Details</h2>
+            <div class="row g-3">
+              <div class="col-6 col-md-3 col-xl-3">
+                <label class="form-label" for="jw-metal">Metal <span class="ngd-req-star" aria-hidden="true">*</span></label>
+                <select class="form-select" id="jw-metal" name="metal" required>
+                  <option value="" selected>Choose&hellip;</option>
+                  <option value="Gold">Gold</option>
+                  <option value="Platinum">Platinum</option>
+                  <option value="Silver">Silver</option>
+                  <option value="Other">Other</option>
+                </select>
+                <div class="invalid-feedback">Please choose metal.</div>
+              </div>
+              <div class="col-6 col-md-3 col-xl-3">
+                <label class="form-label" for="jw-metal_karat">Metal Karat</label>
+                <select class="form-select" id="jw-metal_karat" name="metal_karat">
+                  <option value="" selected>Choose&hellip;</option>
+                  <option value="24K">24K</option>
+                  <option value="22K">22K</option>
+                  <option value="18K">18K</option>
+                  <option value="14K">14K</option>
+                  <option value="10K">10K</option>
+                  <option value="950">950</option>
+                  <option value="925">925</option>
+                </select>
+                <div class="invalid-feedback">Please choose metal karat.</div>
+              </div>
+              <div class="col-6 col-md-3 col-xl-3">
+                <label class="form-label" for="jw-metal_colour">Metal Colour</label>
+                <select class="form-select" id="jw-metal_colour" name="metal_colour">
+                  <option value="" selected>Choose&hellip;</option>
+                  <option value="White">White</option>
+                  <option value="Yellow">Yellow</option>
+                  <option value="Rose">Rose</option>
+                  <option value="Two-tone">Two-tone</option>
+                  <option value="Platinum">Platinum</option>
+                </select>
+                <div class="invalid-feedback">Please choose metal colour.</div>
+              </div>
+              <div class="col-6 col-md-3 col-xl-3">
+                <label class="form-label" for="jw-gross_weight">Gross Weight (g)</label>
+                <input type="number" class="form-control" id="jw-gross_weight" name="gross_weight"
+                       placeholder="4.50" min="0" step="0.01" max="500">
+                <div class="invalid-feedback">Please enter a valid gross weight.</div>
+              </div>
+            </div>
+          </section>
+          <section class="ngd-dash-panel mt-3" data-form-section="4">
+            <h2 class="ngd-form-sec-title"><em>04</em> Diamond Details</h2>
+            <p class="ngd-text-muted small mb-3">Leave the diamond fields blank for all-metal pieces.</p>
+            <div class="row g-3">
+              <div class="col-6 col-md-3 col-xl-3">
+                <label class="form-label" for="jw-diamond_weight">Diamond Weight (ct)</label>
+                <input type="number" class="form-control" id="jw-diamond_weight" name="diamond_weight"
+                       placeholder="1.45" min="0" step="0.01" max="50">
+                <div class="invalid-feedback">Please enter a valid diamond weight.</div>
+              </div>
+              <div class="col-6 col-md-3 col-xl-3">
+                <label class="form-label" for="jw-diamond_pieces">Diamond Pieces</label>
+                <input type="number" class="form-control" id="jw-diamond_pieces" name="diamond_pieces"
+                       placeholder="25" min="0" step="1" max="500">
+                <div class="invalid-feedback">Please enter a valid diamond pieces.</div>
+              </div>
+              <div class="col-6 col-md-3 col-xl-3">
+                <label class="form-label" for="jw-diamond_quality">Diamond Quality</label>
+                <input type="text" class="form-control" id="jw-diamond_quality" name="diamond_quality"
+                       placeholder="E–F / VVS–VS">
+                <div class="invalid-feedback">Please enter a valid diamond quality.</div>
+              </div>
+              <div class="col-6 col-md-3 col-xl-3">
+                <label class="form-label" for="jw-diamond_shape">Diamond Shape</label>
+                <select class="form-select" id="jw-diamond_shape" name="diamond_shape">
+                  <option value="" selected>Choose&hellip;</option>
+                  <option value="Round">Round</option>
+                  <option value="Oval">Oval</option>
+                  <option value="Cushion">Cushion</option>
+                  <option value="Pear">Pear</option>
+                  <option value="Princess">Princess</option>
+                  <option value="Emerald">Emerald</option>
+                  <option value="Marquise">Marquise</option>
+                  <option value="Mixed">Mixed</option>
+                </select>
+                <div class="invalid-feedback">Please choose diamond shape.</div>
+              </div>
+            </div>
+          </section>
+          <section class="ngd-dash-panel mt-3" data-form-section="5">
+            <h2 class="ngd-form-sec-title"><em>05</em> Certificate</h2>
+            <div class="row g-3">
+              <div class="col-md-6 col-xl-4">
+                <label class="form-label" for="jw-certificate_number">Certificate Number</label>
+                <input type="text" class="form-control" id="jw-certificate_number" name="certificate_number"
+                       placeholder="NGDJ-582337">
+                <div class="invalid-feedback">Please enter a valid certificate number.</div>
+              </div>
+            </div>
+          </section>
+          <section class="ngd-dash-panel mt-3" data-form-section="6">
+            <h2 class="ngd-form-sec-title"><em>06</em> Pricing</h2>
+            <p class="ngd-text-muted small mb-3">Prices stay internal until Price Visibility says otherwise.</p>
+            <div class="row g-3">
+              <div class="col-6 col-md-4 col-xl-3">
+                <label class="form-label" for="jw-price">Price</label>
+                <input type="number" class="form-control" id="jw-price" name="price"
+                       placeholder="5200" min="0" step="0.01">
+                <div class="invalid-feedback">Please enter a valid price.</div>
+              </div>
+              <div class="col-6 col-md-4 col-xl-3">
+                <label class="form-label" for="jw-currency">Currency</label>
+                <select class="form-select" id="jw-currency" name="currency">
+                  <option value="" selected>Choose&hellip;</option>
+                  <option value="USD">USD</option>
+                  <option value="EUR">EUR</option>
+                  <option value="GBP">GBP</option>
+                  <option value="INR">INR</option>
+                  <option value="AED">AED</option>
+                </select>
+                <div class="invalid-feedback">Please choose currency.</div>
+              </div>
+              <div class="col-6 col-md-4 col-xl-3">
+                <label class="form-label" for="jw-price_visibility">Price Visibility</label>
+                <select class="form-select" id="jw-price_visibility" name="price_visibility">
+                  <option value="" selected>Choose&hellip;</option>
+                  <option value="visible">visible</option>
+                  <option value="on_request">on_request</option>
+                  <option value="hidden">hidden</option>
+                </select>
+                <div class="invalid-feedback">Please choose price visibility.</div>
+              </div>
+            </div>
+          </section>
+          <section class="ngd-dash-panel mt-3" data-form-section="7">
+            <h2 class="ngd-form-sec-title"><em>07</em> Availability</h2>
+            <div class="row g-3">
+              <div class="col-md-6 col-xl-4">
+                <label class="form-label" for="jw-availability">Availability <span class="ngd-req-star" aria-hidden="true">*</span></label>
+                <select class="form-select" id="jw-availability" name="availability" required>
+                  <option value="" selected>Choose&hellip;</option>
+                  <option value="In Stock">In Stock</option>
+                  <option value="Made to Order">Made to Order</option>
+                </select>
+                <div class="invalid-feedback">Please choose availability.</div>
+              </div>
+            </div>
+          </section>
+          <section class="ngd-dash-panel mt-3" data-form-section="8">
+            <h2 class="ngd-form-sec-title"><em>08</em> Product Images</h2>
+            <p class="ngd-text-muted small mb-3">
+              JPG, JPEG, PNG or WEBP up to 10&nbsp;MB each. Previews only —
+              files upload to Supabase Storage in a later phase; nothing
+              leaves your browser today. The first image becomes the primary
+              automatically — use the star to change it and the arrows to
+              reorder.
+            </p>
+            <div class="ngd-drop" id="jw-drop">
+              <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V5M7.5 9.5 12 5l4.5 4.5"/><path d="M4 16.5V18a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1.5"/></svg>
+              <p class="mb-1 mt-2"><strong>Drag &amp; drop</strong> product images here</p>
+              <p class="ngd-text-muted small mb-2">or</p>
+              <button type="button" class="ngd-btn ngd-btn-outline ngd-btn-sm" id="jw-browse">Browse files</button>
+              <input type="file" id="jw-file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" multiple hidden>
+            </div>
+            <div class="mt-3" id="jw-gallery-wrap" hidden>
+              <span class="ngd-dash-metric-note d-block mb-2">Local gallery preview — reorder, set the primary or remove; nothing is uploaded.</span>
+              <div class="ngd-img-gallery" id="jw-gallery"></div>
+            </div>
+            <p class="small mt-2 mb-0" id="jw-image-error" style="color:#b04343;" hidden></p>
+          </section>
+          <section class="ngd-dash-panel mt-3" data-form-section="9">
+            <h2 class="ngd-form-sec-title"><em>09</em> Internal / Admin Settings</h2>
+            <div class="row g-3">
+              <div class="col-12 col-md-6">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="jw-featured" name="featured">
+                  <label class="form-check-label" for="jw-featured">Featured on the storefront</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="jw-active" name="active" checked>
+                  <label class="form-check-label" for="jw-active">Active (visible to customers)</label>
+                </div>
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label" for="jw-internal_notes">Internal Notes</label>
+                <textarea class="form-control" id="jw-internal_notes" name="internal_notes" rows="3"
+                          placeholder="Visible to admins only — sourcing, memo terms, remarks…"></textarea>
+              </div>
+            </div>
+          </section>
+
+          <div class="ngd-form-actions">
+            <button type="submit" class="ngd-btn ngd-btn-gold" id="jw-submit">Save Jewellery</button>
+            <button type="button" class="ngd-btn ngd-btn-outline" id="jw-save-another">Save &amp; Add Another</button>
+            <a class="ngd-btn ngd-btn-outline" href="jewellery.html" id="jw-cancel">Cancel</a>
+          </div>
+        </form>
       </div>
+
     </main>
   </div>
 
@@ -155,6 +408,8 @@
   <script defer src="../assets/js/auth.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script defer src="../assets/js/ui.js"></script>
-  <script defer src="../assets/js/admin-page.js"></script>
+  <script defer src="../assets/js/jewellery-art.js"></script>
+  <script defer src="../assets/js/jewellery-data.js"></script>
+  <script defer src="../assets/js/admin-jewellery-form.js"></script>
 </body>
 </html>

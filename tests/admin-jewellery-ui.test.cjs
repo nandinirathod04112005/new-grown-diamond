@@ -6,7 +6,7 @@
    (incl. the null-weight all-metal piece), search / the four
    filters / sort / pagination, the honest demo actions
    (feature, activate, archive with Undo), the Add/Edit
-   placeholder navigation, the loading/empty/error previews,
+   form navigation, the loading/empty/error previews,
    guards and the table-vs-cards behaviour at 1440/768/390.
    Run:  node tests/admin-jewellery-ui.test.cjs
    ============================================================ */
@@ -316,7 +316,7 @@ async function openInventory(page) {
     expect(/collection: 18/.test(countText), 'collection back to full size');
   });
 
-  await scenario('view + edit + add navigate to their pages (placeholders honest)', {}, async (page) => {
+  await scenario('view + edit + add navigate to their pages (forms honest)', {}, async (page) => {
     await openInventory(page);
     await page.fill('#adm-search', 'JW-1002');
     const hrefs = await page.evaluate(() => ({
@@ -324,36 +324,34 @@ async function openInventory(page) {
       edit: document.querySelector('[data-adm-row="JW-1002"] [data-adm-act="edit"]').getAttribute('href'),
     }));
     expect(hrefs.view === '../jewellery-details.html?id=JW-1002', 'View targets the storefront details');
-    expect(hrefs.edit === 'edit-jewellery.html?id=JW-1002', 'Edit targets the future editor with the id');
+    expect(hrefs.edit === 'edit-jewellery.html?id=JW-1002', 'Edit targets the editor with the id');
     await page.click('[data-adm-row="JW-1002"] [data-adm-act="edit"]');
     await page.waitForURL('**/admin/edit-jewellery.html?id=JW-1002', { timeout: 8000 });
-    /* the guard reveals the fail-closed body asynchronously */
+    /* the guard reveals the fail-closed body asynchronously; the STEP-27
+       form then prefills from the demo record */
     await page.waitForFunction(() =>
       getComputedStyle(document.body).visibility === 'visible', null, { timeout: 8000 });
-    let ph = await page.evaluate(() => ({
+    await page.waitForFunction(() =>
+      (document.querySelector('[name="sku"]') || {}).value === 'JW-1002',
+      null, { timeout: 8000 });
+    let formPage = await page.evaluate(() => ({
       title: document.querySelector('h1').textContent.trim(),
       active: document.querySelector('.ngd-dash-nav .is-active').getAttribute('data-admin-route'),
-      copy: document.querySelector('.ngd-dash-empty').textContent.replace(/\s+/g, ' '),
-      back: document.querySelector('.ngd-dash-empty a').getAttribute('href'),
     }));
-    expect(ph.title === 'Edit Jewellery', 'edit placeholder reached, got ' + ph.title);
-    expect(ph.active === 'jewellery', 'Jewellery route stays active on the placeholder');
-    expect(/upcoming phase/i.test(ph.copy) && /no form is wired and nothing is saved/i.test(ph.copy),
-      'honest edit placeholder copy');
-    expect(ph.back === 'jewellery.html', 'back link returns to the inventory');
-    await page.click('.ngd-dash-empty a');
+    expect(formPage.title === 'Edit Jewellery', 'edit form reached, got ' + formPage.title);
+    expect(formPage.active === 'jewellery', 'Jewellery route stays active on the form');
+    await page.click('#jw-cancel');
     await page.waitForURL('**/admin/jewellery.html', { timeout: 8000 });
     await page.waitForFunction(() => document.querySelectorAll('#adm-table-body tr').length > 0);
     await page.click('#adm-add');
     await page.waitForURL('**/admin/add-jewellery.html', { timeout: 8000 });
     await page.waitForFunction(() =>
       getComputedStyle(document.body).visibility === 'visible', null, { timeout: 8000 });
-    ph = await page.evaluate(() => ({
+    formPage = await page.evaluate(() => ({
       title: document.querySelector('h1').textContent.trim(),
-      copy: document.querySelector('.ngd-dash-empty').textContent.replace(/\s+/g, ' '),
+      form: !!document.getElementById('ngd-jewellery-form'),
     }));
-    expect(ph.title === 'Add Jewellery', 'add placeholder reached, got ' + ph.title);
-    expect(/no form is wired and nothing is saved/i.test(ph.copy), 'honest add placeholder copy');
+    expect(formPage.title === 'Add Jewellery' && formPage.form, 'Add Jewellery form reached');
   });
 
   await scenario('UI states: loading, empty and error with retry', {}, async (page) => {
