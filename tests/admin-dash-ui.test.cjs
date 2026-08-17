@@ -175,8 +175,9 @@ const ROUTES = ['dashboard', 'diamonds', 'jewellery', 'customers', 'quotes', 'ho
       };
     });
     expect(state.visible, 'admin guard passed and revealed the page');
-    expect(/Asha/.test(state.profileArea) && /Administrator/.test(state.profileArea),
-      'profile area shows name + Administrator');
+    expect(/Asha Admin/.test(state.profileArea) && /admin@ngd\.test/.test(state.profileArea) &&
+      /Administrator/.test(state.profileArea),
+      'profile area shows the real full name, email and role');
     expect(state.topbarLogout && state.navLogout, 'sign-out in topbar and sidebar');
     expect(JSON.stringify(state.routes) === JSON.stringify(ROUTES),
       'all 13 sidebar routes in order, got ' + state.routes.join(','));

@@ -160,29 +160,24 @@ Any element with the `data-ngd-logout` attribute is wired automatically to
 “You have signed out.” notice. Revisiting a dashboard afterwards redirects
 back to login.
 
-## 8. How the Admin role will be assigned (next step)
+## 8. How the Admin role is assigned (First Admin)
 
 There is deliberately **no admin signup** — browsers can never grant roles.
-Until the admin-management step is built, you (the project owner) promote
-an account manually:
+You (the project owner) promote the first account with the safe template
+in [`supabase/first-admin.sql`](../supabase/first-admin.sql):
 
 1. Create the account normally via `register.html` (it becomes a customer),
    and confirm its email.
-2. Dashboard → **SQL Editor**, run:
+2. Dashboard → **SQL Editor** → paste the template, replace
+   `YOUR_ADMIN_EMAIL_HERE` with that account's email, and run it. The
+   script refuses to run with the placeholder in place, creates no user
+   and no password, and reports clearly if the email is unknown.
+3. That user now lands on `admin/dashboard.html` at next sign-in, and the
+   admin header shows their real name, email and role.
 
-   ```sql
-   update public.profiles
-   set role = 'admin'
-   where id = (
-     select id from auth.users where email = 'owner@yourcompany.com'
-   );
-   ```
-
-3. That user now lands on `admin/dashboard.html` at next sign-in.
-
-A proper in-app admin-creation flow (protected by RLS policies that only
-admins satisfy) is part of the next step — never expose role changes to
-the browser before that.
+Step-by-step walkthrough: [`FIRST_ADMIN_SETUP.md`](FIRST_ADMIN_SETUP.md).
+A proper in-app admin-management flow (protected by RLS policies that only
+admins satisfy) comes later — never expose role changes to the browser.
 
 ## 9. Troubleshooting
 

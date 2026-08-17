@@ -39,6 +39,8 @@ Bootstrap 5 + vanilla JavaScript** frontend backed by **Supabase**
 | Admin Customers UI (9-col table, details panel, honest demo toggle) | ✅ done — demo/preview data only |
 | Admin Enquiries UI (10-col inbox, status actions, details + notes area) | ✅ done — demo/preview data only |
 | Supabase client connection + `supabase-status.html` diagnostics | ✅ done — paste keys in `supabase-config.js` |
+| Login / Signup / Logout connected to Supabase Auth | ✅ done — role + status checked from `profiles` |
+| First Admin promotion (`supabase/first-admin.sql`) + admin protection | ✅ done — see `docs/FIRST_ADMIN_SETUP.md` |
 | Admin quotes/holds/inspections consoles, storage, backend | ⏳ upcoming steps |
 
 ## Quick start
@@ -87,6 +89,7 @@ Bootstrap 5 + vanilla JavaScript** frontend backed by **Supabase**
 
 - [`docs/DESIGN_SYSTEM.md`](docs/DESIGN_SYSTEM.md) — tokens & reusable `ngd-` classes
 - [`docs/SUPABASE_AUTH_SETUP.md`](docs/SUPABASE_AUTH_SETUP.md) — auth configuration & behaviour
+- [`docs/FIRST_ADMIN_SETUP.md`](docs/FIRST_ADMIN_SETUP.md) — promoting the first admin with `supabase/first-admin.sql`
 - [`docs/SUPABASE_AUTH_TEST.md`](docs/SUPABASE_AUTH_TEST.md) — automated results + manual test checklist
 - [`tests/README.md`](tests/README.md) — optional automated browser tests
 

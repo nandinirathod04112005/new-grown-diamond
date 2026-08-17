@@ -7,7 +7,7 @@ tooling only** — the website itself is plain HTML/CSS/JS and has no Node backe
   and mobile (390) widths; asserts no horizontal overflow, no JS errors, and that the
   navbar-glass / scroll-reveal / collapse behaviours work. Saves screenshots to
   `tests/screens/`.
-- `auth-flow.test.cjs` — 22 end-to-end auth scenarios (login, signup, role redirects,
+- `auth-flow.test.cjs` — 23 end-to-end auth scenarios (login, signup, role redirects,
   suspended accounts, guards, logout, network failures) against a **mocked Supabase
   backend** via request interception, so no real credentials are needed.
   Manual testing against your real Supabase project is described in

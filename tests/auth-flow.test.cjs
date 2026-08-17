@@ -535,6 +535,22 @@ async function alertText(page, boxId) {
     await page.waitForURL('**/login.html', { timeout: 8000 });
   });
 
+  await scenario('refresh keeps the admin session; header shows real name, email and role', {}, async ({ page }) => {
+    await uiLogin(page, 'admin@ngd.test', 'Admin#12345');
+    await page.waitForURL('**/admin/dashboard.html', { timeout: 8000 });
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await page.waitForFunction(() =>
+      getComputedStyle(document.body).visibility === 'visible', null, { timeout: 8000 });
+    const state = await page.evaluate(() => ({
+      url: location.pathname,
+      topbar: document.getElementById('admin-profile-area').textContent.replace(/\s+/g, ' '),
+    }));
+    expect(/admin\/dashboard\.html$/.test(state.url), 'still on the dashboard after refresh');
+    expect(/Asha Admin/.test(state.topbar) && /admin@ngd\.test/.test(state.topbar) &&
+      /Administrator/.test(state.topbar),
+      'header shows the real full name, email and role, got ' + state.topbar);
+  });
+
   await scenario('account suspended mid-session → signed out on next guard', {}, async ({ page, backend }) => {
     await uiLogin(page, 'customer@ngd.test', 'Customer#12345');
     await page.waitForURL('**/account/dashboard.html', { timeout: 8000 });

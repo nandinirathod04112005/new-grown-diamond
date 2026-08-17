@@ -240,6 +240,7 @@
       return null;
     }
 
+    fillProfileFields(user, result.profile);
     revealPage();
     return { user: user, profile: result.profile };
   }
@@ -250,6 +251,29 @@
 
   function requireCustomer() {
     return requireRole('customer');
+  }
+
+  /* ---------- real identity into the page chrome ---------- */
+
+  /**
+   * Fill every [data-ngd-field] element with the signed-in account's
+   * real data (never demo values). Runs automatically after a guard
+   * passes; page controllers may overwrite with richer formatting.
+   */
+  function fillProfileFields(user, profile) {
+    var fullName = String((profile && profile.full_name) || '').trim();
+    var values = {
+      full_name: fullName || '—',
+      first_name: fullName ? fullName.split(/\s+/)[0] : 'there',
+      email: (user && user.email) || (profile && profile.email) || '—',
+      role: (profile && profile.role) || '—',
+      account_status: (profile && profile.account_status) || '—'
+    };
+    Object.keys(values).forEach(function (field) {
+      document.querySelectorAll('[data-ngd-field="' + field + '"]').forEach(function (el) {
+        el.textContent = values[field];
+      });
+    });
   }
 
   /* ---------- auth state changes (expiry, other-tab logout) ---------- */
@@ -296,6 +320,7 @@
     requireAdmin: requireAdmin,
     requireCustomer: requireCustomer,
     logout: logout,
+    fillProfileFields: fillProfileFields,
     goToDashboard: goToDashboard,
     dashboardPath: dashboardPath,
     isBlockedStatus: isBlockedStatus,
