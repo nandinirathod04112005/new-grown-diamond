@@ -29,7 +29,10 @@
     'We could not load your account details. Please contact support.';
   var MSG_VERIFY_FAILED =
     'We could not verify your account right now. Please sign in again.';
+  var MSG_BAD_ROLE =
+    'Your account role is not recognised. Please contact support.';
   var BLOCKED_STATUSES = ['inactive', 'suspended'];
+  var KNOWN_ROLES = ['admin', 'customer'];
 
   /* True once a guard runs on this page — lets the auth-state
      listener know a sign-out must bounce the visitor to login. */
@@ -228,6 +231,11 @@
       return null;
     }
     if (result.profile.role !== role) {
+      if (KNOWN_ROLES.indexOf(result.profile.role) === -1) {
+        /* Unrecognised role — never bounce between dashboards. */
+        await rejectToLogin(MSG_BAD_ROLE);
+        return null;
+      }
       goToDashboard(result.profile);
       return null;
     }

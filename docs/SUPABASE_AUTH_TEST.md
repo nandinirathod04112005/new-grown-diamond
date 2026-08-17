@@ -31,7 +31,7 @@ GoTrue/PostgREST responses. Covered scenarios:
 | 10 | Missing profiles row → signed out + safe message | ✅ |
 | 11 | Auth endpoint unreachable → friendly network message | ✅ |
 | 12 | Signup password mismatch blocked locally (no request) | ✅ |
-| 13 | Signup (confirmation ON) → exact “Account created. Please verify your email before signing in.”; request contained **only** `full_name`/`company_name`/`phone`/`country`, **no role** | ✅ |
+| 13 | Signup (confirmation ON) → exact “Account created. Please check your email to verify your account.”; request contained **only** `full_name`/`company_name`/`phone`/`country`, **no role** | ✅ |
 | 14 | Signup with existing email → safe “already exists” message | ✅ |
 | 15 | Signup (confirmation OFF, session returned) → customer dashboard | ✅ |
 | 16 | Customer dashboard without session → redirected to login | ✅ |

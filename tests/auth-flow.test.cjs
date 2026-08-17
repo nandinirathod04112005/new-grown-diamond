@@ -18,6 +18,13 @@ const TEST_CONFIG = `window.NGD_SUPABASE_CONFIG = {
   SUPABASE_URL: '${SB_HOST}',
   SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_test_key_1234567890'
 };`;
+/* Injected for the unconfigured-state scenario — the on-disk config now
+   carries the real project values, so placeholder behaviour is tested by
+   serving placeholders here, never by reading the disk file. */
+const PLACEHOLDER_CONFIG = `window.NGD_SUPABASE_CONFIG = {
+  SUPABASE_URL: 'YOUR_SUPABASE_PROJECT_URL',
+  SUPABASE_PUBLISHABLE_KEY: 'YOUR_SUPABASE_PUBLISHABLE_KEY'
+};`;
 
 /* ---------------- mock Supabase backend ---------------- */
 
@@ -244,11 +251,13 @@ async function scenario(name, opts, fn) {
   const pageErrors = [];
   try {
     await installCdnRoutes(context);
-    if (!opts.realConfig) {
-      await context.route('**/assets/js/supabase-config.js', (r) =>
-        r.fulfill({ status: 200, contentType: 'application/javascript', body: TEST_CONFIG })
-      );
-    }
+    await context.route('**/assets/js/supabase-config.js', (r) =>
+      r.fulfill({
+        status: 200,
+        contentType: 'application/javascript',
+        body: opts.placeholderConfig ? PLACEHOLDER_CONFIG : TEST_CONFIG,
+      })
+    );
     await context.route(SB_HOST + '/**', backend.handler);
 
     const page = await context.newPage();
@@ -304,7 +313,7 @@ async function alertText(page, boxId) {
     expect(state.hasAuthApi, 'NGDAuth API exposed');
   });
 
-  await scenario('placeholder config shows setup banner, no crash', { realConfig: true }, async ({ page }) => {
+  await scenario('placeholder config shows setup banner, no crash', { placeholderConfig: true }, async ({ page }) => {
     await page.goto(SITE + '/login.html', { waitUntil: 'networkidle' });
     await page.waitForSelector('#ngd-config-banner');
     const state = await page.evaluate(() => window.ngdSupabaseState);
@@ -435,7 +444,7 @@ async function alertText(page, boxId) {
     await page.click('#register-submit');
     const text = await alertText(page, 'register-alert');
     expect(
-      text === 'Account created. Please verify your email before signing in.',
+      text === 'Account created. Please check your email to verify your account.',
       'exact confirmation message, got: ' + text
     );
     expect(backend.signups.length === 1, 'one signup request');

@@ -33,6 +33,15 @@ async function scenario(name, opts, fn) {
   const pageErrors = [];
   try {
     await installCdnRoutes(context);
+    /* The on-disk config carries the real project keys since STEP 29.
+       This UI-only suite runs in the pre-connection world: serve
+       placeholders so no scenario ever creates a live client. */
+    await context.route('**/assets/js/supabase-config.js', (r) =>
+      r.fulfill({
+        status: 200,
+        contentType: 'application/javascript',
+        body: "window.NGD_SUPABASE_CONFIG = { SUPABASE_URL: 'YOUR_SUPABASE_PROJECT_URL', SUPABASE_PUBLISHABLE_KEY: 'YOUR_SUPABASE_PUBLISHABLE_KEY' };",
+      }));
     const page = await context.newPage();
     page.on('pageerror', (e) => pageErrors.push(String(e)));
     await fn(page);

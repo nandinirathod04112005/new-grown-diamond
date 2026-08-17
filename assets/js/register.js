@@ -24,7 +24,7 @@
   var NOT_CONFIGURED =
     'Supabase is not configured yet — add your project details in assets/js/supabase-config.js.';
   var CONFIRM_EMAIL_MSG =
-    'Account created. Please verify your email before signing in.';
+    'Account created. Please check your email to verify your account.';
 
   function $(id) {
     return document.getElementById(id);
