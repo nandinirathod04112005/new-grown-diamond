@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Diamond Inventory — New Grown Diamond</title>
+  <title>Enquiries — New Grown Diamond</title>
   <meta name="robots" content="noindex">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50 8 88 38 50 92 12 38' fill='%23b48c47'/%3E%3C/svg%3E">
 
@@ -62,7 +62,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg>
             Dashboard
           </a>
-          <a href="diamonds.html" class="is-active" data-admin-route="diamonds" aria-current="page">
+          <a href="diamonds.html" data-admin-route="diamonds">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4h10l4 5-9 11L3 9Z"/><path d="M3 9h18M12 20 8 9l4-5 4 5-4 11"/></svg>
             Diamonds
           </a>
@@ -86,7 +86,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 4.5 4.5"/></svg>
             Inspections <em class="ngd-soon-chip">Soon</em>
           </span>
-          <a href="enquiries.html" data-admin-route="enquiries">
+          <a href="enquiries.html" class="is-active" data-admin-route="enquiries" aria-current="page">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
             Enquiries
           </a>
@@ -125,59 +125,45 @@
     <!-- ══════════ MAIN ══════════ -->
     <main class="ngd-dash-main">
 
-      <!-- Title + Add Diamond -->
       <section class="d-flex flex-wrap align-items-end justify-content-between gap-3" data-admin-section="head">
         <div>
           <span class="ngd-eyebrow">Admin console</span>
-          <h1 class="ngd-display-2 mt-2 mb-1">Diamond Inventory</h1>
+          <h1 class="ngd-display-2 mt-2 mb-1">Enquiries</h1>
           <p class="ngd-text-muted small mb-0">
-            Every stone in the house — search, filter and manage the catalogue.
+            The house inbox — search, review and track every enquiry.
           </p>
-        </div>
-        <div class="d-flex align-items-center gap-2">
-          <!-- Navigates to the future Add Diamond builder (placeholder today) -->
-          <a class="ngd-btn ngd-btn-gold ngd-btn-sm" id="adm-add" href="add-diamond.html">+ Add Diamond</a>
         </div>
       </section>
 
-      <!-- Demo notice; loadAdminDiamonds() in assets/js/admin-diamonds.js
-           is the future Supabase seam. -->
+      <!-- Demo notice; loadAdminEnquiries() in assets/js/admin-enquiries.js
+           is the future Supabase seam over the enquiries table. -->
       <aside class="ngd-edu-note mt-4" id="adm-demo-note">
         <span class="ngd-edu-bullet" aria-hidden="true">&#9670;</span>
-        <p class="mb-0"><strong>Demo preview.</strong> These rows are the
-        public demo catalogue with sample featured/active flags. Feature,
-        activate and archive only update this preview — nothing is saved to
-        any server, and everything returns on reload.</p>
+        <p class="mb-0"><strong>Demo preview.</strong> These enquiries are
+        invented sample messages joined to the demo accounts. Status changes
+        only update this preview — nothing is saved to any server, no email
+        is sent, and everything returns on reload.</p>
       </aside>
 
       <!-- Toolbar -->
       <section class="mt-4 ngd-form" data-admin-section="toolbar">
         <div class="row g-2 align-items-end">
-          <div class="col-12 col-md-5 col-xl-4">
+          <div class="col-12 col-md-6 col-xl-5">
             <label class="form-label" for="adm-search">Search</label>
             <input type="search" class="form-control" id="adm-search"
-                   placeholder="Stock number, shape, colour, clarity…">
+                   placeholder="ENQ-…, name, company, subject, CU-…">
           </div>
-          <div class="col-6 col-md-3 col-xl-3">
-            <label class="form-label" for="adm-sort">Sort</label>
-            <select class="form-select" id="adm-sort">
-              <option value="updated-desc" selected>Recently updated</option>
-              <option value="stock">Stock number</option>
-              <option value="carat-desc">Carat &middot; high to low</option>
-              <option value="carat-asc">Carat &middot; low to high</option>
-            </select>
-          </div>
-          <div class="col-6 col-md-2 col-xl-2 d-grid">
+          <div class="col-6 col-md-3 col-xl-2 d-grid">
             <button class="ngd-btn ngd-btn-outline ngd-btn-sm" type="button"
                     data-bs-toggle="collapse" data-bs-target="#adm-filters"
                     aria-expanded="false" aria-controls="adm-filters" id="adm-filters-toggle">
               Filters <span class="ngd-demo-chip d-none ms-1" id="adm-filter-count"></span>
             </button>
           </div>
-          <div class="col-6 col-md-2 col-xl-2 d-grid">
+          <div class="col-6 col-md-3 col-xl-2 d-grid">
             <button type="button" class="ngd-btn ngd-btn-outline ngd-btn-sm" id="adm-clear">Clear</button>
           </div>
-          <div class="col-12 col-xl-1 text-xl-end">
+          <div class="col-12 col-xl-3 text-xl-end">
             <span class="ngd-demo-chip">Demo</span>
           </div>
         </div>
@@ -185,57 +171,21 @@
         <div class="collapse mt-2" id="adm-filters">
           <div class="ngd-dash-panel">
             <div class="row g-2">
-              <div class="col-6 col-md-3 col-xl-2">
-                <label class="form-label" for="adm-f-shape">Shape</label>
-                <select class="form-select" id="adm-f-shape"><option value="all" selected>All</option></select>
+              <div class="col-6 col-md-3">
+                <label class="form-label" for="adm-f-status">Status</label>
+                <select class="form-select" id="adm-f-status"><option value="all" selected>All</option></select>
               </div>
-              <div class="col-6 col-md-3 col-xl-2">
-                <label class="form-label" for="adm-f-colour">Colour</label>
-                <select class="form-select" id="adm-f-colour"><option value="all" selected>All</option></select>
+              <div class="col-6 col-md-3">
+                <label class="form-label" for="adm-f-type">Enquiry type</label>
+                <select class="form-select" id="adm-f-type"><option value="all" selected>All</option></select>
               </div>
-              <div class="col-6 col-md-3 col-xl-2">
-                <label class="form-label" for="adm-f-clarity">Clarity</label>
-                <select class="form-select" id="adm-f-clarity"><option value="all" selected>All</option></select>
+              <div class="col-6 col-md-3">
+                <label class="form-label" for="adm-f-from">From date</label>
+                <input type="date" class="form-control" id="adm-f-from">
               </div>
-              <div class="col-6 col-md-3 col-xl-2">
-                <label class="form-label" for="adm-f-cut">Cut</label>
-                <select class="form-select" id="adm-f-cut"><option value="all" selected>All</option></select>
-              </div>
-              <div class="col-6 col-md-3 col-xl-2">
-                <label class="form-label" for="adm-f-lab">Laboratory</label>
-                <select class="form-select" id="adm-f-lab"><option value="all" selected>All</option></select>
-              </div>
-              <div class="col-6 col-md-3 col-xl-2">
-                <label class="form-label" for="adm-f-growth">Growth</label>
-                <select class="form-select" id="adm-f-growth"><option value="all" selected>All</option></select>
-              </div>
-              <div class="col-6 col-md-3 col-xl-2">
-                <label class="form-label" for="adm-f-availability">Availability</label>
-                <select class="form-select" id="adm-f-availability"><option value="all" selected>All</option></select>
-              </div>
-              <div class="col-6 col-md-3 col-xl-2">
-                <label class="form-label" for="adm-f-status">Active state</label>
-                <select class="form-select" id="adm-f-status">
-                  <option value="all" selected>All</option>
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                </select>
-              </div>
-              <div class="col-6 col-md-3 col-xl-2">
-                <label class="form-label" for="adm-f-featured">Featured</label>
-                <select class="form-select" id="adm-f-featured">
-                  <option value="all" selected>All</option>
-                  <option value="featured">Featured</option>
-                  <option value="not-featured">Not featured</option>
-                </select>
-              </div>
-              <div class="col-6 col-md-3 col-xl-2">
-                <label class="form-label" for="adm-f-carat-min">Carat min</label>
-                <input type="number" step="0.01" min="0" class="form-control" id="adm-f-carat-min" placeholder="0.30">
-              </div>
-              <div class="col-6 col-md-3 col-xl-2">
-                <label class="form-label" for="adm-f-carat-max">Carat max</label>
-                <input type="number" step="0.01" min="0" class="form-control" id="adm-f-carat-max" placeholder="4.00">
+              <div class="col-6 col-md-3">
+                <label class="form-label" for="adm-f-to">To date</label>
+                <input type="date" class="form-control" id="adm-f-to">
               </div>
             </div>
           </div>
@@ -259,6 +209,9 @@
       <!-- Honest inline toast for demo actions -->
       <div id="adm-toast" class="mt-3" aria-live="polite"></div>
 
+      <!-- Enquiry details panel (rendered by the View action) -->
+      <div class="ngd-dash-panel mt-3" id="enq-detail" data-admin-section="detail" hidden></div>
+
       <!-- Table (≥768px, horizontal scroll inside the card if needed) -->
       <section class="mt-3 d-none d-md-block" data-admin-section="table">
         <div class="ngd-table-card" id="adm-table-card">
@@ -266,17 +219,15 @@
             <table class="table ngd-table ngd-req-table ngd-admin-table mb-0">
               <thead>
                 <tr>
-                  <th scope="col"><span class="visually-hidden">Image</span></th>
-                  <th scope="col">Stock No.</th>
-                  <th scope="col">Shape</th>
-                  <th scope="col">Carat</th>
-                  <th scope="col">Colour</th>
-                  <th scope="col">Clarity</th>
-                  <th scope="col">Lab</th>
-                  <th scope="col">Availability</th>
-                  <th scope="col">Featured</th>
-                  <th scope="col">Active</th>
-                  <th scope="col">Updated</th>
+                  <th scope="col">Enquiry ID</th>
+                  <th scope="col">Customer Name</th>
+                  <th scope="col">Company</th>
+                  <th scope="col">Email</th>
+                  <th scope="col">Subject</th>
+                  <th scope="col">Type</th>
+                  <th scope="col">Related Product</th>
+                  <th scope="col">Date</th>
+                  <th scope="col">Status</th>
                   <th scope="col" class="text-end">Actions</th>
                 </tr>
               </thead>
@@ -291,12 +242,12 @@
 
       <div class="d-flex justify-content-center mt-3" id="adm-pagination"></div>
 
-      <!-- No-match (filters active, catalogue not empty) -->
+      <!-- No-match (filters active, inbox not empty) -->
       <div id="adm-no-match" class="ngd-dash-panel mt-3" hidden>
         <div class="ngd-dash-empty">
           <span class="ngd-icon-tile ngd-depth-1 mb-3">◌</span>
           <h2 class="ngd-title fs-6">Nothing matches those filters</h2>
-          <p class="ngd-text-muted small mb-3">Try a different term, filter or carat range.</p>
+          <p class="ngd-text-muted small mb-3">Try a different term, status or date range.</p>
           <button type="button" class="ngd-btn ngd-btn-outline ngd-btn-sm"
                   onclick="document.getElementById('adm-clear').click()">Clear filters</button>
         </div>
@@ -311,15 +262,14 @@
       <div id="adm-stage-empty" class="ngd-dash-panel mt-3" hidden>
         <div class="ngd-dash-empty">
           <span class="ngd-icon-tile ngd-depth-1 mb-3">◆</span>
-          <h2 class="ngd-title fs-6">No diamonds in the inventory</h2>
-          <p class="ngd-text-muted small mb-3">Add your first stone and it will appear here.</p>
-          <a class="ngd-btn ngd-btn-outline ngd-btn-sm" href="add-diamond.html">+ Add Diamond</a>
+          <h2 class="ngd-title fs-6">The inbox is clear</h2>
+          <p class="ngd-text-muted small mb-0">New enquiries from the contact page appear here.</p>
         </div>
       </div>
       <div id="adm-stage-error" class="ngd-dash-panel mt-3" hidden>
         <div class="ngd-dash-error">
           <span class="ngd-icon-tile mb-3">!</span>
-          <h2 class="ngd-title fs-6">We couldn&rsquo;t load the inventory</h2>
+          <h2 class="ngd-title fs-6">We couldn&rsquo;t load the enquiries</h2>
           <p class="ngd-text-muted small mb-3">Check your connection and try again.</p>
           <button type="button" class="ngd-btn ngd-btn-outline ngd-btn-sm" id="adm-retry">Retry</button>
         </div>
@@ -334,8 +284,8 @@
   <script defer src="../assets/js/auth.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script defer src="../assets/js/ui.js"></script>
-  <script defer src="../assets/js/gem-art.js"></script>
-  <script defer src="../assets/js/diamonds-data.js"></script>
-  <script defer src="../assets/js/admin-diamonds.js"></script>
+  <script defer src="../assets/js/customers-data.js"></script>
+  <script defer src="../assets/js/enquiries-data.js"></script>
+  <script defer src="../assets/js/admin-enquiries.js"></script>
 </body>
 </html>

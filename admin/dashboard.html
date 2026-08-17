@@ -70,10 +70,10 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="14" r="6.5"/><path d="m9.5 4 2.5 3.5L14.5 4M9.5 4h5"/></svg>
             Jewellery
           </a>
-          <span class="ngd-dash-nav-item is-soon" data-admin-route="customers" aria-disabled="true">
+          <a href="customers.html" data-admin-route="customers">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 19a6 6 0 0 1 12 0"/><circle cx="17" cy="9" r="2.4"/><path d="M15.5 14.5a5 5 0 0 1 5.5 4.5"/></svg>
-            Customers <em class="ngd-soon-chip">Soon</em>
-          </span>
+            Customers
+          </a>
           <span class="ngd-dash-nav-item is-soon" data-admin-route="quotes" aria-disabled="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h9l3.5 3.5v13.5H6Z"/><path d="M15 3.5V7h3.5M9 11h6M9 14.5h6M9 18h3.5"/></svg>
             Quotes <em class="ngd-soon-chip">Soon</em>
@@ -86,10 +86,10 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 4.5 4.5"/></svg>
             Inspections <em class="ngd-soon-chip">Soon</em>
           </span>
-          <span class="ngd-dash-nav-item is-soon" data-admin-route="enquiries" aria-disabled="true">
+          <a href="enquiries.html" data-admin-route="enquiries">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
-            Enquiries <em class="ngd-soon-chip">Soon</em>
-          </span>
+            Enquiries
+          </a>
           <span class="ngd-dash-nav-item is-soon" data-admin-route="media" aria-disabled="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="14" rx="2"/><circle cx="9" cy="10" r="1.8"/><path d="m5 17 4.5-4 3 2.6L17 11l3.5 4"/></svg>
             Media <em class="ngd-soon-chip">Soon</em>
@@ -218,9 +218,8 @@
       <!-- Quick actions -->
       <section class="mt-4" id="admin-actions" data-admin-section="actions">
         <h2 class="ngd-title fs-5 mb-3">Quick actions</h2>
-        <!-- Add Diamond, Add Jewellery and the storefront link are live;
-             the remaining actions stay visibly Soon and navigate nowhere
-             until their admin phases arrive. -->
+        <!-- Every action is live except Review Quotes, which stays visibly
+             Soon and navigates nowhere until the Quotes console arrives. -->
         <div class="d-flex flex-wrap gap-2" id="admin-action-buttons">
           <a class="ngd-btn ngd-btn-outline ngd-btn-sm" data-admin-action="add-diamond" href="add-diamond.html">
             Add Diamond
@@ -228,15 +227,15 @@
           <a class="ngd-btn ngd-btn-outline ngd-btn-sm" data-admin-action="add-jewellery" href="add-jewellery.html">
             Add Jewellery
           </a>
-          <button type="button" class="ngd-btn ngd-btn-outline ngd-btn-sm" data-admin-action="view-customers" aria-disabled="true">
-            View Customers <em class="ngd-soon-chip ms-2">Soon</em>
-          </button>
+          <a class="ngd-btn ngd-btn-outline ngd-btn-sm" data-admin-action="view-customers" href="customers.html">
+            View Customers
+          </a>
           <button type="button" class="ngd-btn ngd-btn-outline ngd-btn-sm" data-admin-action="review-quotes" aria-disabled="true">
             Review Quotes <em class="ngd-soon-chip ms-2">Soon</em>
           </button>
-          <button type="button" class="ngd-btn ngd-btn-outline ngd-btn-sm" data-admin-action="view-enquiries" aria-disabled="true">
-            View Enquiries <em class="ngd-soon-chip ms-2">Soon</em>
-          </button>
+          <a class="ngd-btn ngd-btn-outline ngd-btn-sm" data-admin-action="view-enquiries" href="enquiries.html">
+            View Enquiries
+          </a>
           <a class="ngd-btn ngd-btn-gold ngd-btn-sm" href="../diamonds.html">Open the storefront</a>
         </div>
       </section>

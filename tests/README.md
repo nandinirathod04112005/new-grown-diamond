@@ -111,8 +111,8 @@ tooling only** — the website itself is plain HTML/CSS/JS and has no Node backe
 - `admin-dash-ui.test.cjs` — 8 Admin-Dashboard scenarios (mocked auth, role
   parameterised): topbar profile area, the 13-route sidebar with its ten
   honest Soon items and logout, KPI cards whose inventory counts mirror the
-  demo catalogue (everything chipped Demo), the quick actions (Add Diamond
-  + Add Jewellery live, the rest honestly Soon) + live storefront link,
+  demo catalogue (everything chipped Demo), the quick actions (four live
+  links, Review Quotes honestly Soon) + live storefront link,
   the demo activity feed with catalogue links, role
   and session guards, logout, and offcanvas/single-column layouts at
   1440/768/390.
@@ -151,6 +151,24 @@ tooling only** — the website itself is plain HTML/CSS/JS and has no Node backe
   with its three-tile demo gallery (+ the null-weight all-metal piece),
   the UI-only Archive, not-found, and 2-col→1-col responsive checks with
   the sticky action bar at 1440/768/390.
+- `admin-customers-ui.test.cjs` — 10 Admin-Customers scenarios (mocked
+  admin): the 9-column table over the invented demo accounts in
+  recently-joined order, search + status/country filters + sort +
+  pagination, the honest activate/deactivate toggle, the details panel
+  (identity meta, Demo-chipped recent quotes/holds/inspections/enquiries,
+  the View Quotes shortcut, honest empty lines), the View Enquiries deep
+  link into the filtered inbox, loading/empty/error previews, guards and
+  the cards-with-initials-avatars vs contained-table behaviour at
+  390/768/1440.
+- `admin-enquiries-ui.test.cjs` — 10 Admin-Enquiries scenarios (mocked
+  admin): the 10-column inbox joined to the demo customers (guest rows
+  flagged, related products linked to the storefront), search +
+  status/type/date-range filters + pagination, the honest status actions
+  (Mark In Progress / Responded / Close — truthful toasts, no fake email,
+  current status disabled), the details panel (message, draft internal
+  notes that survive re-renders but honestly save nothing, status
+  actions), the ?customer= deep link, loading/empty/error previews,
+  guards and the table-vs-cards behaviour at 390/768/1440.
 - `header-nav.test.cjs` — 12 header/navigation scenarios on every public page:
   sticky glass header, Collections dropdown (open/close/navigate), login button,
   hamburger morph, offcanvas mobile menu (open, stagger, close button, Escape,

@@ -3,9 +3,9 @@
    Logs in against a compact mocked Supabase backend (role
    parameterised per scenario) and verifies the admin shell:
    topbar profile area, the 13-route sidebar (Dashboard active,
-   ten honest Soon items) + logout, KPI cards with
+   eight honest Soon items) + logout, KPI cards with
    demo-catalogue counts and chipped demo figures, the quick
-   actions (two live, three Soon) + storefront link, the demo activity
+   actions (four live, one Soon) + storefront link, the demo activity
    feed, role/guard redirects, logout and responsive layouts at
    1440/768/390.
    Run:  node tests/admin-dash-ui.test.cjs
@@ -180,8 +180,8 @@ const ROUTES = ['dashboard', 'diamonds', 'jewellery', 'customers', 'quotes', 'ho
     expect(state.topbarLogout && state.navLogout, 'sign-out in topbar and sidebar');
     expect(JSON.stringify(state.routes) === JSON.stringify(ROUTES),
       'all 13 sidebar routes in order, got ' + state.routes.join(','));
-    expect(state.soonCount === 10,
-      'ten Soon items — Diamonds and Jewellery are real pages since STEPS 24/26, got ' + state.soonCount);
+    expect(state.soonCount === 8,
+      'eight Soon items — Diamonds, Jewellery, Customers and Enquiries are real pages, got ' + state.soonCount);
     expect(state.active === 'dashboard', 'Dashboard route active');
     expect(state.title === 'Admin Dashboard', 'page title, got ' + state.title);
     expect(/Welcome, Asha/.test(state.welcome), 'first-name welcome');
@@ -220,7 +220,7 @@ const ROUTES = ['dashboard', 'diamonds', 'jewellery', 'customers', 'quotes', 'ho
     expect(/Nothing here is live business data/i.test(state.note), 'honest KPI note');
   });
 
-  await scenario('quick actions: two live add links, three honest Soon buttons, storefront link', {}, async (page, user) => {
+  await scenario('quick actions: four live links, one honest Soon button, storefront link', {}, async (page, user) => {
     await openAdmin(page, user);
     const state = await page.evaluate(() => ({
       labels: [...document.querySelectorAll('#admin-action-buttons [data-admin-action]')]
@@ -230,18 +230,22 @@ const ROUTES = ['dashboard', 'diamonds', 'jewellery', 'customers', 'quotes', 'ho
         .every((b) => b.getAttribute('aria-disabled') === 'true'),
       addHref: document.querySelector('[data-admin-action="add-diamond"]').getAttribute('href'),
       addJwHref: document.querySelector('[data-admin-action="add-jewellery"]').getAttribute('href'),
+      custHref: document.querySelector('[data-admin-action="view-customers"]').getAttribute('href'),
+      enqHref: document.querySelector('[data-admin-action="view-enquiries"]').getAttribute('href'),
       store: document.querySelector('#admin-action-buttons a.ngd-btn-gold').getAttribute('href'),
     }));
     expect(JSON.stringify(state.labels) === JSON.stringify(
       ['Add Diamond', 'Add Jewellery', 'View Customers', 'Review Quotes', 'View Enquiries']),
       'action labels per spec, got ' + state.labels.join(','));
-    expect(state.soonChips === 3 && state.disabled,
-      'three actions still Soon; Add Diamond and Add Jewellery are real since STEPS 25/27');
+    expect(state.soonChips === 1 && state.disabled,
+      'only Review Quotes still Soon; the other four actions are live pages');
     expect(state.addHref === 'add-diamond.html', 'Add Diamond links its page');
     expect(state.addJwHref === 'add-jewellery.html', 'Add Jewellery links its page');
+    expect(state.custHref === 'customers.html' && state.enqHref === 'enquiries.html',
+      'View Customers and View Enquiries link their pages');
     /* aria-disabled makes Playwright refuse a normal click — dispatch one
        directly to prove a Soon button still navigates nowhere */
-    await page.$eval('#admin-action-buttons [data-admin-action="view-customers"]', (el) => el.click());
+    await page.$eval('#admin-action-buttons [data-admin-action="review-quotes"]', (el) => el.click());
     await page.waitForTimeout(300);
     const stayed = await page.evaluate(() => /admin\/dashboard\.html$/.test(location.pathname));
     expect(stayed, 'Soon action navigates nowhere');

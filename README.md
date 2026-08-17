@@ -36,7 +36,9 @@ Bootstrap 5 + vanilla JavaScript** frontend backed by **Supabase**
 | Admin Add/Edit Diamond forms (8 sections, image UI, honest no-save) | ✅ done — payload seam ready |
 | Admin Jewellery Inventory UI (10-col table, 4 filters, demo actions) | ✅ done — demo/preview data only |
 | Admin Add/Edit Jewellery forms (9 sections, multi-image UI, honest no-save) | ✅ done — payload seam ready |
-| Admin management, storage, quotes, enquiries backend | ⏳ upcoming steps |
+| Admin Customers UI (9-col table, details panel, honest demo toggle) | ✅ done — demo/preview data only |
+| Admin Enquiries UI (10-col inbox, status actions, details + notes area) | ✅ done — demo/preview data only |
+| Admin quotes/holds/inspections consoles, storage, backend | ⏳ upcoming steps |
 
 ## Quick start
 
@@ -72,6 +74,8 @@ Bootstrap 5 + vanilla JavaScript** frontend backed by **Supabase**
 | `admin/add-diamond.html` / `edit-diamond.html` | Add/Edit Diamond forms (guarded) — 8 sections, 27 Supabase-ready fields, image drag/drop preview UI, inline validation, unsaved-changes warning; honest no-save submits expose the payload for the future `saveDiamond()` |
 | `admin/jewellery.html` | Admin Jewellery Inventory (guarded) — 10-column table over the demo collection, search, category/availability/active/featured filters, sort incl. diamond weight, pagination, honest demo feature/activate/archive actions |
 | `admin/add-jewellery.html` / `edit-jewellery.html` | Add/Edit Jewellery forms (guarded) — 9 sections, 23 Supabase-ready fields, multi-image gallery (drag/drop, previews, primary badge, set-primary, reorder, remove — no upload), inline validation, unsaved-changes warning; honest no-save submits expose the payload for the future `saveJewellery()` |
+| `admin/customers.html` | Admin Customers (guarded) — 9-column table over invented demo accounts, search, status/country filters, sort, pagination, honest demo activate/deactivate, details panel with recent quotes/holds/inspections/enquiries (all chipped Demo) and a deep link into the Enquiries console |
+| `admin/enquiries.html` | Admin Enquiries (guarded) — 10-column inbox joined to the demo accounts (guests flagged), search, status/type/date filters, honest status actions (New → In Progress → Responded → Closed, no email sent), details panel with message + not-saved internal notes area; supports `?customer=` deep links |
 | `styleguide.html` | Living reference for the design system |
 
 ## Documentation

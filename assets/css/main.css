@@ -3030,6 +3030,35 @@ a.ngd-chip {
   pointer-events: none;
 }
 
+/* People/enquiry admin extras: truncated table cells + initials avatar */
+.ngd-clip {
+  display: inline-block;
+  max-width: 13rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: bottom;
+}
+
+.ngd-init-avatar {
+  display: inline-grid;
+  place-items: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 50%;
+  background: rgba(217, 192, 138, 0.2);
+  color: var(--ngd-gold-deep);
+  font-family: var(--ngd-font-display);
+  font-weight: 600;
+  font-size: 0.9rem;
+  letter-spacing: 0.03em;
+}
+
+.ngd-adm-actions .ngd-icon-btn:disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
 /* UI states: loading skeleton, empty, error */
 .ngd-skeleton {
   position: relative;

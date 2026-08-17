@@ -365,6 +365,25 @@ array carries `{filename, position, is_primary}` for the future
 submit says honestly that nothing was saved. Archive on the edit page is
 UI-only and says so; a dirty form warns via `beforeunload`.
 
+`admin/customers.html` and `admin/enquiries.html` reuse the same list
+shell for people: the dense `.ngd-admin-table` (long text cells truncate
+via the inline `.ngd-clip` span), stacked `.ngd-req-card`s below 768px
+(customers cards carry an `.ngd-init-avatar` initials disc), the
+collapse toolbar, count line, pagination and UI-state switch. Customers
+(9 columns over the invented `customers-data.js` accounts) offers an
+honest activate/deactivate toggle plus a details panel — identity meta
+and Recent Quotes / Holds / Inspections (deterministic samples) and
+Recent Enquiries (joined from `enquiries-data.js`), every row chipped
+Demo; View Quotes opens that panel at its quotes list and View Enquiries
+deep-links to `enquiries.html?customer=…`. Enquiries (10 columns, guests
+flagged, related products linking to the storefront) filters by status /
+type / date range and moves rows through New → In Progress → Responded →
+Closed with truthful toasts — no email is ever sent or faked — and its
+details panel shows the full message, status actions and an internal
+notes textarea that says plainly nothing is saved yet.
+`loadAdminCustomers()` / `loadAdminEnquiries()` are the Supabase seams
+(profiles + enquiries tables).
+
 ### Contact page
 `contact.html` reuses the `.ngd-form` skin (Bootstrap `.is-invalid` +
 `.invalid-feedback` like the auth pages) on a `.ngd-glass` card, four
