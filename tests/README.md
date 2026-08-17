@@ -109,10 +109,11 @@ tooling only** — the website itself is plain HTML/CSS/JS and has no Node backe
   loading/empty/error previews with retry, guard redirects, and the
   desktop-table vs stacked-cards behaviour at 1440/768/390.
 - `admin-dash-ui.test.cjs` — 8 Admin-Dashboard scenarios (mocked auth, role
-  parameterised): topbar profile area, the 13-route sidebar with its twelve
+  parameterised): topbar profile area, the 13-route sidebar with its ten
   honest Soon items and logout, KPI cards whose inventory counts mirror the
-  demo catalogue (everything chipped Demo), the five Soon quick actions +
-  live storefront link, the demo activity feed with catalogue links, role
+  demo catalogue (everything chipped Demo), the quick actions (Add Diamond
+  live, the rest honestly Soon) + live storefront link, the demo activity
+  feed with catalogue links, role
   and session guards, logout, and offcanvas/single-column layouts at
   1440/768/390.
 - `admin-diamonds-ui.test.cjs` — 10 Admin-Diamond-Inventory scenarios
@@ -130,6 +131,15 @@ tooling only** — the website itself is plain HTML/CSS/JS and has no Node backe
   unsaved-changes beforeunload warning, edit prefill + UI-only Archive +
   not-found, and 2-col→1-col responsive checks with the sticky action bar
   at 1440/768/390.
+- `admin-jewellery-ui.test.cjs` — 10 Admin-Jewellery-Inventory scenarios
+  (mocked admin): the 10-column table over the augmented demo collection
+  (incl. the null-weight all-metal piece), search + the four filters
+  (category with the six spec options, availability, active state,
+  featured) + weight sort with nulls last + pagination, the honest demo
+  actions (feature/activate toggles, archive with Undo — truthful toasts,
+  no fake success), Add/Edit placeholder navigation, loading/empty/error
+  previews, guards (inventory + placeholders) and the
+  cards-vs-contained-scrolling-table behaviour at 390/768/1440.
 - `header-nav.test.cjs` — 12 header/navigation scenarios on every public page:
   sticky glass header, Collections dropdown (open/close/navigate), login button,
   hamburger morph, offcanvas mobile menu (open, stagger, close button, Escape,

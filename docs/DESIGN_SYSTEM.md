@@ -336,6 +336,19 @@ a valid submit exposes the exact payload as `data-ngd-payload` and states
 honestly that nothing was saved — `saveDiamond()` is the single seam.
 A dirty form warns via `beforeunload` before leaving.
 
+`admin/jewellery.html` mirrors the diamond manager for the jewellery
+collection: the same `.ngd-admin-table` density (10 columns — image, SKU,
+name, category, diamond weight with an em-dash for all-metal pieces,
+availability, featured, active, updated, actions), `.ngd-icon-btn`
+actions, stacked `.ngd-req-card`s below 768px, and client-side search /
+category–availability–active–featured filters / sort (product name, SKU,
+diamond weight with nulls last) / pagination over the demo collection
+augmented with the same deterministic featured/active/updated formulas
+the diamond console uses. Category thumbnails come from
+`window.NGD_JEWEL_ART`. Add/Edit navigate to guarded placeholder pages
+(`admin-page.js`); `loadAdminJewellery()` in
+`assets/js/admin-jewellery.js` is the Supabase seam.
+
 ### Contact page
 `contact.html` reuses the `.ngd-form` skin (Bootstrap `.is-invalid` +
 `.invalid-feedback` like the auth pages) on a `.ngd-glass` card, four

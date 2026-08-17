@@ -3,7 +3,7 @@
    Logs in against a compact mocked Supabase backend (role
    parameterised per scenario) and verifies the admin shell:
    topbar profile area, the 13-route sidebar (Dashboard active,
-   twelve honest Soon items) + logout, KPI cards with
+   ten honest Soon items) + logout, KPI cards with
    demo-catalogue counts and chipped demo figures, the five
    Soon quick actions + live storefront link, the demo activity
    feed, role/guard redirects, logout and responsive layouts at
@@ -180,8 +180,8 @@ const ROUTES = ['dashboard', 'diamonds', 'jewellery', 'customers', 'quotes', 'ho
     expect(state.topbarLogout && state.navLogout, 'sign-out in topbar and sidebar');
     expect(JSON.stringify(state.routes) === JSON.stringify(ROUTES),
       'all 13 sidebar routes in order, got ' + state.routes.join(','));
-    expect(state.soonCount === 11,
-      'eleven Soon items — Diamonds is a real page since STEP 24, got ' + state.soonCount);
+    expect(state.soonCount === 10,
+      'ten Soon items — Diamonds and Jewellery are real pages since STEPS 24/26, got ' + state.soonCount);
     expect(state.active === 'dashboard', 'Dashboard route active');
     expect(state.title === 'Admin Dashboard', 'page title, got ' + state.title);
     expect(/Welcome, Asha/.test(state.welcome), 'first-name welcome');
