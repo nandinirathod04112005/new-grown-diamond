@@ -198,11 +198,12 @@
   }).join('');
 
   /* ---------- CTAs (frontend only — no fake success) ---------- */
-  var quoteUrl = 'contact.html?piece=' + encodeURIComponent(piece.id) + '&type=quote';
   var enquireUrl = 'contact.html?piece=' + encodeURIComponent(piece.id) + '&type=enquiry';
-  document.getElementById('jd-quote').setAttribute('href', quoteUrl);
   document.getElementById('jd-enquire').setAttribute('href', enquireUrl);
-  document.getElementById('jd-sticky-quote').setAttribute('href', quoteUrl);
+  window.NGDBindQuoteButtons(
+    [document.getElementById('jd-quote'), document.getElementById('jd-sticky-quote')],
+    { type: 'jewellery', reference: piece.id, title: piece.name }
+  );
 
   var favButtons = [document.getElementById('jd-fav'), document.getElementById('jd-sticky-fav')];
   var favActive = false;

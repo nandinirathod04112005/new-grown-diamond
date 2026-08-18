@@ -181,11 +181,12 @@
   }).join('');
 
   /* ---------- CTAs (frontend only — no fake success) ---------- */
-  var quoteUrl = 'contact.html?stone=' + encodeURIComponent(stone.id) + '&type=quote';
   var inspectUrl = 'contact.html?stone=' + encodeURIComponent(stone.id) + '&type=inspection';
-  document.getElementById('dd-quote').setAttribute('href', quoteUrl);
   document.getElementById('dd-inspect').setAttribute('href', inspectUrl);
-  document.getElementById('dd-sticky-quote').setAttribute('href', quoteUrl);
+  window.NGDBindQuoteButtons(
+    [document.getElementById('dd-quote'), document.getElementById('dd-sticky-quote')],
+    { type: 'diamond', reference: stone.id, title: stone.shape + ' · ' + stone.carat.toFixed(2) + ' ct' }
+  );
 
   var favButtons = [document.getElementById('dd-fav'), document.getElementById('dd-sticky-fav')];
   var favActive = false;
