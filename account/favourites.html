@@ -106,20 +106,6 @@
         </div>
       </section>
 
-      <!-- Demo notice: this page previews the favourites UI with sample
-           items resolved from the public demo catalogue. Nothing here is
-           stored anywhere — the future Supabase `favourites` table
-           (user_id, item_type, item_id, created_at) replaces
-           loadFavourites() in assets/js/favourites.js. -->
-      <aside class="ngd-edu-note mt-4" id="fav-demo-note">
-        <span class="ngd-edu-bullet" aria-hidden="true">&#9670;</span>
-        <p class="mb-0"><strong>Demo preview.</strong> These favourites are
-        sample items showing how your saved stones and pieces will appear
-        once favourites sync with your account. Removing one only updates
-        this preview — nothing is saved or deleted anywhere, and the samples
-        return on reload.</p>
-      </aside>
-
       <!-- Toolbar: tabs, search, sort -->
       <section class="mt-4" data-dash-section="fav-toolbar">
         <div class="d-flex flex-wrap align-items-center gap-2">
@@ -129,7 +115,6 @@
             <button type="button" class="ngd-chip" data-fav-tab="jewellery" aria-pressed="false">Jewellery</button>
           </div>
           <span class="ngd-text-muted small ms-auto" id="fav-count" aria-live="polite">—</span>
-          <span class="ngd-demo-chip">Demo</span>
         </div>
         <div class="row g-2 mt-1 ngd-form">
           <div class="col-12 col-md-7 col-lg-8">
@@ -149,7 +134,7 @@
         </div>
       </section>
 
-      <!-- Honest inline toast for demo removals -->
+      <!-- Live add/remove feedback -->
       <div id="fav-toast" class="mt-3" aria-live="polite"></div>
 
       <!-- Cards grid (rendered by favourites.js) -->

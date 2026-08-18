@@ -188,26 +188,9 @@
   document.getElementById('dd-sticky-quote').setAttribute('href', quoteUrl);
 
   var favButtons = [document.getElementById('dd-fav'), document.getElementById('dd-sticky-fav')];
-  var favActive = false;
-
-  function renderFav() {
-    favButtons.forEach(function (btn) {
-      if (!btn) return;
-      btn.classList.toggle('is-active', favActive);
-      btn.setAttribute('aria-pressed', String(favActive));
-      var icon = btn.querySelector('.ngd-fav-icon');
-      if (icon) icon.textContent = favActive ? '♥' : '♡';
-    });
-    var label = document.getElementById('dd-fav-label');
-    if (label) label.textContent = favActive ? 'In Favourites' : 'Add to Favourites';
-  }
-
-  favButtons.forEach(function (btn) {
-    if (!btn) return;
-    btn.addEventListener('click', function () {
-      favActive = !favActive;
-      renderFav();
-    });
+  window.NGDFavourites.bind({
+    type: 'diamond', product: stone, buttons: favButtons,
+    label: document.getElementById('dd-fav-label')
   });
 
   /* ---------- certificate card ---------- */
@@ -258,5 +241,4 @@
   if (window.NGDTilt) window.NGDTilt(document.getElementById('dd-similar'));
 
   renderStage();
-  renderFav();
 })();

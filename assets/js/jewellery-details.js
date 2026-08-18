@@ -205,26 +205,9 @@
   document.getElementById('jd-sticky-quote').setAttribute('href', quoteUrl);
 
   var favButtons = [document.getElementById('jd-fav'), document.getElementById('jd-sticky-fav')];
-  var favActive = false;
-
-  function renderFav() {
-    favButtons.forEach(function (btn) {
-      if (!btn) return;
-      btn.classList.toggle('is-active', favActive);
-      btn.setAttribute('aria-pressed', String(favActive));
-      var icon = btn.querySelector('.ngd-fav-icon');
-      if (icon) icon.textContent = favActive ? '♥' : '♡';
-    });
-    var label = document.getElementById('jd-fav-label');
-    if (label) label.textContent = favActive ? 'In Favourites' : 'Add to Favourites';
-  }
-
-  favButtons.forEach(function (btn) {
-    if (!btn) return;
-    btn.addEventListener('click', function () {
-      favActive = !favActive;
-      renderFav();
-    });
+  window.NGDFavourites.bind({
+    type: 'jewellery', product: piece, buttons: favButtons,
+    label: document.getElementById('jd-fav-label')
   });
 
   /* ---------- certificate / quality ---------- */
@@ -278,5 +261,4 @@
   if (window.NGDTilt) window.NGDTilt(document.getElementById('jd-similar'));
 
   renderStage();
-  renderFav();
 })();
