@@ -1,9 +1,9 @@
 /* ============================================================
    Signup page UI tests (STEP 18).
-   Verifies the premium split card with its ring art, all eight
+   Verifies the premium split card with its ring art, account type,
    fields, both show/hide toggles, the password strength meter,
    the full validation matrix (email/mobile/min-8/match/terms),
-   the no-role-selector security guard, the honest no-backend
+   the conditional Admin Code field, the honest no-backend
    behaviour and responsive layouts at 1440/768/390.
    The mocked signup flows live in auth-flow.test.cjs.
    Run:  node tests/signup-ui.test.cjs
@@ -77,7 +77,7 @@ async function fillValid(page) {
   SITE = started.origin;
   browser = await chromium.launch(chromiumOptions());
 
-  await scenario('desktop split card: ring art, all eight fields, no role selector', {}, async (page) => {
+  await scenario('desktop split card: ring art, fields and account type', {}, async (page) => {
     await open(page);
     const state = await page.evaluate((ids) => {
       const side = document.querySelector('.ngd-auth-side');
@@ -95,8 +95,8 @@ async function fillValid(page) {
         submit: document.getElementById('register-submit').textContent.trim(),
         loginLink: !!document.querySelector('.ngd-auth-main a[href="login.html"]'),
         termsLinks: [...document.querySelectorAll('.form-check-label a')].map((a) => a.getAttribute('href')),
-        roleControls: document.querySelectorAll(
-          'select[name*="role" i], input[name*="role" i], [id*="role" i]').length,
+        accountType: document.getElementById('reg-account-type').value,
+        adminCodeHidden: document.getElementById('reg-admin-code-group').classList.contains('d-none'),
         shadow: getComputedStyle(document.querySelector('.ngd-auth-card')).boxShadow !== 'none',
       };
     }, FIELD_IDS);
@@ -111,8 +111,21 @@ async function fillValid(page) {
     expect(state.loginLink, 'link back to login');
     expect(state.termsLinks.includes('terms.html') && state.termsLinks.includes('privacy.html'),
       'terms + privacy linked, got ' + state.termsLinks.join(','));
-    expect(state.roleControls === 0, 'no admin/customer role selector anywhere');
+    expect(state.accountType === 'customer', 'Customer is the default account type');
+    expect(state.adminCodeHidden, 'Admin Code is hidden for Customer');
     expect(state.shadow, 'soft card shadow');
+  });
+
+  await scenario('Admin account type reveals a required code field', {}, async (page) => {
+    await open(page);
+    await page.selectOption('#reg-account-type', 'admin');
+    const state = await page.evaluate(() => ({
+      hidden: document.getElementById('reg-admin-code-group').classList.contains('d-none'),
+      disabled: document.getElementById('reg-admin-code').disabled,
+      required: document.getElementById('reg-admin-code').required,
+    }));
+    expect(!state.hidden && !state.disabled && state.required,
+      'Admin Code is visible, enabled and required');
   });
 
   await scenario('both password toggles flip independently with aria states', {}, async (page) => {
