@@ -224,11 +224,11 @@ async function fillMinimumValid(page, stock) {
   await page.fill('[name="stock_number"]', stock || 'NGD-2001');
   await page.selectOption('[name="shape"]', 'Round');
   await page.fill('[name="carat"]', '1.25');
-  await page.selectOption('[name="color"]', 'D');
-  await page.selectOption('[name="clarity"]', 'VS1');
+  await page.selectOption('[name="color"]', 'E');
+  await page.selectOption('[name="clarity"]', 'VVS1');
   await page.selectOption('[name="cut"]', 'Ideal');
   await page.selectOption('[name="laboratory"]', 'IGI');
-  await page.selectOption('[name="availability"]', 'In Stock');
+  await page.selectOption('[name="availability"]', 'available');
 }
 
 (async () => {
@@ -292,10 +292,10 @@ async function fillMinimumValid(page, stock) {
     await openAdd(page);
     let dialogSeen = null;
     page.on('dialog', (d) => { dialogSeen = d.type(); d.accept(); });
-    await fillMinimumValid(page, 'NGD-2001');
+    await fillMinimumValid(page, 'TEST-001');
     await page.fill('[name="price_per_carat"]', '1400');
     await page.click('#dia-submit');
-    await page.waitForURL('**/admin/diamonds.html?added=NGD-2001', { timeout: 10000 });
+    await page.waitForURL('**/admin/diamonds.html?added=TEST-001', { timeout: 10000 });
     await page.waitForFunction(() =>
       document.querySelectorAll('#adm-table-body tr').length > 0, null, { timeout: 10000 });
     expect(backend.inserts.length === 1, 'exactly one insert sent');
@@ -303,16 +303,21 @@ async function fillMinimumValid(page, stock) {
     expect(/^DIA-[A-HJ-NP-Z2-9]{8}$/.test(rec.public_id),
       'generated public_id like DIA-XXXXXXXX, got ' + rec.public_id);
     expect(rec.created_by === USERS.admin.id, 'created_by is the signed-in admin');
-    expect(rec.stock_number === 'NGD-2001' && rec.color === 'D' && rec.carat === 1.25 &&
+    expect(rec.stock_number === 'TEST-001' && rec.color === 'E' && rec.clarity === 'VVS1' &&
+      rec.carat === 1.25 && rec.availability === 'available' &&
       rec.price_per_carat === 1400 && rec.price_visible === false && rec.active === true,
       'real column payload, got ' + JSON.stringify(rec).slice(0, 120));
     expect(dialogSeen === null, 'no unsaved-changes warning after a successful save');
     const state = await page.evaluate(() => ({
-      row: !!document.querySelector('[data-adm-row="NGD-2001"]'),
+      row: !!document.querySelector('[data-adm-row="TEST-001"]'),
       toast: (document.querySelector('#adm-toast .ngd-alert') || { textContent: '' }).textContent,
     }));
     expect(state.row, 'the new stone appears in the re-read live list');
-    expect(/NGD-2001 was added to the inventory/.test(state.toast), 'arrival toast confirms it');
+    expect(/TEST-001 was added to the inventory/.test(state.toast), 'arrival toast confirms it');
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('[data-adm-row="TEST-001"]', { timeout: 10000 });
+    expect(await page.locator('[data-adm-row="TEST-001"]').count() > 0,
+      'the inserted test diamond remains visible after browser refresh');
   });
 
   await scenario('duplicate stock number rejected by the pre-check, nothing inserted', {}, async (page, backend) => {
