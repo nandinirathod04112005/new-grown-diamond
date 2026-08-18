@@ -140,6 +140,11 @@
     return BLOCKED_STATUSES.indexOf(status) !== -1;
   }
 
+  function isActiveStatus(profile) {
+    return String((profile && profile.account_status) || '')
+      .trim().toLowerCase() === 'active';
+  }
+
   function dashboardPath(profile) {
     return profile && profile.role === 'admin'
       ? 'admin/dashboard.html'
@@ -226,7 +231,9 @@
       await rejectToLogin(MSG_VERIFY_FAILED, 'warning');
       return null;
     }
-    if (isBlockedStatus(result.profile)) {
+    /* Protected role pages are fail-closed: pending, blank and any future
+       status are denied as well as the explicitly blocked statuses. */
+    if (!isActiveStatus(result.profile)) {
       await rejectToLogin(MSG_UNAVAILABLE);
       return null;
     }
@@ -324,6 +331,7 @@
     goToDashboard: goToDashboard,
     dashboardPath: dashboardPath,
     isBlockedStatus: isBlockedStatus,
+    isActiveStatus: isActiveStatus,
     consumeNotice: consumeNotice,
     setNotice: setNotice,
     revealPage: revealPage,

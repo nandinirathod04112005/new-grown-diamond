@@ -1,17 +1,13 @@
 /* ============================================================
-   NEW GROWN DIAMOND — ADMIN DIAMOND INVENTORY (LIVE, STEP 32)
+   NEW GROWN DIAMOND — ADMIN DIAMOND INVENTORY (LIVE)
    ------------------------------------------------------------
    Guarded by requireAdmin(). Rows load from public.diamonds in
    the connected Supabase project (RLS decides what an account
    may see). Search, filters, sort and pagination run client-side
    over the loaded inventory.
 
-   Honesty notes:
-   - Feature / activate / archive still change THIS PAGE ONLY —
-     writing those changes to the database arrives with the Edit
-     step, and every toast says so. Reloading restores the truth
-     from the database.
-   - Loading / empty / error states are real: they reflect the
+   Feature, activate and archive write through to Supabase. Loading,
+   empty and error states reflect the
      actual fetch, and Retry re-queries Supabase.
    ============================================================ */
 (function () {
@@ -30,7 +26,7 @@
     sort: 'updated-desc',
     page: 1,
     ui: 'loading',
-    lastArchived: null,
+    mutating: {},
     toolbarBound: false
   };
 
@@ -57,6 +53,7 @@
       availability: d.availability || '—',
       featured: !!d.featured,
       active: d.active !== false,
+      archivedAt: d.archived_at || null,
       updated: String(d.updated_at || d.created_at || '').slice(0, 10) || '—'
     };
   }
@@ -66,12 +63,13 @@
     var res = await window.ngdSupabase
       .from('diamonds')
       .select('*')
+      .is('archived_at', null)
       .order('created_at', { ascending: false });
     if (res.error) throw res.error;
     return (res.data || []).map(mapRow);
   }
 
-  /* ---------------- honest page-only mutations ---------------- */
+  /* ---------------- live mutations ---------------- */
 
   function toast(message, withUndo, type) {
     var box = $('adm-toast');
@@ -83,51 +81,67 @@
     var text = document.createElement('span');
     text.textContent = message;
     div.appendChild(text);
-    if (withUndo) {
-      var undo = document.createElement('button');
-      undo.type = 'button';
-      undo.className = 'ngd-link btn btn-link p-0 border-0 align-baseline';
-      undo.id = 'adm-undo';
-      undo.textContent = 'Undo';
-      undo.addEventListener('click', restoreArchived);
-      div.appendChild(undo);
-    }
     box.appendChild(div);
   }
 
-  function pageOnlyNote(action, row) {
-    return row.id + ' ' + action + ' on this page only — the database was ' +
-      'not changed (saving arrives with the Edit step), so it resets on reload.';
+  function mutationError(error) {
+    console.error('[NGD Admin] diamond update failed:', error);
+    var message = (error && error.message) || '';
+    if (/failed to fetch|networkerror|fetch failed|load failed/i.test(message)) {
+      return 'Could not reach the inventory service. Check your connection and try again.';
+    }
+    if (error && (error.code === '42501' || /row-level security|permission denied/i.test(message))) {
+      return 'Your account is not permitted to change diamonds.';
+    }
+    return 'The change could not be saved. Please try again.';
   }
 
-  function toggleFeatured(row) {
-    row.featured = !row.featured;
-    toast(pageOnlyNote(row.featured ? 'marked featured' : 'unfeatured', row));
+  async function updateRow(row, values, success) {
+    if (state.mutating[row.publicId]) return false;
+    state.mutating[row.publicId] = true;
     apply();
+    try {
+      values.updated_at = new Date().toISOString();
+      var result = await window.ngdSupabase.from('diamonds').update(values)
+        .eq('public_id', row.publicId).is('archived_at', null).select('public_id');
+      if (result.error) throw result.error;
+      if (!result.data || result.data.length !== 1) throw { code: 'not_found' };
+      toast(success, false, 'success');
+      return true;
+    } catch (error) {
+      toast(mutationError(error), false, 'danger');
+      return false;
+    } finally {
+      delete state.mutating[row.publicId];
+      apply();
+    }
   }
 
-  function toggleActive(row) {
-    row.active = !row.active;
-    toast(pageOnlyNote(row.active ? 'activated' : 'deactivated', row));
-    apply();
+  async function toggleFeatured(row) {
+    var next = !row.featured;
+    if (await updateRow(row, { featured: next },
+      row.id + (next ? ' is now featured.' : ' is no longer featured.'))) {
+      row.featured = next;
+      apply();
+    }
   }
 
-  function archiveRow(row) {
-    var index = state.rows.indexOf(row);
-    if (index === -1) return;
-    state.rows.splice(index, 1);
-    state.lastArchived = { row: row, index: index };
-    toast(pageOnlyNote('hidden', row), true);
-    apply();
+  async function toggleActive(row) {
+    var next = !row.active;
+    if (!next && !window.confirm('Deactivate ' + row.id + '? Customers will no longer see it.')) return;
+    if (await updateRow(row, { active: next }, row.id + (next ? ' was activated.' : ' was deactivated.'))) {
+      row.active = next;
+      apply();
+    }
   }
 
-  function restoreArchived() {
-    var last = state.lastArchived;
-    if (!last) return;
-    state.rows.splice(Math.min(last.index, state.rows.length), 0, last.row);
-    state.lastArchived = null;
-    $('adm-toast').innerHTML = '';
-    apply();
+  async function archiveRow(row) {
+    if (!window.confirm('Archive ' + row.id + '? It will be deactivated and removed from this inventory.')) return;
+    var now = new Date().toISOString();
+    if (await updateRow(row, { archived_at: now, active: false }, row.id + ' was archived.')) {
+      state.rows = state.rows.filter(function (item) { return item.publicId !== row.publicId; });
+      setUiState(state.rows.length ? 'rows' : 'empty');
+    }
   }
 
   /* ---------------- filtering + sorting ---------------- */
@@ -207,18 +221,18 @@
       '<div class="ngd-adm-actions">' +
       '<a class="ngd-icon-btn" href="../diamond-details.html?id=' + encodeURIComponent(row.id) + '"' +
       ' title="View on the storefront" aria-label="View ' + row.id + '" data-adm-act="view">' + ICONS.view + '</a>' +
-      '<a class="ngd-icon-btn" href="edit-diamond.html?id=' + encodeURIComponent(row.id) + '"' +
+      '<a class="ngd-icon-btn" href="edit-diamond.html?id=' + encodeURIComponent(row.publicId) + '"' +
       ' title="Edit" aria-label="Edit ' + row.id + '" data-adm-act="edit">' + ICONS.edit + '</a>' +
       '<button type="button" class="ngd-icon-btn' + (row.featured ? ' is-on' : '') + '"' +
-      ' title="' + (row.featured ? 'Unfeature' : 'Feature') + ' (this page only)"' +
+      ' title="' + (row.featured ? 'Unfeature' : 'Feature') + '"' +
       ' aria-label="' + (row.featured ? 'Unfeature ' : 'Feature ') + row.id + '"' +
       ' aria-pressed="' + row.featured + '" data-adm-act="feature">' + ICONS.star + '</button>' +
       '<button type="button" class="ngd-icon-btn' + (row.active ? '' : ' is-off') + '"' +
-      ' title="' + (row.active ? 'Deactivate' : 'Activate') + ' (this page only)"' +
+      ' title="' + (row.active ? 'Deactivate' : 'Activate') + '"' +
       ' aria-label="' + (row.active ? 'Deactivate ' : 'Activate ') + row.id + '"' +
       ' aria-pressed="' + row.active + '" data-adm-act="active">' + ICONS.power + '</button>' +
-      '<button type="button" class="ngd-icon-btn is-danger" title="Hide from this page (not deleted)"' +
-      ' aria-label="Hide ' + row.id + '" data-adm-act="archive">' + ICONS.archive + '</button>' +
+      '<button type="button" class="ngd-icon-btn is-danger" title="Archive (never permanently deletes)"' +
+      ' aria-label="Archive ' + row.id + '" data-adm-act="archive">' + ICONS.archive + '</button>' +
       '</div>'
     );
   }
@@ -456,9 +470,12 @@
     await reload();
 
     /* Arriving from a successful Add Diamond save */
-    var added = new URLSearchParams(window.location.search).get('added');
-    if (added && state.ui === 'rows') {
-      toast(added + ' was added to the inventory.', false, 'success');
+    var params = new URLSearchParams(window.location.search);
+    var added = params.get('added');
+    var updated = params.get('updated');
+    if (state.ui === 'rows' && (added || updated || params.get('archived'))) {
+      toast(added ? added + ' was added to the inventory.' :
+        updated ? updated + ' was updated successfully.' : 'The diamond was archived.', false, 'success');
     }
   }
 

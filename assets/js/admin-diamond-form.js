@@ -1,81 +1,17 @@
-/* ============================================================
-   NEW GROWN DIAMOND — ADMIN ADD / EDIT DIAMOND FORM (STEP 32)
-   ------------------------------------------------------------
-   One controller powers both pages, selected by
-   <body data-diamond-form="add|edit">. Guarded by requireAdmin().
-
-   ADD is LIVE: a valid submit inserts the row into
-   public.diamonds through the shared Supabase client — field
-   names ARE the table columns. The controller generates a
-   unique public_id (DIA-XXXXXXXX), stamps created_by with the
-   signed-in admin's user id, rejects duplicate stock numbers
-   (pre-checked, and the database unique constraint is handled
-   too), maps real Supabase errors to safe messages, and on
-   success redirects back to the inventory, which re-reads the
-   table so the new stone appears in the real list.
-
-   EDIT stays an honest demo until the Edit step: it prefills
-   from the demo catalogue and says plainly that updating is not
-   wired yet. The image picker previews locally only — Storage
-   uploads arrive in a later phase.
-   ============================================================ */
+/* New Grown Diamond — live admin Add / Edit diamond controller. */
 (function () {
   'use strict';
 
   var REQUIRED = ['stock_number', 'shape', 'carat', 'color', 'clarity', 'cut',
     'laboratory', 'availability'];
-
+  var PUBLIC_ID_PATTERN = /^DIA-[A-Z0-9]{8}$/;
   var IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
   var IMAGE_MAX_BYTES = 10 * 1024 * 1024;
+  var state = { mode: 'add', userId: null, record: null, imageFile: null,
+    dirty: false, saving: false };
 
-  var state = {
-    mode: 'add',
-    userId: null,     /* the signed-in admin (created_by) */
-    record: null,     /* edit: the demo record being edited */
-    imageFile: null,  /* File selected for preview (never uploaded) */
-    dirty: false,
-    saving: false
-  };
-
-  function $(id) {
-    return document.getElementById(id);
-  }
-
-  function field(name) {
-    return document.querySelector('[name="' + name + '"]');
-  }
-
-  /* ---------------- demo record (edit mode only) ---------------- */
-
-  function adminAugment(d, i) {
-    return Object.assign({}, d, {
-      featured: i % 5 === 0 || i % 7 === 0,
-      active: i % 9 !== 4
-    });
-  }
-
-  function demoRecord(id) {
-    var list = window.NGD_DEMO_DIAMONDS || [];
-    for (var i = 0; i < list.length; i++) {
-      if (list[i].id === id) return adminAugment(list[i], i);
-    }
-    return null;
-  }
-
-  function demoCommercials(d) {
-    var base = { D: 1350, E: 1250, F: 1150, G: 1050, H: 950 }[d.colour] || 900;
-    var perCarat = Math.round(base + d.carat * 220);
-    return {
-      price_per_carat: perCarat,
-      total_price: Math.round(perCarat * d.carat),
-      currency: 'USD',
-      certificate_url: 'https://example.com/reports/' + d.report,
-      internal_notes: 'Demo record — sample note for layout preview.'
-    };
-  }
-
-  /* ---------------- alerts + dirty tracking ---------------- */
-
+  function $(id) { return document.getElementById(id); }
+  function field(name) { return document.querySelector('[name="' + name + '"]'); }
   function showAlert(type, message) {
     var box = $('dia-alert');
     box.innerHTML = '';
@@ -86,414 +22,237 @@
     box.appendChild(div);
     div.scrollIntoView({ block: 'nearest' });
   }
-
-  function clearAlert() {
-    $('dia-alert').innerHTML = '';
-  }
-
-  function markDirty() {
-    state.dirty = true;
-  }
-
-  function clearDirty() {
-    state.dirty = false;
-  }
-
-  function initUnsavedWarning(form) {
-    form.addEventListener('input', markDirty);
-    form.addEventListener('change', markDirty);
-    window.addEventListener('beforeunload', function (event) {
-      if (!state.dirty) return;
-      event.preventDefault();
-      /* required by Chrome for the native dialog */
-      event.returnValue = '';
-    });
-  }
-
-  /* ---------------- validation ---------------- */
-
+  function clearAlert() { $('dia-alert').innerHTML = ''; }
   function setInvalid(el, invalid) {
+    if (!el) return;
     el.classList.toggle('is-invalid', invalid);
     if (invalid) el.setAttribute('aria-invalid', 'true');
     else el.removeAttribute('aria-invalid');
   }
-
   function numberOk(el) {
     if (el.value.trim() === '') return !el.required;
-    var v = parseFloat(el.value);
-    if (isNaN(v)) return false;
+    var value = Number(el.value);
+    if (!Number.isFinite(value)) return false;
     var min = el.getAttribute('min');
     var max = el.getAttribute('max');
-    if (min !== null && v < parseFloat(min)) return false;
-    if (max !== null && v > parseFloat(max)) return false;
-    return true;
+    return !(min !== null && value < Number(min)) && !(max !== null && value > Number(max));
   }
-
   function validate(form) {
     var firstBad = null;
-
     function check(el, ok) {
       setInvalid(el, !ok);
       if (!ok && !firstBad) firstBad = el;
     }
-
     REQUIRED.forEach(function (name) {
       var el = field(name);
-      if (!el) return;
-      var ok = el.type === 'number' ? numberOk(el) : el.value.trim() !== '';
-      check(el, ok);
+      check(el, el.type === 'number' ? numberOk(el) : el.value.trim() !== '');
     });
-
     form.querySelectorAll('input[type="number"]').forEach(function (el) {
-      if (el.classList.contains('is-invalid')) return;
-      check(el, numberOk(el));
+      if (!el.classList.contains('is-invalid')) check(el, numberOk(el));
     });
-
     var url = field('certificate_url');
-    if (url && url.value.trim() !== '') {
-      check(url, /^https?:\/\/\S+$/i.test(url.value.trim()));
-    }
-
+    if (url && url.value.trim()) check(url, /^https?:\/\/\S+$/i.test(url.value.trim()));
     if (firstBad) firstBad.focus();
     return !firstBad;
   }
-
-  function bindLiveClear(form) {
-    form.querySelectorAll('input, select, textarea').forEach(function (el) {
-      ['input', 'change'].forEach(function (evt) {
-        el.addEventListener(evt, function () { setInvalid(el, false); });
-      });
-    });
-  }
-
-  /* ---------------- payload ---------------- */
-
-  /** Unique storefront id, e.g. DIA-7K2M9XQ4 (unambiguous charset). */
   function generatePublicId() {
     var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    var out = '';
-    var buf = new Uint32Array(8);
-    if (window.crypto && window.crypto.getRandomValues) {
-      window.crypto.getRandomValues(buf);
-    } else {
-      for (var j = 0; j < 8; j++) buf[j] = Math.floor(Math.random() * 4294967296);
-    }
-    for (var i = 0; i < 8; i++) out += chars[buf[i] % chars.length];
-    return 'DIA-' + out;
+    var values = new Uint32Array(8);
+    if (window.crypto && window.crypto.getRandomValues) window.crypto.getRandomValues(values);
+    else values.forEach(function (_v, i) { values[i] = Math.floor(Math.random() * 0xffffffff); });
+    return 'DIA-' + Array.from(values).map(function (v) { return chars[v % chars.length]; }).join('');
   }
-
-  function buildPayload(form) {
+  function formValues(form) {
     var payload = {};
     form.querySelectorAll('[name]').forEach(function (el) {
       if (el.type === 'file') return;
       if (el.type === 'checkbox') payload[el.name] = el.checked;
-      else if (el.type === 'number') payload[el.name] = el.value === '' ? null : parseFloat(el.value);
+      else if (el.type === 'number') payload[el.name] = el.value === '' ? null : Number(el.value);
       else payload[el.name] = el.value.trim() === '' ? null : el.value.trim();
     });
-    payload.public_id = generatePublicId();
-    payload.created_by = state.userId;
     return payload;
   }
-
-  /* ---------------- real Supabase errors → safe messages ---------------- */
-
-  function isDuplicateError(error) {
-    return error && (error.code === '23505' ||
-      /duplicate key|already exists/i.test(error.message || ''));
+  function isDuplicate(error) {
+    return error && (error.code === '23505' || /duplicate key|already exists/i.test(error.message || ''));
   }
-
-  function mapDbError(error) {
-    console.error('[NGD Add Diamond] insert failed:', error);
-    if (!error) return 'Saving failed. Please try again.';
-    var msg = error.message || '';
-    if (isDuplicateError(error)) {
-      return 'That stock number already exists in the inventory — stock numbers must be unique.';
-    }
-    if (error.code === '42501' || /row-level security|permission denied/i.test(msg)) {
-      return 'Your account is not allowed to add diamonds — only an active admin can (enforced by Row Level Security).';
-    }
-    if (error.code === 'PGRST204' || error.code === '42703') {
-      return 'The diamonds table does not match the form (' + msg + '). Check the column names in Supabase.';
-    }
-    if (/failed to fetch|networkerror|fetch failed|load failed/i.test(msg) || error.code === '') {
-      return 'Could not reach Supabase — check your connection and try again. Nothing was saved.';
-    }
-    return 'Supabase rejected the save: ' + msg;
+  function isNetwork(error) {
+    return error && /failed to fetch|networkerror|fetch failed|load failed/i.test(error.message || '');
   }
+  function safeError(error, action) {
+    console.error('[NGD Diamond] ' + action + ' failed:', error);
+    if (isDuplicate(error)) return 'That stock number already exists — stock numbers must be unique.';
+    if (isNetwork(error)) return 'Could not reach the inventory service. Check your connection and try again.';
+    if (error && (error.code === '42501' || /row-level security|permission denied/i.test(error.message || ''))) {
+      return 'Your account is not permitted to change diamonds.';
+    }
+    return 'The diamond could not be ' + action + '. Please try again.';
+  }
+  async function duplicateStock(stock, excludePublicId) {
+    var query = window.ngdSupabase.from('diamonds').select('public_id').eq('stock_number', stock).limit(1);
+    if (excludePublicId) query = query.neq('public_id', excludePublicId);
+    var result = await query;
+    if (result.error) throw result.error;
+    return result.data && result.data.length > 0;
+  }
+  function setSaving(saving) {
+    state.saving = saving;
+    var button = $('dia-submit');
+    button.disabled = saving;
+    button.textContent = saving ? 'Saving…' : (state.mode === 'edit' ? 'Update Diamond' : 'Save Diamond');
+    var another = $('dia-save-another');
+    if (another) another.disabled = saving;
+    var archive = $('dia-archive');
+    if (archive) archive.disabled = saving;
+  }
+  function clearDirty() { state.dirty = false; }
 
-  /* ---------------- the live save (add mode) ---------------- */
-
-  async function saveDiamond(payload, mode, form) {
+  async function save(form, addAnother) {
+    clearAlert();
+    if (!validate(form)) {
+      showAlert('danger', 'Please complete the highlighted fields with valid values.');
+      return;
+    }
+    var payload = formValues(form);
+    if (state.mode === 'edit' && state.record.active !== false && payload.active === false &&
+      !window.confirm('Deactivate ' + (state.record.stock_number || state.record.public_id) +
+        '? Customers will no longer see it.')) return;
     form.setAttribute('data-ngd-payload', JSON.stringify(payload));
-    var sb = window.ngdSupabase;
-    var label = payload.stock_number;
-
-    /* friendly duplicate check first (the DB unique constraint is the
-       real enforcement — a race still surfaces as 23505 below) */
-    var existing = await sb.from('diamonds')
-      .select('id')
-      .eq('stock_number', label)
-      .limit(1);
-    if (!existing.error && existing.data && existing.data.length > 0) {
-      showAlert('danger',
-        label + ' already exists in the inventory — stock numbers must be unique.');
-      var stockEl = field('stock_number');
-      setInvalid(stockEl, true);
-      stockEl.focus();
-      return false;
+    setSaving(true);
+    try {
+      var duplicate = await duplicateStock(payload.stock_number,
+        state.mode === 'edit' ? state.record.public_id : null);
+      if (duplicate) {
+        setInvalid(field('stock_number'), true);
+        field('stock_number').focus();
+        showAlert('danger', 'That stock number already exists — stock numbers must be unique.');
+        return;
+      }
+      var result;
+      if (state.mode === 'edit') {
+        payload.updated_at = new Date().toISOString();
+        result = await window.ngdSupabase.from('diamonds').update(payload)
+          .eq('public_id', state.record.public_id).is('archived_at', null).select('public_id');
+        if (!result.error && (!result.data || result.data.length !== 1)) {
+          showNotFound(state.record.public_id);
+          return;
+        }
+      } else {
+        payload.public_id = generatePublicId();
+        payload.created_by = state.userId;
+        result = await window.ngdSupabase.from('diamonds').insert(payload).select('public_id');
+      }
+      if (result.error) throw result.error;
+      clearDirty();
+      if (state.mode === 'edit') {
+        showAlert('success', payload.stock_number + ' was updated successfully. Returning to the inventory…');
+        window.setTimeout(function () {
+          window.location.replace('diamonds.html?updated=' + encodeURIComponent(payload.stock_number));
+        }, 500);
+      } else if (addAnother) {
+        showAlert('success', payload.stock_number + ' was added. The form is ready for another diamond.');
+        form.reset(); resetImage(); window.scrollTo({ top: 0 });
+      } else {
+        window.location.replace('diamonds.html?added=' + encodeURIComponent(payload.stock_number));
+      }
+    } catch (error) {
+      if (isDuplicate(error)) setInvalid(field('stock_number'), true);
+      showAlert('danger', safeError(error, state.mode === 'edit' ? 'updated' : 'saved'));
+    } finally {
+      setSaving(false);
     }
-
-    var res = await sb.from('diamonds').insert(payload);
-    if (res.error) {
-      if (isDuplicateError(res.error)) setInvalid(field('stock_number'), true);
-      showAlert('danger', mapDbError(res.error));
-      return false;
-    }
-
-    clearDirty();
-    if (mode === 'add-another') {
-      showAlert('success',
-        label + ' was added to the inventory (' + payload.public_id + '). ' +
-        'The form has been cleared for the next stone.');
-      form.reset();
-      resetImage();
-      window.scrollTo({ top: 0 });
-    } else {
-      showAlert('success', label + ' was added to the inventory. Returning to the list…');
-      window.location.replace('diamonds.html?added=' + encodeURIComponent(label));
-    }
-    return true;
   }
-
-  /* ---------------- image picker (preview only) ---------------- */
-
-  function imageError(message) {
-    var box = $('dia-image-error');
-    box.textContent = message || '';
-    box.hidden = !message;
-  }
-
-  function acceptFile(file) {
-    if (!file) return;
-    if (IMAGE_TYPES.indexOf(file.type) === -1) {
-      imageError('That file type isn’t supported — use JPG, JPEG, PNG or WEBP.');
-      return;
-    }
-    if (file.size > IMAGE_MAX_BYTES) {
-      imageError('That image is larger than 10 MB — please choose a smaller file.');
-      return;
-    }
-    imageError('');
-    state.imageFile = file;
-    markDirty();
-    var reader = new FileReader();
-    reader.onload = function () {
-      $('dia-preview-img').src = String(reader.result);
-      $('dia-preview-name').textContent = file.name +
-        ' · ' + (file.size / (1024 * 1024)).toFixed(2) + ' MB';
-      $('dia-drop').hidden = true;
-      $('dia-preview').hidden = false;
-    };
-    reader.readAsDataURL(file);
-  }
-
-  function resetImage() {
-    state.imageFile = null;
-    $('dia-file').value = '';
-    $('dia-preview-img').removeAttribute('src');
-    $('dia-preview').hidden = true;
-    $('dia-drop').hidden = false;
-    imageError('');
-  }
-
-  function initImagePicker() {
-    var drop = $('dia-drop');
-    var input = $('dia-file');
-
-    $('dia-browse').addEventListener('click', function () { input.click(); });
-    $('dia-replace').addEventListener('click', function () { input.click(); });
-    $('dia-remove').addEventListener('click', function () {
-      resetImage();
-      markDirty();
-    });
-
-    input.addEventListener('change', function () {
-      acceptFile(input.files && input.files[0]);
-    });
-
-    ['dragenter', 'dragover'].forEach(function (evt) {
-      drop.addEventListener(evt, function (event) {
-        event.preventDefault();
-        drop.classList.add('is-drag');
-      });
-    });
-    ['dragleave', 'drop'].forEach(function (evt) {
-      drop.addEventListener(evt, function (event) {
-        event.preventDefault();
-        drop.classList.remove('is-drag');
-      });
-    });
-    drop.addEventListener('drop', function (event) {
-      var file = event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0];
-      acceptFile(file);
-    });
-  }
-
-  /* ---------------- edit-mode prefill (demo until the Edit step) ---------------- */
 
   function prefill(record) {
-    var extras = demoCommercials(record);
-    var values = {
-      stock_number: record.id,
-      report_number: record.report,
-      shape: record.shape,
-      carat: record.carat,
-      color: record.colour,
-      clarity: record.clarity,
-      cut: record.cut,
-      polish: record.polish,
-      symmetry: record.symmetry,
-      fluorescence: record.fluorescence,
-      laboratory: record.lab,
-      certificate_number: record.report,
-      certificate_url: extras.certificate_url,
-      measurements: record.measurements,
-      depth_percentage: record.depthPct,
-      table_percentage: record.tablePct,
-      ratio: record.ratio,
-      growth_method: record.growth,
-      location: record.growth === 'CVD' ? 'Surat atelier' : 'Mumbai vault',
-      availability: record.availability,
-      price_per_carat: extras.price_per_carat,
-      total_price: extras.total_price,
-      currency: extras.currency,
-      internal_notes: extras.internal_notes
-    };
-    Object.keys(values).forEach(function (name) {
+    Object.keys(record).forEach(function (name) {
       var el = field(name);
-      if (el && values[name] != null) el.value = values[name];
+      if (!el || record[name] == null) return;
+      if (el.type === 'checkbox') el.checked = !!record[name];
+      else el.value = record[name];
     });
-    field('featured').checked = !!record.featured;
-    field('active').checked = !!record.active;
-    field('price_visible').checked = false;
-
-    var artBox = $('dia-current-art');
-    if (artBox) {
-      artBox.innerHTML = (window.NGD_GEM_ART || {})[record.shape.toLowerCase()] || '';
-    }
+    ['featured', 'active', 'price_visible'].forEach(function (name) {
+      var el = field(name); if (el) el.checked = !!record[name];
+    });
+    var art = $('dia-current-art');
+    if (art) art.innerHTML = (window.NGD_GEM_ART || {})[String(record.shape || '').toLowerCase()] || '';
   }
-
   function showNotFound(id) {
     $('dia-form-wrap').hidden = true;
     $('dia-notfound').hidden = false;
     $('dia-notfound-id').textContent = id || '(no id)';
   }
-
-  /* ---------------- boot ---------------- */
-
-  function setSaving(saving, label) {
-    state.saving = saving;
-    var btn = $('dia-submit');
-    if (!btn) return;
-    btn.disabled = saving;
-    btn.textContent = saving ? 'Saving…' : label;
-    var another = $('dia-save-another');
-    if (another) another.disabled = saving;
+  async function loadEdit(publicId) {
+    var result = await window.ngdSupabase.from('diamonds').select('*')
+      .eq('public_id', publicId).is('archived_at', null).maybeSingle();
+    if (result.error) throw result.error;
+    return result.data;
+  }
+  async function archiveDiamond() {
+    if (!state.record || state.saving) return;
+    if (!window.confirm('Archive ' + state.record.stock_number + '? It will be deactivated and removed from the normal inventory.')) return;
+    setSaving(true);
+    try {
+      var now = new Date().toISOString();
+      var result = await window.ngdSupabase.from('diamonds')
+        .update({ archived_at: now, active: false, updated_at: now })
+        .eq('public_id', state.record.public_id).is('archived_at', null).select('public_id');
+      if (result.error) throw result.error;
+      if (!result.data || result.data.length !== 1) { showNotFound(state.record.public_id); return; }
+      clearDirty();
+      showAlert('success', state.record.stock_number + ' was archived. Returning to the inventory…');
+      window.setTimeout(function () { window.location.replace('diamonds.html?archived=1'); }, 500);
+    } catch (error) { showAlert('danger', safeError(error, 'archived')); }
+    finally { setSaving(false); }
   }
 
-  function initButtons(form) {
-    var submitLabel = state.mode === 'edit' ? 'Update Diamond' : 'Save Diamond';
-
-    async function runAdd(mode) {
-      clearAlert();
-      if (!validate(form)) {
-        showAlert('danger',
-          'Please complete the highlighted fields — required values and ' +
-          'number ranges are marked inline.');
-        return;
-      }
-      var payload = buildPayload(form);
-      setSaving(true, submitLabel);
-      try {
-        await saveDiamond(payload, mode, form);
-      } catch (err) {
-        showAlert('danger', mapDbError(err));
-      }
-      setSaving(false, submitLabel);
-    }
-
-    form.addEventListener('submit', function (event) {
-      event.preventDefault();
-      if (state.saving) return;
-
-      if (state.mode === 'edit') {
-        clearAlert();
-        if (!validate(form)) {
-          showAlert('danger',
-            'Please complete the highlighted fields — required values and ' +
-            'number ranges are marked inline.');
-          return;
-        }
-        var payload = buildPayload(form);
-        form.setAttribute('data-ngd-payload', JSON.stringify(payload));
-        clearDirty();
-        showAlert('info',
-          (payload.stock_number || 'The diamond') + ' is valid and its update ' +
-          'payload is ready — but updating is not wired yet: it arrives with ' +
-          'the Edit step, so nothing in the database was changed.');
-        return;
-      }
-
-      runAdd('add');
+  function imageError(message) { var box = $('dia-image-error'); box.textContent = message || ''; box.hidden = !message; }
+  function resetImage() {
+    state.imageFile = null; $('dia-file').value = ''; $('dia-preview-img').removeAttribute('src');
+    $('dia-preview').hidden = true; $('dia-drop').hidden = false; imageError('');
+  }
+  function acceptFile(file) {
+    if (!file) return;
+    if (IMAGE_TYPES.indexOf(file.type) < 0) return imageError('Use a JPG, PNG or WEBP image.');
+    if (file.size > IMAGE_MAX_BYTES) return imageError('Choose an image smaller than 10 MB.');
+    imageError(''); state.imageFile = file; state.dirty = true;
+    var reader = new FileReader();
+    reader.onload = function () { $('dia-preview-img').src = String(reader.result); $('dia-preview-name').textContent = file.name;
+      $('dia-drop').hidden = true; $('dia-preview').hidden = false; };
+    reader.readAsDataURL(file);
+  }
+  function initImagePicker() {
+    var drop = $('dia-drop'), input = $('dia-file');
+    $('dia-browse').onclick = $('dia-replace').onclick = function () { input.click(); };
+    $('dia-remove').onclick = function () { resetImage(); state.dirty = true; };
+    input.onchange = function () { acceptFile(input.files && input.files[0]); };
+    ['dragenter', 'dragover'].forEach(function (event) { drop.addEventListener(event, function (e) { e.preventDefault(); drop.classList.add('is-drag'); }); });
+    ['dragleave', 'drop'].forEach(function (event) { drop.addEventListener(event, function (e) { e.preventDefault(); drop.classList.remove('is-drag'); }); });
+    drop.addEventListener('drop', function (e) { acceptFile(e.dataTransfer && e.dataTransfer.files[0]); });
+  }
+  function bind(form) {
+    form.querySelectorAll('input, select, textarea').forEach(function (el) {
+      ['input', 'change'].forEach(function (event) { el.addEventListener(event, function () { setInvalid(el, false); state.dirty = true; }); });
     });
-
-    var another = $('dia-save-another');
-    if (another) {
-      another.addEventListener('click', function () {
-        if (!state.saving) runAdd('add-another');
-      });
-    }
-
-    var archive = $('dia-archive');
-    if (archive) {
-      archive.addEventListener('click', function () {
-        var id = state.record ? state.record.id : 'This diamond';
-        showAlert('info',
-          id + ' — Archive is UI-only for now: nothing was archived or ' +
-          'deleted anywhere. The real action arrives with the Edit step.');
-      });
-    }
+    form.addEventListener('submit', function (event) { event.preventDefault(); if (!state.saving) save(form, false); });
+    var another = $('dia-save-another'); if (another) another.onclick = function () { if (!state.saving) save(form, true); };
+    var archive = $('dia-archive'); if (archive) archive.onclick = archiveDiamond;
+    window.addEventListener('beforeunload', function (event) { if (state.dirty) { event.preventDefault(); event.returnValue = ''; } });
   }
-
   async function init() {
-    var res = await window.NGDAuth.requireAdmin();
-    if (!res) return; // a redirect is already happening
-
-    state.userId = res.user.id;
+    var auth = await window.NGDAuth.requireAdmin();
+    if (!auth) return;
+    state.userId = auth.user.id;
     state.mode = document.body.getAttribute('data-diamond-form') || 'add';
-    var form = $('ngd-diamond-form');
-    if (!form) return;
-
+    var form = $('ngd-diamond-form'); if (!form) return;
     if (state.mode === 'edit') {
-      var id = new URLSearchParams(window.location.search).get('id');
-      state.record = id ? demoRecord(id) : null;
-      if (!state.record) {
-        showNotFound(id);
-        return;
-      }
-      $('dia-editing-id').textContent = state.record.id;
+      var publicId = new URLSearchParams(window.location.search).get('id');
+      if (!publicId || !PUBLIC_ID_PATTERN.test(publicId)) { showNotFound(publicId); return; }
+      try { state.record = await loadEdit(publicId); }
+      catch (error) { showAlert('danger', safeError(error, 'loaded')); $('dia-form-wrap').hidden = true; return; }
+      if (!state.record) { showNotFound(publicId); return; }
+      $('dia-editing-id').textContent = state.record.stock_number || state.record.public_id;
       prefill(state.record);
     }
-
-    initImagePicker();
-    bindLiveClear(form);
-    initButtons(form);
-    initUnsavedWarning(form);
+    initImagePicker(); bind(form);
   }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();
