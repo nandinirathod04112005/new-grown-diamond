@@ -1,5 +1,5 @@
 /* ============================================================
-   NEW GROWN DIAMOND — CUSTOMER SIGNUP (Supabase Auth)
+   NEW GROWN DIAMOND — CUSTOMER / ADMIN SIGNUP (Supabase Auth)
    ------------------------------------------------------------
    - Validates the form, then supabase.auth.signUp()
    - Sends ONLY safe metadata: full_name, company_name, phone,
@@ -25,6 +25,7 @@
     'Supabase is not configured yet — add your project details in assets/js/supabase-config.js.';
   var CONFIRM_EMAIL_MSG =
     'Account created. Please check your email to verify your account.';
+  var INVALID_ADMIN_CODE = 'Invalid Admin Code.';
 
   function $(id) {
     return document.getElementById(id);
@@ -140,6 +141,54 @@
     );
   }
 
+  function isAdminSignup() {
+    return $('reg-account-type') && $('reg-account-type').value === 'admin';
+  }
+
+  function syncAccountType() {
+    var group = $('reg-admin-code-group');
+    var field = $('reg-admin-code');
+    if (!group || !field) return;
+    var admin = isAdminSignup();
+    group.classList.toggle('d-none', !admin);
+    field.disabled = !admin;
+    field.required = admin;
+    if (!admin) field.value = '';
+  }
+
+  async function registerAdmin(email, password, metadata) {
+    var result = await window.ngdSupabase.functions.invoke('register-admin', {
+      body: {
+        email: email,
+        password: password,
+        full_name: metadata.full_name,
+        company_name: metadata.company_name,
+        phone: metadata.phone,
+        country: metadata.country,
+        admin_code: $('reg-admin-code').value
+      }
+    });
+
+    if (result.error) {
+      var context = result.error.context;
+      var payload = context && typeof context.json === 'function'
+        ? await context.json().catch(function () { return null; })
+        : null;
+      var code = payload && payload.code;
+      if (code === 'invalid_admin_code') throw { adminCodeInvalid: true };
+      if (code === 'rate_limited') throw { rateLimited: true };
+      if (code === 'already_registered') throw { alreadyRegistered: true };
+      throw result.error;
+    }
+
+    var login = await window.ngdSupabase.auth.signInWithPassword({
+      email: email,
+      password: password
+    });
+    if (login.error) throw login.error;
+    window.location.replace((window.NGD_SITE_ROOT || './') + 'admin/dashboard.html');
+  }
+
   async function onSubmit(event) {
     event.preventDefault();
     event.stopPropagation();
@@ -176,6 +225,11 @@
 
     setLoading(true);
     try {
+      if (isAdminSignup()) {
+        await registerAdmin(email, password, metadata);
+        return;
+      }
+
       var res = await window.ngdSupabase.auth.signUp({
         email: email,
         password: password,
@@ -221,7 +275,10 @@
       setLoading(false);
     } catch (err) {
       console.error('[NGD Signup] unexpected failure:', err);
-      showAlert('danger', NETWORK_ERROR);
+      if (err && err.adminCodeInvalid) showAlert('danger', INVALID_ADMIN_CODE);
+      else if (err && err.rateLimited) showAlert('danger', RATE_LIMITED);
+      else if (err && err.alreadyRegistered) showAlert('info', ALREADY_REGISTERED);
+      else showAlert('danger', mapSignupError(err));
       setLoading(false);
     }
   }
@@ -241,6 +298,10 @@
     var form = $('ngd-register-form');
     if (!form) return;
     form.addEventListener('submit', onSubmit);
+
+    var accountType = $('reg-account-type');
+    if (accountType) accountType.addEventListener('change', syncAccountType);
+    syncAccountType();
 
     var confirm = $('reg-confirm');
     var password = $('reg-password');
