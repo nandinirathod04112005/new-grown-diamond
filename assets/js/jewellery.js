@@ -2,7 +2,7 @@
    NEW GROWN DIAMOND — JEWELLERY LISTING CONTROLLER
    ------------------------------------------------------------
    Vanilla-JS listing over the static demo dataset in
-   jewellery-data.js: search, category chips, sorting and
+   Supabase: search, category chips, sorting and
    pagination all run client-side.
 
    Supabase-ready: loadJewellery() is the single data seam —
@@ -16,12 +16,23 @@
   if (!grid) return; // listing page only
 
   /* ---------- data source ---------- */
-  function loadJewellery() {
-    /* Future: return supabase.from('jewellery').select('*') … */
-    return window.NGD_DEMO_JEWELLERY || [];
+  async function loadJewellery() {
+    if (!window.ngdIsSupabaseConfigured || !window.ngdIsSupabaseConfigured()) throw new Error('unavailable');
+    var result = await window.ngdSupabase.from('jewellery')
+      .select('id,public_id,sku,product_name,category,short_description,diamond_weight,availability,featured,jewellery_images(image_url,sort_order,is_primary)')
+      .eq('active', true).is('archived_at', null);
+    if (result.error) throw result.error;
+    return (result.data || []).map(function (p) {
+      var images = (p.jewellery_images || []).slice().sort(function (a, b) {
+        return (b.is_primary ? 1 : 0) - (a.is_primary ? 1 : 0) || (Number(a.sort_order) || 0) - (Number(b.sort_order) || 0);
+      });
+      return { id: p.public_id, sku: p.sku, name: p.product_name || '—', category: p.category || '—',
+        description: p.short_description || '', weightCt: p.diamond_weight === null ? null : Number(p.diamond_weight),
+        availability: p.availability || 'On Request', imageUrl: images[0] && images[0].image_url || '', featured: !!p.featured };
+    });
   }
 
-  var DATA = loadJewellery();
+  var DATA = [];
   var PAGE_SIZE = 8;
   var CATEGORIES = ['Rings', 'Earrings', 'Pendants', 'Necklaces', 'Bracelets', 'Bangles'];
 
@@ -191,5 +202,11 @@
     if (match) state.category = match;
   }
 
-  apply();
+  el.count.textContent = 'Loading jewellery…';
+  el.grid.innerHTML = '<div class="col-12"><div class="ngd-card text-center py-5" role="status">Loading the collection…</div></div>';
+  loadJewellery().then(function (rows) { DATA = rows; apply(); }).catch(function () {
+    el.grid.classList.remove('d-none');
+    el.grid.innerHTML = '<div class="col-12"><div class="ngd-card text-center py-5" role="alert"><p class="ngd-title mb-2">We couldn’t load the collection</p><p class="ngd-text-muted small mb-0">Please check your connection and try again.</p></div></div>';
+    el.count.textContent = 'Jewellery collection unavailable'; el.empty.classList.add('d-none'); el.pagination.innerHTML = '';
+  });
 })();

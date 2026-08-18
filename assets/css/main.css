@@ -3197,3 +3197,7 @@ a.ngd-chip {
   .ngd-btn-block-sm { width: 100%; }
   .ngd-card { padding: 1.25rem; }
 }
+
+/* Live catalogue photography retains the existing premium stage geometry. */
+.ngd-diamond-media img, .ngd-jewel-figure img, .ngd-detail-stage-inner > img,
+.ngd-jd-stage-inner > img, .ngd-thumb img { width: 100%; height: 100%; object-fit: contain; display: block; }

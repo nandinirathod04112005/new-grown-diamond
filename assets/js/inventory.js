@@ -2,7 +2,7 @@
    NEW GROWN DIAMOND — DIAMOND INVENTORY CONTROLLER
    ------------------------------------------------------------
    Vanilla-JS inventory over the static demo dataset in
-   diamonds-data.js. Search, filters, sorting, grid/table views,
+   Supabase. Search, filters, sorting, grid/table views,
    pagination and the details modal all run client-side.
 
    Supabase-ready: loadDiamonds() is the single data source —
@@ -27,12 +27,21 @@
   }
 
   /* ---------- data source ---------- */
-  function loadDiamonds() {
-    /* Future: return supabase.from('diamonds').select('*') … */
-    return window.NGD_DEMO_DIAMONDS || [];
+  async function loadDiamonds() {
+    if (!window.ngdIsSupabaseConfigured || !window.ngdIsSupabaseConfigured()) throw new Error('unavailable');
+    var result = await window.ngdSupabase.from('diamonds')
+      .select('public_id,stock_number,shape,carat,color,clarity,cut,laboratory,growth_method,availability,image_url,featured')
+      .eq('active', true).is('archived_at', null);
+    if (result.error) throw result.error;
+    return (result.data || []).map(function (d) {
+      return { id: d.public_id, stockNumber: d.stock_number, shape: d.shape || '—',
+        carat: Number(d.carat) || 0, colour: d.color || '—', clarity: d.clarity || '—',
+        cut: d.cut || '—', lab: d.laboratory || '—', growth: d.growth_method || '—',
+        availability: d.availability || 'On Request', imageUrl: d.image_url || '', featured: !!d.featured };
+    });
   }
 
-  var DATA = loadDiamonds();
+  var DATA = [];
   var PAGE_SIZE = 9;
 
   var FILTER_GROUPS = [
@@ -127,7 +136,7 @@
   function matches(d) {
     if (state.search) {
       var q = state.search.toLowerCase();
-      if (d.id.toLowerCase().indexOf(q) === -1 && d.shape.toLowerCase().indexOf(q) === -1) {
+      if (d.id.toLowerCase().indexOf(q) === -1 && (d.stockNumber || '').toLowerCase().indexOf(q) === -1 && d.shape.toLowerCase().indexOf(q) === -1) {
         return false;
       }
     }
@@ -334,5 +343,11 @@
     }
   }
 
-  apply(false);
+  el.count.textContent = 'Loading diamonds…';
+  el.grid.innerHTML = '<div class="col-12"><div class="ngd-card text-center py-5" role="status">Loading diamond inventory…</div></div>';
+  loadDiamonds().then(function (rows) { DATA = rows; apply(false); }).catch(function () {
+    el.grid.classList.remove('d-none');
+    el.grid.innerHTML = '<div class="col-12"><div class="ngd-card text-center py-5" role="alert"><p class="ngd-title mb-2">We couldn’t load the diamonds</p><p class="ngd-text-muted small mb-0">Please check your connection and try again.</p></div></div>';
+    el.count.textContent = 'Diamond inventory unavailable'; el.empty.classList.add('d-none'); el.pagination.innerHTML = '';
+  });
 })();

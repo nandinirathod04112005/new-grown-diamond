@@ -24,10 +24,13 @@
   }
 
   function cardHtml(d) {
+    var media = d.imageUrl
+      ? '<img src="' + encodeURI(d.imageUrl) + '" alt="' + d.shape + ' lab-grown diamond" loading="lazy">'
+      : artFor(d);
     return (
       '<div class="col-12 col-md-6 col-xl-4">' +
       '<article class="ngd-card ngd-card-dark ngd-card-3d ngd-diamond-card h-100" data-ngd-tilt data-diamond-id="' + d.id + '">' +
-      '<div class="ngd-diamond-media ngd-depth-1">' + artFor(d) + '</div>' +
+      '<div class="ngd-diamond-media ngd-depth-1">' + media + '</div>' +
       '<div class="ngd-diamond-body">' +
       '<div class="d-flex justify-content-between align-items-baseline gap-2">' +
       '<h3 class="ngd-diamond-title">' + d.shape + '</h3>' +

@@ -32,7 +32,7 @@
       '<article class="ngd-card ngd-card-3d ngd-jewel-card h-100" data-ngd-tilt ' +
       'data-jewellery-id="' + p.id + '" data-category="' + p.category.toLowerCase() + '">' +
       '<div class="ngd-jewel-media">' +
-      '<div class="ngd-jewel-figure">' + artFor(p) + '</div>' +
+      '<div class="ngd-jewel-figure">' + (p.imageUrl ? '<img src="' + encodeURI(p.imageUrl) + '" alt="' + p.name + '" loading="lazy">' : artFor(p)) + '</div>' +
       '</div>' +
       '<div class="ngd-jewel-body">' +
       '<p class="ngd-jewel-cat">' + p.category + '</p>' +

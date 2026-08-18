@@ -78,10 +78,7 @@
     </div>
   </div>
 
-  <!-- ══════════ JEWELLERY LISTING ══════════
-       Static demo data (assets/js/jewellery-data.js). The controller
-       (assets/js/jewellery.js) is structured so the future Supabase
-       phase only swaps its loadJewellery() data source. -->
+  <!-- ══════════ JEWELLERY LISTING · LIVE SUPABASE DATA ══════════ -->
   <main class="ngd-section-tight" id="jewellery-listing">
     <div class="container">
 
@@ -232,9 +229,11 @@
   </button>
 
   <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script defer src="assets/js/supabase-config.js"></script>
+  <script defer src="assets/js/supabase-client.js"></script>
   <script defer src="assets/js/ui.js"></script>
   <script defer src="assets/js/jewellery-art.js"></script>
-  <script defer src="assets/js/jewellery-data.js"></script>
   <script defer src="assets/js/jewellery-card.js"></script>
   <script defer src="assets/js/jewellery.js"></script>
 </body>
