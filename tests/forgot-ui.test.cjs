@@ -2,8 +2,8 @@
    Forgot Password page UI tests (STEP 19).
    Verifies the premium split card with the loupe art, the
    title + instruction copy, the email field with validation,
-   the Send Reset Link button, the honest no-send behaviour
-   (nothing simulated, nothing stored), the back-to-login
+   the Send Reset Link button, the real Supabase request behaviour,
+   privacy-safe messaging, the back-to-login
    link, the login-page integration and responsive layouts
    at 1440/768/390.
    Run:  node tests/forgot-ui.test.cjs
@@ -20,6 +20,7 @@ fs.mkdirSync(SCREEN_DIR, { recursive: true });
 const results = [];
 let browser;
 let SITE;
+let recoveryCalls = [];
 
 function expect(cond, msg) {
   if (!cond) throw new Error('Expectation failed: ' + msg);
@@ -32,6 +33,16 @@ async function scenario(name, opts, fn) {
   const pageErrors = [];
   try {
     await installCdnRoutes(context);
+    await context.route('**/assets/js/supabase-config.js', (route) => route.fulfill({
+      contentType: 'application/javascript',
+      body: "window.NGD_SUPABASE_CONFIG={SUPABASE_URL:'https://forgot-test.supabase.co',SUPABASE_PUBLISHABLE_KEY:'sb_publishable_test_key_1234567890'};",
+    }));
+    await context.route('https://forgot-test.supabase.co/**', async (route) => {
+      const request = route.request();
+      if (request.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*' } });
+      recoveryCalls.push({ url: request.url(), body: request.postDataJSON() });
+      return route.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: '{}' });
+    });
     const page = await context.newPage();
     page.on('pageerror', (e) => pageErrors.push(String(e)));
     await fn(page);
@@ -72,8 +83,8 @@ async function open(page) {
         alertArea: !!document.getElementById('forgot-alert'),
         loginLink: !!main.querySelector('a[href="login.html"]'),
         shadow: getComputedStyle(document.querySelector('.ngd-auth-card')).boxShadow !== 'none',
-        noBackendScripts: [...document.querySelectorAll('script[src]')]
-          .every((s) => !/supabase/i.test(s.getAttribute('src'))),
+        hasBackendScripts: [...document.querySelectorAll('script[src]')]
+          .some((s) => /supabase/i.test(s.getAttribute('src'))),
       };
     });
     expect(state.split, 'split layout with the brand panel');
@@ -85,7 +96,7 @@ async function open(page) {
     expect(state.alertArea, 'dedicated message area reserved');
     expect(state.loginLink, 'back-to-login link present');
     expect(state.shadow, 'soft card shadow');
-    expect(state.noBackendScripts, 'no auth/backend scripts loaded yet');
+    expect(state.hasBackendScripts, 'Supabase Auth scripts loaded');
   });
 
   await scenario('validation: empty and malformed email flagged, nothing shown as sent', {}, async (page) => {
@@ -108,24 +119,26 @@ async function open(page) {
     expect(state.alert === '', 'still no message on invalid input');
   });
 
-  await scenario('honest submit: no email sent, no fake success, value kept', {}, async (page) => {
+  await scenario('submit: Supabase receives request and UI uses privacy-safe success', {}, async (page) => {
+    recoveryCalls = [];
     await open(page);
     await page.fill('#forgot-email', 'asha@example.com');
     await page.click('#forgot-submit');
     await page.waitForSelector('#forgot-alert .ngd-alert', { timeout: 5000 });
     const state = await page.evaluate(() => ({
       alert: document.querySelector('#forgot-alert .ngd-alert').textContent,
-      info: !!document.querySelector('#forgot-alert .ngd-alert-info'),
+      success: !!document.querySelector('#forgot-alert .ngd-alert-success'),
       url: location.pathname,
-      emailKept: document.getElementById('forgot-email').value,
+      emailCleared: document.getElementById('forgot-email').value,
     }));
-    expect(state.info, 'informational (not success) alert');
-    expect(/aren.t connected yet|not connected/i.test(state.alert) && /no email has been sent/i.test(state.alert),
-      'honest not-connected explanation, got: ' + state.alert);
-    expect(!/reset link sent|check your inbox|we.ve emailed/i.test(state.alert),
-      'no fake sent wording');
+    expect(state.success, 'success alert shown only after accepted request');
+    expect(state.alert.trim() === 'If this email is registered, a password reset link has been sent.',
+      'privacy-safe message, got: ' + state.alert);
+    expect(recoveryCalls.length === 1 && /\/auth\/v1\/recover/.test(recoveryCalls[0].url), 'Supabase recovery endpoint called once');
+    expect(recoveryCalls[0].body.email === 'asha@example.com', 'email sent to Supabase');
+    expect(/reset-password\.html/.test(recoveryCalls[0].body.redirect_to), 'recovery redirects to reset page');
     expect(/forgot-password\.html$/.test(state.url), 'stays on the page');
-    expect(state.emailKept === 'asha@example.com', 'email preserved (nothing happened)');
+    expect(state.emailCleared === '', 'email field cleared after accepted request');
   });
 
   await scenario('back-to-login link navigates', {}, async (page) => {

@@ -1,83 +1,73 @@
-/* ============================================================
-   NEW GROWN DIAMOND — FORGOT PASSWORD (UI ONLY, STEP 19)
-   ------------------------------------------------------------
-   No reset service is connected yet, and this page is honest
-   about that: a valid submit explains that NO email was sent.
-   Nothing is simulated and nothing is stored.
-
-   FUTURE SUPABASE INTEGRATION (one seam)
-   --------------------------------------
-   Replace the body of requestReset() with:
-
-     var res = await window.ngdSupabase.auth.resetPasswordForEmail(
-       email, { redirectTo: <your reset-completion page> });
-
-   …then add the standard auth script stack (supabase CDN, config,
-   client, auth.js) to forgot-password.html — exactly as on
-   login.html. The form IDs (ngd-forgot-form / forgot-email /
-   forgot-submit / forgot-alert) are final.
-   ============================================================ */
+/* NEW GROWN DIAMOND — Supabase Auth password-reset request */
 (function () {
   'use strict';
 
-  var NOT_CONNECTED_MSG =
-    'Password reset emails aren’t connected yet — no email has been ' +
-    'sent and nothing was stored. This page is ready for the reset ' +
-    'service that arrives with an upcoming release; until then, reach ' +
-    'us through the contact page and we will verify you personally.';
+  var SAFE_SUCCESS =
+    'If this email is registered, a password reset link has been sent.';
+  var SERVICE_ERROR =
+    'We could not send a password reset link right now. Please try again later.';
 
-  function $(id) {
-    return document.getElementById(id);
-  }
+  function $(id) { return document.getElementById(id); }
 
   function showAlert(type, message) {
     var box = $('forgot-alert');
     if (!box) return;
     box.innerHTML = '';
-    var div = document.createElement('div');
-    div.className = 'ngd-alert ngd-alert-' + type;
-    div.setAttribute('role', 'alert');
-    div.textContent = message;
-    box.appendChild(div);
+    var alert = document.createElement('div');
+    alert.className = 'ngd-alert ngd-alert-' + type;
+    alert.setAttribute('role', 'alert');
+    alert.textContent = message;
+    box.appendChild(alert);
   }
 
-  function clearAlert() {
-    var box = $('forgot-alert');
-    if (box) box.innerHTML = '';
+  function setLoading(loading) {
+    var button = $('forgot-submit');
+    button.disabled = loading;
+    button.textContent = loading ? 'Sending…' : 'Send Reset Link';
   }
 
-  /**
-   * The single future-backend seam. Today it can only say, honestly,
-   * that no reset service exists yet. The Supabase phase replaces this
-   * with resetPasswordForEmail() — nothing else on the page changes.
-   */
-  function requestReset(email) {
-    void email; /* unused until the reset service is connected */
-    showAlert('info', NOT_CONNECTED_MSG);
-  }
-
-  function onSubmit(event) {
+  async function onSubmit(event) {
     event.preventDefault();
     event.stopPropagation();
-
     var form = $('ngd-forgot-form');
-    clearAlert();
-
+    $('forgot-alert').innerHTML = '';
     if (!form.checkValidity()) {
       form.classList.add('was-validated');
       return;
     }
     form.classList.add('was-validated');
 
-    requestReset($('forgot-email').value.trim());
+    if (!window.ngdSupabase) {
+      showAlert('danger', SERVICE_ERROR);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      var redirectTo = (window.NGD_SITE_ROOT || new URL('./', location.href).href) +
+        'reset-password.html';
+      var result = await window.ngdSupabase.auth.resetPasswordForEmail(
+        $('forgot-email').value.trim(),
+        { redirectTo: redirectTo }
+      );
+      if (result.error) {
+        showAlert('danger', SERVICE_ERROR);
+        return;
+      }
+      showAlert('success', SAFE_SUCCESS);
+      form.reset();
+      form.classList.remove('was-validated');
+    } catch (_error) {
+      showAlert('danger', SERVICE_ERROR);
+    } finally {
+      setLoading(false);
+    }
   }
 
   function init() {
     var form = $('ngd-forgot-form');
-    if (!form) return;
-    form.addEventListener('submit', onSubmit);
+    if (form) form.addEventListener('submit', onSubmit);
   }
-
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {
