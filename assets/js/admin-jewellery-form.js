@@ -27,7 +27,7 @@
     'metal', 'availability'];
 
   var IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-  var IMAGE_MAX_BYTES = 10 * 1024 * 1024;
+  var IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 
   var state = {
     mode: 'add',
@@ -35,7 +35,8 @@
     images: [],       /* ordered gallery: {uid, name, sizeLabel, src|art, file} */
     primaryUid: null,
     nextUid: 1,
-    dirty: false
+    dirty: false,
+    busy: false
   };
 
   function $(id) {
@@ -69,7 +70,8 @@
      does not carry. Clearly samples, never claimed live. */
   function demoCommercials(p) {
     return {
-      price: Math.round((p.weightCt || 0.35) * 1450 + p.grossWeight * 42),
+      price: Math.round((p.weightCt || p.diamond_weight || 0.35) * 1450 +
+        (p.grossWeight || p.gross_weight || 0) * 42),
       currency: 'USD',
       price_visibility: 'on_request',
       internal_notes: 'Demo record — sample note for layout preview.'
@@ -203,23 +205,19 @@
    * Future-backend seam. Today it only records the payload on the form
    * (data-ngd-payload) and tells the truth: nothing was saved.
    */
-  function saveJewellery(payload, mode, form) {
+  async function saveJewellery(payload, mode, form) {
+    delete payload.images;
+    var query = window.ngdSupabase.from('jewellery');
+    var result = state.record
+      ? await query.update(payload).eq('id', state.record.id).select().single()
+      : await query.insert(payload).select().single();
+    if (result.error) throw result.error;
+    state.record = result.data;
+    await uploadPendingImages();
     form.setAttribute('data-ngd-payload', JSON.stringify(payload));
-    var label = payload.sku || 'The piece';
+    showAlert('success', (payload.sku || 'Jewellery') + ' and its images were saved.');
     if (mode === 'add-another') {
-      showAlert('info',
-        label + ' is valid and its payload is ready — but nothing was ' +
-        'saved: the database arrives with the Supabase phase. The form ' +
-        'has been cleared so you can preview another entry.');
-    } else if (mode === 'edit') {
-      showAlert('info',
-        label + ' is valid and its update payload is ready — but nothing ' +
-        'was saved: the database arrives with the Supabase phase.');
-    } else {
-      showAlert('info',
-        label + ' is valid and its payload is ready — but nothing was ' +
-        'saved: the database arrives with the Supabase phase. ' +
-        'saveJewellery() in admin-jewellery-form.js is the wiring point.');
+      form.reset(); resetGallery(); state.record = null;
     }
   }
 
@@ -314,7 +312,36 @@
     return -1;
   }
 
-  function galleryAction(act, uid) {
+  async function persistOrder() {
+    var updates = state.images.map(function (img, idx) {
+      return window.ngdSupabase.from('jewellery_images').update({ sort_order: idx + 1 }).eq('id', img.id);
+    });
+    var results = await Promise.all(updates);
+    var failed = results.find(function (result) { return result.error; });
+    if (failed) throw failed.error;
+  }
+
+  async function setPrimary(img) {
+    var cleared = await window.ngdSupabase.from('jewellery_images')
+      .update({ is_primary: false }).eq('jewellery_id', state.record.id);
+    if (cleared.error) throw cleared.error;
+    var selected = await window.ngdSupabase.from('jewellery_images')
+      .update({ is_primary: true }).eq('id', img.id);
+    if (selected.error) throw selected.error;
+    state.primaryUid = img.uid;
+  }
+
+  async function deleteStoredImage(img) {
+    if (!window.confirm('Remove this image? This cannot be undone.')) return false;
+    var removedFile = await window.ngdSupabase.storage
+      .from(window.NGDJewelleryImages.bucket).remove([img.image_path]);
+    if (removedFile.error) throw removedFile.error;
+    var removedRow = await window.ngdSupabase.from('jewellery_images').delete().eq('id', img.id);
+    if (removedRow.error) throw removedRow.error;
+    return true;
+  }
+
+  async function galleryAction(act, uid) {
     var idx = findImage(uid);
     if (idx === -1) return;
     if (act === 'left' && idx > 0) {
@@ -326,17 +353,50 @@
       state.images[idx + 1] = state.images[idx];
       state.images[idx] = next;
     } else if (act === 'primary') {
-      state.primaryUid = uid;
+      if (state.record && state.images[idx].id) await setPrimary(state.images[idx]);
+      else state.primaryUid = uid;
     } else if (act === 'remove') {
+      if (state.record && state.images[idx].id && !(await deleteStoredImage(state.images[idx]))) return;
       var removed = state.images.splice(idx, 1)[0];
       if (removed.uid === state.primaryUid) {
         state.primaryUid = state.images.length ? state.images[0].uid : null;
+        if (state.record && state.images.length) await setPrimary(state.images[0]);
       }
     } else {
       return;
     }
-    markDirty();
-    renderGallery();
+    if (state.record && (act === 'left' || act === 'right')) await persistOrder();
+    markDirty(); renderGallery();
+  }
+
+  function safePath(file) {
+    var ext = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg';
+    var random = (window.crypto && window.crypto.randomUUID)
+      ? window.crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2);
+    return 'jewellery/' + String(state.record.sku || state.record.id).replace(/[^a-z0-9_-]/gi, '-') + '/' + random + '.' + ext;
+  }
+
+  async function uploadImage(img) {
+    var path = safePath(img.file);
+    var uploaded = await window.ngdSupabase.storage.from(window.NGDJewelleryImages.bucket)
+      .upload(path, img.file, { contentType: img.file.type, upsert: false });
+    if (uploaded.error) throw uploaded.error;
+    var row = {
+      jewellery_id: state.record.id, image_path: path,
+      sort_order: state.images.indexOf(img) + 1,
+      is_primary: state.images.filter(function (item) { return item.id; }).length === 0 && img.uid === state.primaryUid
+    };
+    var inserted = await window.ngdSupabase.from('jewellery_images').insert(row).select().single();
+    if (inserted.error) {
+      await window.ngdSupabase.storage.from(window.NGDJewelleryImages.bucket).remove([path]);
+      throw inserted.error;
+    }
+    Object.assign(img, inserted.data, { image_path: path });
+  }
+
+  async function uploadPendingImages() {
+    var pending = state.images.filter(function (img) { return img.file && !img.id; });
+    for (var i = 0; i < pending.length; i++) await uploadImage(pending[i]);
   }
 
   function addFiles(fileList) {
@@ -350,7 +410,7 @@
         return;
       }
       if (file.size > IMAGE_MAX_BYTES) {
-        rejected.push(file.name + ' (larger than 10 MB)');
+        rejected.push(file.name + ' (larger than 5 MB)');
         return;
       }
       var entry = {
@@ -375,6 +435,14 @@
       ? 'Not added — ' + rejected.join('; ') + '.'
       : '');
     renderGallery();
+    if (state.record) {
+      uploadPendingImages().then(function () {
+        showAlert('success', files.length + (files.length === 1 ? ' image uploaded.' : ' images uploaded.'));
+        renderGallery();
+      }).catch(function (error) {
+        showAlert('danger', 'Image upload failed: ' + (error.message || 'check your connection and try again.'));
+      });
+    }
   }
 
   function resetGallery() {
@@ -417,7 +485,9 @@
       var btn = event.target.closest('[data-img-act]');
       if (!btn || btn.disabled) return;
       var uid = parseInt(btn.closest('[data-img-uid]').getAttribute('data-img-uid'), 10);
-      galleryAction(btn.getAttribute('data-img-act'), uid);
+      galleryAction(btn.getAttribute('data-img-act'), uid).catch(function (error) {
+        showAlert('danger', 'Image update failed: ' + (error.message || 'check your connection and try again.'));
+      });
     });
   }
 
@@ -426,26 +496,26 @@
   function prefill(record) {
     var extras = demoCommercials(record);
     var values = {
-      sku: record.id,
-      product_name: record.name,
+      sku: record.sku || record.id,
+      product_name: record.product_name || record.name,
       category: record.category,
       subcategory: record.subcategory,
-      short_description: record.description,
-      full_description: record.fullDesc,
+      short_description: record.short_description || record.description,
+      full_description: record.full_description || record.fullDesc,
       metal: record.metal,
       metal_karat: record.metalKarat,
       metal_colour: record.metalColour,
-      gross_weight: record.grossWeight,
-      diamond_weight: record.weightCt,
-      diamond_pieces: record.diamondPieces,
-      diamond_quality: record.diamondQuality,
-      diamond_shape: record.diamondShape,
-      certificate_number: record.certificateNo,
+      gross_weight: record.gross_weight != null ? record.gross_weight : record.grossWeight,
+      diamond_weight: record.diamond_weight != null ? record.diamond_weight : record.weightCt,
+      diamond_pieces: record.diamond_pieces != null ? record.diamond_pieces : record.diamondPieces,
+      diamond_quality: record.diamond_quality || record.diamondQuality,
+      diamond_shape: record.diamond_shape || record.diamondShape,
+      certificate_number: record.certificate_number || record.certificateNo,
       size: record.size,
-      price: extras.price,
-      currency: extras.currency,
-      price_visibility: extras.price_visibility,
-      internal_notes: extras.internal_notes,
+      price: record.price != null ? record.price : extras.price,
+      currency: record.currency || extras.currency,
+      price_visibility: record.price_visibility || extras.price_visibility,
+      internal_notes: record.internal_notes || extras.internal_notes,
       availability: record.availability
     };
     Object.keys(values).forEach(function (name) {
@@ -455,8 +525,27 @@
     field('featured').checked = !!record.featured;
     field('active').checked = !!record.active;
 
-    state.images = demoGallery(record);
-    state.primaryUid = state.images.length ? state.images[0].uid : null;
+    field('featured').checked = !!record.featured;
+    field('active').checked = record.active !== false;
+  }
+
+  async function loadRecord(requested) {
+    var bySku = await window.ngdSupabase.from('jewellery').select('*').eq('sku', requested).maybeSingle();
+    if (!bySku.error && bySku.data) return bySku.data;
+    var byId = await window.ngdSupabase.from('jewellery').select('*').eq('id', requested).maybeSingle();
+    if (byId.error) throw byId.error;
+    return byId.data;
+  }
+
+  async function loadGallery() {
+    var rows = await window.NGDJewelleryImages.load(state.record.id);
+    state.images = rows.map(function (row) {
+      return Object.assign({}, row, {
+        uid: state.nextUid++, name: row.image_path.split('/').pop(), src: row.image_url, file: null
+      });
+    });
+    var primary = state.images.find(function (img) { return img.is_primary; });
+    state.primaryUid = primary ? primary.uid : null;
     renderGallery();
   }
 
@@ -469,7 +558,7 @@
   /* ---------------- boot ---------------- */
 
   function initButtons(form) {
-    form.addEventListener('submit', function (event) {
+    form.addEventListener('submit', async function (event) {
       event.preventDefault();
       clearAlert();
       if (!validate(form)) {
@@ -479,13 +568,17 @@
         return;
       }
       var payload = buildPayload(form);
-      clearDirty();
-      saveJewellery(payload, state.mode === 'edit' ? 'edit' : 'add', form);
+      try {
+        await saveJewellery(payload, state.mode === 'edit' ? 'edit' : 'add', form);
+        clearDirty();
+      } catch (error) {
+        showAlert('danger', 'Could not save jewellery images: ' + (error.message || 'network failure.'));
+      }
     });
 
     var another = $('jw-save-another');
     if (another) {
-      another.addEventListener('click', function () {
+      another.addEventListener('click', async function () {
         clearAlert();
         if (!validate(form)) {
           showAlert('danger',
@@ -494,11 +587,12 @@
           return;
         }
         var payload = buildPayload(form);
-        saveJewellery(payload, 'add-another', form);
-        form.reset();
-        resetGallery();
-        clearDirty();
-        window.scrollTo({ top: 0 });
+        try {
+          await saveJewellery(payload, 'add-another', form);
+          clearDirty(); window.scrollTo({ top: 0 });
+        } catch (error) {
+          showAlert('danger', 'Could not save jewellery images: ' + (error.message || 'network failure.'));
+        }
       });
     }
 
@@ -530,13 +624,19 @@
 
     if (state.mode === 'edit') {
       var id = new URLSearchParams(window.location.search).get('id');
-      state.record = id ? demoRecord(id) : null;
+      try { state.record = id ? await loadRecord(id) : null; }
+      catch (error) {
+        showAlert('danger', 'Could not load this product. Check your connection and try again.');
+        return;
+      }
       if (!state.record) {
         showNotFound(id);
         return;
       }
-      $('jw-editing-id').textContent = state.record.id;
+      $('jw-editing-id').textContent = state.record.sku || state.record.id;
       prefill(state.record);
+      try { await loadGallery(); }
+      catch (error) { showAlert('danger', 'Could not load product images: ' + (error.message || 'network failure.')); }
     }
 
     initImagePicker();

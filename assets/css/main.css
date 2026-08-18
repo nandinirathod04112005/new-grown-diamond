@@ -3007,6 +3007,13 @@ a.ngd-chip {
   object-fit: cover;
 }
 
+.ngd-jewel-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
 .ngd-img-tile-frame svg { width: 55%; height: auto; }
 
 .ngd-img-tile-frame .ngd-status-chip {

@@ -10,6 +10,10 @@
   'use strict';
 
   function artFor(p) {
+    if (p.primaryImage) {
+      return '<img class="ngd-jewel-photo" src="' + p.primaryImage + '" alt="' +
+        String(p.name || 'Jewellery').replace(/&/g, '&amp;').replace(/"/g, '&quot;') + '" loading="lazy">';
+    }
     var art = window.NGD_JEWEL_ART || {};
     return art[p.category.toLowerCase()] || '';
   }

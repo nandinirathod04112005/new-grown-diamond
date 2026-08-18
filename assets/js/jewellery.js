@@ -192,4 +192,20 @@
   }
 
   apply();
+
+  async function loadPrimaryImages() {
+    if (!window.ngdSupabase) return;
+    var products = await window.ngdSupabase.from('jewellery').select('id,sku');
+    if (products.error) return;
+    var images = await window.ngdSupabase.from('jewellery_images')
+      .select('jewellery_id,image_path').eq('is_primary', true);
+    if (images.error) return;
+    DATA.forEach(function (piece) {
+      var product = products.data.find(function (row) { return row.sku === piece.id || row.id === piece.id; });
+      var image = product && images.data.find(function (row) { return row.jewellery_id === product.id; });
+      if (image) piece.primaryImage = window.NGDJewelleryImages.publicUrl(image.image_path);
+    });
+    apply();
+  }
+  loadPrimaryImages().catch(function () { /* fallback artwork remains visible */ });
 })();

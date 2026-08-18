@@ -163,6 +163,7 @@
   /* ---------------- rendering ---------------- */
 
   function art(row) {
+    if (row.primaryImage) return '<img class="ngd-jewel-photo" src="' + row.primaryImage + '" alt="">';
     return (window.NGD_JEWEL_ART || {})[row.category.toLowerCase()] || '';
   }
 
@@ -415,6 +416,19 @@
     state.rows = loadAdminJewellery();
     initToolbar();
     setUiState('demo');
+    var images = await window.ngdSupabase.from('jewellery_images')
+      .select('jewellery_id,image_path,is_primary').eq('is_primary', true);
+    if (!images.error) {
+      var products = await window.ngdSupabase.from('jewellery').select('id,sku');
+      if (!products.error) {
+        state.rows.forEach(function (row) {
+          var product = products.data.find(function (p) { return p.sku === row.id || p.id === row.id; });
+          var photo = product && images.data.find(function (img) { return img.jewellery_id === product.id; });
+          if (photo) row.primaryImage = window.NGDJewelleryImages.publicUrl(photo.image_path);
+        });
+        apply();
+      }
+    }
   }
 
   if (document.readyState === 'loading') {

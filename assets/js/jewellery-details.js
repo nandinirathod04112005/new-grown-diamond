@@ -279,4 +279,35 @@
 
   renderStage();
   renderFav();
+
+  async function loadRealGallery() {
+    if (!window.ngdSupabase) return;
+    var productRow = await window.ngdSupabase.from('jewellery').select('id')
+      .eq('sku', piece.sku || piece.id).maybeSingle();
+    if (productRow.error || !productRow.data) return;
+    var images = await window.NGDJewelleryImages.load(productRow.data.id);
+    if (!images.length) return;
+    VIEWS = images.map(function (img, index) {
+      return { key: 'image-' + index, label: index === 0 ? 'Primary image' : 'Product image ' + (index + 1), url: img.image_url };
+    });
+    activeView = VIEWS[0].key;
+    thumbs.innerHTML = VIEWS.map(function (view) {
+      return '<button type="button" class="ngd-thumb ngd-thumb-light" role="tab" data-view="' + view.key +
+        '" aria-label="' + view.label + '"><img class="ngd-jewel-photo" src="' + view.url + '" alt=""></button>';
+    }).join('');
+    var oldRender = renderStage;
+    renderStage = function () {
+      var view = VIEWS.find(function (item) { return item.key === activeView; });
+      if (!view.url) { oldRender(); return; }
+      stage.classList.remove('is-static', 'is-zoomed');
+      stageInner.innerHTML = '<img class="ngd-jewel-photo" src="' + view.url + '" alt="' + piece.name + ' — ' + view.label + '">';
+      zoomHint.textContent = 'Click to zoom';
+      thumbs.querySelectorAll('.ngd-thumb').forEach(function (button) {
+        var on = button.getAttribute('data-view') === activeView;
+        button.classList.toggle('is-active', on); button.setAttribute('aria-selected', String(on));
+      });
+    };
+    renderStage();
+  }
+  loadRealGallery().catch(function () { /* generated fallback gallery remains visible */ });
 })();
