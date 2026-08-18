@@ -102,25 +102,7 @@
           <h1 class="ngd-display-2 mt-2 mb-1">Inspections</h1>
           <p class="ngd-text-muted small mb-0">Viewings at the atelier, by video or at an independent laboratory.</p>
         </div>
-        <!-- Demo-only preview control for the loading/empty/error designs.
-             Nothing is loaded from anywhere in any of these states. -->
-        <div class="text-lg-end">
-          <span class="ngd-dash-metric-note d-block mb-1">UI preview (demo only)</span>
-          <div class="ngd-dash-state-switch" id="req-state-switch" role="group" aria-label="Preview a UI state">
-            <button type="button" class="is-on" data-req-state="demo">Demo rows</button>
-            <button type="button" data-req-state="loading">Loading</button>
-            <button type="button" data-req-state="empty">Empty</button>
-            <button type="button" data-req-state="error">Error</button>
-          </div>
-        </div>
       </section>
-
-      <!-- Demo notice; the future Supabase phase replaces loadRequests()
-           in assets/js/account-requests.js with real per-user selects. -->
-      <aside class="ngd-edu-note mt-4" id="req-demo-note">
-        <span class="ngd-edu-bullet" aria-hidden="true">&#9670;</span>
-        <p class="mb-0"><strong>Demo preview.</strong> These inspections are sample records showing how your inspection requests will appear once the account backend arrives. Nothing here was submitted anywhere and nothing is stored.</p>
-      </aside>
 
       <!-- Toolbar: search, status filter, date range -->
       <section class="mt-4 ngd-form" data-dash-section="req-toolbar">
@@ -178,7 +160,7 @@
         <div class="ngd-dash-empty">
           <span class="ngd-icon-tile ngd-depth-1 mb-3">◎</span>
           <h2 class="ngd-title fs-6">No inspections yet</h2>
-          <p class="ngd-text-muted small mb-3">Book a viewing of any stone or piece — inspection requests will be tracked here once your account backend arrives.</p>
+          <p class="ngd-text-muted small mb-3">Request an inspection from any diamond or jewellery details page.</p>
           <a class="ngd-btn ngd-btn-outline ngd-btn-sm" href="../contact.html">Arrange a viewing</a>
         </div>
       </div>
@@ -204,6 +186,6 @@
   <script defer src="../assets/js/jewellery-art.js"></script>
   <script defer src="../assets/js/diamonds-data.js"></script>
   <script defer src="../assets/js/jewellery-data.js"></script>
-  <script defer src="../assets/js/account-requests.js"></script>
+  <script defer src="../assets/js/customer-inspections.js"></script>
 </body>
 </html>

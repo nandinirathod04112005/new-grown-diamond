@@ -201,7 +201,7 @@
   var quoteUrl = 'contact.html?piece=' + encodeURIComponent(piece.id) + '&type=quote';
   var enquireUrl = 'contact.html?piece=' + encodeURIComponent(piece.id) + '&type=enquiry';
   document.getElementById('jd-quote').setAttribute('href', quoteUrl);
-  document.getElementById('jd-enquire').setAttribute('href', enquireUrl);
+  /* Inspection CTA is connected by inspection-request.js. */
   document.getElementById('jd-sticky-quote').setAttribute('href', quoteUrl);
 
   var favButtons = [document.getElementById('jd-fav'), document.getElementById('jd-sticky-fav')];
