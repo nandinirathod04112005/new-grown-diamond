@@ -52,6 +52,21 @@
         <form id="ngd-register-form" class="ngd-form mt-3" novalidate>
           <div class="row g-3">
             <div class="col-12">
+              <label class="form-label" for="reg-account-type">Account Type</label>
+              <select class="form-select" id="reg-account-type" name="account_type" required>
+                <option value="customer" selected>Customer</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+
+            <div class="col-12" id="reg-admin-code-group" hidden>
+              <label class="form-label" for="reg-admin-code">Admin Code</label>
+              <input type="password" class="form-control" id="reg-admin-code"
+                     name="admin_code" autocomplete="off" disabled>
+              <div class="invalid-feedback">Please enter the Admin Code.</div>
+            </div>
+
+            <div class="col-12">
               <label class="form-label" for="reg-full-name">Full name</label>
               <input type="text" class="form-control" id="reg-full-name" name="full_name"
                      placeholder="Aarav Shah" autocomplete="name" minlength="2" required>

@@ -1,9 +1,9 @@
 /* ============================================================
    Signup page UI tests (STEP 18).
-   Verifies the premium split card with its ring art, all eight
+   Verifies the premium split card, account type controls,
    fields, both show/hide toggles, the password strength meter,
    the full validation matrix (email/mobile/min-8/match/terms),
-   the no-role-selector security guard, the honest no-backend
+   the server-only role assignment guard, the honest no-backend
    behaviour and responsive layouts at 1440/768/390.
    The mocked signup flows live in auth-flow.test.cjs.
    Run:  node tests/signup-ui.test.cjs
@@ -18,7 +18,7 @@ const SCREEN_DIR = path.join(__dirname, 'screens');
 fs.mkdirSync(SCREEN_DIR, { recursive: true });
 
 const FIELD_IDS = ['reg-full-name', 'reg-company', 'reg-email', 'reg-phone',
-  'reg-country', 'reg-password', 'reg-confirm', 'reg-terms'];
+  'reg-country', 'reg-password', 'reg-confirm', 'reg-terms', 'reg-account-type'];
 
 const results = [];
 let browser;
@@ -77,7 +77,7 @@ async function fillValid(page) {
   SITE = started.origin;
   browser = await chromium.launch(chromiumOptions());
 
-  await scenario('desktop split card: ring art, all eight fields, no role selector', {}, async (page) => {
+  await scenario('desktop split card: ring art and account type selector', {}, async (page) => {
     await open(page);
     const state = await page.evaluate((ids) => {
       const side = document.querySelector('.ngd-auth-side');
@@ -95,14 +95,14 @@ async function fillValid(page) {
         submit: document.getElementById('register-submit').textContent.trim(),
         loginLink: !!document.querySelector('.ngd-auth-main a[href="login.html"]'),
         termsLinks: [...document.querySelectorAll('.form-check-label a')].map((a) => a.getAttribute('href')),
-        roleControls: document.querySelectorAll(
-          'select[name*="role" i], input[name*="role" i], [id*="role" i]').length,
+        accountType: document.getElementById('reg-account-type').value,
+        adminCodeHidden: document.getElementById('reg-admin-code-group').hidden,
         shadow: getComputedStyle(document.querySelector('.ngd-auth-card')).boxShadow !== 'none',
       };
     }, FIELD_IDS);
     expect(state.split, 'split layout with the brand panel');
     expect(state.art, 'diamond ring visual on the brand panel');
-    expect(state.fields && state.labelled, 'all eight labelled fields present');
+    expect(state.fields && state.labelled, 'all standard labelled fields present');
     expect(state.countries >= 10, 'country choices, got ' + state.countries);
     expect(state.toggles === 2, 'show/hide toggle on both password fields');
     expect(state.strength, 'password strength meter present');
@@ -111,8 +111,27 @@ async function fillValid(page) {
     expect(state.loginLink, 'link back to login');
     expect(state.termsLinks.includes('terms.html') && state.termsLinks.includes('privacy.html'),
       'terms + privacy linked, got ' + state.termsLinks.join(','));
-    expect(state.roleControls === 0, 'no admin/customer role selector anywhere');
+    expect(state.accountType === 'customer' && state.adminCodeHidden,
+      'customer is default and Admin Code is hidden');
     expect(state.shadow, 'soft card shadow');
+  });
+
+  await scenario('admin selection reveals a required Admin Code field', {}, async (page) => {
+    await open(page);
+    await page.selectOption('#reg-account-type', 'admin');
+    let state = await page.evaluate(() => ({
+      hidden: document.getElementById('reg-admin-code-group').hidden,
+      disabled: document.getElementById('reg-admin-code').disabled,
+      required: document.getElementById('reg-admin-code').required,
+    }));
+    expect(!state.hidden && !state.disabled && state.required,
+      'Admin Code becomes visible and required');
+    await page.selectOption('#reg-account-type', 'customer');
+    state = await page.evaluate(() => ({
+      hidden: document.getElementById('reg-admin-code-group').hidden,
+      disabled: document.getElementById('reg-admin-code').disabled,
+    }));
+    expect(state.hidden && state.disabled, 'switching back hides and disables Admin Code');
   });
 
   await scenario('both password toggles flip independently with aria states', {}, async (page) => {

@@ -1,5 +1,5 @@
 /* ============================================================
-   NEW GROWN DIAMOND — CUSTOMER SIGNUP (Supabase Auth)
+   NEW GROWN DIAMOND — CUSTOMER / ADMIN SIGNUP (Supabase Auth)
    ------------------------------------------------------------
    - Validates the form, then supabase.auth.signUp()
    - Sends ONLY safe metadata: full_name, company_name, phone,
@@ -25,6 +25,7 @@
     'Supabase is not configured yet — add your project details in assets/js/supabase-config.js.';
   var CONFIRM_EMAIL_MSG =
     'Account created. Please check your email to verify your account.';
+  var INVALID_ADMIN_CODE = 'Invalid Admin Code.';
 
   function $(id) {
     return document.getElementById(id);
@@ -89,6 +90,44 @@
       return SERVICE_DOWN;
     }
     return GENERIC_ERROR;
+  }
+
+  function setAccountType() {
+    var isAdmin = $('reg-account-type').value === 'admin';
+    var group = $('reg-admin-code-group');
+    var code = $('reg-admin-code');
+    group.hidden = !isAdmin;
+    code.disabled = !isAdmin;
+    code.required = isAdmin;
+    if (!isAdmin) code.value = '';
+  }
+
+  async function registerAdmin(email, password, metadata) {
+    var response = await window.ngdSupabase.functions.invoke('register-admin', {
+      body: {
+        email: email,
+        password: password,
+        adminCode: $('reg-admin-code').value,
+        profile: metadata
+      }
+    });
+
+    if (response.error) {
+      var context = response.error.context;
+      var status = context && context.status;
+      if (status === 401) throw { adminCode: true };
+      if (status === 429) throw { rateLimited: true };
+      throw response.error;
+    }
+
+    /* The privileged function creates the user and promotes the profile;
+       authenticate normally so no server credential reaches this browser. */
+    var login = await window.ngdSupabase.auth.signInWithPassword({
+      email: email,
+      password: password
+    });
+    if (login.error) throw login.error;
+    return login.data;
   }
 
   /** Rough strength hint (UI only — minlength 8 is the real gate).
@@ -164,6 +203,7 @@
 
     var email = $('reg-email').value.trim();
     var password = $('reg-password').value;
+    var isAdmin = $('reg-account-type').value === 'admin';
 
     /* ONLY safe metadata. Never send a role from the browser — the
        database trigger assigns role = 'customer' on its own. */
@@ -176,6 +216,19 @@
 
     setLoading(true);
     try {
+      if (isAdmin) {
+        var adminData = await registerAdmin(email, password, metadata);
+        var profileResult = await window.NGDAuth.getCurrentProfile(adminData.user);
+        if (profileResult.error || profileResult.profile.role !== 'admin') {
+          await window.ngdSupabase.auth.signOut();
+          throw new Error('Admin profile verification failed.');
+        }
+        window.location.replace(
+          (window.NGD_SITE_ROOT || './') + 'admin/dashboard.html'
+        );
+        return;
+      }
+
       var res = await window.ngdSupabase.auth.signUp({
         email: email,
         password: password,
@@ -221,7 +274,13 @@
       setLoading(false);
     } catch (err) {
       console.error('[NGD Signup] unexpected failure:', err);
-      showAlert('danger', NETWORK_ERROR);
+      if (err && err.adminCode) {
+        showAlert('danger', INVALID_ADMIN_CODE);
+      } else if (err && err.rateLimited) {
+        showAlert('danger', RATE_LIMITED);
+      } else {
+        showAlert('danger', mapSignupError(err));
+      }
       setLoading(false);
     }
   }
@@ -241,6 +300,8 @@
     var form = $('ngd-register-form');
     if (!form) return;
     form.addEventListener('submit', onSubmit);
+    $('reg-account-type').addEventListener('change', setAccountType);
+    setAccountType();
 
     var confirm = $('reg-confirm');
     var password = $('reg-password');
