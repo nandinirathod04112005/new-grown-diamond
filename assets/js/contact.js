@@ -1,225 +1,111 @@
-/* ============================================================
-   NEW GROWN DIAMOND — CONTACT PAGE
-   ------------------------------------------------------------
-   Frontend-only enquiry form (STEP 16). No backend exists yet,
-   so this controller is deliberately honest:
-
-   - It validates the form client-side.
-   - It NEVER pretends a message was sent. Nothing is stored,
-     nothing is posted.
-   - If an enquiries inbox is configured (below), a valid submit
-     prepares a pre-filled draft in the visitor's own email app
-     via a mailto: link — a real action, clearly explained.
-   - When Supabase arrives, submitEnquiry() below is the single
-     seam to replace with an insert into an `enquiries` table.
-
-   HOW TO CONNECT YOUR INBOX (until the backend phase)
-   ---------------------------------------------------
-   Replace the empty string below with your enquiries address,
-   e.g. 'enquiries@your-domain.com'. That is the only change
-   needed — the form then opens pre-filled drafts to it.
-   ============================================================ */
 (function () {
   'use strict';
-
-  var CONTACT_EMAIL = ''; // ← paste your enquiries inbox here
-
   var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
   var PHONE_RE = /^[+()\-\s\d]{7,20}$/;
+  var $ = function (id) { return document.getElementById(id); };
 
-  var NOT_CONNECTED_MSG =
-    'Direct sending isn’t connected yet — this website stores ' +
-    'nothing and has sent nothing. Your text is kept safely in the form: ' +
-    'add your enquiries inbox in assets/js/contact.js to prepare email ' +
-    'drafts, or check back once our enquiries desk goes live.';
-  var DRAFT_MSG =
-    'Your email app should now open with this enquiry prepared as a ' +
-    'draft. Nothing is sent by this website itself — the message ' +
-    'only goes out when you send it from your inbox.';
-
-  function $(id) {
-    return document.getElementById(id);
-  }
-
-  function configuredEmail() {
-    /* window override is a convenience for demos and tests */
-    var value = window.NGD_CONTACT_EMAIL !== undefined
-      ? window.NGD_CONTACT_EMAIL
-      : CONTACT_EMAIL;
-    return String(value || '').trim();
-  }
-
-  function showAlert(type, message) {
+  function alertBox(type, text) {
     var box = $('contact-alert');
-    if (!box) return;
     box.innerHTML = '';
-    var div = document.createElement('div');
-    div.className = 'ngd-alert ngd-alert-' + type;
-    div.setAttribute('role', 'alert');
-    div.textContent = message;
-    box.appendChild(div);
-    div.scrollIntoView({ block: 'nearest' });
+    var node = document.createElement('div');
+    node.className = 'ngd-alert ngd-alert-' + type;
+    node.setAttribute('role', type === 'danger' ? 'alert' : 'status');
+    node.textContent = text;
+    box.appendChild(node);
   }
-
-  function clearAlert() {
-    var box = $('contact-alert');
-    if (box) box.innerHTML = '';
+  function invalid(field, value) {
+    field.classList.toggle('is-invalid', value);
+    if (value) field.setAttribute('aria-invalid', 'true');
+    else field.removeAttribute('aria-invalid');
   }
-
-  function setInvalid(field, invalid) {
-    field.classList.toggle('is-invalid', invalid);
-    if (invalid) {
-      field.setAttribute('aria-invalid', 'true');
-    } else {
-      field.removeAttribute('aria-invalid');
+  function publicId() {
+    var bytes = new Uint8Array(8);
+    crypto.getRandomValues(bytes);
+    return 'ENQ-' + Array.from(bytes, function (b) { return (b % 36).toString(36); }).join('').toUpperCase();
+  }
+  function productParams() {
+    var q = new URLSearchParams(location.search);
+    if (q.get('stone')) return { type: 'diamond', reference: q.get('stone') };
+    if (q.get('piece')) return { type: 'jewellery', reference: q.get('piece') };
+    var type = q.get('product_type');
+    return /^(diamond|jewellery)$/.test(type || '') && q.get('product')
+      ? { type: type, reference: q.get('product') } : null;
+  }
+  async function resolveProduct(sb, product) {
+    if (!product) return null;
+    var table = product.type === 'diamond' ? 'diamonds' : 'jewellery';
+    var key = product.type === 'diamond' ? 'stock_number' : 'sku';
+    var result = await sb.from(table).select('id').eq(key, product.reference).limit(1);
+    if (result.error || !result.data || !result.data[0]) return null;
+    return { type: product.type, id: result.data[0].id };
+  }
+  async function insert(payload) {
+    var sb = window.ngdSupabase;
+    if (!sb) throw new Error('unavailable');
+    var auth = await sb.auth.getUser();
+    payload.user_id = auth.data && auth.data.user ? auth.data.user.id : null;
+    var resolved = await resolveProduct(sb, productParams());
+    if (resolved) {
+      payload.product_type = resolved.type;
+      payload[resolved.type === 'diamond' ? 'diamond_id' : 'jewellery_id'] = resolved.id;
     }
-  }
-
-  function validate(fields) {
-    var firstBad = null;
-
-    function check(field, ok) {
-      setInvalid(field, !ok);
-      if (!ok && !firstBad) firstBad = field;
-      return ok;
+    for (var attempt = 0; attempt < 3; attempt++) {
+      payload.public_id = publicId();
+      // Do not request a representation: anonymous users intentionally have no
+      // SELECT policy, while INSERT is allowed by the guest submission policy.
+      var result = await sb.from('enquiries').insert(payload);
+      if (!result.error) return payload.public_id;
+      if (result.error.code !== '23505') throw result.error;
     }
-
-    var okName = check(fields.name, fields.name.value.trim().length >= 2);
-    var okEmail = check(fields.email, EMAIL_RE.test(fields.email.value.trim()));
-    var okMobile = check(fields.mobile, PHONE_RE.test(fields.mobile.value.trim()));
-    var okCountry = check(fields.country, fields.country.value !== '');
-    var okSubject = check(fields.subject, fields.subject.value !== '');
-    var okMessage = check(fields.message, fields.message.value.trim().length >= 20);
-    /* company is optional and never flagged */
-
-    if (firstBad) firstBad.focus();
-    return okName && okEmail && okMobile && okCountry && okSubject && okMessage;
+    throw new Error('id collision');
   }
-
-  /**
-   * The single future-backend seam. Today it can only prepare a
-   * mailto draft (when an inbox is configured); the Supabase phase
-   * replaces the body of this function with an insert into an
-   * RLS-protected `enquiries` table — nothing else changes.
-   */
-  function submitEnquiry(enquiry, form) {
-    var inbox = configuredEmail();
-    if (!inbox) {
-      form.removeAttribute('data-ngd-mailto');
-      showAlert('info', NOT_CONNECTED_MSG);
-      return;
-    }
-    var subjectLine = '[' + enquiry.subject + '] Enquiry from ' + enquiry.full_name;
-    var bodyLines = [
-      'Name: ' + enquiry.full_name,
-      enquiry.company_name ? 'Company: ' + enquiry.company_name : null,
-      'Email: ' + enquiry.email,
-      'Mobile: ' + enquiry.mobile,
-      'Country: ' + enquiry.country,
-      'Subject: ' + enquiry.subject,
-      '',
-      enquiry.message,
-    ].filter(Boolean);
-    var url = 'mailto:' + inbox +
-      '?subject=' + encodeURIComponent(subjectLine) +
-      '&body=' + encodeURIComponent(bodyLines.join('\n'));
-    /* exposed for tests / future CMS tooling before navigating */
-    form.setAttribute('data-ngd-mailto', url);
-    showAlert('info', DRAFT_MSG);
-    window.location.href = url;
-  }
-
-  function initCounter(message) {
-    var counter = $('contact-message-count');
-    if (!counter) return;
-    var max = message.getAttribute('maxlength') || 1000;
-    var update = function () {
-      counter.textContent = message.value.length + ' / ' + max;
-    };
-    message.addEventListener('input', update);
-    update();
-  }
-
-  /** Preselect the subject from ?subject=… or a [data-contact-subject]
-      trigger (e.g. the business-enquiry button). */
-  function initSubjectShortcuts(fields) {
-    var select = fields.subject;
-
-    function apply(value) {
-      if (!value) return;
-      var match = [].some.call(select.options, function (o) {
-        return o.value === value;
-      });
-      if (match) {
-        select.value = value;
-        setInvalid(select, false);
-      }
-    }
-
-    apply(new URLSearchParams(window.location.search).get('subject'));
-
-    [].forEach.call(document.querySelectorAll('[data-contact-subject]'), function (btn) {
-      btn.addEventListener('click', function () {
-        apply(btn.getAttribute('data-contact-subject'));
-        /* the anchor itself scrolls to the form */
-      });
-    });
-  }
-
   function init() {
     var form = $('ngd-contact-form');
     if (!form) return;
-
-    var fields = {
-      name: $('contact-name'),
-      company: $('contact-company'),
-      email: $('contact-email'),
-      mobile: $('contact-mobile'),
-      country: $('contact-country'),
-      subject: $('contact-subject'),
-      message: $('contact-message'),
-    };
-
-    initCounter(fields.message);
-    initSubjectShortcuts(fields);
-
-    Object.keys(fields).forEach(function (key) {
-      fields[key].addEventListener('input', function () {
-        setInvalid(fields[key], false);
-      });
-      fields[key].addEventListener('change', function () {
-        setInvalid(fields[key], false);
-      });
+    var f = { name: $('contact-name'), company: $('contact-company'), email: $('contact-email'),
+      mobile: $('contact-mobile'), country: $('contact-country'), subject: $('contact-subject'),
+      message: $('contact-message'), website: $('contact-website') };
+    var counter = $('contact-message-count');
+    function count() { counter.textContent = f.message.value.length + ' / 1000'; }
+    f.message.addEventListener('input', count); count();
+    Object.keys(f).forEach(function (key) {
+      f[key].addEventListener('input', function () { invalid(f[key], false); });
+      f[key].addEventListener('change', function () { invalid(f[key], false); });
     });
-
-    form.addEventListener('submit', function (event) {
+    var product = productParams();
+    var q = new URLSearchParams(location.search);
+    var requestedSubject = q.get('subject');
+    if (product) {
+      f.subject.value = product.type;
+      f.message.value = 'I would like more information about ' + product.reference + '. ';
+      count();
+    } else if (requestedSubject && Array.from(f.subject.options).some(function (o) { return o.value === requestedSubject; })) {
+      f.subject.value = requestedSubject;
+    }
+    form.addEventListener('submit', async function (event) {
       event.preventDefault();
-      clearAlert();
-      if (!validate(fields)) {
-        showAlert('danger',
-          'Please complete the highlighted fields — every enquiry needs ' +
-          'a name, a valid email, a mobile number, a country, a subject ' +
-          'and a few sentences.');
-        return;
-      }
-      /* keys mirror the future Supabase `enquiries` columns */
-      submitEnquiry({
-        full_name: fields.name.value.trim(),
-        company_name: fields.company.value.trim(),
-        email: fields.email.value.trim(),
-        mobile: fields.mobile.value.trim(),
-        country: fields.country.value === 'other'
-          ? 'Other'
-          : fields.country.value,
-        subject: fields.subject.options[fields.subject.selectedIndex].text,
-        message: fields.message.value.trim(),
-      }, form);
+      if (f.website.value) return; // honeypot: deliberately silent
+      var checks = [
+        [f.name, f.name.value.trim().length >= 2], [f.email, EMAIL_RE.test(f.email.value.trim())],
+        [f.mobile, !f.mobile.value.trim() || PHONE_RE.test(f.mobile.value.trim())],
+        [f.subject, !!f.subject.value], [f.message, f.message.value.trim().length >= 20]
+      ];
+      checks.forEach(function (c) { invalid(c[0], !c[1]); });
+      var bad = checks.find(function (c) { return !c[1]; });
+      if (bad) { alertBox('danger', 'Please complete the highlighted required fields with valid information.'); bad[0].focus(); return; }
+      var button = $('contact-submit'); button.disabled = true; button.textContent = 'Sending…';
+      try {
+        var id = await insert({ full_name: f.name.value.trim(), company_name: f.company.value.trim() || null,
+          email: f.email.value.trim(), mobile: f.mobile.value.trim() || null,
+          country: f.country.value === 'other' ? 'Other' : (f.country.value || null),
+          subject: f.subject.options[f.subject.selectedIndex].text, message: f.message.value.trim() });
+        form.reset(); count();
+        alertBox('success', 'Thank you — your enquiry ' + id + ' has been received.');
+      } catch (error) {
+        console.error('[NGD] Enquiry insert failed', error);
+        alertBox('danger', 'We could not send your enquiry. Please check your connection and try again.');
+      } finally { button.disabled = false; button.textContent = 'Send enquiry'; }
     });
   }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();

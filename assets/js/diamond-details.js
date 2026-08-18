@@ -181,7 +181,7 @@
   }).join('');
 
   /* ---------- CTAs (frontend only — no fake success) ---------- */
-  var inspectUrl = 'contact.html?stone=' + encodeURIComponent(stone.id) + '&type=inspection';
+  var inspectUrl = 'contact.html?stone=' + encodeURIComponent(stone.id) + '&type=enquiry';
   document.getElementById('dd-inspect').setAttribute('href', inspectUrl);
   window.NGDBindQuoteButtons(
     [document.getElementById('dd-quote'), document.getElementById('dd-sticky-quote')],
