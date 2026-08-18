@@ -1,4 +1,4 @@
-# Supabase Auth Setup — Step 4A (Login + Customer Signup)
+# Supabase Auth Setup — Login + Customer/Admin Signup
 
 This document explains exactly what you must configure to make the
 New Grown Diamond login and signup work against **your** Supabase project.
@@ -78,9 +78,10 @@ current session — and never displays a key. Two things to know:
 Script order on every auth page (all `defer`): Supabase JS v2 (CDN,
 pinned `2.112.3`) → config → client → auth → page script.
 
-## 4. Creating a customer account
+## 4. Creating an account
 
-1. Open `register.html`.
+1. Open `register.html` and leave **Account Type** set to Customer for a
+   normal customer account.
 2. Fill in full name, company (optional), email, mobile, password (min 8),
    confirm password, and accept the terms.
 3. Submit. The browser calls `supabase.auth.signUp()` sending **only** the
@@ -91,6 +92,14 @@ pinned `2.112.3`) → config → client → auth → page script.
    ever called.
 4. Your existing database trigger creates the `public.profiles` row with
    `role = 'customer'` and the default `account_status`.
+
+For an administrator, select **Admin**, enter the separately supplied Admin
+Code, and submit. The browser sends the code and registration details to the
+`register-admin` Edge Function. Only that server-side function validates the
+secret, creates the user with Supabase's privileged API, and writes
+`role = 'admin'` / `account_status = 'active'`. The frontend never receives the
+real code or a service-role key. A successful registration signs in through the
+normal Auth API and redirects to `admin/dashboard.html`.
 
 ### How email confirmation affects signup
 
@@ -160,24 +169,20 @@ Any element with the `data-ngd-logout` attribute is wired automatically to
 “You have signed out.” notice. Revisiting a dashboard afterwards redirects
 back to login.
 
-## 8. How the Admin role is assigned (First Admin)
+## 8. Configure secure Admin registration
 
-There is deliberately **no admin signup** — browsers can never grant roles.
-You (the project owner) promote the first account with the safe template
-in [`supabase/first-admin.sql`](../supabase/first-admin.sql):
+1. Apply `supabase/migrations/20260818000000_admin_signup_attempts.sql`.
+   Its table has RLS enabled and no browser policies; it supports a five-failed-
+   attempts-per-15-minutes limit keyed by a hash of client IP and email.
+2. Store the shared code in the hosted function environment:
+   `supabase secrets set ADMIN_SIGNUP_CODE=123456`.
+3. Deploy with `supabase functions deploy register-admin`.
 
-1. Create the account normally via `register.html` (it becomes a customer),
-   and confirm its email.
-2. Dashboard → **SQL Editor** → paste the template, replace
-   `YOUR_ADMIN_EMAIL_HERE` with that account's email, and run it. The
-   script refuses to run with the placeholder in place, creates no user
-   and no password, and reports clearly if the email is unknown.
-3. That user now lands on `admin/dashboard.html` at next sign-in, and the
-   admin header shows their real name, email and role.
-
-Step-by-step walkthrough: [`FIRST_ADMIN_SETUP.md`](FIRST_ADMIN_SETUP.md).
-A proper in-app admin-management flow (protected by RLS policies that only
-admins satisfy) comes later — never expose role changes to the browser.
+Do not put the code in HTML, frontend JavaScript, configuration, or a committed
+environment file. Supabase automatically supplies `SUPABASE_URL` and
+`SUPABASE_SERVICE_ROLE_KEY` to the hosted function. The older
+`supabase/first-admin.sql` remains available only as an owner-operated recovery
+option.
 
 ## 9. Troubleshooting
 
