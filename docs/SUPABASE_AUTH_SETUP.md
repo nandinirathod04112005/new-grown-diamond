@@ -69,7 +69,7 @@ current session — and never displays a key. Two things to know:
 |---|---|
 | `assets/js/supabase-config.js` | Your Project URL + publishable key (placeholders) |
 | `assets/js/supabase-client.js` | Creates the **single** shared Supabase client (`window.ngdSupabase`) |
-| `assets/js/auth.js` | `getCurrentUser`, `getCurrentProfile`, `requireAuth`, `requireAdmin`, `requireCustomer`, `logout`, account-status handling, auth-state listener |
+| `assets/js/auth-guard.js` | `getCurrentUser`, `getCurrentProfile`, `requireAuth`, `requireAdmin`, `requireCustomer`, `logout`, account-status handling, auth-state listener |
 | `assets/js/login.js` | `login.html` → `supabase.auth.signInWithPassword()` |
 | `assets/js/register.js` | `register.html` → `supabase.auth.signUp()` |
 | `assets/js/customer-dashboard.js` | Guards + fills `account/dashboard.html` |

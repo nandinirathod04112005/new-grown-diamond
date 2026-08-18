@@ -1,4 +1,4 @@
-# First Admin Setup — Step 31
+# First Admin Setup — Step 3
 
 There is deliberately **no admin signup** anywhere in the site — a browser
 can never grant roles, and new registrations always become `customer`

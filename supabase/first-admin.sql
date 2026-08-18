@@ -1,5 +1,5 @@
 -- ============================================================
--- NEW GROWN DIAMOND — FIRST ADMIN PROMOTION (STEP 31)
+-- NEW GROWN DIAMOND — FIRST ADMIN PROMOTION (STEP 3)
 -- ------------------------------------------------------------
 -- Promotes ONE existing, already-registered account to admin.
 -- Run it in: Supabase Dashboard → SQL Editor.

@@ -31,7 +31,6 @@
     'We could not verify your account right now. Please sign in again.';
   var MSG_BAD_ROLE =
     'Your account role is not recognised. Please contact support.';
-  var BLOCKED_STATUSES = ['inactive', 'suspended'];
   var KNOWN_ROLES = ['admin', 'customer'];
 
   /* True once a guard runs on this page — lets the auth-state
@@ -133,11 +132,11 @@
     }
   }
 
-  function isBlockedStatus(profile) {
+  function isActiveStatus(profile) {
     var status = String((profile && profile.account_status) || '')
       .trim()
       .toLowerCase();
-    return BLOCKED_STATUSES.indexOf(status) !== -1;
+    return status === 'active';
   }
 
   function dashboardPath(profile) {
@@ -226,7 +225,9 @@
       await rejectToLogin(MSG_VERIFY_FAILED, 'warning');
       return null;
     }
-    if (isBlockedStatus(result.profile)) {
+    /* Fail closed: access requires the explicit `active` value. This
+       also rejects null, blank, pending, or future status values. */
+    if (!isActiveStatus(result.profile)) {
       await rejectToLogin(MSG_UNAVAILABLE);
       return null;
     }
@@ -323,7 +324,7 @@
     fillProfileFields: fillProfileFields,
     goToDashboard: goToDashboard,
     dashboardPath: dashboardPath,
-    isBlockedStatus: isBlockedStatus,
+    isActiveStatus: isActiveStatus,
     consumeNotice: consumeNotice,
     setNotice: setNotice,
     revealPage: revealPage,

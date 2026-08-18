@@ -13,7 +13,7 @@
        email, { redirectTo: <your reset-completion page> });
 
    …then add the standard auth script stack (supabase CDN, config,
-   client, auth.js) to forgot-password.html — exactly as on
+   client, auth-guard.js) to forgot-password.html — exactly as on
    login.html. The form IDs (ngd-forgot-form / forgot-email /
    forgot-submit / forgot-alert) are final.
    ============================================================ */
