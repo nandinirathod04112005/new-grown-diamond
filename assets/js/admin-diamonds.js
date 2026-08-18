@@ -6,12 +6,7 @@
    may see). Search, filters, sort and pagination run client-side
    over the loaded inventory.
 
-   Honesty notes:
-   - Feature / activate / archive still change THIS PAGE ONLY —
-     writing those changes to the database arrives with the Edit
-     step, and every toast says so. Reloading restores the truth
-     from the database.
-   - Loading / empty / error states are real: they reflect the
+   Loading / empty / error states are real: they reflect the
      actual fetch, and Retry re-queries Supabase.
    ============================================================ */
 (function () {
@@ -30,12 +25,17 @@
     sort: 'updated-desc',
     page: 1,
     ui: 'loading',
-    lastArchived: null,
     toolbarBound: false
   };
 
   function $(id) {
     return document.getElementById(id);
+  }
+
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, function (character) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character];
+    });
   }
 
   /* ---------------- live data ---------------- */
@@ -66,12 +66,12 @@
     var res = await window.ngdSupabase
       .from('diamonds')
       .select('*')
-      .order('created_at', { ascending: false });
+      .order('updated_at', { ascending: false });
     if (res.error) throw res.error;
     return (res.data || []).map(mapRow);
   }
 
-  /* ---------------- honest page-only mutations ---------------- */
+  /* ---------------- notifications ---------------- */
 
   function toast(message, withUndo, type) {
     var box = $('adm-toast');
@@ -93,41 +93,6 @@
       div.appendChild(undo);
     }
     box.appendChild(div);
-  }
-
-  function pageOnlyNote(action, row) {
-    return row.id + ' ' + action + ' on this page only — the database was ' +
-      'not changed (saving arrives with the Edit step), so it resets on reload.';
-  }
-
-  function toggleFeatured(row) {
-    row.featured = !row.featured;
-    toast(pageOnlyNote(row.featured ? 'marked featured' : 'unfeatured', row));
-    apply();
-  }
-
-  function toggleActive(row) {
-    row.active = !row.active;
-    toast(pageOnlyNote(row.active ? 'activated' : 'deactivated', row));
-    apply();
-  }
-
-  function archiveRow(row) {
-    var index = state.rows.indexOf(row);
-    if (index === -1) return;
-    state.rows.splice(index, 1);
-    state.lastArchived = { row: row, index: index };
-    toast(pageOnlyNote('hidden', row), true);
-    apply();
-  }
-
-  function restoreArchived() {
-    var last = state.lastArchived;
-    if (!last) return;
-    state.rows.splice(Math.min(last.index, state.rows.length), 0, last.row);
-    state.lastArchived = null;
-    $('adm-toast').innerHTML = '';
-    apply();
   }
 
   /* ---------------- filtering + sorting ---------------- */
@@ -177,14 +142,10 @@
 
   /* ---------------- rendering ---------------- */
 
-  function art(row) {
-    return (window.NGD_GEM_ART || {})[String(row.shape).toLowerCase()] || '';
-  }
-
   function chips(row) {
     var availCls = row.availability === 'In Stock' ? 'is-good' : '';
     return {
-      avail: '<span class="ngd-status-chip ' + availCls + '">' + row.availability + '</span>',
+      avail: '<span class="ngd-status-chip ' + availCls + '">' + escapeHtml(row.availability) + '</span>',
       featured: row.featured
         ? '<span class="ngd-status-chip is-gold">Featured</span>'
         : '<span class="ngd-status-chip is-dim">—</span>',
@@ -194,52 +155,21 @@
     };
   }
 
-  var ICONS = {
-    view: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12Z"/><circle cx="12" cy="12" r="2.8"/></svg>',
-    edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19.5 8.5a2.1 2.1 0 0 0-3-3L5 17Z"/><path d="m13.5 6.5 3 3"/></svg>',
-    star: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3.5 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9Z"/></svg>',
-    power: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v8"/><path d="M6.3 6.5a8 8 0 1 0 11.4 0"/></svg>',
-    archive: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="5" rx="1"/><path d="M5 9v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9M10 13h4"/></svg>'
-  };
-
-  function actionsHtml(row) {
-    return (
-      '<div class="ngd-adm-actions">' +
-      '<a class="ngd-icon-btn" href="../diamond-details.html?id=' + encodeURIComponent(row.id) + '"' +
-      ' title="View on the storefront" aria-label="View ' + row.id + '" data-adm-act="view">' + ICONS.view + '</a>' +
-      '<a class="ngd-icon-btn" href="edit-diamond.html?id=' + encodeURIComponent(row.id) + '"' +
-      ' title="Edit" aria-label="Edit ' + row.id + '" data-adm-act="edit">' + ICONS.edit + '</a>' +
-      '<button type="button" class="ngd-icon-btn' + (row.featured ? ' is-on' : '') + '"' +
-      ' title="' + (row.featured ? 'Unfeature' : 'Feature') + ' (this page only)"' +
-      ' aria-label="' + (row.featured ? 'Unfeature ' : 'Feature ') + row.id + '"' +
-      ' aria-pressed="' + row.featured + '" data-adm-act="feature">' + ICONS.star + '</button>' +
-      '<button type="button" class="ngd-icon-btn' + (row.active ? '' : ' is-off') + '"' +
-      ' title="' + (row.active ? 'Deactivate' : 'Activate') + ' (this page only)"' +
-      ' aria-label="' + (row.active ? 'Deactivate ' : 'Activate ') + row.id + '"' +
-      ' aria-pressed="' + row.active + '" data-adm-act="active">' + ICONS.power + '</button>' +
-      '<button type="button" class="ngd-icon-btn is-danger" title="Hide from this page (not deleted)"' +
-      ' aria-label="Hide ' + row.id + '" data-adm-act="archive">' + ICONS.archive + '</button>' +
-      '</div>'
-    );
-  }
-
   function tableRows(rows) {
     return rows.map(function (row) {
       var c = chips(row);
       return (
-        '<tr data-adm-row="' + row.id + '"' + (row.active ? '' : ' class="is-inactive"') + '>' +
-        '<td><span class="ngd-req-thumb">' + art(row) + '</span></td>' +
-        '<td class="ngd-stock-cell">' + row.id + '</td>' +
-        '<td>' + row.shape + '</td>' +
+        '<tr data-adm-row="' + escapeHtml(row.id) + '"' + (row.active ? '' : ' class="is-inactive"') + '>' +
+        '<td class="ngd-stock-cell">' + escapeHtml(row.id) + '</td>' +
+        '<td>' + escapeHtml(row.shape) + '</td>' +
         '<td>' + row.carat.toFixed(2) + '</td>' +
-        '<td>' + row.colour + '</td>' +
-        '<td>' + row.clarity + '</td>' +
-        '<td>' + row.lab + '</td>' +
+        '<td>' + escapeHtml(row.colour) + '</td>' +
+        '<td>' + escapeHtml(row.clarity) + '</td>' +
+        '<td>' + escapeHtml(row.lab) + '</td>' +
         '<td>' + c.avail + '</td>' +
         '<td>' + c.featured + '</td>' +
         '<td>' + c.active + '</td>' +
-        '<td class="text-nowrap">' + row.updated + '</td>' +
-        '<td>' + actionsHtml(row) + '</td>' +
+        '<td class="text-nowrap">' + escapeHtml(row.updated) + '</td>' +
         '</tr>'
       );
     }).join('');
@@ -249,18 +179,16 @@
     return rows.map(function (row) {
       var c = chips(row);
       return (
-        '<article class="ngd-req-card" data-adm-row="' + row.id + '">' +
+        '<article class="ngd-req-card" data-adm-row="' + escapeHtml(row.id) + '">' +
         '<div class="d-flex align-items-center gap-3">' +
-        '<span class="ngd-req-thumb">' + art(row) + '</span>' +
         '<div class="flex-grow-1 min-w-0">' +
-        '<strong>' + row.id + '</strong>' +
-        '<span class="ngd-text-muted d-block small">' + row.shape + ' · ' + row.carat.toFixed(2) +
-        ' ct · ' + row.colour + ' · ' + row.clarity + ' · ' + row.lab + '</span>' +
+        '<strong>' + escapeHtml(row.id) + '</strong>' +
+        '<span class="ngd-text-muted d-block small">' + escapeHtml(row.shape) + ' · ' + row.carat.toFixed(2) +
+        ' ct · ' + escapeHtml(row.colour) + ' · ' + escapeHtml(row.clarity) + ' · ' + escapeHtml(row.lab) + '</span>' +
         '</div>' +
         '</div>' +
         '<div class="d-flex flex-wrap gap-2 mt-2">' + c.avail + c.featured + c.active + '</div>' +
-        '<dl class="ngd-req-meta"><div><dt>Updated</dt><dd>' + row.updated + '</dd></div></dl>' +
-        '<div class="mt-2">' + actionsHtml(row) + '</div>' +
+        '<dl class="ngd-req-meta"><div><dt>Updated</dt><dd>' + escapeHtml(row.updated) + '</dd></div></dl>' +
         '</article>'
       );
     }).join('');
@@ -293,21 +221,6 @@
     });
   }
 
-  function bindActions(root) {
-    root.querySelectorAll('[data-adm-act]').forEach(function (el) {
-      var act = el.getAttribute('data-adm-act');
-      if (act === 'view' || act === 'edit') return; /* real navigation */
-      el.addEventListener('click', function () {
-        var id = el.closest('[data-adm-row]').getAttribute('data-adm-row');
-        var row = state.rows.find(function (r) { return r.id === id; });
-        if (!row) return;
-        if (act === 'feature') toggleFeatured(row);
-        else if (act === 'active') toggleActive(row);
-        else if (act === 'archive') archiveRow(row);
-      });
-    });
-  }
-
   function apply() {
     if (state.ui !== 'rows') return;
     var all = visibleRows();
@@ -318,8 +231,6 @@
 
     $('adm-table-body').innerHTML = tableRows(pageRows);
     $('adm-cards-wrap').innerHTML = cardsHtml(pageRows);
-    bindActions($('adm-table-body'));
-    bindActions($('adm-cards-wrap'));
     renderPagination(all.length);
 
     $('adm-count').textContent =

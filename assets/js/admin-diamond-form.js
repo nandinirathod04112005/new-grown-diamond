@@ -22,8 +22,7 @@
 (function () {
   'use strict';
 
-  var REQUIRED = ['stock_number', 'shape', 'carat', 'color', 'clarity', 'cut',
-    'laboratory', 'availability'];
+  var REQUIRED = ['stock_number', 'shape', 'carat'];
 
   var IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
   var IMAGE_MAX_BYTES = 10 * 1024 * 1024;
@@ -120,8 +119,8 @@
 
   function numberOk(el) {
     if (el.value.trim() === '') return !el.required;
-    var v = parseFloat(el.value);
-    if (isNaN(v)) return false;
+    var v = Number(el.value);
+    if (!Number.isFinite(v)) return false;
     var min = el.getAttribute('min');
     var max = el.getAttribute('max');
     if (min !== null && v < parseFloat(min)) return false;
@@ -151,7 +150,15 @@
 
     var url = field('certificate_url');
     if (url && url.value.trim() !== '') {
-      check(url, /^https?:\/\/\S+$/i.test(url.value.trim()));
+      var validUrl = false;
+      try {
+        var parsedUrl = new URL(url.value.trim());
+        validUrl = (parsedUrl.protocol === 'https:' || parsedUrl.protocol === 'http:') &&
+          parsedUrl.hostname !== '';
+      } catch (error) {
+        validUrl = false;
+      }
+      check(url, validUrl);
     }
 
     if (firstBad) firstBad.focus();
@@ -187,7 +194,7 @@
     form.querySelectorAll('[name]').forEach(function (el) {
       if (el.type === 'file') return;
       if (el.type === 'checkbox') payload[el.name] = el.checked;
-      else if (el.type === 'number') payload[el.name] = el.value === '' ? null : parseFloat(el.value);
+      else if (el.type === 'number') payload[el.name] = el.value === '' ? null : Number(el.value);
       else payload[el.name] = el.value.trim() === '' ? null : el.value.trim();
     });
     payload.public_id = generatePublicId();

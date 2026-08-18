@@ -258,7 +258,7 @@ async function fillMinimumValid(page, stock) {
     expect(JSON.stringify(state.sections) === JSON.stringify(['1', '2', '3', '4', '5', '6', '7', '8']),
       'eight sections in order');
     expect(state.fields.length === 0, 'all 27 column-named fields present, missing: ' + state.fields.join(','));
-    expect(state.stars === 8, 'eight required indicators, got ' + state.stars);
+    expect(state.stars === 3, 'three required indicators, got ' + state.stars);
     expect(state.priceVisibleType === 'checkbox', 'price_visible is a boolean checkbox');
     expect(/saves to Supabase/i.test(state.chip), 'live chip, got ' + state.chip);
     expect(state.buttons.save === 'Save Diamond' && state.buttons.another &&
@@ -273,8 +273,9 @@ async function fillMinimumValid(page, stock) {
       invalid: [...document.querySelectorAll('#ngd-diamond-form .is-invalid')].map((el) => el.name),
       alert: (document.querySelector('#dia-alert .ngd-alert') || { textContent: '' }).textContent,
     }));
-    expect(state.invalid.length === 8 && state.invalid.includes('color'),
-      '8 required fields flagged incl. color, got ' + state.invalid.join(','));
+    expect(state.invalid.length === 3 && state.invalid.includes('stock_number') &&
+      state.invalid.includes('shape') && state.invalid.includes('carat'),
+      'only stock number, shape and carat are required, got ' + state.invalid.join(','));
     expect(/highlighted fields/i.test(state.alert), 'error summary shown');
     await fillMinimumValid(page);
     await page.fill('[name="depth_percentage"]', '150');

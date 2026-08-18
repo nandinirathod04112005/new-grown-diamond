@@ -189,7 +189,7 @@ async function openInventory(page, query) {
   SITE = started.origin;
   browser = await chromium.launch(chromiumOptions());
 
-  await scenario('live list: 12 columns over public.diamonds rows, newest first, truthful note', {}, async (page) => {
+  await scenario('live list: requested columns over public.diamonds rows, newest first, truthful note', {}, async (page) => {
     await openInventory(page);
     const state = await page.evaluate(() => {
       const heads = [...document.querySelectorAll('.ngd-admin-table thead th')]
@@ -205,7 +205,6 @@ async function openInventory(page, query) {
         rows: document.querySelectorAll('#adm-table-body tr').length,
         firstStock: first.getAttribute('data-adm-row'),
         count: document.getElementById('adm-count').textContent,
-        thumb: !!first.querySelector('.ngd-req-thumb svg'),
         actions: first.querySelectorAll('[data-adm-act]').length,
         addHref: document.getElementById('adm-add').getAttribute('href'),
         demoDataLoaded: !!window.NGD_DEMO_DIAMONDS,
@@ -219,14 +218,15 @@ async function openInventory(page, query) {
     expect(!/demo preview|demo catalogue/i.test(state.notice), 'no demo wording left');
     expect(state.chip.includes('Live'), 'Live chip in the toolbar, got ' + state.chip.join(','));
     expect(JSON.stringify(state.heads) === JSON.stringify(
-      ['Image', 'Stock No.', 'Shape', 'Carat', 'Colour', 'Clarity', 'Lab',
-        'Availability', 'Featured', 'Active', 'Updated', 'Actions']),
-      'twelve columns kept, got ' + state.heads.join(','));
+      ['Stock No.', 'Shape', 'Carat', 'Colour', 'Clarity', 'Lab',
+        'Availability', 'Featured', 'Active', 'Updated']),
+      'requested columns shown, got ' + state.heads.join(','));
     expect(state.rows === 10, 'first page holds 10 rows, got ' + state.rows);
     expect(state.firstStock === 'NGD-1028', 'newest stone first, got ' + state.firstStock);
     expect(/of 28/.test(state.count) && /inventory: 28 stones/.test(state.count),
       'count reflects the table, got ' + state.count);
-    expect(state.thumb && state.actions === 5 && state.addHref === 'add-diamond.html', 'row anatomy kept');
+    expect(state.actions === 0 && state.addHref === 'add-diamond.html',
+      'Add is available without prematurely exposing edit/archive actions');
     expect(!state.demoDataLoaded, 'demo catalogue script no longer loads on this page');
     expect(!state.stateSwitch, 'demo state switch removed — states are real now');
   });
@@ -249,14 +249,14 @@ async function openInventory(page, query) {
     await page.waitForSelector('#adm-filters.show', { timeout: 4000 });
     await page.selectOption('#adm-f-shape', 'Round');
     let state = await page.evaluate(() => ({
-      shapes: [...document.querySelectorAll('#adm-table-body tr td:nth-child(3)')].map((t) => t.textContent.trim()),
+      shapes: [...document.querySelectorAll('#adm-table-body tr td:nth-child(2)')].map((t) => t.textContent.trim()),
     }));
     expect(state.shapes.length === 4 && state.shapes.every((s) => s === 'Round'),
       'shape filter applies to the loaded rows, got ' + state.shapes.length);
     await page.click('#adm-clear');
     await page.selectOption('#adm-f-availability', 'On Request');
     state = await page.evaluate(() => ({
-      chips: [...document.querySelectorAll('#adm-table-body tr td:nth-child(8)')].map((t) => t.textContent.trim()),
+      chips: [...document.querySelectorAll('#adm-table-body tr td:nth-child(7)')].map((t) => t.textContent.trim()),
     }));
     expect(state.chips.length === 7 && state.chips.every((c) => c === 'On Request'),
       'availability filter applies, got ' + state.chips.length);
@@ -270,14 +270,14 @@ async function openInventory(page, query) {
     await page.click('#adm-clear');
     await page.selectOption('#adm-f-featured', 'featured');
     state = await page.evaluate(() => ({
-      featured: [...document.querySelectorAll('#adm-table-body tr td:nth-child(9)')].map((t) => t.textContent.trim()),
+      featured: [...document.querySelectorAll('#adm-table-body tr td:nth-child(8)')].map((t) => t.textContent.trim()),
     }));
     expect(state.featured.length === 6 && state.featured.every((f) => f === 'Featured'),
       'featured filter applies, got ' + state.featured.length);
     await page.click('#adm-clear');
     await page.selectOption('#adm-sort', 'carat-desc');
     const carats = await page.evaluate(() =>
-      [...document.querySelectorAll('#adm-table-body tr td:nth-child(4)')].map((t) => parseFloat(t.textContent)));
+      [...document.querySelectorAll('#adm-table-body tr td:nth-child(3)')].map((t) => parseFloat(t.textContent)));
     const sorted = [...carats].sort((a, b) => b - a);
     expect(JSON.stringify(carats) === JSON.stringify(sorted), 'carat sort orders the page');
   });
@@ -292,31 +292,6 @@ async function openInventory(page, query) {
     }));
     expect(state.active === '3' && state.rows === 8, 'last page holds the remainder, got ' + state.rows);
     expect(/Showing 21–28 of 28/.test(state.count), 'count window follows, got ' + state.count);
-  });
-
-  await scenario('feature/activate/hide stay page-only with truthful toasts', {}, async (page) => {
-    await openInventory(page);
-    await page.fill('#adm-search', 'NGD-1001');
-    await page.click('[data-adm-row="NGD-1001"] [data-adm-act="feature"]');
-    let state = await page.evaluate(() => ({
-      featured: document.querySelector('#adm-table-body tr td:nth-child(9)').textContent.trim(),
-      toast: document.querySelector('#adm-toast .ngd-alert').textContent,
-    }));
-    expect(state.featured === '—', 'unfeatured in the page');
-    expect(/on this page only/i.test(state.toast) && /database was not changed/i.test(state.toast),
-      'truthful page-only toast, got: ' + state.toast);
-    expect(!/success|saved!/i.test(state.toast), 'no fake success wording');
-    await page.click('[data-adm-row="NGD-1001"] [data-adm-act="archive"]');
-    state = await page.evaluate(() => ({
-      gone: !document.querySelector('[data-adm-row="NGD-1001"]'),
-      undo: !!document.getElementById('adm-undo'),
-      toast: document.querySelector('#adm-toast .ngd-alert').textContent,
-    }));
-    expect(state.gone && state.undo && /hidden on this page only/i.test(state.toast),
-      'hide is honest and undoable');
-    await page.click('#adm-undo');
-    const back = await page.evaluate(() => !!document.querySelector('[data-adm-row="NGD-1001"]'));
-    expect(back, 'Undo restores the stone');
   });
 
   await scenario('?added= arrival shows the success toast over the refreshed list', {}, async (page) => {
