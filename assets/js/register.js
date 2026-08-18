@@ -2,8 +2,8 @@
    NEW GROWN DIAMOND — CUSTOMER SIGNUP (Supabase Auth)
    ------------------------------------------------------------
    - Validates the form, then supabase.auth.signUp()
-   - Sends ONLY safe metadata: full_name, company_name, phone,
-     country. The role is NEVER sent from the browser — the
+   - Sends ONLY safe metadata: full_name, company_name and phone.
+     The role is NEVER sent from the browser — the
      database trigger creates the profiles row with role = 'customer'.
    - Email confirmation ON  → success message, stay on page
    - Email confirmation OFF → session returned → customer dashboard
@@ -170,8 +170,7 @@
     var metadata = {
       full_name: $('reg-full-name').value.trim(),
       company_name: $('reg-company').value.trim() || null,
-      phone: $('reg-phone').value.trim(),
-      country: $('reg-country').value
+      phone: $('reg-phone').value.trim()
     };
 
     setLoading(true);

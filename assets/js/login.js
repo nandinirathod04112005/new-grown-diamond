@@ -131,6 +131,11 @@
       showAlert('danger', auth.messages.unavailable);
       return false;
     }
+    if (result.profile.role !== 'admin' && result.profile.role !== 'customer') {
+      await window.ngdSupabase.auth.signOut();
+      showAlert('danger', auth.messages.badRole);
+      return false;
+    }
 
     window.location.replace(
       (window.NGD_SITE_ROOT || './') + auth.dashboardPath(result.profile)
@@ -158,6 +163,11 @@
     if (auth.isBlockedStatus(result.profile)) {
       await window.ngdSupabase.auth.signOut();
       showAlert('danger', auth.messages.unavailable);
+      return;
+    }
+    if (result.profile.role !== 'admin' && result.profile.role !== 'customer') {
+      await window.ngdSupabase.auth.signOut();
+      showAlert('danger', auth.messages.badRole);
       return;
     }
     auth.goToDashboard(result.profile);
