@@ -11,7 +11,8 @@
 
   function artFor(d) {
     var art = window.NGD_GEM_ART || {};
-    return art[d.shape.toLowerCase()] || art.round || '';
+    if (d.imagePath || d.image_path) return window.NGDDiamondImages.picture(d.imagePath || d.image_path, d.shape, d.id + ' diamond', 'ngd-product-image');
+    return art[d.shape.toLowerCase()] || art.round || window.NGDDiamondImages.fallback(d.shape);
   }
 
   function availBadge(d) {

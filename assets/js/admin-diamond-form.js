@@ -26,13 +26,13 @@
     'laboratory', 'availability'];
 
   var IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-  var IMAGE_MAX_BYTES = 10 * 1024 * 1024;
+  var IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 
   var state = {
     mode: 'add',
     userId: null,     /* the signed-in admin (created_by) */
     record: null,     /* edit: the demo record being edited */
-    imageFile: null,  /* File selected for preview (never uploaded) */
+    imageFile: null,  /* validated File selected for upload */
     dirty: false,
     saving: false
   };
@@ -190,8 +190,10 @@
       else if (el.type === 'number') payload[el.name] = el.value === '' ? null : parseFloat(el.value);
       else payload[el.name] = el.value.trim() === '' ? null : el.value.trim();
     });
-    payload.public_id = generatePublicId();
-    payload.created_by = state.userId;
+    if (state.mode === 'add') {
+      payload.public_id = generatePublicId();
+      payload.created_by = state.userId;
+    }
     return payload;
   }
 
@@ -221,51 +223,83 @@
     return 'Supabase rejected the save: ' + msg;
   }
 
-  /* ---------------- the live save (add mode) ---------------- */
+  /* ---------------- live add/edit save + Storage upload ---------------- */
+
+  function safeExtension(file) {
+    return { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' }[file.type];
+  }
+
+  function randomToken() {
+    var bytes = new Uint8Array(16);
+    window.crypto.getRandomValues(bytes);
+    return Array.prototype.map.call(bytes, function (b) { return b.toString(16).padStart(2, '0'); }).join('');
+  }
+
+  async function uploadImage(publicId) {
+    if (!state.imageFile) return null;
+    var safeId = String(publicId).replace(/[^A-Za-z0-9_-]/g, '-');
+    var path = 'diamonds/' + safeId + '/' + randomToken() + '.' + safeExtension(state.imageFile);
+    var uploaded = await window.ngdSupabase.storage.from(window.NGDDiamondImages.bucket)
+      .upload(path, state.imageFile, { cacheControl: '3600', upsert: false, contentType: state.imageFile.type });
+    if (uploaded.error) throw new Error('Image upload failed: ' + uploaded.error.message);
+    return path;
+  }
+
+  async function removeUploaded(path) {
+    if (!path) return;
+    var result = await window.ngdSupabase.storage.from(window.NGDDiamondImages.bucket).remove([path]);
+    if (result.error) console.error('[NGD Diamond Image] cleanup failed:', result.error);
+  }
 
   async function saveDiamond(payload, mode, form) {
     form.setAttribute('data-ngd-payload', JSON.stringify(payload));
     var sb = window.ngdSupabase;
     var label = payload.stock_number;
+    var oldPath = state.record && state.record.image_path;
+    var publicId = (state.record ? state.record.public_id : payload.public_id) || label;
+    var newPath = null;
 
-    /* friendly duplicate check first (the DB unique constraint is the
-       real enforcement — a race still surfaces as 23505 below) */
-    var existing = await sb.from('diamonds')
-      .select('id')
-      .eq('stock_number', label)
-      .limit(1);
-    if (!existing.error && existing.data && existing.data.length > 0) {
-      showAlert('danger',
-        label + ' already exists in the inventory — stock numbers must be unique.');
-      var stockEl = field('stock_number');
-      setInvalid(stockEl, true);
-      stockEl.focus();
-      return false;
+    if (state.mode === 'add') {
+      var existing = await sb.from('diamonds').select('id').eq('stock_number', label).limit(1);
+      if (!existing.error && existing.data && existing.data.length) {
+        showAlert('danger', label + ' already exists in the inventory — stock numbers must be unique.');
+        setInvalid(field('stock_number'), true);
+        return false;
+      }
     }
 
-    var res = await sb.from('diamonds').insert(payload);
+    try {
+      newPath = await uploadImage(publicId);
+    } catch (uploadError) {
+      showAlert('danger', uploadError.message + '. Nothing was changed and the previous image is still in place.');
+      return false;
+    }
+    if (newPath) payload.image_path = newPath;
+
+    var query = state.mode === 'edit'
+      ? sb.from('diamonds').update(payload).eq('id', state.record.id)
+      : sb.from('diamonds').insert(payload);
+    var res = await query;
     if (res.error) {
-      if (isDuplicateError(res.error)) setInvalid(field('stock_number'), true);
+      await removeUploaded(newPath); // never leave an orphan when the row save fails
       showAlert('danger', mapDbError(res.error));
       return false;
     }
 
+    // Replacement ordering is intentional: upload -> database update -> old delete.
+    if (newPath && oldPath && oldPath !== newPath) await removeUploaded(oldPath);
     clearDirty();
     if (mode === 'add-another') {
-      showAlert('success',
-        label + ' was added to the inventory (' + payload.public_id + '). ' +
-        'The form has been cleared for the next stone.');
-      form.reset();
-      resetImage();
-      window.scrollTo({ top: 0 });
+      showAlert('success', label + ' was added. The form has been cleared for the next stone.');
+      form.reset(); resetImage(); window.scrollTo({ top: 0 });
     } else {
-      showAlert('success', label + ' was added to the inventory. Returning to the list…');
-      window.location.replace('diamonds.html?added=' + encodeURIComponent(label));
+      showAlert('success', label + (state.mode === 'edit' ? ' was updated' : ' was added') + '. Returning to the list…');
+      window.location.replace('diamonds.html?' + (state.mode === 'edit' ? 'updated=' : 'added=') + encodeURIComponent(label));
     }
     return true;
   }
 
-  /* ---------------- image picker (preview only) ---------------- */
+  /* ---------------- validated image picker ---------------- */
 
   function imageError(message) {
     var box = $('dia-image-error');
@@ -273,14 +307,23 @@
     box.hidden = !message;
   }
 
+  function inputReset() {
+    var input = $('dia-file');
+    if (input) input.value = '';
+  }
+
   function acceptFile(file) {
     if (!file) return;
     if (IMAGE_TYPES.indexOf(file.type) === -1) {
+      state.imageFile = null;
+      inputReset();
       imageError('That file type isn’t supported — use JPG, JPEG, PNG or WEBP.');
       return;
     }
     if (file.size > IMAGE_MAX_BYTES) {
-      imageError('That image is larger than 10 MB — please choose a smaller file.');
+      state.imageFile = null;
+      inputReset();
+      imageError('That image is larger than 5 MB — please choose a smaller file.');
       return;
     }
     imageError('');
@@ -339,7 +382,20 @@
     });
   }
 
-  /* ---------------- edit-mode prefill (demo until the Edit step) ---------------- */
+  /* ---------------- edit-mode database prefill ---------------- */
+
+  function prefillRow(record) {
+    Object.keys(record).forEach(function (name) {
+      var el = field(name);
+      if (!el || record[name] == null) return;
+      if (el.type === 'checkbox') el.checked = !!record[name];
+      else el.value = record[name];
+    });
+    var artBox = $('dia-current-art');
+    if (artBox) artBox.innerHTML = window.NGDDiamondImages.picture(
+      record.image_path, record.shape,
+      (record.stock_number || record.public_id) + ' diamond', 'ngd-dia-preview');
+  }
 
   function prefill(record) {
     var extras = demoCommercials(record);
@@ -426,25 +482,7 @@
       event.preventDefault();
       if (state.saving) return;
 
-      if (state.mode === 'edit') {
-        clearAlert();
-        if (!validate(form)) {
-          showAlert('danger',
-            'Please complete the highlighted fields — required values and ' +
-            'number ranges are marked inline.');
-          return;
-        }
-        var payload = buildPayload(form);
-        form.setAttribute('data-ngd-payload', JSON.stringify(payload));
-        clearDirty();
-        showAlert('info',
-          (payload.stock_number || 'The diamond') + ' is valid and its update ' +
-          'payload is ready — but updating is not wired yet: it arrives with ' +
-          'the Edit step, so nothing in the database was changed.');
-        return;
-      }
-
-      runAdd('add');
+      runAdd(state.mode === 'edit' ? 'edit' : 'add');
     });
 
     var another = $('dia-save-another');
@@ -476,13 +514,15 @@
 
     if (state.mode === 'edit') {
       var id = new URLSearchParams(window.location.search).get('id');
-      state.record = id ? demoRecord(id) : null;
-      if (!state.record) {
+      var found = id ? await window.ngdSupabase.from('diamonds').select('*')
+        .or('stock_number.eq.' + id + ',public_id.eq.' + id).limit(1) : { data: [] };
+      if (found.error || !found.data || !found.data[0]) {
         showNotFound(id);
         return;
       }
-      $('dia-editing-id').textContent = state.record.id;
-      prefill(state.record);
+      state.record = found.data[0];
+      $('dia-editing-id').textContent = state.record.stock_number || state.record.public_id;
+      prefillRow(state.record);
     }
 
     initImagePicker();

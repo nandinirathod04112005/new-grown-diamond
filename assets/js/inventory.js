@@ -27,12 +27,18 @@
   }
 
   /* ---------- data source ---------- */
-  function loadDiamonds() {
-    /* Future: return supabase.from('diamonds').select('*') … */
-    return window.NGD_DEMO_DIAMONDS || [];
+  function mapRow(d) {
+    return { id: d.stock_number || d.public_id, publicId: d.public_id, shape: d.shape,
+      carat: Number(d.carat) || 0, colour: d.color, clarity: d.clarity, cut: d.cut,
+      polish: d.polish, symmetry: d.symmetry, fluorescence: d.fluorescence,
+      lab: d.laboratory, report: d.report_number || d.certificate_number,
+      measurements: d.measurements, depthPct: Number(d.depth_percentage) || 0,
+      tablePct: Number(d.table_percentage) || 0, ratio: Number(d.ratio) || 0,
+      growth: d.growth_method, availability: d.availability, featured: !!d.featured,
+      imagePath: d.image_path || '' };
   }
 
-  var DATA = loadDiamonds();
+  var DATA = [];
   var PAGE_SIZE = 9;
 
   var FILTER_GROUPS = [
@@ -334,5 +340,11 @@
     }
   }
 
-  apply(false);
+  async function loadDiamonds() {
+    var result = await window.ngdSupabase.from('diamonds').select('*').eq('active', true);
+    if (result.error) { console.error('[NGD Inventory] load failed:', result.error); return []; }
+    return (result.data || []).map(mapRow);
+  }
+
+  loadDiamonds().then(function (rows) { DATA = rows; apply(false); });
 })();

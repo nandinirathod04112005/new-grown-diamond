@@ -57,7 +57,8 @@
       availability: d.availability || '—',
       featured: !!d.featured,
       active: d.active !== false,
-      updated: String(d.updated_at || d.created_at || '').slice(0, 10) || '—'
+      updated: String(d.updated_at || d.created_at || '').slice(0, 10) || '—',
+      imagePath: d.image_path || ''
     };
   }
 
@@ -178,7 +179,7 @@
   /* ---------------- rendering ---------------- */
 
   function art(row) {
-    return (window.NGD_GEM_ART || {})[String(row.shape).toLowerCase()] || '';
+    return window.NGDDiamondImages.picture(row.imagePath, row.shape, row.id + ' diamond', 'ngd-admin-diamond-image');
   }
 
   function chips(row) {

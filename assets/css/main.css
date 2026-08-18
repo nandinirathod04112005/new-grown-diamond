@@ -3197,3 +3197,10 @@ a.ngd-chip {
   .ngd-btn-block-sm { width: 100%; }
   .ngd-card { padding: 1.25rem; }
 }
+
+/* Supabase-hosted diamond product photography */
+.ngd-product-image, .ngd-admin-diamond-image, .ngd-diamond-media > img {
+  width: 100%; height: 100%; display: block; object-fit: cover;
+}
+.ngd-req-thumb .ngd-admin-diamond-image { border-radius: inherit; }
+.ngd-detail-stage .ngd-product-image { object-fit: contain; }

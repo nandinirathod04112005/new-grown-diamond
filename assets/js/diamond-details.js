@@ -27,9 +27,19 @@
     return null;
   }
 
+  async function renderDetails() {
   var params = new URLSearchParams(window.location.search);
   var requestedId = params.get('id');
-  var stone = requestedId ? findStone(requestedId) : (window.NGD_DEMO_DIAMONDS || [])[0];
+  var query = window.ngdSupabase.from('diamonds').select('*').eq('active', true);
+  if (requestedId) query = query.or('stock_number.eq.' + requestedId + ',public_id.eq.' + requestedId);
+  var result = await query.limit(1);
+  var row = !result.error && result.data && result.data[0];
+  var stone = row ? { id: row.stock_number || row.public_id, publicId: row.public_id, shape: row.shape,
+    carat: Number(row.carat) || 0, colour: row.color, clarity: row.clarity, cut: row.cut,
+    polish: row.polish || '—', symmetry: row.symmetry || '—', fluorescence: row.fluorescence || '—',
+    lab: row.laboratory, report: row.report_number || row.certificate_number || '—', measurements: row.measurements || '—',
+    depthPct: Number(row.depth_percentage) || 0, tablePct: Number(row.table_percentage) || 0, ratio: Number(row.ratio) || 0,
+    growth: row.growth_method, availability: row.availability, imagePath: row.image_path || '' } : null;
 
   if (!stone) {
     product.classList.add('d-none');
@@ -79,7 +89,7 @@
   }
 
   var VIEWS = [
-    { key: 'top', label: 'Top view', svg: shared.artFor(stone), float: true },
+    { key: 'top', label: 'Product image', svg: shared.artFor(stone), float: !stone.imagePath },
     { key: 'profile', label: 'Profile view', svg: profileSvg(), float: true },
     { key: 'certificate', label: 'Certificate', svg: certSvg(stone), float: false }
   ];
@@ -259,4 +269,11 @@
 
   renderStage();
   renderFav();
+  }
+
+  renderDetails().catch(function (error) {
+    console.error('[NGD Diamond Details] load failed:', error);
+    product.classList.add('d-none');
+    document.getElementById('dd-notfound').classList.remove('d-none');
+  });
 })();
