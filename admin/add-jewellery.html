@@ -130,19 +130,16 @@
         <div>
           <span class="ngd-eyebrow">Admin console &middot; Jewellery</span>
           <h1 class="ngd-display-2 mt-2 mb-1">Add Jewellery</h1>
-          <p class="ngd-text-muted small mb-0">Bring a new piece into the collection — the form is fully wired, the database arrives with Supabase.</p>
+          <p class="ngd-text-muted small mb-0">Bring a new piece into the collection and save it securely to Supabase.</p>
         </div>
-        <span class="ngd-demo-chip">UI only — nothing saves yet</span>
+        <span class="ngd-demo-chip">Live inventory</span>
       </section>
 
       <div id="jw-alert" class="mt-3" aria-live="polite"></div>
 
       <div id="jw-form-wrap">
-        <!-- Field names mirror the future Supabase `jewellery` columns
-             (images → the jewellery_images table with position +
-             is_primary). saveJewellery() in assets/js/admin-jewellery-form.js
-             is the single seam the backend phase replaces — no fake saves
-             meanwhile. -->
+        <!-- Field names mirror the live public.jewellery columns. Images are
+             intentionally preview-only in this Add + List phase. -->
         <form id="ngd-jewellery-form" novalidate class="ngd-form">
           <section class="ngd-dash-panel mt-3" data-form-section="1">
             <h2 class="ngd-form-sec-title"><em>01</em> Basic Information</h2>
@@ -166,14 +163,14 @@
                 <div class="invalid-feedback">Please enter a valid size.</div>
               </div>
               <div class="col-12 col-xl-8">
-                <label class="form-label" for="jw-short_description">Short Description <span class="ngd-req-star" aria-hidden="true">*</span></label>
+                <label class="form-label" for="jw-short_description">Short Description</label>
                 <input type="text" class="form-control" id="jw-short_description" name="short_description"
-                       placeholder="One line for listing cards…" required>
+                       placeholder="One line for listing cards…">
                 <div class="invalid-feedback">Please enter a valid short description.</div>
               </div>
               <div class="col-12">
                 <label class="form-label" for="jw-full_description">Full Description</label>
-                <textarea class="form-control" id="jw-full_description" name="full_description" rows="4"
+                <textarea class="form-control" id="jw-full_description" name="description" rows="4"
                           placeholder="The longer story shown on the product page…"></textarea>
               </div>
             </div>
@@ -207,8 +204,8 @@
             <h2 class="ngd-form-sec-title"><em>03</em> Metal Details</h2>
             <div class="row g-3">
               <div class="col-6 col-md-3 col-xl-3">
-                <label class="form-label" for="jw-metal">Metal <span class="ngd-req-star" aria-hidden="true">*</span></label>
-                <select class="form-select" id="jw-metal" name="metal" required>
+                <label class="form-label" for="jw-metal">Metal</label>
+                <select class="form-select" id="jw-metal" name="metal">
                   <option value="" selected>Choose&hellip;</option>
                   <option value="Gold">Gold</option>
                   <option value="Platinum">Platinum</option>
@@ -233,7 +230,7 @@
               </div>
               <div class="col-6 col-md-3 col-xl-3">
                 <label class="form-label" for="jw-metal_colour">Metal Colour</label>
-                <select class="form-select" id="jw-metal_colour" name="metal_colour">
+                <select class="form-select" id="jw-metal_colour" name="metal_color">
                   <option value="" selected>Choose&hellip;</option>
                   <option value="White">White</option>
                   <option value="Yellow">Yellow</option>
@@ -324,14 +321,10 @@
                 <div class="invalid-feedback">Please choose currency.</div>
               </div>
               <div class="col-6 col-md-4 col-xl-3">
-                <label class="form-label" for="jw-price_visibility">Price Visibility</label>
-                <select class="form-select" id="jw-price_visibility" name="price_visibility">
-                  <option value="" selected>Choose&hellip;</option>
-                  <option value="visible">visible</option>
-                  <option value="on_request">on_request</option>
-                  <option value="hidden">hidden</option>
-                </select>
-                <div class="invalid-feedback">Please choose price visibility.</div>
+                <div class="form-check mt-4 pt-2">
+                  <input class="form-check-input" type="checkbox" id="jw-price_visibility" name="price_visible">
+                  <label class="form-check-label" for="jw-price_visibility">Price visible</label>
+                </div>
               </div>
             </div>
           </section>
@@ -339,11 +332,12 @@
             <h2 class="ngd-form-sec-title"><em>07</em> Availability</h2>
             <div class="row g-3">
               <div class="col-md-6 col-xl-4">
-                <label class="form-label" for="jw-availability">Availability <span class="ngd-req-star" aria-hidden="true">*</span></label>
-                <select class="form-select" id="jw-availability" name="availability" required>
+                <label class="form-label" for="jw-availability">Availability</label>
+                <select class="form-select" id="jw-availability" name="availability">
                   <option value="" selected>Choose&hellip;</option>
-                  <option value="In Stock">In Stock</option>
-                  <option value="Made to Order">Made to Order</option>
+                  <option value="available">Available</option>
+                  <option value="made_to_order">Made to Order</option>
+                  <option value="sold">Sold</option>
                 </select>
                 <div class="invalid-feedback">Please choose availability.</div>
               </div>

@@ -4,33 +4,22 @@
    One controller powers both pages, selected by
    <body data-jewellery-form="add|edit">. Guarded by requireAdmin().
 
-   HONEST BY DESIGN: no database exists, so Save / Update never
-   pretend anything was stored. A valid submit builds the exact
-   Supabase-ready payload (snake_case field names matching the
-   future `jewellery` table, plus an ordered images array with
-   the primary flag), exposes it on the form as data-ngd-payload
-   for inspection, and says plainly that nothing was saved. The
-   multi-image picker validates and previews locally only — no
-   file leaves the browser. Archive on the edit page is UI-only
-   and says so.
-
-   FUTURE SUPABASE SEAM
-   --------------------
-   saveJewellery(payload, mode) is the single function the
-   backend phase replaces with insert/update (+ Storage uploads
-   for the files held in state.images).
+   ADD is live: it validates the form, rejects duplicate SKUs,
+   generates JEW-XXXXXXXX, stamps the authenticated admin id and
+   inserts into public.jewellery. Images and Edit remain outside
+   this phase; the existing picker is a local preview only.
    ============================================================ */
 (function () {
   'use strict';
 
-  var REQUIRED = ['sku', 'product_name', 'category', 'short_description',
-    'metal', 'availability'];
+  var REQUIRED = ['sku', 'product_name', 'category'];
 
   var IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
   var IMAGE_MAX_BYTES = 10 * 1024 * 1024;
 
   var state = {
     mode: 'add',
+    userId: null,
     record: null,     /* edit: the demo record being edited */
     images: [],       /* ordered gallery: {uid, name, sizeLabel, src|art, file} */
     primaryUid: null,
@@ -136,6 +125,7 @@
   }
 
   function numberOk(el) {
+    if (el.validity && el.validity.badInput) return false;
     if (el.value.trim() === '') return !el.required;
     var v = parseFloat(el.value);
     if (isNaN(v)) return false;
@@ -143,6 +133,7 @@
     var max = el.getAttribute('max');
     if (min !== null && v < parseFloat(min)) return false;
     if (max !== null && v > parseFloat(max)) return false;
+    if (el.name === 'diamond_pieces' && !Number.isInteger(v)) return false;
     return true;
   }
 
@@ -178,7 +169,16 @@
     });
   }
 
-  /* ---------------- payload + honest save ---------------- */
+  /* ---------------- live Supabase insert ---------------- */
+
+  function generatePublicId() {
+    var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    var values = new Uint32Array(8);
+    if (window.crypto && window.crypto.getRandomValues) window.crypto.getRandomValues(values);
+    else for (var j = 0; j < values.length; j++) values[j] = Math.floor(Math.random() * 4294967296);
+    var id = ''; for (var i = 0; i < values.length; i++) id += chars[values[i] % chars.length];
+    return 'JEW-' + id;
+  }
 
   function buildPayload(form) {
     var payload = {};
@@ -188,39 +188,38 @@
       else if (el.type === 'number') payload[el.name] = el.value === '' ? null : parseFloat(el.value);
       else payload[el.name] = el.value.trim() === '' ? null : el.value.trim();
     });
-    /* ordered gallery for the future jewellery_images table */
-    payload.images = state.images.map(function (img, idx) {
-      return {
-        filename: img.name,
-        position: idx + 1,
-        is_primary: img.uid === state.primaryUid
-      };
-    });
+    payload.public_id = generatePublicId();
+    payload.created_by = state.userId;
     return payload;
   }
 
-  /**
-   * Future-backend seam. Today it only records the payload on the form
-   * (data-ngd-payload) and tells the truth: nothing was saved.
-   */
-  function saveJewellery(payload, mode, form) {
+  /* Database errors are converted into useful, non-sensitive messages. */
+  function duplicateError(error) {
+    return error && (error.code === '23505' || /duplicate key|already exists/i.test(error.message || ''));
+  }
+
+  function dbMessage(error) {
+    console.error('[NGD Add Jewellery] insert failed:', error);
+    if (duplicateError(error)) return 'That SKU already exists in the inventory — SKUs must be unique.';
+    if (error && (error.code === '42501' || /row-level security|permission denied/i.test(error.message || '')))
+      return 'Your account is not allowed to add jewellery — only an active admin can (enforced by Row Level Security).';
+    if (error && (error.code === 'PGRST204' || error.code === '42703'))
+      return 'The jewellery table does not match the form. Check its column names in Supabase.';
+    return 'Supabase rejected the save: ' + ((error && error.message) || 'Please check your connection and try again.');
+  }
+
+  async function saveJewellery(payload, mode, form) {
     form.setAttribute('data-ngd-payload', JSON.stringify(payload));
-    var label = payload.sku || 'The piece';
-    if (mode === 'add-another') {
-      showAlert('info',
-        label + ' is valid and its payload is ready — but nothing was ' +
-        'saved: the database arrives with the Supabase phase. The form ' +
-        'has been cleared so you can preview another entry.');
-    } else if (mode === 'edit') {
-      showAlert('info',
-        label + ' is valid and its update payload is ready — but nothing ' +
-        'was saved: the database arrives with the Supabase phase.');
-    } else {
-      showAlert('info',
-        label + ' is valid and its payload is ready — but nothing was ' +
-        'saved: the database arrives with the Supabase phase. ' +
-        'saveJewellery() in admin-jewellery-form.js is the wiring point.');
+    var existing = await window.ngdSupabase.from('jewellery').select('id').eq('sku', payload.sku).limit(1);
+    if (!existing.error && existing.data && existing.data.length) {
+      setInvalid(field('sku'), true); field('sku').focus(); showAlert('danger', payload.sku + ' already exists in the inventory — SKUs must be unique.'); return false;
     }
+    var result = await window.ngdSupabase.from('jewellery').insert(payload);
+    if (result.error) { if (duplicateError(result.error)) setInvalid(field('sku'), true); showAlert('danger', dbMessage(result.error)); return false; }
+    clearDirty();
+    if (mode === 'add-another') { showAlert('success', payload.sku + ' was added. The form is ready for another piece.'); form.reset(); resetGallery(); window.scrollTo({ top: 0 }); }
+    else { showAlert('success', payload.sku + ' was added to the inventory. Returning to the list…'); window.location.replace('jewellery.html?added=' + encodeURIComponent(payload.sku)); }
+    return true;
   }
 
   /* ---------------- multi-image gallery (preview only) ---------------- */
@@ -469,7 +468,7 @@
   /* ---------------- boot ---------------- */
 
   function initButtons(form) {
-    form.addEventListener('submit', function (event) {
+    form.addEventListener('submit', async function (event) {
       event.preventDefault();
       clearAlert();
       if (!validate(form)) {
@@ -479,13 +478,12 @@
         return;
       }
       var payload = buildPayload(form);
-      clearDirty();
-      saveJewellery(payload, state.mode === 'edit' ? 'edit' : 'add', form);
+      await saveJewellery(payload, state.mode === 'edit' ? 'edit' : 'add', form);
     });
 
     var another = $('jw-save-another');
     if (another) {
-      another.addEventListener('click', function () {
+      another.addEventListener('click', async function () {
         clearAlert();
         if (!validate(form)) {
           showAlert('danger',
@@ -494,11 +492,7 @@
           return;
         }
         var payload = buildPayload(form);
-        saveJewellery(payload, 'add-another', form);
-        form.reset();
-        resetGallery();
-        clearDirty();
-        window.scrollTo({ top: 0 });
+        await saveJewellery(payload, 'add-another', form);
       });
     }
 
@@ -518,6 +512,7 @@
   async function init() {
     var res = await window.NGDAuth.requireAdmin();
     if (!res) return; // a redirect is already happening
+    state.userId = res.user.id;
 
     var fullName = (res.profile.full_name || '').trim();
     document.querySelectorAll('[data-ngd-field="first_name"]').forEach(function (el) {
