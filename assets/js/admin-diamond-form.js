@@ -22,8 +22,9 @@
 (function () {
   'use strict';
 
-  var REQUIRED = ['stock_number', 'shape', 'carat', 'color', 'clarity', 'cut',
-    'laboratory', 'availability'];
+  /* Step 4's only mandatory business fields. Every other diamonds
+     column is still submitted when supplied, but may be left empty. */
+  var REQUIRED = ['stock_number', 'shape', 'carat'];
 
   var IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
   var IMAGE_MAX_BYTES = 10 * 1024 * 1024;
