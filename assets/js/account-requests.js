@@ -28,7 +28,7 @@
       title: 'Quote History',
       idHead: 'Request',
       statuses: { Pending: '', Reviewed: 'is-gold', Responded: 'is-good', Closed: 'is-dim' },
-      extra: { key: 'type', head: 'Type' },
+      extra: { key: 'price', head: 'Quoted Price' },
       emptyTitle: 'No quote requests yet',
       emptyText: 'Request Quote buttons across the site will file requests here once your account backend arrives.',
       rows: [
@@ -119,8 +119,43 @@
     } : null;
   }
 
-  /** Future-backend seam: today resolves the static demo rows. */
-  function loadRequests(kind) {
+  /** Load quote requests from Supabase; the untouched request types retain their existing previews. */
+  async function loadRequests(kind) {
+    if (kind === 'quotes') {
+      var result = await window.ngdSupabase.from('quotes')
+        .select('*, diamonds(*), jewellery(*)')
+        .order('created_at', { ascending: false });
+      if (result.error) throw result.error;
+      return (result.data || []).map(function (quote) {
+        var item = quote.product_type === 'diamond' ? quote.diamonds : quote.jewellery;
+        if (!item) return null;
+        var diamond = quote.product_type === 'diamond';
+        var ref = diamond ? (item.stock_number || item.public_id) : (item.sku || item.public_id);
+        return {
+          id: quote.public_id,
+          kind: quote.product_type,
+          ref: ref,
+          requested: String(quote.created_at).slice(0, 10),
+          status: quote.status.charAt(0).toUpperCase() + quote.status.slice(1),
+          note: quote.customer_message || '—',
+          adminNote: quote.admin_note,
+          price: quote.quoted_price,
+          currency: quote.currency,
+          product: {
+            name: diamond
+              ? (item.shape || 'Diamond') + ' · ' + Number(item.carat || 0).toFixed(2) + ' ct'
+              : (item.name || item.product_name || 'Jewellery'),
+            sub: diamond
+              ? [item.color, item.clarity, item.laboratory].filter(Boolean).join(' · ')
+              : (item.category || 'Jewellery'),
+            stock: ref,
+            art: diamond ? ((window.NGD_GEM_ART || {})[String(item.shape || '').toLowerCase()] || '') : '',
+            url: '../' + (diamond ? 'diamond' : 'jewellery') + '-details.html?id=' + encodeURIComponent(ref),
+            typeLabel: diamond ? 'Diamond' : 'Jewellery'
+          }
+        };
+      }).filter(Boolean);
+    }
     return (CONFIGS[kind].rows || []).map(function (row) {
       var product = resolveProduct(row);
       return product ? Object.assign({ product: product }, row) : null;
@@ -149,6 +184,9 @@
   }
 
   function extraValue(row) {
+    if (state.config === CONFIGS.quotes) {
+      return row.price == null ? '—' : (row.currency || '') + ' ' + Number(row.price).toLocaleString();
+    }
     var key = state.config.extra.key;
     if (key === 'type' && state.config === CONFIGS.quotes) return row.product.typeLabel;
     return row[key] || '—';
@@ -174,11 +212,13 @@
       (row.expires ? '<dt class="col-sm-3 ngd-stat-label py-1">Expires</dt><dd class="col-sm-9 py-1 mb-0">' + row.expires + '</dd>' : '') +
       (row.type ? '<dt class="col-sm-3 ngd-stat-label py-1">Type</dt><dd class="col-sm-9 py-1 mb-0">' + row.type + '</dd>' : '') +
       '<dt class="col-sm-3 ngd-stat-label py-1">Status</dt><dd class="col-sm-9 py-1 mb-0">' + chip(row) + '</dd>' +
-      '<dt class="col-sm-3 ngd-stat-label py-1">Notes</dt><dd class="col-sm-9 py-1 mb-0">' + row.note + '</dd>' +
+      '<dt class="col-sm-3 ngd-stat-label py-1">Customer message</dt><dd class="col-sm-9 py-1 mb-0">' + row.note + '</dd>' +
+      (row.adminNote ? '<dt class="col-sm-3 ngd-stat-label py-1">Admin response</dt><dd class="col-sm-9 py-1 mb-0">' + row.adminNote + '</dd>' : '') +
+      (row.price != null ? '<dt class="col-sm-3 ngd-stat-label py-1">Quoted price</dt><dd class="col-sm-9 py-1 mb-0">' + extraValue(row) + '</dd>' : '') +
       '</dl>' +
       '<div class="d-flex flex-wrap align-items-center gap-3">' +
       '<a class="ngd-link small" href="' + row.product.url + '">View this item in the catalogue</a>' +
-      '<span class="ngd-demo-chip">Demo record</span>' +
+      (state.config === CONFIGS.quotes ? '' : '<span class="ngd-demo-chip">Demo record</span>') +
       '</div>' +
       '</div>'
     );
@@ -256,9 +296,9 @@
     bindToggles($('req-table-wrap'));
     bindToggles($('req-cards-wrap'));
 
-    $('req-count').textContent = 'Showing ' + rows.length + ' of ' + total + ' demo records';
+    $('req-count').textContent = 'Showing ' + rows.length + ' of ' + total + (state.config === CONFIGS.quotes ? ' quote requests' : ' demo records');
     $('req-no-match').hidden = !(total > 0 && rows.length === 0);
-    $('req-stage-empty').hidden = true;
+    $('req-stage-empty').hidden = total !== 0;
     $('req-stage-loading').hidden = true;
     $('req-stage-error').hidden = true;
   }
@@ -318,7 +358,7 @@
       var btn = event.target.closest('[data-req-state]');
       if (btn) setUiState(btn.getAttribute('data-req-state'));
     });
-    $('req-retry').addEventListener('click', function () { setUiState('demo'); });
+    $('req-retry').addEventListener('click', function () { window.location.reload(); });
   }
 
   function fill(field, value) {
@@ -338,7 +378,14 @@
     var fullName = (res.profile.full_name || '').trim();
     fill('first_name', fullName ? fullName.split(/\s+/)[0] : 'there');
 
-    state.rows = loadRequests(kind);
+    try {
+      state.rows = await loadRequests(kind);
+    } catch (error) {
+      console.error('[NGD Quotes] load failed:', error);
+      initToolbar();
+      setUiState('error');
+      return;
+    }
     initToolbar();
     setUiState('demo');
   }
