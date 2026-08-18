@@ -451,8 +451,8 @@ async function alertText(page, boxId) {
     const sent = backend.signups[0];
     const keys = Object.keys(sent.data || {}).sort();
     expect(
-      JSON.stringify(keys) === JSON.stringify(['company_name', 'country', 'full_name', 'phone']),
-      'metadata keys exactly full_name/company_name/phone/country, got ' + keys.join(',')
+      JSON.stringify(keys) === JSON.stringify(['company_name', 'full_name', 'phone']),
+      'metadata keys exactly full_name/company_name/phone, got ' + keys.join(',')
     );
     expect(!('role' in (sent.data || {})), 'no role in metadata');
     expect(!('role' in sent), 'no role at top level');

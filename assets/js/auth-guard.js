@@ -31,7 +31,6 @@
     'We could not verify your account right now. Please sign in again.';
   var MSG_BAD_ROLE =
     'Your account role is not recognised. Please contact support.';
-  var BLOCKED_STATUSES = ['inactive', 'suspended'];
   var KNOWN_ROLES = ['admin', 'customer'];
 
   /* True once a guard runs on this page — lets the auth-state
@@ -137,7 +136,9 @@
     var status = String((profile && profile.account_status) || '')
       .trim()
       .toLowerCase();
-    return BLOCKED_STATUSES.indexOf(status) !== -1;
+    /* Fail closed: only the explicit database value `active` grants
+       access. This also protects future/unknown status values. */
+    return status !== 'active';
   }
 
   function dashboardPath(profile) {
@@ -209,7 +210,7 @@
 
   /**
    * Shared role guard. Confirms: authenticated + profile exists +
-   * account_status not blocked + role matches. Wrong-role visitors
+   * account_status is exactly active + role matches. Wrong-role visitors
    * are sent to their own dashboard, everything else to login.
    */
   async function requireRole(role) {

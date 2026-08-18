@@ -69,7 +69,7 @@ current session — and never displays a key. Two things to know:
 |---|---|
 | `assets/js/supabase-config.js` | Your Project URL + publishable key (placeholders) |
 | `assets/js/supabase-client.js` | Creates the **single** shared Supabase client (`window.ngdSupabase`) |
-| `assets/js/auth.js` | `getCurrentUser`, `getCurrentProfile`, `requireAuth`, `requireAdmin`, `requireCustomer`, `logout`, account-status handling, auth-state listener |
+| `assets/js/auth-guard.js` | `getCurrentUser`, `getCurrentProfile`, `requireAuth`, `requireAdmin`, `requireCustomer`, `logout`, account-status handling, auth-state listener |
 | `assets/js/login.js` | `login.html` → `supabase.auth.signInWithPassword()` |
 | `assets/js/register.js` | `register.html` → `supabase.auth.signUp()` |
 | `assets/js/customer-dashboard.js` | Guards + fills `account/dashboard.html` |
@@ -84,7 +84,7 @@ pinned `2.112.3`) → config → client → auth → page script.
 2. Fill in full name, company (optional), email, mobile, password (min 8),
    confirm password, and accept the terms.
 3. Submit. The browser calls `supabase.auth.signUp()` sending **only** the
-   safe metadata `full_name`, `company_name`, `phone`, `country` — never a role.
+   safe metadata `full_name`, `company_name`, and `phone` — never a role.
    The signup UI (STEP 18) adds show/hide password toggles and a
    four-segment strength hint; `minlength=8`, the confirm-match check and
    the required Terms & Privacy checkbox all validate before Supabase is

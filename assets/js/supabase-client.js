@@ -15,7 +15,7 @@
      1. Supabase JS v2 (CDN)
      2. assets/js/supabase-config.js   ← credentials live there
      3. this file
-     4. assets/js/auth.js
+     4. assets/js/auth-guard.js
      5. the page script (login.js, register.js, …)
 
    Do not call supabase.createClient anywhere else.
