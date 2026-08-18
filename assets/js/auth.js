@@ -31,7 +31,6 @@
     'We could not verify your account right now. Please sign in again.';
   var MSG_BAD_ROLE =
     'Your account role is not recognised. Please contact support.';
-  var BLOCKED_STATUSES = ['inactive', 'suspended'];
   var KNOWN_ROLES = ['admin', 'customer'];
 
   /* True once a guard runs on this page — lets the auth-state
@@ -137,7 +136,9 @@
     var status = String((profile && profile.account_status) || '')
       .trim()
       .toLowerCase();
-    return BLOCKED_STATUSES.indexOf(status) !== -1;
+    /* Admin/customer data access is granted only to an explicitly active
+       account.  Unknown and newly introduced statuses therefore fail closed. */
+    return status !== 'active';
   }
 
   function dashboardPath(profile) {

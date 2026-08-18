@@ -173,7 +173,7 @@
               </div>
               <div class="col-12">
                 <label class="form-label" for="jw-full_description">Full Description</label>
-                <textarea class="form-control" id="jw-full_description" name="full_description" rows="4"
+                <textarea class="form-control" id="jw-full_description" name="description" rows="4"
                           placeholder="The longer story shown on the product page…"></textarea>
               </div>
             </div>
@@ -233,7 +233,7 @@
               </div>
               <div class="col-6 col-md-3 col-xl-3">
                 <label class="form-label" for="jw-metal_colour">Metal Colour</label>
-                <select class="form-select" id="jw-metal_colour" name="metal_colour">
+                <select class="form-select" id="jw-metal_colour" name="metal_color">
                   <option value="" selected>Choose&hellip;</option>
                   <option value="White">White</option>
                   <option value="Yellow">Yellow</option>
@@ -325,11 +325,10 @@
               </div>
               <div class="col-6 col-md-4 col-xl-3">
                 <label class="form-label" for="jw-price_visibility">Price Visibility</label>
-                <select class="form-select" id="jw-price_visibility" name="price_visibility">
+                <select class="form-select" id="jw-price_visibility" name="price_visible">
                   <option value="" selected>Choose&hellip;</option>
-                  <option value="visible">visible</option>
-                  <option value="on_request">on_request</option>
-                  <option value="hidden">hidden</option>
+                  <option value="true">Visible</option>
+                  <option value="false">Hidden / on request</option>
                 </select>
                 <div class="invalid-feedback">Please choose price visibility.</div>
               </div>

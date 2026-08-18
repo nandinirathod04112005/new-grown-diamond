@@ -49,13 +49,18 @@
   }
 
   /** Future-backend seam: demo collection + deterministic admin fields. */
-  function loadAdminJewellery() {
-    return (window.NGD_DEMO_JEWELLERY || []).map(function (p, i) {
-      return Object.assign({}, p, {
-        featured: i % 5 === 0 || i % 7 === 0,
-        active: i % 9 !== 4,
-        updated: updatedFor(i)
-      });
+  async function loadAdminJewellery() {
+    var result = await window.ngdSupabase.from('jewellery').select(
+      'public_id,sku,product_name,category,diamond_weight,availability,featured,active,updated_at'
+    ).is('archived_at', null).order('updated_at', { ascending: false });
+    if (result.error) throw result.error;
+    return (result.data || []).map(function (p) {
+      return {
+        id: p.public_id, sku: p.sku, name: p.product_name,
+        category: p.category, weightCt: p.diamond_weight == null ? null : Number(p.diamond_weight),
+        availability: p.availability, featured: !!p.featured, active: !!p.active,
+        updated: p.updated_at ? String(p.updated_at).slice(0, 10) : '—'
+      };
     });
   }
 
@@ -82,37 +87,34 @@
     box.appendChild(div);
   }
 
-  function demoNote(action, row) {
-    return row.id + ' ' + action + ' in this demo preview — nothing was saved to any server.';
-  }
-
-  function toggleFeatured(row) {
-    row.featured = !row.featured;
-    toast(demoNote(row.featured ? 'marked featured' : 'unfeatured', row));
+  async function updateRow(row, changes, successMessage) {
+    var result = await window.ngdSupabase.from('jewellery').update(Object.assign({}, changes, {
+      updated_at: new Date().toISOString()
+    })).eq('public_id', row.id).select('public_id').maybeSingle();
+    if (result.error || !result.data) {
+      toast('The change was not saved. ' + ((result.error && result.error.message) || 'The product may no longer exist.'));
+      return false;
+    }
+    Object.assign(row, changes, { updated: new Date().toISOString().slice(0, 10) });
+    toast(row.id + ' ' + successMessage + '.');
     apply();
+    return true;
   }
 
-  function toggleActive(row) {
-    row.active = !row.active;
-    toast(demoNote(row.active ? 'activated' : 'deactivated', row));
-    apply();
+  async function toggleFeatured(row) {
+    await updateRow(row, { featured: !row.featured }, row.featured ? 'unfeatured' : 'marked featured');
   }
 
-  function archiveRow(row) {
-    var index = state.rows.indexOf(row);
-    if (index === -1) return;
-    state.rows.splice(index, 1);
-    state.lastArchived = { row: row, index: index };
-    toast(demoNote('archived', row), true);
-    apply();
+  async function toggleActive(row) {
+    if (row.active && !window.confirm('Deactivate ' + row.id + '?')) return;
+    await updateRow(row, { active: !row.active }, row.active ? 'deactivated' : 'activated');
   }
 
-  function restoreArchived() {
-    var last = state.lastArchived;
-    if (!last) return;
-    state.rows.splice(Math.min(last.index, state.rows.length), 0, last.row);
-    state.lastArchived = null;
-    $('adm-toast').innerHTML = '';
+  async function archiveRow(row) {
+    if (!window.confirm('Archive ' + row.id + '? It will be removed from the normal inventory.')) return;
+    var ok = await updateRow(row, { active: false, archived_at: new Date().toISOString() }, 'archived');
+    if (!ok) return;
+    state.rows = state.rows.filter(function (item) { return item !== row; });
     apply();
   }
 
@@ -121,7 +123,7 @@
   function matches(row) {
     var f = state.filters;
     var q = state.query.trim().toLowerCase();
-    if (q && (row.id + ' ' + row.name + ' ' + row.category).toLowerCase().indexOf(q) === -1) return false;
+    if (q && (row.id + ' ' + row.sku + ' ' + row.name + ' ' + row.category).toLowerCase().indexOf(q) === -1) return false;
     if (f.category !== 'all' && row.category !== f.category) return false;
     if (f.availability !== 'all' && row.availability !== f.availability) return false;
     if (f.status === 'active' && !row.active) return false;
@@ -135,7 +137,7 @@
   var SORTS = {
     'updated-desc': function (a, b) { return b.updated.localeCompare(a.updated) || a.id.localeCompare(b.id); },
     'name': function (a, b) { return a.name.localeCompare(b.name); },
-    'sku': function (a, b) { return a.id.localeCompare(b.id); },
+    'sku': function (a, b) { return a.sku.localeCompare(b.sku); },
     'weight-desc': function (a, b) {
       if (a.weightCt === null) return b.weightCt === null ? 0 : 1;
       if (b.weightCt === null) return -1;
@@ -199,14 +201,14 @@
       '<a class="ngd-icon-btn" href="edit-jewellery.html?id=' + encodeURIComponent(row.id) + '"' +
       ' title="Edit" aria-label="Edit ' + row.id + '" data-adm-act="edit">' + ICONS.edit + '</a>' +
       '<button type="button" class="ngd-icon-btn' + (row.featured ? ' is-on' : '') + '"' +
-      ' title="' + (row.featured ? 'Unfeature' : 'Feature') + ' (demo only)"' +
+      ' title="' + (row.featured ? 'Unfeature' : 'Feature') + '"' +
       ' aria-label="' + (row.featured ? 'Unfeature ' : 'Feature ') + row.id + '"' +
       ' aria-pressed="' + row.featured + '" data-adm-act="feature">' + ICONS.star + '</button>' +
       '<button type="button" class="ngd-icon-btn' + (row.active ? '' : ' is-off') + '"' +
-      ' title="' + (row.active ? 'Deactivate' : 'Activate') + ' (demo only)"' +
+      ' title="' + (row.active ? 'Deactivate' : 'Activate') + '"' +
       ' aria-label="' + (row.active ? 'Deactivate ' : 'Activate ') + row.id + '"' +
       ' aria-pressed="' + row.active + '" data-adm-act="active">' + ICONS.power + '</button>' +
-      '<button type="button" class="ngd-icon-btn is-danger" title="Archive (demo only)"' +
+      '<button type="button" class="ngd-icon-btn is-danger" title="Archive"' +
       ' aria-label="Archive ' + row.id + '" data-adm-act="archive">' + ICONS.archive + '</button>' +
       '</div>'
     );
@@ -218,7 +220,7 @@
       return (
         '<tr data-adm-row="' + row.id + '"' + (row.active ? '' : ' class="is-inactive"') + '>' +
         '<td><span class="ngd-req-thumb">' + art(row) + '</span></td>' +
-        '<td class="ngd-stock-cell">' + row.id + '</td>' +
+        '<td class="ngd-stock-cell">' + row.sku + '</td>' +
         '<td>' + row.name + '</td>' +
         '<td>' + row.category + '</td>' +
         '<td>' + weightText(row) + '</td>' +
@@ -241,7 +243,7 @@
         '<span class="ngd-req-thumb">' + art(row) + '</span>' +
         '<div class="flex-grow-1 min-w-0">' +
         '<strong>' + row.name + '</strong>' +
-        '<span class="ngd-text-muted d-block small">' + row.id + ' · ' + row.category +
+        '<span class="ngd-text-muted d-block small">' + row.sku + ' · ' + row.category +
         ' · ' + weightText(row) + '</span>' +
         '</div>' +
         '</div>' +
@@ -313,7 +315,7 @@
       ? 'No jewellery'
       : 'Showing ' + (all.length === 0 ? 0 : start + 1) + '–' +
         Math.min(start + PAGE_SIZE, all.length) + ' of ' + all.length +
-        ' (collection: ' + total + ' demo pieces)';
+        ' (collection: ' + total + ' products)';
     var fc = activeFilterCount();
     $('adm-filter-count').textContent = fc ? String(fc) : '';
     $('adm-filter-count').classList.toggle('d-none', fc === 0);
@@ -412,9 +414,16 @@
     var fullName = (res.profile.full_name || '').trim();
     fill('first_name', fullName ? fullName.split(/\s+/)[0] : 'there');
 
-    state.rows = loadAdminJewellery();
-    initToolbar();
-    setUiState('demo');
+    try {
+      state.rows = await loadAdminJewellery();
+      initToolbar();
+      setUiState('demo');
+    } catch (error) {
+      console.error('[NGD Admin Jewellery] load failed:', error);
+      state.rows = [];
+      initToolbar();
+      setUiState('error');
+    }
   }
 
   if (document.readyState === 'loading') {
