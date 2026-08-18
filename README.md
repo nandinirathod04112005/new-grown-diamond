@@ -33,7 +33,7 @@ Bootstrap 5 + vanilla JavaScript** frontend backed by **Supabase**
 | Customer Quotes / Holds / Inspections UI (shared list shell) | ✅ done — demo/preview data only |
 | Admin Dashboard UI (13-route sidebar, KPIs, activity feed) | ✅ done — demo figures only |
 | Admin Diamond Inventory (12-col table, filters, pagination) | ✅ live — reads `public.diamonds` |
-| Admin Add Diamond (real insert, `DIA-` public id, duplicate guard) | ✅ live — Edit/Archive arrive next |
+| Admin Add/Edit Diamond + status/archive (`DIA-` public id, duplicate guard) | ✅ live |
 | Admin Jewellery Inventory UI (10-col table, 4 filters, demo actions) | ✅ done — demo/preview data only |
 | Admin Add/Edit Jewellery forms (9 sections, multi-image UI, honest no-save) | ✅ done — payload seam ready |
 | Admin Customers UI (9-col table, details panel, honest demo toggle) | ✅ done — demo/preview data only |
@@ -76,8 +76,8 @@ Bootstrap 5 + vanilla JavaScript** frontend backed by **Supabase**
 | `account/favourites.html` | My Favourites (guarded) — All/Diamonds/Jewellery tabs, search, sort, honest demo-only removal with Undo; ready for the Supabase `favourites` table |
 | `account/quotes.html` / `holds.html` / `inspections.html` | Request lists (guarded) — one shared controller: demo rows, search + status + date filters, state previews, detail drawers; ready for the Supabase request tables |
 | `admin/dashboard.html` | Admin Dashboard (guarded) — 13-route sidebar (management routes marked Soon), KPI cards with demo-catalogue counts, quick actions, demo activity feed |
-| `admin/diamonds.html` | Admin Diamond Inventory (guarded, LIVE) — 12-column table over `public.diamonds`, search by stock/report number, ten filters, sort, pagination, real loading/empty/error states with retry; feature/activate/hide preview on-page until the Edit step |
-| `admin/add-diamond.html` / `edit-diamond.html` | Add Diamond (guarded, LIVE) — 8 sections whose field names are the real table columns, generated `DIA-` public id, `created_by` from the session, duplicate stock numbers rejected, safe Supabase error messages, success + redirect into the list. Edit stays an honest demo prefill until the Edit step |
+| `admin/diamonds.html` | Admin Diamond Inventory (guarded, LIVE) — 12-column table over `public.diamonds`, search by stock/report number, filters, sort, pagination, live feature/status/archive actions, and real loading/empty/error states |
+| `admin/add-diamond.html` / `edit-diamond.html` | Add/Edit Diamond (guarded, LIVE) — generated `DIA-` public ids for adds; verified public-id loading, full-field updates, duplicate protection, archive, validation, and safe Supabase errors for edits |
 | `admin/jewellery.html` | Admin Jewellery Inventory (guarded) — 10-column table over the demo collection, search, category/availability/active/featured filters, sort incl. diamond weight, pagination, honest demo feature/activate/archive actions |
 | `admin/add-jewellery.html` / `edit-jewellery.html` | Add/Edit Jewellery forms (guarded) — 9 sections, 23 Supabase-ready fields, multi-image gallery (drag/drop, previews, primary badge, set-primary, reorder, remove — no upload), inline validation, unsaved-changes warning; honest no-save submits expose the payload for the future `saveJewellery()` |
 | `admin/customers.html` | Admin Customers (guarded) — 9-column table over invented demo accounts, search, status/country filters, sort, pagination, honest demo activate/deactivate, details panel with recent quotes/holds/inspections/enquiries (all chipped Demo) and a deep link into the Enquiries console |
