@@ -1,17 +1,14 @@
 /* ============================================================
-   NEW GROWN DIAMOND — ADMIN DIAMOND INVENTORY (LIVE, STEP 32)
+   NEW GROWN DIAMOND — ADMIN DIAMOND INVENTORY (LIVE, STEP 5)
    ------------------------------------------------------------
    Guarded by requireAdmin(). Rows load from public.diamonds in
    the connected Supabase project (RLS decides what an account
    may see). Search, filters, sort and pagination run client-side
    over the loaded inventory.
 
-   Honesty notes:
-   - Feature / activate / archive still change THIS PAGE ONLY —
-     writing those changes to the database arrives with the Edit
-     step, and every toast says so. Reloading restores the truth
-     from the database.
-   - Loading / empty / error states are real: they reflect the
+   Feature, status and archive actions write through Supabase and
+   re-read the list after success. Loading / empty / error states
+   are real: they reflect the
      actual fetch, and Retry re-queries Supabase.
    ============================================================ */
 (function () {
@@ -30,7 +27,7 @@
     sort: 'updated-desc',
     page: 1,
     ui: 'loading',
-    lastArchived: null,
+    mutating: false,
     toolbarBound: false
   };
 
@@ -57,6 +54,7 @@
       availability: d.availability || '—',
       featured: !!d.featured,
       active: d.active !== false,
+      archivedAt: d.archived_at || null,
       updated: String(d.updated_at || d.created_at || '').slice(0, 10) || '—'
     };
   }
@@ -66,12 +64,13 @@
     var res = await window.ngdSupabase
       .from('diamonds')
       .select('*')
+      .is('archived_at', null)
       .order('created_at', { ascending: false });
     if (res.error) throw res.error;
     return (res.data || []).map(mapRow);
   }
 
-  /* ---------------- honest page-only mutations ---------------- */
+  /* ---------------- live mutations ---------------- */
 
   function toast(message, withUndo, type) {
     var box = $('adm-toast');
@@ -83,51 +82,44 @@
     var text = document.createElement('span');
     text.textContent = message;
     div.appendChild(text);
-    if (withUndo) {
-      var undo = document.createElement('button');
-      undo.type = 'button';
-      undo.className = 'ngd-link btn btn-link p-0 border-0 align-baseline';
-      undo.id = 'adm-undo';
-      undo.textContent = 'Undo';
-      undo.addEventListener('click', restoreArchived);
-      div.appendChild(undo);
-    }
     box.appendChild(div);
   }
 
-  function pageOnlyNote(action, row) {
-    return row.id + ' ' + action + ' on this page only — the database was ' +
-      'not changed (saving arrives with the Edit step), so it resets on reload.';
+  function safeMutationError(err) {
+    console.error('[NGD Admin] diamond update failed:', err);
+    return 'The inventory change could not be saved. Check your connection and try again.';
+  }
+
+  async function mutateRow(row, changes, success) {
+    if (state.mutating) return;
+    state.mutating = true;
+    try {
+      changes.updated_at = new Date().toISOString();
+      var res = await window.ngdSupabase.from('diamonds').update(changes)
+        .eq('public_id', row.publicId).eq('id', row.uuid).select('id');
+      if (res.error) throw res.error;
+      if (!res.data || res.data.length !== 1) throw new Error('record verification failed');
+      await reload();
+      toast(row.id + ' ' + success + '.', false, 'success');
+    } catch (err) {
+      toast(safeMutationError(err), false, 'danger');
+    } finally {
+      state.mutating = false;
+    }
   }
 
   function toggleFeatured(row) {
-    row.featured = !row.featured;
-    toast(pageOnlyNote(row.featured ? 'marked featured' : 'unfeatured', row));
-    apply();
+    return mutateRow(row, { featured: !row.featured }, row.featured ? 'was unfeatured' : 'is now featured');
   }
 
   function toggleActive(row) {
-    row.active = !row.active;
-    toast(pageOnlyNote(row.active ? 'activated' : 'deactivated', row));
-    apply();
+    if (row.active && !window.confirm('Deactivate ' + row.id + '? It will no longer be visible to customers.')) return;
+    return mutateRow(row, { active: !row.active }, row.active ? 'was deactivated' : 'was activated');
   }
 
   function archiveRow(row) {
-    var index = state.rows.indexOf(row);
-    if (index === -1) return;
-    state.rows.splice(index, 1);
-    state.lastArchived = { row: row, index: index };
-    toast(pageOnlyNote('hidden', row), true);
-    apply();
-  }
-
-  function restoreArchived() {
-    var last = state.lastArchived;
-    if (!last) return;
-    state.rows.splice(Math.min(last.index, state.rows.length), 0, last.row);
-    state.lastArchived = null;
-    $('adm-toast').innerHTML = '';
-    apply();
+    if (!window.confirm('Archive ' + row.id + '? It will be deactivated and removed from this list.')) return;
+    return mutateRow(row, { archived_at: new Date().toISOString(), active: false }, 'was archived');
   }
 
   /* ---------------- filtering + sorting ---------------- */
@@ -207,18 +199,18 @@
       '<div class="ngd-adm-actions">' +
       '<a class="ngd-icon-btn" href="../diamond-details.html?id=' + encodeURIComponent(row.id) + '"' +
       ' title="View on the storefront" aria-label="View ' + row.id + '" data-adm-act="view">' + ICONS.view + '</a>' +
-      '<a class="ngd-icon-btn" href="edit-diamond.html?id=' + encodeURIComponent(row.id) + '"' +
+      '<a class="ngd-icon-btn" href="edit-diamond.html?id=' + encodeURIComponent(row.publicId) + '"' +
       ' title="Edit" aria-label="Edit ' + row.id + '" data-adm-act="edit">' + ICONS.edit + '</a>' +
       '<button type="button" class="ngd-icon-btn' + (row.featured ? ' is-on' : '') + '"' +
-      ' title="' + (row.featured ? 'Unfeature' : 'Feature') + ' (this page only)"' +
+      ' title="' + (row.featured ? 'Unfeature' : 'Feature') + '"' +
       ' aria-label="' + (row.featured ? 'Unfeature ' : 'Feature ') + row.id + '"' +
       ' aria-pressed="' + row.featured + '" data-adm-act="feature">' + ICONS.star + '</button>' +
       '<button type="button" class="ngd-icon-btn' + (row.active ? '' : ' is-off') + '"' +
-      ' title="' + (row.active ? 'Deactivate' : 'Activate') + ' (this page only)"' +
+      ' title="' + (row.active ? 'Deactivate' : 'Activate') + '"' +
       ' aria-label="' + (row.active ? 'Deactivate ' : 'Activate ') + row.id + '"' +
       ' aria-pressed="' + row.active + '" data-adm-act="active">' + ICONS.power + '</button>' +
-      '<button type="button" class="ngd-icon-btn is-danger" title="Hide from this page (not deleted)"' +
-      ' aria-label="Hide ' + row.id + '" data-adm-act="archive">' + ICONS.archive + '</button>' +
+      '<button type="button" class="ngd-icon-btn is-danger" title="Archive (never permanently deletes)"' +
+      ' aria-label="Archive ' + row.id + '" data-adm-act="archive">' + ICONS.archive + '</button>' +
       '</div>'
     );
   }
@@ -460,6 +452,8 @@
     if (added && state.ui === 'rows') {
       toast(added + ' was added to the inventory.', false, 'success');
     }
+    var archived = new URLSearchParams(window.location.search).get('archived');
+    if (archived) toast(archived + ' was archived and removed from the normal inventory.', false, 'success');
   }
 
   if (document.readyState === 'loading') {

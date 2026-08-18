@@ -319,9 +319,9 @@ inside the table card, never the page; stacked `.ngd-req-card`s below
 768px). Search (stock, report and public id), the ten filters, sort and
 pagination run client-side over the loaded rows, and the loading / empty
 / error states are real — Retry re-queries Supabase, and arriving with
-`?added=<stock>` shows the insert confirmation. Feature/activate/hide
-still change the page only (truthful toasts; writing them arrives with
-the Edit step). Shapes render `NGD_GEM_ART` thumbnails until photography
+`?added=<stock>` shows the insert confirmation. Feature, status and
+archive actions write through Supabase and refresh after success; archived
+rows are excluded from the normal list. Shapes render `NGD_GEM_ART` thumbnails until photography
 uploads exist.
 
 `admin/add-diamond.html` / `edit-diamond.html` share one generated form
