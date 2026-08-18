@@ -311,29 +311,32 @@ sample activity list. `loadAdminData()` in `assets/js/admin-dashboard.js`
 is the seam the Supabase phase replaces with real counts and an activity
 query.
 
-`admin/diamonds.html` is the inventory manager: a dense `.ngd-admin-table`
-(12 columns fitting 1440px; any tablet overflow scrolls inside the table
-card, never the page) with `.ngd-icon-btn` compact actions
-(`.is-on` featured star, `.is-danger` archive) and `.is-inactive` muted
-rows; below 768px the rows become stacked `.ngd-req-card`s. Search, ten
-filters (selects + carat range + active + featured with a count badge on
-the collapse toggle), sort and pagination all run client-side over the
-demo catalogue augmented with deterministic featured/active/updated
-fields. Feature/activate/archive edit only the preview with truthful
-toasts (+ Undo for archive). View → the public details page; Add/Edit →
-the shared diamond form pages. `loadAdminDiamonds()` is the Supabase seam.
+`admin/diamonds.html` is the LIVE inventory manager: rows load from
+`public.diamonds` through the shared client (`loadAdminDiamonds()` in
+`assets/js/admin-diamonds.js`), newest first, into the dense
+`.ngd-admin-table` (12 columns fitting 1440px; tablet overflow scrolls
+inside the table card, never the page; stacked `.ngd-req-card`s below
+768px). Search (stock, report and public id), the ten filters, sort and
+pagination run client-side over the loaded rows, and the loading / empty
+/ error states are real — Retry re-queries Supabase, and arriving with
+`?added=<stock>` shows the insert confirmation. Feature/activate/hide
+still change the page only (truthful toasts; writing them arrives with
+the Edit step). Shapes render `NGD_GEM_ART` thumbnails until photography
+uploads exist.
 
 `admin/add-diamond.html` / `edit-diamond.html` share one generated form
-(`assets/js/admin-diamond-form.js`, mode from `body[data-diamond-form]`):
-eight numbered `.ngd-form-sec-title` sections, `.ngd-req-star` required
-markers, the `.ngd-drop` drag/drop zone (`.is-drag` state) with the
-`.ngd-dia-preview` local preview and replace/remove controls
-(JPG/JPEG/PNG/WEBP ≤ 10 MB, validated client-side, never uploaded), and
-the sticky `.ngd-form-actions` bar (`.ngd-btn-danger-soft` for the
-UI-only Archive). Field names are the future Supabase `diamonds` columns;
-a valid submit exposes the exact payload as `data-ngd-payload` and states
-honestly that nothing was saved — `saveDiamond()` is the single seam.
-A dirty form warns via `beforeunload` before leaving.
+(`assets/js/admin-diamond-form.js`, mode from `body[data-diamond-form]`);
+field names ARE the `public.diamonds` columns (`color`,
+`depth_percentage`, `table_percentage`, boolean `price_visible`, …).
+ADD is live: a valid submit generates a `DIA-XXXXXXXX` `public_id`,
+stamps `created_by` with the signed-in admin, pre-checks the stock
+number and inserts through `saveDiamond()` — duplicates (pre-check or
+the 23505 constraint), RLS denials and network failures all map to safe
+messages, and success redirects to the inventory where the new stone
+appears in the re-read list. EDIT stays an honest demo prefill until the
+Edit step and says so. The `.ngd-drop` image picker still previews
+locally only (JPG/JPEG/PNG/WEBP ≤ 10 MB — Storage uploads come later),
+and a dirty form warns via `beforeunload`.
 
 `admin/jewellery.html` mirrors the diamond manager for the jewellery
 collection: the same `.ngd-admin-table` density (10 columns — image, SKU,

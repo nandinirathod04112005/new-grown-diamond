@@ -141,14 +141,14 @@
         </div>
       </section>
 
-      <!-- Demo notice; loadAdminDiamonds() in assets/js/admin-diamonds.js
-           is the future Supabase seam. -->
+      <!-- Live note; loadAdminDiamonds() in assets/js/admin-diamonds.js
+           selects from public.diamonds. -->
       <aside class="ngd-edu-note mt-4" id="adm-demo-note">
         <span class="ngd-edu-bullet" aria-hidden="true">&#9670;</span>
-        <p class="mb-0"><strong>Demo preview.</strong> These rows are the
-        public demo catalogue with sample featured/active flags. Feature,
-        activate and archive only update this preview — nothing is saved to
-        any server, and everything returns on reload.</p>
+        <p class="mb-0"><strong>Live inventory.</strong> These rows load from
+        the diamonds table in your Supabase project. Feature, activate and
+        archive still change this page only — writing those changes to the
+        database arrives with the Edit step, so they reset on reload.</p>
       </aside>
 
       <!-- Toolbar -->
@@ -179,7 +179,7 @@
             <button type="button" class="ngd-btn ngd-btn-outline ngd-btn-sm" id="adm-clear">Clear</button>
           </div>
           <div class="col-12 col-xl-1 text-xl-end">
-            <span class="ngd-demo-chip">Demo</span>
+            <span class="ngd-demo-chip">Live</span>
           </div>
         </div>
 
@@ -243,17 +243,7 @@
         </div>
 
         <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mt-2">
-          <p class="ngd-dash-metric-note mb-0" id="adm-count" aria-live="polite">—</p>
-          <!-- Demo-only preview of the loading/empty/error designs -->
-          <div class="d-flex align-items-center gap-2">
-            <span class="ngd-dash-metric-note">UI preview (demo only)</span>
-            <div class="ngd-dash-state-switch" id="adm-state-switch" role="group" aria-label="Preview a UI state">
-              <button type="button" class="is-on" data-adm-state="demo">Rows</button>
-              <button type="button" data-adm-state="loading">Loading</button>
-              <button type="button" data-adm-state="empty">Empty</button>
-              <button type="button" data-adm-state="error">Error</button>
-            </div>
-          </div>
+          <p class="ngd-dash-metric-note mb-0" id="adm-count" aria-live="polite">Loading&hellip;</p>
         </div>
       </section>
 
@@ -336,7 +326,6 @@
   <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script defer src="../assets/js/ui.js"></script>
   <script defer src="../assets/js/gem-art.js"></script>
-  <script defer src="../assets/js/diamonds-data.js"></script>
   <script defer src="../assets/js/admin-diamonds.js"></script>
 </body>
 </html>

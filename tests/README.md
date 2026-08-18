@@ -116,21 +116,27 @@ tooling only** — the website itself is plain HTML/CSS/JS and has no Node backe
   the demo activity feed with catalogue links, role
   and session guards, logout, and offcanvas/single-column layouts at
   1440/768/390.
-- `admin-diamonds-ui.test.cjs` — 10 Admin-Diamond-Inventory scenarios
-  (mocked admin): the 12-column table over the augmented demo catalogue,
-  search + the ten filters (incl. carat range, active state and featured)
-  + sort + pagination, the honest demo actions (feature/activate toggles,
-  archive with Undo — truthful toasts, no fake success), Add/Edit
-  placeholder navigation, loading/empty/error previews, guards and the
-  cards-vs-contained-scrolling-table behaviour at 390/768/1440.
-- `admin-diamond-form-ui.test.cjs` — 10 Add/Edit-Diamond scenarios (mocked
-  admin): the eight sections with all 27 snake_case fields and required
-  stars, empty/number/range validation, the honest no-save submits with
-  their exposed payloads, Save & Add Another, the image picker (preview,
-  replace/remove, JPG/PNG/WEBP + 10 MB rules — no upload), the
-  unsaved-changes beforeunload warning, edit prefill + UI-only Archive +
-  not-found, and 2-col→1-col responsive checks with the sticky action bar
-  at 1440/768/390.
+- `admin-diamonds-ui.test.cjs` — 10 LIVE Admin-Diamond-Inventory
+  scenarios (PostgREST-style mocked Supabase): the 12-column table over
+  rows read from `public.diamonds` newest-first with the truthful "Live
+  inventory" note, search by stock AND report number, the filters + sort
+  + pagination on loaded rows, honest page-only feature/activate/hide
+  toggles, the `?added=` arrival toast, the REAL loading/empty/error
+  lifecycle (an HTTP 500 then Retry re-queries; an empty table shows the
+  Add CTA), guards and the cards-vs-contained-table behaviour at
+  390/768/1440.
+- `admin-diamond-form-ui.test.cjs` — 12 Add/Edit-Diamond scenarios
+  (PostgREST-style mocked Supabase): the eight sections whose 27 field
+  names are the real table columns (incl. the `price_visible` checkbox),
+  client validation sending nothing, the LIVE insert (generated
+  `DIA-XXXXXXXX` public_id, `created_by` from the session, success +
+  redirect + the stone appearing in the re-read list), duplicate stock
+  numbers rejected by the pre-check AND via the 23505 constraint path,
+  RLS denials mapped to a safe admin-only message, Save & Add Another
+  with distinct public_ids, the preview-only image picker, the
+  unsaved-changes warning, the edit page's honest demo prefill, a
+  customer turned away to their own dashboard, and responsive checks at
+  1440/390.
 - `admin-jewellery-ui.test.cjs` — 10 Admin-Jewellery-Inventory scenarios
   (mocked admin): the 10-column table over the augmented demo collection
   (incl. the null-weight all-metal piece), search + the four filters

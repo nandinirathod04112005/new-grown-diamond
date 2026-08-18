@@ -1,28 +1,28 @@
 /* ============================================================
-   NEW GROWN DIAMOND — ADMIN ADD / EDIT DIAMOND FORM (STEP 25)
+   NEW GROWN DIAMOND — ADMIN ADD / EDIT DIAMOND FORM (STEP 32)
    ------------------------------------------------------------
    One controller powers both pages, selected by
    <body data-diamond-form="add|edit">. Guarded by requireAdmin().
 
-   HONEST BY DESIGN: no database exists, so Save / Update never
-   pretend anything was stored. A valid submit builds the exact
-   Supabase-ready payload (snake_case field names matching the
-   future `diamonds` table), exposes it on the form as
-   data-ngd-payload for inspection, and says plainly that
-   nothing was saved. The image picker validates and previews
-   locally only — no file leaves the browser. Archive on the
-   edit page is UI-only and says so.
+   ADD is LIVE: a valid submit inserts the row into
+   public.diamonds through the shared Supabase client — field
+   names ARE the table columns. The controller generates a
+   unique public_id (DIA-XXXXXXXX), stamps created_by with the
+   signed-in admin's user id, rejects duplicate stock numbers
+   (pre-checked, and the database unique constraint is handled
+   too), maps real Supabase errors to safe messages, and on
+   success redirects back to the inventory, which re-reads the
+   table so the new stone appears in the real list.
 
-   FUTURE SUPABASE SEAM
-   --------------------
-   saveDiamond(payload, mode) is the single function the
-   backend phase replaces with insert/update (+ Storage upload
-   for the image file held in state.imageFile).
+   EDIT stays an honest demo until the Edit step: it prefills
+   from the demo catalogue and says plainly that updating is not
+   wired yet. The image picker previews locally only — Storage
+   uploads arrive in a later phase.
    ============================================================ */
 (function () {
   'use strict';
 
-  var REQUIRED = ['stock_number', 'shape', 'carat', 'colour', 'clarity', 'cut',
+  var REQUIRED = ['stock_number', 'shape', 'carat', 'color', 'clarity', 'cut',
     'laboratory', 'availability'];
 
   var IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
@@ -30,9 +30,11 @@
 
   var state = {
     mode: 'add',
+    userId: null,     /* the signed-in admin (created_by) */
     record: null,     /* edit: the demo record being edited */
     imageFile: null,  /* File selected for preview (never uploaded) */
-    dirty: false
+    dirty: false,
+    saving: false
   };
 
   function $(id) {
@@ -43,10 +45,8 @@
     return document.querySelector('[name="' + name + '"]');
   }
 
-  /* ---------------- demo record (edit mode) ---------------- */
+  /* ---------------- demo record (edit mode only) ---------------- */
 
-  /* Mirrors the deterministic admin augmentation used by
-     assets/js/admin-diamonds.js — keep the two in step. */
   function adminAugment(d, i) {
     return Object.assign({}, d, {
       featured: i % 5 === 0 || i % 7 === 0,
@@ -62,8 +62,6 @@
     return null;
   }
 
-  /* Deterministic demo pricing/location for fields the public demo
-     catalogue does not carry. Clearly samples, never claimed live. */
   function demoCommercials(d) {
     var base = { D: 1350, E: 1250, F: 1150, G: 1050, H: 950 }[d.colour] || 900;
     var perCarat = Math.round(base + d.carat * 220);
@@ -71,8 +69,6 @@
       price_per_carat: perCarat,
       total_price: Math.round(perCarat * d.carat),
       currency: 'USD',
-      price_visibility: 'on_request',
-      location: d.growth === 'CVD' ? 'Surat atelier' : 'Mumbai vault',
       certificate_url: 'https://example.com/reports/' + d.report,
       internal_notes: 'Demo record — sample note for layout preview.'
     };
@@ -170,7 +166,21 @@
     });
   }
 
-  /* ---------------- payload + honest save ---------------- */
+  /* ---------------- payload ---------------- */
+
+  /** Unique storefront id, e.g. DIA-7K2M9XQ4 (unambiguous charset). */
+  function generatePublicId() {
+    var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    var out = '';
+    var buf = new Uint32Array(8);
+    if (window.crypto && window.crypto.getRandomValues) {
+      window.crypto.getRandomValues(buf);
+    } else {
+      for (var j = 0; j < 8; j++) buf[j] = Math.floor(Math.random() * 4294967296);
+    }
+    for (var i = 0; i < 8; i++) out += chars[buf[i] % chars.length];
+    return 'DIA-' + out;
+  }
 
   function buildPayload(form) {
     var payload = {};
@@ -180,32 +190,79 @@
       else if (el.type === 'number') payload[el.name] = el.value === '' ? null : parseFloat(el.value);
       else payload[el.name] = el.value.trim() === '' ? null : el.value.trim();
     });
-    payload.image_filename = state.imageFile ? state.imageFile.name : null;
+    payload.public_id = generatePublicId();
+    payload.created_by = state.userId;
     return payload;
   }
 
-  /**
-   * Future-backend seam. Today it only records the payload on the form
-   * (data-ngd-payload) and tells the truth: nothing was saved.
-   */
-  function saveDiamond(payload, mode, form) {
-    form.setAttribute('data-ngd-payload', JSON.stringify(payload));
-    var label = payload.stock_number || 'The diamond';
-    if (mode === 'add-another') {
-      showAlert('info',
-        label + ' is valid and its payload is ready — but nothing was ' +
-        'saved: the database arrives with the Supabase phase. The form ' +
-        'has been cleared so you can preview another entry.');
-    } else if (mode === 'edit') {
-      showAlert('info',
-        label + ' is valid and its update payload is ready — but nothing ' +
-        'was saved: the database arrives with the Supabase phase.');
-    } else {
-      showAlert('info',
-        label + ' is valid and its payload is ready — but nothing was ' +
-        'saved: the database arrives with the Supabase phase. ' +
-        'saveDiamond() in admin-diamond-form.js is the wiring point.');
+  /* ---------------- real Supabase errors → safe messages ---------------- */
+
+  function isDuplicateError(error) {
+    return error && (error.code === '23505' ||
+      /duplicate key|already exists/i.test(error.message || ''));
+  }
+
+  function mapDbError(error) {
+    console.error('[NGD Add Diamond] insert failed:', error);
+    if (!error) return 'Saving failed. Please try again.';
+    var msg = error.message || '';
+    if (isDuplicateError(error)) {
+      return 'That stock number already exists in the inventory — stock numbers must be unique.';
     }
+    if (error.code === '42501' || /row-level security|permission denied/i.test(msg)) {
+      return 'Your account is not allowed to add diamonds — only an active admin can (enforced by Row Level Security).';
+    }
+    if (error.code === 'PGRST204' || error.code === '42703') {
+      return 'The diamonds table does not match the form (' + msg + '). Check the column names in Supabase.';
+    }
+    if (/failed to fetch|networkerror|fetch failed|load failed/i.test(msg) || error.code === '') {
+      return 'Could not reach Supabase — check your connection and try again. Nothing was saved.';
+    }
+    return 'Supabase rejected the save: ' + msg;
+  }
+
+  /* ---------------- the live save (add mode) ---------------- */
+
+  async function saveDiamond(payload, mode, form) {
+    form.setAttribute('data-ngd-payload', JSON.stringify(payload));
+    var sb = window.ngdSupabase;
+    var label = payload.stock_number;
+
+    /* friendly duplicate check first (the DB unique constraint is the
+       real enforcement — a race still surfaces as 23505 below) */
+    var existing = await sb.from('diamonds')
+      .select('id')
+      .eq('stock_number', label)
+      .limit(1);
+    if (!existing.error && existing.data && existing.data.length > 0) {
+      showAlert('danger',
+        label + ' already exists in the inventory — stock numbers must be unique.');
+      var stockEl = field('stock_number');
+      setInvalid(stockEl, true);
+      stockEl.focus();
+      return false;
+    }
+
+    var res = await sb.from('diamonds').insert(payload);
+    if (res.error) {
+      if (isDuplicateError(res.error)) setInvalid(field('stock_number'), true);
+      showAlert('danger', mapDbError(res.error));
+      return false;
+    }
+
+    clearDirty();
+    if (mode === 'add-another') {
+      showAlert('success',
+        label + ' was added to the inventory (' + payload.public_id + '). ' +
+        'The form has been cleared for the next stone.');
+      form.reset();
+      resetImage();
+      window.scrollTo({ top: 0 });
+    } else {
+      showAlert('success', label + ' was added to the inventory. Returning to the list…');
+      window.location.replace('diamonds.html?added=' + encodeURIComponent(label));
+    }
+    return true;
   }
 
   /* ---------------- image picker (preview only) ---------------- */
@@ -282,7 +339,7 @@
     });
   }
 
-  /* ---------------- edit-mode prefill ---------------- */
+  /* ---------------- edit-mode prefill (demo until the Edit step) ---------------- */
 
   function prefill(record) {
     var extras = demoCommercials(record);
@@ -291,7 +348,7 @@
       report_number: record.report,
       shape: record.shape,
       carat: record.carat,
-      colour: record.colour,
+      color: record.colour,
       clarity: record.clarity,
       cut: record.cut,
       polish: record.polish,
@@ -301,16 +358,15 @@
       certificate_number: record.report,
       certificate_url: extras.certificate_url,
       measurements: record.measurements,
-      depth_pct: record.depthPct,
-      table_pct: record.tablePct,
+      depth_percentage: record.depthPct,
+      table_percentage: record.tablePct,
       ratio: record.ratio,
       growth_method: record.growth,
-      location: extras.location,
+      location: record.growth === 'CVD' ? 'Surat atelier' : 'Mumbai vault',
       availability: record.availability,
       price_per_carat: extras.price_per_carat,
       total_price: extras.total_price,
       currency: extras.currency,
-      price_visibility: extras.price_visibility,
       internal_notes: extras.internal_notes
     };
     Object.keys(values).forEach(function (name) {
@@ -319,8 +375,8 @@
     });
     field('featured').checked = !!record.featured;
     field('active').checked = !!record.active;
+    field('price_visible').checked = false;
 
-    /* current artwork stands in for the stone's photo */
     var artBox = $('dia-current-art');
     if (artBox) {
       artBox.innerHTML = (window.NGD_GEM_ART || {})[record.shape.toLowerCase()] || '';
@@ -335,9 +391,20 @@
 
   /* ---------------- boot ---------------- */
 
+  function setSaving(saving, label) {
+    state.saving = saving;
+    var btn = $('dia-submit');
+    if (!btn) return;
+    btn.disabled = saving;
+    btn.textContent = saving ? 'Saving…' : label;
+    var another = $('dia-save-another');
+    if (another) another.disabled = saving;
+  }
+
   function initButtons(form) {
-    form.addEventListener('submit', function (event) {
-      event.preventDefault();
+    var submitLabel = state.mode === 'edit' ? 'Update Diamond' : 'Save Diamond';
+
+    async function runAdd(mode) {
       clearAlert();
       if (!validate(form)) {
         showAlert('danger',
@@ -346,13 +413,20 @@
         return;
       }
       var payload = buildPayload(form);
-      clearDirty();
-      saveDiamond(payload, state.mode === 'edit' ? 'edit' : 'add', form);
-    });
+      setSaving(true, submitLabel);
+      try {
+        await saveDiamond(payload, mode, form);
+      } catch (err) {
+        showAlert('danger', mapDbError(err));
+      }
+      setSaving(false, submitLabel);
+    }
 
-    var another = $('dia-save-another');
-    if (another) {
-      another.addEventListener('click', function () {
+    form.addEventListener('submit', function (event) {
+      event.preventDefault();
+      if (state.saving) return;
+
+      if (state.mode === 'edit') {
         clearAlert();
         if (!validate(form)) {
           showAlert('danger',
@@ -361,11 +435,22 @@
           return;
         }
         var payload = buildPayload(form);
-        saveDiamond(payload, 'add-another', form);
-        form.reset();
-        resetImage();
+        form.setAttribute('data-ngd-payload', JSON.stringify(payload));
         clearDirty();
-        window.scrollTo({ top: 0 });
+        showAlert('info',
+          (payload.stock_number || 'The diamond') + ' is valid and its update ' +
+          'payload is ready — but updating is not wired yet: it arrives with ' +
+          'the Edit step, so nothing in the database was changed.');
+        return;
+      }
+
+      runAdd('add');
+    });
+
+    var another = $('dia-save-another');
+    if (another) {
+      another.addEventListener('click', function () {
+        if (!state.saving) runAdd('add-another');
       });
     }
 
@@ -375,9 +460,7 @@
         var id = state.record ? state.record.id : 'This diamond';
         showAlert('info',
           id + ' — Archive is UI-only for now: nothing was archived or ' +
-          'deleted anywhere. The Diamond Inventory page previews the ' +
-          'archive behaviour, and the real action arrives with the ' +
-          'Supabase phase.');
+          'deleted anywhere. The real action arrives with the Edit step.');
       });
     }
   }
@@ -386,11 +469,7 @@
     var res = await window.NGDAuth.requireAdmin();
     if (!res) return; // a redirect is already happening
 
-    var fullName = (res.profile.full_name || '').trim();
-    document.querySelectorAll('[data-ngd-field="first_name"]').forEach(function (el) {
-      el.textContent = fullName ? fullName.split(/\s+/)[0] : 'there';
-    });
-
+    state.userId = res.user.id;
     state.mode = document.body.getAttribute('data-diamond-form') || 'add';
     var form = $('ngd-diamond-form');
     if (!form) return;

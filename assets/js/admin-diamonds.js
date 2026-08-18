@@ -1,20 +1,18 @@
 /* ============================================================
-   NEW GROWN DIAMOND — ADMIN DIAMOND INVENTORY (STEP 24 UI)
+   NEW GROWN DIAMOND — ADMIN DIAMOND INVENTORY (LIVE, STEP 32)
    ------------------------------------------------------------
-   Guarded by requireAdmin(). DEMO ONLY beyond the guard: the
-   rows are the public demo catalogue augmented with
-   deterministic admin fields (featured / active / updated).
-   Feature, activate and archive actions edit ONLY this
-   in-memory preview — every change shows an honest toast
-   (with Undo for archive) and the samples return on reload.
-   Nothing is saved to any server and no success is faked.
+   Guarded by requireAdmin(). Rows load from public.diamonds in
+   the connected Supabase project (RLS decides what an account
+   may see). Search, filters, sort and pagination run client-side
+   over the loaded inventory.
 
-   FUTURE SUPABASE SEAM
-   --------------------
-   loadAdminDiamonds() becomes a select over the diamonds table
-   (incl. featured/active/updated_at columns) and the three
-   mutate helpers become updates/soft-deletes. Rendering,
-   filters, sort and pagination need no changes.
+   Honesty notes:
+   - Feature / activate / archive still change THIS PAGE ONLY —
+     writing those changes to the database arrives with the Edit
+     step, and every toast says so. Reloading restores the truth
+     from the database.
+   - Loading / empty / error states are real: they reflect the
+     actual fetch, and Retry re-queries Supabase.
    ============================================================ */
 (function () {
   'use strict';
@@ -31,40 +29,56 @@
     },
     sort: 'updated-desc',
     page: 1,
-    ui: 'demo',
-    lastArchived: null
+    ui: 'loading',
+    lastArchived: null,
+    toolbarBound: false
   };
 
   function $(id) {
     return document.getElementById(id);
   }
 
-  /* ---------------- demo data ---------------- */
+  /* ---------------- live data ---------------- */
 
-  function updatedFor(i) {
-    var month = 6 + (i % 3);            /* 2026-06 … 2026-08 */
-    var day = (i * 7) % 28 + 1;
-    return '2026-0' + month + '-' + String(day).padStart(2, '0');
+  /** One row from public.diamonds → the shape the renderers use. */
+  function mapRow(d) {
+    return {
+      uuid: d.id,
+      id: d.stock_number || d.public_id || '—',
+      publicId: d.public_id || '',
+      report: d.report_number || '',
+      shape: d.shape || '—',
+      carat: Number(d.carat) || 0,
+      colour: d.color || '—',
+      clarity: d.clarity || '—',
+      cut: d.cut || '—',
+      lab: d.laboratory || '—',
+      growth: d.growth_method || '—',
+      availability: d.availability || '—',
+      featured: !!d.featured,
+      active: d.active !== false,
+      updated: String(d.updated_at || d.created_at || '').slice(0, 10) || '—'
+    };
   }
 
-  /** Future-backend seam: demo catalogue + deterministic admin fields. */
-  function loadAdminDiamonds() {
-    return (window.NGD_DEMO_DIAMONDS || []).map(function (d, i) {
-      return Object.assign({}, d, {
-        featured: i % 5 === 0 || i % 7 === 0,
-        active: i % 9 !== 4,
-        updated: updatedFor(i)
-      });
-    });
+  /** Select the whole inventory from Supabase (newest first). */
+  async function loadAdminDiamonds() {
+    var res = await window.ngdSupabase
+      .from('diamonds')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (res.error) throw res.error;
+    return (res.data || []).map(mapRow);
   }
 
-  /* ---------------- honest demo mutations ---------------- */
+  /* ---------------- honest page-only mutations ---------------- */
 
-  function toast(message, withUndo) {
+  function toast(message, withUndo, type) {
     var box = $('adm-toast');
     box.innerHTML = '';
     var div = document.createElement('div');
-    div.className = 'ngd-alert ngd-alert-info d-flex flex-wrap align-items-center gap-2';
+    div.className = 'ngd-alert ngd-alert-' + (type || 'info') +
+      ' d-flex flex-wrap align-items-center gap-2';
     div.setAttribute('role', 'status');
     var text = document.createElement('span');
     text.textContent = message;
@@ -81,19 +95,20 @@
     box.appendChild(div);
   }
 
-  function demoNote(action, row) {
-    return row.id + ' ' + action + ' in this demo preview — nothing was saved to any server.';
+  function pageOnlyNote(action, row) {
+    return row.id + ' ' + action + ' on this page only — the database was ' +
+      'not changed (saving arrives with the Edit step), so it resets on reload.';
   }
 
   function toggleFeatured(row) {
     row.featured = !row.featured;
-    toast(demoNote(row.featured ? 'marked featured' : 'unfeatured', row));
+    toast(pageOnlyNote(row.featured ? 'marked featured' : 'unfeatured', row));
     apply();
   }
 
   function toggleActive(row) {
     row.active = !row.active;
-    toast(demoNote(row.active ? 'activated' : 'deactivated', row));
+    toast(pageOnlyNote(row.active ? 'activated' : 'deactivated', row));
     apply();
   }
 
@@ -102,7 +117,7 @@
     if (index === -1) return;
     state.rows.splice(index, 1);
     state.lastArchived = { row: row, index: index };
-    toast(demoNote('archived', row), true);
+    toast(pageOnlyNote('hidden', row), true);
     apply();
   }
 
@@ -120,8 +135,9 @@
   function matches(row) {
     var f = state.filters;
     var q = state.query.trim().toLowerCase();
-    if (q && (row.id + ' ' + row.shape + ' ' + row.colour + ' ' + row.clarity + ' ' +
-      row.cut + ' ' + row.lab).toLowerCase().indexOf(q) === -1) return false;
+    if (q && (row.id + ' ' + row.report + ' ' + row.publicId + ' ' + row.shape + ' ' +
+      row.colour + ' ' + row.clarity + ' ' + row.cut + ' ' + row.lab)
+      .toLowerCase().indexOf(q) === -1) return false;
     if (f.shape !== 'all' && row.shape !== f.shape) return false;
     if (f.colour !== 'all' && row.colour !== f.colour) return false;
     if (f.clarity !== 'all' && row.clarity !== f.clarity) return false;
@@ -162,7 +178,7 @@
   /* ---------------- rendering ---------------- */
 
   function art(row) {
-    return (window.NGD_GEM_ART || {})[row.shape.toLowerCase()] || '';
+    return (window.NGD_GEM_ART || {})[String(row.shape).toLowerCase()] || '';
   }
 
   function chips(row) {
@@ -194,15 +210,15 @@
       '<a class="ngd-icon-btn" href="edit-diamond.html?id=' + encodeURIComponent(row.id) + '"' +
       ' title="Edit" aria-label="Edit ' + row.id + '" data-adm-act="edit">' + ICONS.edit + '</a>' +
       '<button type="button" class="ngd-icon-btn' + (row.featured ? ' is-on' : '') + '"' +
-      ' title="' + (row.featured ? 'Unfeature' : 'Feature') + ' (demo only)"' +
+      ' title="' + (row.featured ? 'Unfeature' : 'Feature') + ' (this page only)"' +
       ' aria-label="' + (row.featured ? 'Unfeature ' : 'Feature ') + row.id + '"' +
       ' aria-pressed="' + row.featured + '" data-adm-act="feature">' + ICONS.star + '</button>' +
       '<button type="button" class="ngd-icon-btn' + (row.active ? '' : ' is-off') + '"' +
-      ' title="' + (row.active ? 'Deactivate' : 'Activate') + ' (demo only)"' +
+      ' title="' + (row.active ? 'Deactivate' : 'Activate') + ' (this page only)"' +
       ' aria-label="' + (row.active ? 'Deactivate ' : 'Activate ') + row.id + '"' +
       ' aria-pressed="' + row.active + '" data-adm-act="active">' + ICONS.power + '</button>' +
-      '<button type="button" class="ngd-icon-btn is-danger" title="Archive (demo only)"' +
-      ' aria-label="Archive ' + row.id + '" data-adm-act="archive">' + ICONS.archive + '</button>' +
+      '<button type="button" class="ngd-icon-btn is-danger" title="Hide from this page (not deleted)"' +
+      ' aria-label="Hide ' + row.id + '" data-adm-act="archive">' + ICONS.archive + '</button>' +
       '</div>'
     );
   }
@@ -293,7 +309,7 @@
   }
 
   function apply() {
-    if (state.ui !== 'demo') return;
+    if (state.ui !== 'rows') return;
     var all = visibleRows();
     var total = state.rows.length;
     var start = (state.page - 1) * PAGE_SIZE;
@@ -306,11 +322,10 @@
     bindActions($('adm-cards-wrap'));
     renderPagination(all.length);
 
-    $('adm-count').textContent = all.length === 0 && total === 0
-      ? 'No diamonds'
-      : 'Showing ' + (all.length === 0 ? 0 : start + 1) + '–' +
-        Math.min(start + PAGE_SIZE, all.length) + ' of ' + all.length +
-        ' (catalogue: ' + total + ' demo stones)';
+    $('adm-count').textContent =
+      'Showing ' + (all.length === 0 ? 0 : start + 1) + '–' +
+      Math.min(start + PAGE_SIZE, all.length) + ' of ' + all.length +
+      ' (inventory: ' + total + ' stones)';
     var fc = activeFilterCount();
     $('adm-filter-count').textContent = fc ? String(fc) : '';
     $('adm-filter-count').classList.toggle('d-none', fc === 0);
@@ -318,31 +333,48 @@
     $('adm-table-card').hidden = pageRows.length === 0;
     $('adm-cards-wrap').hidden = pageRows.length === 0;
     $('adm-no-match').hidden = !(total > 0 && all.length === 0);
-    $('adm-stage-empty').hidden = total !== 0;
+    $('adm-stage-empty').hidden = true;
     $('adm-stage-loading').hidden = true;
     $('adm-stage-error').hidden = true;
   }
 
-  /* ---------------- UI state previews ---------------- */
+  /* ---------------- real load lifecycle ---------------- */
 
   function setUiState(ui) {
     state.ui = ui;
-    var demo = ui === 'demo';
-    $('adm-table-card').hidden = !demo;
-    $('adm-cards-wrap').hidden = !demo;
-    $('adm-pagination').hidden = !demo;
+    var rows = ui === 'rows';
+    $('adm-table-card').hidden = !rows;
+    $('adm-cards-wrap').hidden = !rows;
+    $('adm-pagination').hidden = !rows;
     $('adm-no-match').hidden = true;
     $('adm-stage-loading').hidden = ui !== 'loading';
     $('adm-stage-empty').hidden = ui !== 'empty';
     $('adm-stage-error').hidden = ui !== 'error';
-    document.querySelectorAll('#adm-state-switch [data-adm-state]').forEach(function (btn) {
-      btn.classList.toggle('is-on', btn.getAttribute('data-adm-state') === ui);
-    });
-    if (demo) apply();
-    else $('adm-count').textContent = 'UI state preview — no data is being loaded';
+    if (ui === 'loading') $('adm-count').textContent = 'Loading the inventory…';
+    else if (ui === 'empty') $('adm-count').textContent = 'No diamonds in the inventory yet';
+    else if (ui === 'error') $('adm-count').textContent = 'The inventory could not be loaded';
+    if (rows) apply();
+  }
+
+  async function reload() {
+    setUiState('loading');
+    try {
+      state.rows = await loadAdminDiamonds();
+      populateFilters();
+      setUiState(state.rows.length ? 'rows' : 'empty');
+    } catch (err) {
+      console.error('[NGD Admin] diamonds load failed:', err);
+      setUiState('error');
+    }
   }
 
   /* ---------------- wiring ---------------- */
+
+  function resetSelect(id) {
+    var sel = $(id);
+    while (sel.options.length > 1) sel.remove(1);
+    sel.value = 'all';
+  }
 
   function fillSelect(id, values) {
     var sel = $(id);
@@ -357,19 +389,26 @@
   function uniques(key) {
     var seen = [];
     state.rows.forEach(function (r) {
-      if (seen.indexOf(r[key]) === -1) seen.push(r[key]);
+      var v = r[key];
+      if (v && v !== '—' && seen.indexOf(v) === -1) seen.push(v);
     });
     return seen.sort();
   }
 
-  function initToolbar() {
-    fillSelect('adm-f-shape', uniques('shape'));
-    fillSelect('adm-f-colour', uniques('colour'));
-    fillSelect('adm-f-clarity', uniques('clarity'));
-    fillSelect('adm-f-cut', uniques('cut'));
-    fillSelect('adm-f-lab', uniques('lab'));
-    fillSelect('adm-f-growth', uniques('growth'));
-    fillSelect('adm-f-availability', uniques('availability'));
+  /** Re-derive the filter options from the freshly loaded rows. */
+  function populateFilters() {
+    [['adm-f-shape', 'shape'], ['adm-f-colour', 'colour'], ['adm-f-clarity', 'clarity'],
+     ['adm-f-cut', 'cut'], ['adm-f-lab', 'lab'], ['adm-f-growth', 'growth'],
+     ['adm-f-availability', 'availability']].forEach(function (pair) {
+      resetSelect(pair[0]);
+      fillSelect(pair[0], uniques(pair[1]));
+      state.filters[pair[1]] = 'all';
+    });
+  }
+
+  function bindToolbar() {
+    if (state.toolbarBound) return;
+    state.toolbarBound = true;
 
     $('adm-search').addEventListener('input', function () {
       state.query = this.value; state.page = 1; apply();
@@ -406,29 +445,21 @@
       apply();
     });
 
-    $('adm-state-switch').addEventListener('click', function (event) {
-      var btn = event.target.closest('[data-adm-state]');
-      if (btn) setUiState(btn.getAttribute('data-adm-state'));
-    });
-    $('adm-retry').addEventListener('click', function () { setUiState('demo'); });
-  }
-
-  function fill(field, value) {
-    document.querySelectorAll('[data-ngd-field="' + field + '"]').forEach(function (el) {
-      el.textContent = value;
-    });
+    $('adm-retry').addEventListener('click', reload);
   }
 
   async function init() {
     var res = await window.NGDAuth.requireAdmin();
     if (!res) return; // a redirect is already happening
 
-    var fullName = (res.profile.full_name || '').trim();
-    fill('first_name', fullName ? fullName.split(/\s+/)[0] : 'there');
+    bindToolbar();
+    await reload();
 
-    state.rows = loadAdminDiamonds();
-    initToolbar();
-    setUiState('demo');
+    /* Arriving from a successful Add Diamond save */
+    var added = new URLSearchParams(window.location.search).get('added');
+    if (added && state.ui === 'rows') {
+      toast(added + ' was added to the inventory.', false, 'success');
+    }
   }
 
   if (document.readyState === 'loading') {
