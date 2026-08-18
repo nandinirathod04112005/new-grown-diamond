@@ -469,6 +469,13 @@
     var res = await window.NGDAuth.requireAdmin();
     if (!res) return; // a redirect is already happening
 
+    /* requireAdmin is the shared navigation guard; keep this write surface
+       fail-closed to the exact status required by the diamonds RLS policy. */
+    if (String(res.profile.account_status || '').toLowerCase() !== 'active') {
+      await window.NGDAuth.logout();
+      return;
+    }
+
     state.userId = res.user.id;
     state.mode = document.body.getAttribute('data-diamond-form') || 'add';
     var form = $('ngd-diamond-form');

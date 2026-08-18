@@ -452,6 +452,14 @@
     var res = await window.NGDAuth.requireAdmin();
     if (!res) return; // a redirect is already happening
 
+    /* Match the database policy exactly: only an active admin may use the
+       live inventory, even if a future profile status is unknown to the
+       shared navigation guard. */
+    if (String(res.profile.account_status || '').toLowerCase() !== 'active') {
+      await window.NGDAuth.logout();
+      return;
+    }
+
     bindToolbar();
     await reload();
 
