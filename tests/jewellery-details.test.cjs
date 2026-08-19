@@ -34,6 +34,12 @@ async function scenario(name, opts, fn) {
   const pageErrors = [];
   try {
     await installCdnRoutes(context);
+    await context.route('**/assets/js/supabase-config.js', (r) =>
+      r.fulfill({
+        status: 200,
+        contentType: 'application/javascript',
+        body: "window.NGD_SUPABASE_CONFIG = { SUPABASE_URL: 'YOUR_SUPABASE_PROJECT_URL', SUPABASE_PUBLISHABLE_KEY: 'YOUR_SUPABASE_PUBLISHABLE_KEY' };",
+      }));
     const page = await context.newPage();
     page.on('pageerror', (e) => pageErrors.push(String(e)));
     await fn(page);
@@ -159,16 +165,17 @@ async function open(page, query) {
     expect(/perspective/.test(tilt), 'tilt applied to the gallery, got ' + (tilt || 'none'));
   });
 
-  await scenario('CTAs: quote + enquire link with the piece ref; favourite toggles + syncs', {}, async (page) => {
+  await scenario('CTAs: quote + enquire are live triggers (login first); favourite toggles + syncs', {}, async (page) => {
     await open(page, '?id=JW-1005');
     const hrefs = await page.evaluate(() => ({
       quote: document.getElementById('jd-quote').getAttribute('href'),
       enquire: document.getElementById('jd-enquire').getAttribute('href'),
       sticky: document.getElementById('jd-sticky-quote').getAttribute('href'),
     }));
-    expect(hrefs.quote === 'contact.html?piece=JW-1005&type=quote', 'quote href, got ' + hrefs.quote);
-    expect(hrefs.enquire === 'contact.html?piece=JW-1005&type=enquiry', 'enquire href');
-    expect(hrefs.sticky === hrefs.quote, 'sticky quote matches');
+    expect(hrefs.quote === '#' && hrefs.sticky === '#',
+      'quote CTAs are live modal triggers, got ' + hrefs.quote + ' / ' + hrefs.sticky);
+    expect(hrefs.enquire === 'contact.html?piece=JW-1005&type=enquiry',
+      'enquire routes to the contact form with the piece ref, got ' + hrefs.enquire);
     await page.click('#jd-fav');
     const fav = await page.evaluate(() => ({
       pressed: document.getElementById('jd-fav').getAttribute('aria-pressed'),
@@ -177,6 +184,9 @@ async function open(page, query) {
     }));
     expect(fav.pressed === 'true' && fav.label === 'In Favourites', 'favourite toggled on');
     expect(fav.stickySync === 'true', 'sticky favourite stays in sync');
+    /* signed-out visitors are sent to login before the quote modal */
+    await page.click('#jd-quote');
+    await page.waitForURL('**/login.html', { timeout: 8000 });
   });
 
   await scenario('certificate section: quality + report for set pieces, hallmark note for all-metal', {}, async (page) => {
