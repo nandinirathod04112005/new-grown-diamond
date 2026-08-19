@@ -15,6 +15,8 @@ assert.match(js, /rpc\('admin_set_customer_status'/, 'status changes use the RPC
 assert.ok(js.indexOf('row.account_status = newStatus') > js.indexOf("rpc('admin_set_customer_status'"), 'UI changes only after RPC returns');
 assert.doesNotMatch(html + js, /NGD_DEMO_CUSTOMERS|customers-data\.js|enquiries-data\.js|password/i, 'no demo records or sensitive auth fields');
 assert.match(sql, /alter table public\.profiles enable row level security/);
+assert.match(sql, /from pg_policies[\s\S]*tablename = 'profiles'[\s\S]*cmd in \('SELECT', 'UPDATE', 'ALL'\)/, 'removes legacy permissive profile policies');
+assert.match(sql, /execute format\('drop policy %I on public\.profiles'/, 'drops policies regardless of their old names');
 assert.match(sql, /auth\.uid\(\) is null or not public\.is_active_admin\(\)/);
 assert.match(sql, /new_status not in \('active', 'inactive', 'suspended'\)/);
 assert.match(sql, /where id = target_user_id\s+and role = 'customer'/, 'RPC cannot target an admin');
@@ -22,5 +24,6 @@ assert.doesNotMatch(sql, /set\s+role\s*=/i, 'RPC never changes a role');
 assert.match(sql, /returns text/, 'RPC returns only the confirmed status, not an entire profile');
 assert.match(js, /res\.data !== newStatus/, 'browser verifies the database-confirmed status before updating the UI');
 assert.match(sql, /revoke update on public\.profiles from authenticated/);
+assert.match(sql, /grant select on public\.profiles to authenticated/);
 assert.match(sql, /using \(role = 'customer' and public\.is_active_admin\(\)\)/);
 console.log('PASS  Admin Customers uses real Supabase data and secure status RPC');

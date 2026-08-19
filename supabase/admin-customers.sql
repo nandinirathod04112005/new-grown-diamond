@@ -2,7 +2,25 @@
 -- This script deliberately grants no direct profile UPDATE privilege to the browser.
 alter table public.profiles enable row level security;
 
-drop policy if exists "customers read own profile" on public.profiles;
+-- PostgreSQL combines permissive policies with OR. Remove every existing
+-- browser SELECT/UPDATE policy first so a legacy, differently-named policy
+-- cannot continue to expose all profiles or permit role/status changes.
+do $policy_cleanup$
+declare
+  profile_policy record;
+begin
+  for profile_policy in
+    select policyname
+      from pg_policies
+     where schemaname = 'public'
+       and tablename = 'profiles'
+       and cmd in ('SELECT', 'UPDATE', 'ALL')
+  loop
+    execute format('drop policy %I on public.profiles', profile_policy.policyname);
+  end loop;
+end
+$policy_cleanup$;
+
 create policy "customers read own profile"
 on public.profiles for select to authenticated
 using (id = auth.uid());
@@ -20,19 +38,14 @@ $$;
 revoke all on function public.is_active_admin() from public;
 grant execute on function public.is_active_admin() to authenticated;
 
-drop policy if exists "active admins read customer profiles" on public.profiles;
 create policy "active admins read customer profiles"
 on public.profiles for select to authenticated
 using (role = 'customer' and public.is_active_admin());
 
--- Existing own-profile SELECT policies remain in place, so customers can read
--- themselves. Remove known unsafe UPDATE policies; profile edits should use a
--- separate column-limited RPC rather than permitting role/status writes.
-drop policy if exists "Users can update own profile" on public.profiles;
-drop policy if exists "users update own profile" on public.profiles;
-drop policy if exists "Customers can update own profile" on public.profiles;
-drop policy if exists "customers update own profile" on public.profiles;
+-- Customers receive no direct UPDATE privilege or policy. Profile edits must
+-- use narrowly-scoped RPCs rather than permitting role/status writes.
 revoke update on public.profiles from authenticated;
+grant select on public.profiles to authenticated;
 
 -- Drop the earlier signature explicitly because PostgreSQL cannot change a
 -- function's return type with CREATE OR REPLACE. This also keeps reruns safe.
