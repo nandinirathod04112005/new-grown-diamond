@@ -1,300 +1,130 @@
-/* ============================================================
-   NEW GROWN DIAMOND — CUSTOMER FAVOURITES (STEP 21 UI)
-   ------------------------------------------------------------
-   Guarded by requireCustomer(). DEMO ONLY beyond the guard:
-   no favourites backend exists, so this page renders a sample
-   list resolved from the public demo catalogue and says so in
-   the on-page notice. Removing an item updates ONLY this
-   in-memory preview (with Undo); nothing is stored or deleted
-   anywhere and the samples return on reload.
-
-   FUTURE SUPABASE SEAM
-   --------------------
-   Replace loadFavourites() with a select from a `favourites`
-   table (user_id, item_type, item_id, created_at) joined to the
-   catalogue, and removeFavourite() with the matching delete.
-   The rendering, tabs, search and sort need no changes.
-   ============================================================ */
+/* Customer favourites page backed by Supabase and protected by RLS. */
 (function () {
   'use strict';
+  var state = { items: [], tab: 'all', query: '', sort: 'recent' };
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (value) { var el = document.createElement('span'); el.textContent = value == null ? '' : String(value); return el.innerHTML; };
 
-  /* Saved order = recency (first item is the most recent save). */
-  var DEMO_FAVOURITES = [
-    { type: 'diamond', id: 'NGD-1007' },
-    { type: 'jewellery', id: 'JW-1003' },
-    { type: 'diamond', id: 'NGD-1015' },
-    { type: 'diamond', id: 'NGD-1003' },
-    { type: 'jewellery', id: 'JW-1008' },
-    { type: 'diamond', id: 'NGD-1022' },
-    { type: 'jewellery', id: 'JW-1012' }
-  ];
-
-  var state = {
-    items: [],        /* resolved favourites, saved order */
-    tab: 'all',
-    query: '',
-    sort: 'recent',
-    lastRemoved: null /* { entry, index } for Undo */
-  };
-
-  function $(id) {
-    return document.getElementById(id);
+  function value(row, names, fallback) {
+    for (var i = 0; i < names.length; i++) if (row[names[i]] != null) return row[names[i]];
+    return fallback;
   }
 
-  /** Future-backend seam: today resolves the demo list. */
-  function loadFavourites() {
-    var diamonds = window.NGD_DEMO_DIAMONDS || [];
-    var pieces = window.NGD_DEMO_JEWELLERY || [];
-    return DEMO_FAVOURITES.map(function (fav, i) {
-      var record = fav.type === 'diamond'
-        ? diamonds.find(function (d) { return d.id === fav.id; })
-        : pieces.find(function (p) { return p.id === fav.id; });
-      return record ? { type: fav.type, record: record, savedIndex: i } : null;
-    }).filter(Boolean);
+  function normalize(row) {
+    var type = row.product_type;
+    var record = type === 'diamond' ? row.diamonds : row.jewellery;
+    if (!record) return null;
+    return { id: row.id, type: type, productId: type === 'diamond' ? row.diamond_id : row.jewellery_id,
+      createdAt: row.created_at, record: record };
   }
 
-  /** Future-backend seam: today it only edits the in-memory preview. */
-  function removeFavourite(item) {
-    var index = state.items.indexOf(item);
-    if (index === -1) return;
-    state.items.splice(index, 1);
-    state.lastRemoved = { entry: item, index: index };
-    showToast(item);
-    apply();
+  async function loadFavourites(user) {
+    var result = await window.ngdSupabase.from('favourites')
+      .select('id,product_type,diamond_id,jewellery_id,created_at,diamonds(*),jewellery(*)')
+      .eq('user_id', user.id).order('created_at', { ascending: false });
+    if (result.error) throw result.error;
+    return (result.data || []).map(normalize).filter(Boolean);
   }
 
-  function restoreLast() {
-    var last = state.lastRemoved;
-    if (!last) return;
-    state.items.splice(Math.min(last.index, state.items.length), 0, last.entry);
-    state.lastRemoved = null;
-    clearToast();
-    apply();
+  async function removeFavourite(item) {
+    var button = document.querySelector('[data-fav-row="' + item.id + '"] [data-fav-remove]');
+    if (button) button.disabled = true;
+    try {
+      await window.NGDFavourites.remove(item.type, item.productId);
+      state.items = state.items.filter(function (entry) { return entry.id !== item.id; });
+      apply();
+    } catch (error) {
+      if (button) button.disabled = false;
+      console.error('[NGD Favourites]', error);
+      showError('We could not remove that favourite. Please try again.');
+    }
   }
 
-  /* ---------------- toast ---------------- */
-
-  function showToast(item) {
-    var box = $('fav-toast');
-    if (!box) return;
-    var label = item.type === 'diamond' ? item.record.id : item.record.name;
-    box.innerHTML = '';
-    var div = document.createElement('div');
-    div.className = 'ngd-alert ngd-alert-info d-flex flex-wrap align-items-center gap-2';
-    div.setAttribute('role', 'status');
-    var text = document.createElement('span');
-    text.textContent = label +
-      ' removed from this demo preview — nothing was saved or deleted on any server.';
-    var undo = document.createElement('button');
-    undo.type = 'button';
-    undo.className = 'ngd-link btn btn-link p-0 border-0 align-baseline';
-    undo.id = 'fav-undo';
-    undo.textContent = 'Undo';
-    undo.addEventListener('click', restoreLast);
-    div.appendChild(text);
-    div.appendChild(undo);
-    box.appendChild(div);
+  function showError(message) {
+    $('fav-toast').innerHTML = '<div class="ngd-alert ngd-alert-danger" role="alert">' + esc(message) + '</div>';
   }
-
-  function clearToast() {
-    var box = $('fav-toast');
-    if (box) box.innerHTML = '';
-  }
-
-  /* ---------------- filtering + sorting ---------------- */
-
-  function haystack(item) {
-    var r = item.record;
-    return item.type === 'diamond'
-      ? [r.id, r.shape, r.colour, r.clarity, r.lab].join(' ').toLowerCase()
-      : [r.id, r.name, r.category].join(' ').toLowerCase();
-  }
-
-  function caratOf(item) {
-    return item.type === 'diamond'
-      ? item.record.carat
-      : (item.record.weightCt || 0);
-  }
-
-  function nameOf(item) {
-    return item.type === 'diamond' ? item.record.id : item.record.name;
-  }
-
-  var SORTS = {
-    recent: function (a, b) { return a.savedIndex - b.savedIndex; },
-    name: function (a, b) { return nameOf(a).localeCompare(nameOf(b)); },
-    'carat-desc': function (a, b) { return caratOf(b) - caratOf(a); },
-    'carat-asc': function (a, b) { return caratOf(a) - caratOf(b); }
-  };
 
   function visibleItems() {
     var q = state.query.trim().toLowerCase();
-    return state.items
-      .filter(function (item) {
-        if (state.tab !== 'all' && item.type !== state.tab) return false;
-        return !q || haystack(item).indexOf(q) !== -1;
-      })
-      .sort(SORTS[state.sort] || SORTS.recent);
+    return state.items.filter(function (item) {
+      if (state.tab !== 'all' && state.tab !== item.type) return false;
+      var r = item.record;
+      var text = item.type === 'diamond'
+        ? [value(r, ['stock_number', 'stock_no', 'id'], ''), r.shape, r.colour, r.clarity].join(' ')
+        : [value(r, ['sku', 'id'], ''), value(r, ['product_name', 'name'], ''), r.category].join(' ');
+      return !q || text.toLowerCase().indexOf(q) !== -1;
+    }).sort(function (a, b) {
+      if (state.sort === 'recent') return String(b.createdAt).localeCompare(String(a.createdAt));
+      var ar = a.record, br = b.record;
+      if (state.sort === 'name') return name(a).localeCompare(name(b));
+      var aw = Number(value(ar, ['carat', 'diamond_weight', 'weight_ct'], 0));
+      var bw = Number(value(br, ['carat', 'diamond_weight', 'weight_ct'], 0));
+      return state.sort === 'carat-desc' ? bw - aw : aw - bw;
+    });
   }
 
-  /* ---------------- rendering ---------------- */
-
-  var COL = 'col-12 col-sm-6 col-xl-4 col-xxl-3';
-
-  function diamondCard(item) {
-    var d = item.record;
-    var art = (window.NGD_GEM_ART || {})[d.shape.toLowerCase()] || '';
-    var availCls = d.availability === 'In Stock' ? 'ngd-avail-stock' : 'ngd-avail-request';
-    return (
-      '<div class="' + COL + '">' +
-      '<article class="ngd-card ngd-card-dark ngd-card-3d ngd-diamond-card ngd-fav-card h-100" data-ngd-tilt ' +
-      'data-fav-type="diamond" data-fav-id="' + d.id + '">' +
-      '<div class="ngd-diamond-media ngd-depth-1">' +
-      '<span class="ngd-demo-chip ngd-fav-chip">Demo</span>' + art + '</div>' +
-      '<div class="ngd-diamond-body">' +
-      '<div class="d-flex justify-content-between align-items-baseline gap-2">' +
-      '<h2 class="ngd-diamond-title">' + d.shape + '</h2>' +
-      '<span class="ngd-diamond-carat">' + d.carat.toFixed(2) + ' ct</span>' +
-      '</div>' +
-      '<div class="d-flex justify-content-between align-items-center mt-1">' +
-      '<span class="ngd-stock-no">' + d.id + '</span>' +
-      '<span class="ngd-avail ' + availCls + '">' + d.availability + '</span>' +
-      '</div>' +
-      '<dl class="ngd-diamond-specs">' +
-      '<div><dt>Shape</dt><dd>' + d.shape + '</dd></div>' +
-      '<div><dt>Carat</dt><dd>' + d.carat.toFixed(2) + '</dd></div>' +
-      '<div><dt>Colour</dt><dd>' + d.colour + '</dd></div>' +
-      '<div><dt>Clarity</dt><dd>' + d.clarity + '</dd></div>' +
-      '<div><dt>Laboratory</dt><dd>' + d.lab + '</dd></div>' +
-      '<div><dt>Growth</dt><dd>' + d.growth + '</dd></div>' +
-      '</dl>' +
-      '<div class="ngd-fav-actions mt-3">' +
-      '<a class="ngd-btn ngd-btn-gold ngd-btn-sm" href="../diamond-details.html?id=' +
-        encodeURIComponent(d.id) + '">View Details</a>' +
-      '<button type="button" class="ngd-btn ngd-btn-ghost ngd-btn-sm" data-fav-remove>' +
-      'Remove</button>' +
-      '</div>' +
-      '</div></article></div>'
-    );
+  function name(item) {
+    return item.type === 'diamond'
+      ? value(item.record, ['stock_number', 'stock_no', 'id'], 'Diamond')
+      : value(item.record, ['product_name', 'name', 'sku'], 'Jewellery');
   }
 
-  function jewelleryCard(item) {
-    var p = item.record;
-    var art = (window.NGD_JEWEL_ART || {})[p.category.toLowerCase()] || '';
-    var availCls = p.availability === 'In Stock' ? 'ngd-avail-stock' : 'ngd-avail-request';
-    var weight = p.weightCt != null
-      ? '<span class="ngd-weight-chip">' + p.weightCt.toFixed(2) + ' ct diamonds</span>'
-      : '';
-    return (
-      '<div class="' + COL + '">' +
-      '<article class="ngd-card ngd-card-3d ngd-jewel-card ngd-fav-card h-100" data-ngd-tilt ' +
-      'data-fav-type="jewellery" data-fav-id="' + p.id + '">' +
-      '<div class="ngd-jewel-media">' +
-      '<span class="ngd-demo-chip ngd-fav-chip">Demo</span>' +
-      '<div class="ngd-jewel-figure">' + art + '</div>' +
-      '</div>' +
-      '<div class="ngd-jewel-body">' +
-      '<p class="ngd-jewel-cat">' + p.category + '</p>' +
-      '<h2 class="ngd-jewel-name">' + p.name + '</h2>' +
-      '<div class="d-flex align-items-center gap-2 flex-wrap mb-3">' +
-      '<span class="ngd-avail ' + availCls + '">' + p.availability + '</span>' + weight +
-      '</div>' +
-      '<div class="ngd-fav-actions mt-auto">' +
-      '<a class="ngd-btn ngd-btn-outline ngd-btn-sm" href="../jewellery-details.html?id=' +
-        encodeURIComponent(p.id) + '">View Details</a>' +
-      '<button type="button" class="ngd-btn ngd-btn-outline ngd-btn-sm" data-fav-remove>' +
-      'Remove</button>' +
-      '</div>' +
-      '</div></article></div>'
-    );
+  function media(r, fallback) {
+    var url = value(r, ['image_url', 'primary_image_url', 'image'], '');
+    return url ? '<img src="' + esc(url) + '" alt="" loading="lazy">' : fallback;
+  }
+
+  function card(item) {
+    var r = item.record;
+    var diamond = item.type === 'diamond';
+    var ref = diamond ? value(r, ['stock_number', 'stock_no', 'id'], '') : value(r, ['sku', 'id'], '');
+    var title = diamond ? [value(r, ['shape'], 'Diamond'), value(r, ['carat'], '') ? Number(r.carat).toFixed(2) + ' ct' : ''].join(' · ') : value(r, ['product_name', 'name'], 'Jewellery');
+    var category = diamond ? value(r, ['diamond_type', 'type', 'shape'], 'Diamond') : value(r, ['category', 'type'], 'Jewellery');
+    var art = diamond ? ((window.NGD_GEM_ART || {})[String(r.shape || '').toLowerCase()] || '') : ((window.NGD_JEWEL_ART || {})[String(r.category || '').toLowerCase()] || '');
+    var details = diamond ? '../diamond-details.html?id=' : '../jewellery-details.html?id=';
+    return '<div class="col-12 col-sm-6 col-xl-4 col-xxl-3"><article class="ngd-card ngd-fav-card h-100" data-fav-row="' + esc(item.id) + '">' +
+      '<div class="' + (diamond ? 'ngd-diamond-media' : 'ngd-jewel-media') + '">' + media(r, art) + '</div>' +
+      '<div class="' + (diamond ? 'ngd-diamond-body' : 'ngd-jewel-body') + '"><p class="ngd-jewel-cat">' + esc(category) + '</p>' +
+      '<h2 class="ngd-title fs-5">' + esc(title) + '</h2><p class="ngd-stock-no">' + esc(ref) + '</p>' +
+      '<div class="ngd-fav-actions mt-3"><a class="ngd-btn ngd-btn-gold ngd-btn-sm" href="' + details + encodeURIComponent(ref || item.productId) + '">View Details</a>' +
+      '<button type="button" class="ngd-btn ngd-btn-outline ngd-btn-sm" data-fav-remove>Remove from Favourites</button></div></div></article></div>';
   }
 
   function apply() {
-    var grid = $('fav-grid');
-    var visible = visibleItems();
-    var total = state.items.length;
-
-    grid.innerHTML = visible.map(function (item) {
-      return item.type === 'diamond' ? diamondCard(item) : jewelleryCard(item);
-    }).join('');
-
-    if (window.NGDTilt) window.NGDTilt(grid);
-
-    grid.querySelectorAll('[data-fav-remove]').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        var card = btn.closest('[data-fav-id]');
-        var match = state.items.find(function (item) {
-          return item.type === card.getAttribute('data-fav-type') &&
-            item.record.id === card.getAttribute('data-fav-id');
-        });
-        if (match) removeFavourite(match);
-      });
-    });
-
-    var diamonds = state.items.filter(function (i) { return i.type === 'diamond'; }).length;
-    $('fav-count').textContent = total === 0
-      ? 'No favourites'
-      : 'Showing ' + visible.length + ' of ' + total +
-        ' — ' + diamonds + ' diamonds · ' + (total - diamonds) + ' jewellery';
-
+    var visible = visibleItems(), total = state.items.length;
+    $('fav-grid').innerHTML = visible.map(card).join('');
+    $('fav-grid').hidden = visible.length === 0;
     $('fav-empty').hidden = total !== 0;
-    $('fav-no-match').hidden = !(total > 0 && visible.length === 0);
-    grid.hidden = visible.length === 0;
-  }
-
-  /* ---------------- wiring ---------------- */
-
-  function initToolbar() {
-    document.querySelectorAll('[data-fav-tab]').forEach(function (tabBtn) {
-      tabBtn.addEventListener('click', function () {
-        state.tab = tabBtn.getAttribute('data-fav-tab');
-        document.querySelectorAll('[data-fav-tab]').forEach(function (b) {
-          var on = b === tabBtn;
-          b.classList.toggle('is-active', on);
-          b.setAttribute('aria-pressed', on ? 'true' : 'false');
-        });
-        apply();
+    $('fav-no-match').hidden = !(total && !visible.length);
+    var diamonds = state.items.filter(function (x) { return x.type === 'diamond'; }).length;
+    $('fav-count').textContent = total ? 'Showing ' + visible.length + ' of ' + total + ' — ' + diamonds + ' diamonds · ' + (total - diamonds) + ' jewellery' : 'No favourites';
+    document.querySelectorAll('[data-fav-remove]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        var id = button.closest('[data-fav-row]').getAttribute('data-fav-row');
+        var item = state.items.find(function (x) { return x.id === id; });
+        if (item) removeFavourite(item);
       });
     });
-
-    $('fav-search').addEventListener('input', function () {
-      state.query = this.value;
-      apply();
-    });
-
-    $('fav-sort').addEventListener('change', function () {
-      state.sort = this.value;
-      apply();
-    });
-
-    $('fav-clear-search').addEventListener('click', function () {
-      state.query = '';
-      $('fav-search').value = '';
-      apply();
-    });
   }
 
-  function fill(field, value) {
-    document.querySelectorAll('[data-ngd-field="' + field + '"]').forEach(function (el) {
-      el.textContent = value;
-    });
+  function wire() {
+    document.querySelectorAll('[data-fav-tab]').forEach(function (button) { button.addEventListener('click', function () {
+      state.tab = button.getAttribute('data-fav-tab');
+      document.querySelectorAll('[data-fav-tab]').forEach(function (b) { b.classList.toggle('is-active', b === button); b.setAttribute('aria-pressed', String(b === button)); }); apply();
+    }); });
+    $('fav-search').addEventListener('input', function () { state.query = this.value; apply(); });
+    $('fav-sort').addEventListener('change', function () { state.sort = this.value; apply(); });
+    $('fav-clear-search').addEventListener('click', function () { state.query = ''; $('fav-search').value = ''; apply(); });
   }
 
   async function init() {
-    var res = await window.NGDAuth.requireCustomer();
-    if (!res) return; // a redirect is already happening
-
-    var fullName = (res.profile.full_name || '').trim();
-    fill('first_name', fullName ? fullName.split(/\s+/)[0] : 'there');
-
-    state.items = loadFavourites();
-    initToolbar();
-    apply();
+    var auth = await window.NGDAuth.requireCustomer();
+    if (!auth) return;
+    var fullName = String(auth.profile.full_name || '').trim();
+    document.querySelectorAll('[data-ngd-field="first_name"]').forEach(function (el) { el.textContent = fullName ? fullName.split(/\s+/)[0] : 'there'; });
+    wire();
+    try { state.items = await loadFavourites(auth.user); apply(); }
+    catch (error) { console.error('[NGD Favourites]', error); showError('We could not load your favourites. Please try again.'); }
   }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();
