@@ -119,8 +119,12 @@
 
   function numberOk(el) {
     if (el.value.trim() === '') return !el.required;
-    var v = parseFloat(el.value);
-    if (isNaN(v)) return false;
+    var v = Number(el.value);
+    if (!Number.isFinite(v)) return false;
+    /* Let the native number control enforce min, max and step as well as
+       malformed values. This keeps every optional numeric field subject to
+       the same validation as required carat. */
+    if (el.validity && !el.validity.valid) return false;
     var min = el.getAttribute('min');
     var max = el.getAttribute('max');
     if (min !== null && v < parseFloat(min)) return false;
