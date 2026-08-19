@@ -90,6 +90,7 @@ Bootstrap 5 + vanilla JavaScript** frontend backed by **Supabase**
 - [`docs/DESIGN_SYSTEM.md`](docs/DESIGN_SYSTEM.md) — tokens & reusable `ngd-` classes
 - [`docs/SUPABASE_AUTH_SETUP.md`](docs/SUPABASE_AUTH_SETUP.md) — auth configuration & behaviour
 - [`docs/FIRST_ADMIN_SETUP.md`](docs/FIRST_ADMIN_SETUP.md) — promoting the first admin with `supabase/first-admin.sql`
+- [`supabase/diamond-edit-status-archive.sql`](supabase/diamond-edit-status-archive.sql) — soft-archive column and active-admin-only diamond update policy for Backend Step 5
 - [`docs/SUPABASE_AUTH_TEST.md`](docs/SUPABASE_AUTH_TEST.md) — automated results + manual test checklist
 - [`tests/README.md`](tests/README.md) — optional automated browser tests
 
@@ -99,4 +100,7 @@ The browser only ever holds the **publishable/anon key**. Roles and account
 status live in `public.profiles`, read through RLS — never from
 `localStorage`, never from a form. Page guards are navigation UX;
 **Row Level Security is the enforcement layer**. `service_role`/secret keys
-must never appear in this repository.
+must never appear in this repository. Apply the Step 5 diamond SQL before
+using edit, feature, status, or archive actions; it removes older permissive
+diamond UPDATE policies so logged-out users and customers cannot mutate the
+inventory.
