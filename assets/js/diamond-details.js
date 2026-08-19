@@ -187,6 +187,10 @@
     [document.getElementById('dd-quote'), document.getElementById('dd-sticky-quote')],
     { type: 'diamond', reference: stone.id, title: stone.shape + ' · ' + stone.carat.toFixed(2) + ' ct' }
   );
+  window.NGDBindHoldButtons(
+    [document.getElementById('dd-hold'), document.getElementById('dd-sticky-hold')],
+    { type: 'diamond', reference: stone.id, title: stone.shape + ' · ' + stone.carat.toFixed(2) + ' ct' }
+  );
 
   var favButtons = [document.getElementById('dd-fav'), document.getElementById('dd-sticky-fav')];
   window.NGDFavourites.bind(

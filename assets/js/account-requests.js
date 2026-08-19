@@ -49,22 +49,11 @@
     holds: {
       title: 'Holds',
       idHead: 'Hold',
-      statuses: { Pending: '', Active: 'is-gold', Expired: 'is-dim', Released: 'is-dim' },
+      statuses: { Pending: '', Active: 'is-gold', Released: 'is-dim', Expired: 'is-dim', Rejected: 'is-dim' },
       extra: { key: 'expires', head: 'Expires' },
       emptyTitle: 'No holds yet',
-      emptyText: 'Ask us to hold a stone while you decide — holds you request will be tracked here once your account backend arrives.',
-      rows: [
-        { id: 'H-0045', kind: 'diamond', ref: 'NGD-1022', requested: '2026-08-12', expires: '2026-08-19',
-          status: 'Pending', note: 'Awaiting confirmation from the inventory desk.' },
-        { id: 'H-0044', kind: 'diamond', ref: 'NGD-1007', requested: '2026-08-09', expires: '2026-08-16',
-          status: 'Active', note: 'Stone is off the market and reserved for you.' },
-        { id: 'H-0043', kind: 'jewellery', ref: 'JW-1008', requested: '2026-08-02', expires: '2026-08-09',
-          status: 'Active', note: 'Piece held at the atelier for your viewing.' },
-        { id: 'H-0042', kind: 'diamond', ref: 'NGD-1012', requested: '2026-07-18', expires: '2026-07-25',
-          status: 'Expired', note: 'Hold lapsed after seven days — the stone returned to the inventory.' },
-        { id: 'H-0041', kind: 'diamond', ref: 'NGD-1003', requested: '2026-07-05', expires: '2026-07-12',
-          status: 'Released', note: 'Released early at your request.' }
-      ]
+      emptyText: 'Ask us to hold a stone or piece while you decide.',
+      rows: []
     },
     inspections: {
       title: 'Inspections',
@@ -119,7 +108,7 @@
     } : null;
   }
 
-  /** Load quote requests from Supabase; the untouched request types retain their existing previews. */
+  /** Load quote and hold requests from Supabase; inspections retain their preview. */
   async function loadRequests(kind) {
     if (kind === 'quotes') {
       var result = await window.ngdSupabase.from('quotes')
@@ -150,6 +139,32 @@
               : (item.category || 'Jewellery'),
             stock: ref,
             art: diamond ? ((window.NGD_GEM_ART || {})[String(item.shape || '').toLowerCase()] || '') : '',
+            url: '../' + (diamond ? 'diamond' : 'jewellery') + '-details.html?id=' + encodeURIComponent(ref),
+            typeLabel: diamond ? 'Diamond' : 'Jewellery'
+          }
+        };
+      }).filter(Boolean);
+    }
+    if (kind === 'holds') {
+      var holds = await window.ngdSupabase.from('holds')
+        .select('*, diamonds(*), jewellery(*)')
+        .order('requested_at', { ascending: false });
+      if (holds.error) throw holds.error;
+      return (holds.data || []).map(function (hold) {
+        var item = hold.product_type === 'diamond' ? hold.diamonds : hold.jewellery;
+        if (!item) return null;
+        var diamond = hold.product_type === 'diamond';
+        var ref = diamond ? (item.stock_number || item.public_id || item.id) : (item.sku || item.public_id || item.id);
+        return {
+          id: hold.public_id, kind: hold.product_type, ref: ref,
+          requested: String(hold.requested_at || hold.created_at).slice(0, 10),
+          expires: hold.expires_at ? String(hold.expires_at).slice(0, 10) : null,
+          status: hold.status.charAt(0).toUpperCase() + hold.status.slice(1),
+          note: hold.customer_message || '—', adminNote: hold.admin_note,
+          product: {
+            name: diamond ? (item.shape || 'Diamond') + ' · ' + Number(item.carat || 0).toFixed(2) + ' ct' : (item.name || item.product_name || 'Jewellery'),
+            sub: diamond ? [item.color, item.clarity, item.laboratory].filter(Boolean).join(' · ') : (item.category || 'Jewellery'),
+            stock: ref, art: diamond ? ((window.NGD_GEM_ART || {})[String(item.shape || '').toLowerCase()] || '') : '',
             url: '../' + (diamond ? 'diamond' : 'jewellery') + '-details.html?id=' + encodeURIComponent(ref),
             typeLabel: diamond ? 'Diamond' : 'Jewellery'
           }
@@ -296,7 +311,7 @@
     bindToggles($('req-table-wrap'));
     bindToggles($('req-cards-wrap'));
 
-    $('req-count').textContent = 'Showing ' + rows.length + ' of ' + total + (state.config === CONFIGS.quotes ? ' quote requests' : ' demo records');
+    $('req-count').textContent = 'Showing ' + rows.length + ' of ' + total + (state.config === CONFIGS.inspections ? ' demo records' : ' requests');
     $('req-no-match').hidden = !(total > 0 && rows.length === 0);
     $('req-stage-empty').hidden = total !== 0;
     $('req-stage-loading').hidden = true;
