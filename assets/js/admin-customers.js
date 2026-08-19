@@ -69,7 +69,7 @@
   async function fetchRelated(userId) {
     var names = ['quotes', 'holds', 'inspections', 'enquiries'];
     var results = await Promise.all(names.map(function (name) { return window.ngdSupabase.from(name).select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(5); }));
-    var out = {}; names.forEach(function (name, i) { out[name] = results[i].error ? [] : (results[i].data || []); }); return out;
+    var out = {}; names.forEach(function (name, i) { out[name] = results[i].error ? null : (results[i].data || []); }); return out;
   }
   async function openDetail(id) {
     var r = state.rows.find(function (x) { return x.id === id; }); if (!r) return;
@@ -79,7 +79,7 @@
     panel.innerHTML = '<div class="d-flex flex-wrap align-items-center gap-3"><span class="ngd-init-avatar">' + esc(initials(r.full_name)) + '</span><div class="flex-grow-1"><h2 class="ngd-title fs-5 mb-0">' + esc(r.full_name || '—') + '</h2><span class="small ngd-text-muted">' + esc(r.company_name || 'Individual account') + '</span></div><button class="ngd-btn ngd-btn-outline ngd-btn-sm" id="cust-detail-close">Close</button></div>' +
       '<dl class="ngd-req-meta mt-3"><div><dt>Full name</dt><dd>' + esc(r.full_name || '—') + '</dd></div><div><dt>Company</dt><dd>' + esc(r.company_name || '—') + '</dd></div><div><dt>Phone</dt><dd>' + esc(r.phone || '—') + '</dd></div><div><dt>Account status</dt><dd>' + statusChip(r.account_status) + '</dd></div><div><dt>Joined</dt><dd>' + esc(date(r.created_at)) + '</dd></div></dl>' +
       '<div class="ngd-form mt-3"><label class="form-label" for="cust-status">Change account status</label><div class="d-flex gap-2"><select class="form-select" id="cust-status">' + options + '</select><button class="ngd-btn ngd-btn-dark ngd-btn-sm" id="cust-status-save">Save</button></div></div>' +
-      ['quotes', 'holds', 'inspections', 'enquiries'].map(function (name) { return '<section class="mt-3" data-cust-sec="' + name + '"><h3 class="ngd-eyebrow mb-2">Recent ' + pretty(name) + '</h3>' + relatedRows(name, related[name]) + '</section>'; }).join('');
+      ['quotes', 'holds', 'inspections', 'enquiries'].map(function (name) { return '<section class="mt-3" data-cust-sec="' + name + '"><h3 class="ngd-eyebrow mb-2">Recent ' + pretty(name) + '</h3>' + (related[name] === null ? '<p class="ngd-text-muted small mb-0">' + pretty(name) + ' are not available.</p>' : relatedRows(name, related[name])) + '</section>'; }).join('');
     $('cust-detail-close').onclick = function () { panel.hidden = true; state.detailId = null; };
     $('cust-status-save').onclick = function () { updateStatus(r, $('cust-status').value, this); };
   }
@@ -87,7 +87,7 @@
     if (ALLOWED_STATUSES.indexOf(newStatus) === -1 || newStatus === row.account_status) return;
     button.disabled = true; button.textContent = 'Saving…';
     var res = await window.ngdSupabase.rpc('admin_set_customer_status', { target_user_id: row.id, new_status: newStatus });
-    if (res.error) { toast('Status was not changed: ' + res.error.message, true); button.disabled = false; button.textContent = 'Save'; return; }
+    if (res.error || res.data !== newStatus) { toast('Status was not changed' + (res.error ? ': ' + res.error.message : '.'), true); button.disabled = false; button.textContent = 'Save'; return; }
     row.account_status = newStatus; toast((row.full_name || 'Customer') + ' is now ' + newStatus + '.'); render(); await openDetail(row.id);
   }
   function toolbar() {
