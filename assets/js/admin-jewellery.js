@@ -28,7 +28,8 @@
     };
   }
   async function load() {
-    var result = await window.ngdSupabase.from('jewellery').select('*').order('created_at', { ascending: false });
+    var columns = 'id,public_id,sku,product_name,category,subcategory,metal,diamond_weight,availability,price,currency,featured,active,updated_at,created_at';
+    var result = await window.ngdSupabase.from('jewellery').select(columns).order('updated_at', { ascending: false });
     if (result.error) throw result.error;
     return (result.data || []).map(mapRow);
   }

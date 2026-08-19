@@ -128,7 +128,7 @@
     if (el.validity && el.validity.badInput) return false;
     if (el.value.trim() === '') return !el.required;
     var v = parseFloat(el.value);
-    if (isNaN(v)) return false;
+    if (!isFinite(v)) return false;
     var min = el.getAttribute('min');
     var max = el.getAttribute('max');
     if (min !== null && v < parseFloat(min)) return false;
@@ -210,15 +210,19 @@
 
   async function saveJewellery(payload, mode, form) {
     form.setAttribute('data-ngd-payload', JSON.stringify(payload));
-    var existing = await window.ngdSupabase.from('jewellery').select('id').eq('sku', payload.sku).limit(1);
+    var buttons = [$('jw-submit'), $('jw-save-another')].filter(Boolean);
+    buttons.forEach(function (button) { button.disabled = true; });
+    var existing = await window.ngdSupabase.from('jewellery').select('id').ilike('sku', payload.sku).limit(1);
     if (!existing.error && existing.data && existing.data.length) {
-      setInvalid(field('sku'), true); field('sku').focus(); showAlert('danger', payload.sku + ' already exists in the inventory — SKUs must be unique.'); return false;
+      setInvalid(field('sku'), true); field('sku').focus(); showAlert('danger', payload.sku + ' already exists in the inventory — SKUs must be unique.');
+      buttons.forEach(function (button) { button.disabled = false; }); return false;
     }
     var result = await window.ngdSupabase.from('jewellery').insert(payload);
-    if (result.error) { if (duplicateError(result.error)) setInvalid(field('sku'), true); showAlert('danger', dbMessage(result.error)); return false; }
+    if (result.error) { if (duplicateError(result.error)) setInvalid(field('sku'), true); showAlert('danger', dbMessage(result.error)); buttons.forEach(function (button) { button.disabled = false; }); return false; }
     clearDirty();
     if (mode === 'add-another') { showAlert('success', payload.sku + ' was added. The form is ready for another piece.'); form.reset(); resetGallery(); window.scrollTo({ top: 0 }); }
     else { showAlert('success', payload.sku + ' was added to the inventory. Returning to the list…'); window.location.replace('jewellery.html?added=' + encodeURIComponent(payload.sku)); }
+    buttons.forEach(function (button) { button.disabled = false; });
     return true;
   }
 
