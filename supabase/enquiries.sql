@@ -20,6 +20,11 @@ create table if not exists public.enquiries (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint enquiries_public_id_format check (public_id ~ '^ENQ-[A-Z0-9]{8}$'),
+  constraint enquiries_full_name_present check (char_length(btrim(full_name)) >= 2),
+  constraint enquiries_email_format check (
+    email = btrim(email) and email ~* '^[^[:space:]@]+@[^[:space:]@]+\.[^[:space:]@]+$'
+  ),
+  constraint enquiries_subject_present check (char_length(btrim(subject)) > 0),
   constraint enquiries_message_length check (char_length(btrim(message)) >= 20),
   constraint enquiries_product_reference check (
     (product_type is null and diamond_id is null and jewellery_id is null) or
