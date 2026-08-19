@@ -21,8 +21,9 @@
 (function () {
   'use strict';
 
-  var REQUIRED = ['stock_number', 'shape', 'carat', 'color', 'clarity', 'cut',
-    'laboratory', 'availability'];
+  /* Matches the page's required markers and the spec: everything else
+     is optional grading detail that can be completed later. */
+  var REQUIRED = ['stock_number', 'shape', 'carat'];
 
   var IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
   var IMAGE_MAX_BYTES = 10 * 1024 * 1024;
@@ -188,6 +189,10 @@
     }
     if (error.code === 'PGRST204' || error.code === '42703') {
       return 'The inventory could not accept this change. Please contact an administrator.';
+    }
+    if (error.code === '23514' || /check constraint/i.test(msg)) {
+      return 'A value on this form is not allowed by the diamonds table — ' +
+        'check that column\'s allowed values in the Supabase Table Editor.';
     }
     if (/failed to fetch|networkerror|fetch failed|load failed/i.test(msg) || error.code === '') {
       return 'Could not reach Supabase — check your connection and try again. Nothing was saved.';

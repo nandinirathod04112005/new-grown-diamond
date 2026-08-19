@@ -87,6 +87,7 @@ function seedDiamonds() {
 const CORS = { 'access-control-allow-origin': '*', 'access-control-expose-headers': '*' };
 function makeMock(opts = {}) {
   const diamonds = opts.emptyInventory ? [] : seedDiamonds();
+  const patches = [];
   async function handler(route) {
     const req = route.request();
     const url = new URL(req.url());
@@ -131,11 +132,23 @@ function makeMock(opts = {}) {
       if (stockEq && stockEq.startsWith('eq.')) {
         rows = rows.filter((d) => d.stock_number === stockEq.slice(3));
       }
+      if (url.searchParams.get('archived_at') === 'is.null') {
+        rows = rows.filter((d) => !d.archived_at);
+      }
       return json(200, rows);
+    }
+    if (url.pathname === '/rest/v1/diamonds' && method === 'PATCH') {
+      const changes = JSON.parse(req.postData() || '{}');
+      const pubEq = url.searchParams.get('public_id') || '';
+      const target = diamonds.find((d) => 'eq.' + d.public_id === pubEq);
+      if (!target) return json(200, []);
+      Object.assign(target, changes);
+      patches.push({ publicId: pubEq.slice(3), changes });
+      return json(200, [{ id: target.id }]);
     }
     return json(404, { message: 'mock: unhandled ' + method + ' ' + url.pathname });
   }
-  return { handler, diamonds };
+  return { handler, diamonds, patches };
 }
 
 const results = [];
@@ -294,29 +307,46 @@ async function openInventory(page, query) {
     expect(/Showing 21–28 of 28/.test(state.count), 'count window follows, got ' + state.count);
   });
 
-  await scenario('feature/activate/hide stay page-only with truthful toasts', {}, async (page) => {
+  await scenario('feature, deactivate and archive write through Supabase and re-read', {}, async (page, backend) => {
     await openInventory(page);
+    page.on('dialog', (d) => d.accept());
     await page.fill('#adm-search', 'NGD-1001');
+    /* NGD-1001 seeds featured + active; unfeature it */
     await page.click('[data-adm-row="NGD-1001"] [data-adm-act="feature"]');
+    await page.waitForFunction(() =>
+      /was unfeatured/.test((document.querySelector('#adm-toast .ngd-alert-success') || { textContent: '' }).textContent),
+      null, { timeout: 8000 });
     let state = await page.evaluate(() => ({
-      featured: document.querySelector('#adm-table-body tr td:nth-child(9)').textContent.trim(),
-      toast: document.querySelector('#adm-toast .ngd-alert').textContent,
+      featured: document.querySelector('[data-adm-row="NGD-1001"] td:nth-child(9)').textContent.trim(),
     }));
-    expect(state.featured === '—', 'unfeatured in the page');
-    expect(/on this page only/i.test(state.toast) && /database was not changed/i.test(state.toast),
-      'truthful page-only toast, got: ' + state.toast);
-    expect(!/success|saved!/i.test(state.toast), 'no fake success wording');
+    expect(state.featured === '—', 'row re-read as unfeatured after the update');
+    expect(backend.patches.length === 1 && backend.patches[0].changes.featured === false,
+      'featured change PATCHed to Supabase');
+    /* deactivate (native confirm accepted) */
+    await page.click('[data-adm-row="NGD-1001"] [data-adm-act="active"]');
+    await page.waitForFunction(() =>
+      /was deactivated/.test((document.querySelector('#adm-toast .ngd-alert-success') || { textContent: '' }).textContent),
+      null, { timeout: 8000 });
+    const dimmed = await page.evaluate(() =>
+      document.querySelector('[data-adm-row="NGD-1001"]').classList.contains('is-inactive'));
+    expect(dimmed && backend.patches[1].changes.active === false,
+      'deactivation persisted and re-read');
+    /* archive: a soft delete — archived_at set, row leaves the list */
     await page.click('[data-adm-row="NGD-1001"] [data-adm-act="archive"]');
+    await page.waitForFunction(() =>
+      /was archived/.test((document.querySelector('#adm-toast .ngd-alert-success') || { textContent: '' }).textContent),
+      null, { timeout: 8000 });
     state = await page.evaluate(() => ({
       gone: !document.querySelector('[data-adm-row="NGD-1001"]'),
-      undo: !!document.getElementById('adm-undo'),
-      toast: document.querySelector('#adm-toast .ngd-alert').textContent,
     }));
-    expect(state.gone && state.undo && /hidden on this page only/i.test(state.toast),
-      'hide is honest and undoable');
-    await page.click('#adm-undo');
-    const back = await page.evaluate(() => !!document.querySelector('[data-adm-row="NGD-1001"]'));
-    expect(back, 'Undo restores the stone');
+    expect(state.gone, 'archived stone excluded from the re-read list');
+    const patch = backend.patches[2];
+    expect(!!patch.changes.archived_at && patch.changes.active === false,
+      'archive sets archived_at + inactive — never a DELETE');
+    await page.click('#adm-clear');
+    const countText = await page.textContent('#adm-count');
+    expect(/inventory: 27 stones/.test(countText),
+      'inventory count reflects the archive, got ' + countText);
   });
 
   await scenario('?added= arrival shows the success toast over the refreshed list', {}, async (page) => {

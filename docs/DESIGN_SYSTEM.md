@@ -328,15 +328,18 @@ uploads exist.
 (`assets/js/admin-diamond-form.js`, mode from `body[data-diamond-form]`);
 field names ARE the `public.diamonds` columns (`color`,
 `depth_percentage`, `table_percentage`, boolean `price_visible`, …).
-ADD is live: a valid submit generates a `DIA-XXXXXXXX` `public_id`,
-stamps `created_by` with the signed-in admin, pre-checks the stock
-number and inserts through `saveDiamond()` — duplicates (pre-check or
-the 23505 constraint), RLS denials and network failures all map to safe
-messages, and success redirects to the inventory where the new stone
-appears in the re-read list. EDIT stays an honest demo prefill until the
-Edit step and says so. The `.ngd-drop` image picker still previews
-locally only (JPG/JPEG/PNG/WEBP ≤ 10 MB — Storage uploads come later),
-and a dirty form warns via `beforeunload`.
+ADD is live: a valid submit (only stock number, shape and carat are
+required) generates a `DIA-XXXXXXXX` `public_id`, stamps `created_by`
+with the signed-in admin, pre-checks the stock number and inserts
+through `saveDiamond()` — duplicates (pre-check or the 23505
+constraint), RLS denials, check-constraint rejections and network
+failures all map to safe messages, and success redirects to the
+inventory where the new stone appears in the re-read list. EDIT is live
+too: it loads the record by its immutable `public_id`, updates with
+duplicate protection and row verification, and Archive is a soft delete
+(`archived_at` + inactive — never a hard DELETE). The `.ngd-drop` image
+picker still previews locally only (JPG/JPEG/PNG/WEBP ≤ 10 MB — Storage
+uploads come later), and a dirty form warns via `beforeunload`.
 
 `admin/jewellery.html` mirrors the diamond manager for the jewellery
 collection: the same `.ngd-admin-table` density (10 columns — image, SKU,

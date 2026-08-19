@@ -83,6 +83,7 @@ function makeMock(opts = {}) {
   const user = USERS[opts.role || 'admin'];
   const diamonds = seedDiamonds();
   const inserts = [];
+  const patches = [];
   let newSeq = 0;
   async function handler(route) {
     const req = route.request();
@@ -129,7 +130,23 @@ function makeMock(opts = {}) {
         rows = rows.filter((d) => d.stock_number === stockEq.slice(3));
         if (opts.precheckMiss) rows = [];
       }
+      const pubEq = url.searchParams.get('public_id');
+      if (pubEq && pubEq.startsWith('eq.')) {
+        rows = rows.filter((d) => d.public_id === pubEq.slice(3));
+      }
+      if (url.searchParams.get('archived_at') === 'is.null') {
+        rows = rows.filter((d) => !d.archived_at);
+      }
       return json(200, rows);
+    }
+    if (url.pathname === '/rest/v1/diamonds' && method === 'PATCH') {
+      const changes = JSON.parse(req.postData() || '{}');
+      const pubEq = url.searchParams.get('public_id') || '';
+      const target = diamonds.find((d) => 'eq.' + d.public_id === pubEq);
+      if (!target) return json(200, []);
+      Object.assign(target, changes);
+      patches.push({ publicId: pubEq.slice(3), changes });
+      return json(200, [{ id: target.id }]);
     }
     if (url.pathname === '/rest/v1/diamonds' && method === 'POST') {
       const body = JSON.parse(req.postData() || '{}');
@@ -152,7 +169,7 @@ function makeMock(opts = {}) {
     }
     return json(404, { message: 'mock: unhandled ' + method + ' ' + url.pathname });
   }
-  return { handler, diamonds, inserts };
+  return { handler, diamonds, inserts, patches };
 }
 
 const FIELD_NAMES = ['stock_number', 'report_number', 'shape', 'carat', 'color', 'clarity',
@@ -258,7 +275,7 @@ async function fillMinimumValid(page, stock) {
     expect(JSON.stringify(state.sections) === JSON.stringify(['1', '2', '3', '4', '5', '6', '7', '8']),
       'eight sections in order');
     expect(state.fields.length === 0, 'all 27 column-named fields present, missing: ' + state.fields.join(','));
-    expect(state.stars === 8, 'eight required indicators, got ' + state.stars);
+    expect(state.stars === 3, 'three required indicators — stock number, shape, carat — got ' + state.stars);
     expect(state.priceVisibleType === 'checkbox', 'price_visible is a boolean checkbox');
     expect(/saves to Supabase/i.test(state.chip), 'live chip, got ' + state.chip);
     expect(state.buttons.save === 'Save Diamond' && state.buttons.another &&
@@ -273,8 +290,8 @@ async function fillMinimumValid(page, stock) {
       invalid: [...document.querySelectorAll('#ngd-diamond-form .is-invalid')].map((el) => el.name),
       alert: (document.querySelector('#dia-alert .ngd-alert') || { textContent: '' }).textContent,
     }));
-    expect(state.invalid.length === 8 && state.invalid.includes('color'),
-      '8 required fields flagged incl. color, got ' + state.invalid.join(','));
+    expect(JSON.stringify(state.invalid.slice().sort()) === JSON.stringify(['carat', 'shape', 'stock_number']),
+      'exactly the required trio flagged, got ' + state.invalid.join(','));
     expect(/highlighted fields/i.test(state.alert), 'error summary shown');
     await fillMinimumValid(page);
     await page.fill('[name="depth_percentage"]', '150');
@@ -288,14 +305,21 @@ async function fillMinimumValid(page, stock) {
     expect(backend.inserts.length === 0, 'nothing was sent while invalid');
   });
 
-  await scenario('live insert: DIA- public_id + created_by, success, redirect, appears in the list', {}, async (page, backend) => {
+  await scenario('TEST-001 recipe: live insert, redirect, appears in the list, survives refresh', {}, async (page, backend) => {
     await openAdd(page);
     let dialogSeen = null;
     page.on('dialog', (d) => { dialogSeen = d.type(); d.accept(); });
-    await fillMinimumValid(page, 'NGD-2001');
-    await page.fill('[name="price_per_carat"]', '1400');
+    /* the acceptance recipe: TEST-001 / Round / 1.25 / E / VVS1 / IGI —
+       cut stays empty on purpose: only stock, shape and carat are required */
+    await page.fill('[name="stock_number"]', 'TEST-001');
+    await page.selectOption('[name="shape"]', 'Round');
+    await page.fill('[name="carat"]', '1.25');
+    await page.selectOption('[name="color"]', 'E');
+    await page.selectOption('[name="clarity"]', 'VVS1');
+    await page.selectOption('[name="laboratory"]', 'IGI');
+    await page.selectOption('[name="availability"]', 'In Stock');
     await page.click('#dia-submit');
-    await page.waitForURL('**/admin/diamonds.html?added=NGD-2001', { timeout: 10000 });
+    await page.waitForURL('**/admin/diamonds.html?added=TEST-001', { timeout: 10000 });
     await page.waitForFunction(() =>
       document.querySelectorAll('#adm-table-body tr').length > 0, null, { timeout: 10000 });
     expect(backend.inserts.length === 1, 'exactly one insert sent');
@@ -303,16 +327,25 @@ async function fillMinimumValid(page, stock) {
     expect(/^DIA-[A-HJ-NP-Z2-9]{8}$/.test(rec.public_id),
       'generated public_id like DIA-XXXXXXXX, got ' + rec.public_id);
     expect(rec.created_by === USERS.admin.id, 'created_by is the signed-in admin');
-    expect(rec.stock_number === 'NGD-2001' && rec.color === 'D' && rec.carat === 1.25 &&
-      rec.price_per_carat === 1400 && rec.price_visible === false && rec.active === true,
-      'real column payload, got ' + JSON.stringify(rec).slice(0, 120));
+    expect(rec.stock_number === 'TEST-001' && rec.shape === 'Round' && rec.carat === 1.25 &&
+      rec.color === 'E' && rec.clarity === 'VVS1' && rec.laboratory === 'IGI' &&
+      rec.availability === 'In Stock' && rec.cut === null && rec.active === true,
+      'recipe payload saved verbatim (optional cut null), got ' + JSON.stringify(rec).slice(0, 160));
     expect(dialogSeen === null, 'no unsaved-changes warning after a successful save');
-    const state = await page.evaluate(() => ({
-      row: !!document.querySelector('[data-adm-row="NGD-2001"]'),
+    let state = await page.evaluate(() => ({
+      row: !!document.querySelector('[data-adm-row="TEST-001"]'),
       toast: (document.querySelector('#adm-toast .ngd-alert') || { textContent: '' }).textContent,
     }));
-    expect(state.row, 'the new stone appears in the re-read live list');
-    expect(/NGD-2001 was added to the inventory/.test(state.toast), 'arrival toast confirms it');
+    expect(state.row, 'TEST-001 appears in the re-read live list');
+    expect(/TEST-001 was added to the inventory/.test(state.toast), 'arrival toast confirms it');
+    /* a browser refresh re-queries the table — the record must persist */
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await page.waitForFunction(() =>
+      document.querySelectorAll('#adm-table-body tr').length > 0, null, { timeout: 10000 });
+    state = await page.evaluate(() => ({
+      row: !!document.querySelector('[data-adm-row="TEST-001"]'),
+    }));
+    expect(state.row, 'TEST-001 still listed after a refresh (read back from the table)');
   });
 
   await scenario('duplicate stock number rejected by the pre-check, nothing inserted', {}, async (page, backend) => {
@@ -355,7 +388,7 @@ async function fillMinimumValid(page, stock) {
     const state = await page.evaluate(() => ({
       alert: document.querySelector('#dia-alert .ngd-alert').textContent,
     }));
-    expect(/only an active admin/i.test(state.alert) && /Row Level Security/i.test(state.alert),
+    expect(/only an active admin/i.test(state.alert) && /not allowed to change diamonds/i.test(state.alert),
       'RLS denial explained safely, got: ' + state.alert);
     expect(!/42501|violates row-level/i.test(state.alert), 'no raw database internals');
   });
@@ -420,41 +453,32 @@ async function fillMinimumValid(page, stock) {
     expect(dialogSeen === null, 'no warning when nothing changed');
   });
 
-  await scenario('edit: honest demo prefill on the real column names, no fake update', {}, async (page) => {
-    await openEdit(page, 'NGD-1007');
+  await scenario('edit: loads the live record by public_id, updates it, redirects', {}, async (page, backend) => {
+    await openEdit(page, 'DIA-SEED0004');
     await page.waitForFunction(() =>
-      (document.querySelector('[name="stock_number"]') || {}).value === 'NGD-1007');
-    const state = await page.evaluate(() => {
-      const rec = window.NGD_DEMO_DIAMONDS.find((d) => d.id === 'NGD-1007');
-      const v = (n) => document.querySelector('[name="' + n + '"]').value;
-      return {
-        title: document.querySelector('h1').textContent.trim(),
-        chip: [...document.querySelectorAll('.ngd-demo-chip')].map((c) => c.textContent.trim()).join('|'),
-        mismatches: [
-          ['color', v('color') === rec.colour],
-          ['depth_percentage', parseFloat(v('depth_percentage')) === rec.depthPct],
-          ['table_percentage', parseFloat(v('table_percentage')) === rec.tablePct],
-          ['laboratory', v('laboratory') === rec.lab],
-          ['growth_method', v('growth_method') === rec.growth],
-        ].filter((p) => !p[1]).map((p) => p[0]),
-        buttons: {
-          update: document.getElementById('dia-submit').textContent.trim(),
-          archive: !!document.getElementById('dia-archive'),
-          another: !!document.getElementById('dia-save-another'),
-        },
-      };
-    });
-    expect(state.title === 'Edit Diamond', 'edit page reached');
-    expect(/editing arrives next/i.test(state.chip), 'honest edit chip, got ' + state.chip);
-    expect(state.mismatches.length === 0, 'demo prefill mapped onto real columns, wrong: ' + state.mismatches.join(','));
-    expect(state.buttons.update === 'Update Diamond' && state.buttons.archive && !state.buttons.another,
-      'edit-page buttons');
+      (document.querySelector('[name="stock_number"]') || {}).value === 'NGD-1004', null, { timeout: 10000 });
+    const before = await page.evaluate(() => ({
+      title: document.querySelector('h1').textContent.trim(),
+      carat: document.querySelector('[name="carat"]').value,
+      update: document.getElementById('dia-submit').textContent.trim(),
+      archive: !!document.getElementById('dia-archive'),
+    }));
+    expect(before.title === 'Edit Diamond' && before.update === 'Update Diamond' && before.archive,
+      'live edit page loaded');
+    expect(before.carat === '1', 'record prefilled from the table, got ' + before.carat);
+    await page.fill('[name="carat"]', '1.50');
     await page.click('#dia-submit');
-    await page.waitForSelector('#dia-alert .ngd-alert', { timeout: 5000 });
-    const alert = await page.evaluate(() =>
-      document.querySelector('#dia-alert .ngd-alert').textContent.replace(/\s+/g, ' '));
-    expect(/updating is not wired yet/i.test(alert) && /nothing in the database was changed/i.test(alert),
-      'honest no-update notice, got: ' + alert);
+    await page.waitForURL('**/admin/diamonds.html?updated=NGD-1004', { timeout: 10000 });
+    await page.waitForFunction(() =>
+      document.querySelectorAll('#adm-table-body tr').length > 0, null, { timeout: 10000 });
+    expect(backend.patches.length === 1 && backend.patches[0].changes.carat === 1.5,
+      'update PATCHed the record');
+    const state = await page.evaluate(() => ({
+      toast: (document.querySelector('#adm-toast .ngd-alert') || { textContent: '' }).textContent,
+      caratCell: (document.querySelector('[data-adm-row="NGD-1004"] td:nth-child(4)') || { textContent: '' }).textContent.trim(),
+    }));
+    expect(/NGD-1004 was updated successfully/.test(state.toast), 'arrival toast confirms the update');
+    expect(state.caratCell === '1.50', 'list shows the updated carat, got ' + state.caratCell);
   });
 
   await scenario('customer cannot open the add form — sent to their own dashboard', { role: 'customer' }, async (page) => {
