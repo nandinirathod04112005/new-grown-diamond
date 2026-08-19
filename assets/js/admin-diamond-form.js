@@ -26,7 +26,9 @@
   var REQUIRED = ['stock_number', 'shape', 'carat'];
 
   var IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-  var IMAGE_MAX_BYTES = 10 * 1024 * 1024;
+  var IMAGE_MAX_BYTES = 5 * 1024 * 1024;
+  var IMAGE_BUCKET = 'diamond-images';
+  var EXT_BY_TYPE = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
 
   var state = {
     mode: 'add',
@@ -212,17 +214,37 @@
       return false;
     }
 
+    /* replace flow: upload the NEW image first; only after the database
+       update succeeds is the old file removed — a failed upload keeps
+       the old image untouched */
+    var oldImagePath = state.record.image_path || null;
+    if (state.imageFile) {
+      try {
+        payload.image_path = await uploadImage(
+          imagePathFor(state.record.public_id, state.imageFile), state.imageFile);
+      } catch (err) {
+        showAlert('danger', mapStorageError(err));
+        return false;
+      }
+    }
+
     form.setAttribute('data-ngd-payload', JSON.stringify(payload));
     var res = await sb.from('diamonds').update(payload)
       .eq('public_id', state.record.public_id).eq('id', state.record.id).select('id');
     if (res.error) {
+      /* the row kept its old image — drop the just-uploaded file */
+      if (state.imageFile && payload.image_path) removeImageQuietly(payload.image_path);
       if (isDuplicateError(res.error)) setInvalid(field('stock_number'), true);
       showAlert('danger', mapDbError(res.error));
       return false;
     }
     if (!res.data || res.data.length !== 1) {
+      if (state.imageFile && payload.image_path) removeImageQuietly(payload.image_path);
       showAlert('danger', 'This diamond no longer exists or could not be verified. Nothing was changed.');
       return false;
+    }
+    if (state.imageFile && oldImagePath && oldImagePath !== payload.image_path) {
+      removeImageQuietly(oldImagePath);
     }
     state.record = Object.assign({}, state.record, payload);
     clearDirty();
@@ -231,6 +253,55 @@
       window.location.replace('diamonds.html?updated=' + encodeURIComponent(payload.stock_number));
     }, 700);
     return true;
+  }
+
+  /* ---------------- Storage upload (diamond-images bucket) ---------------- */
+
+  /** Never the original filename: diamonds/<public_id>/<random>.<ext> */
+  function imagePathFor(publicId, file) {
+    var chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    var buf = new Uint32Array(16);
+    if (window.crypto && window.crypto.getRandomValues) {
+      window.crypto.getRandomValues(buf);
+    } else {
+      for (var j = 0; j < 16; j++) buf[j] = Math.floor(Math.random() * 4294967296);
+    }
+    var token = '';
+    for (var i = 0; i < 16; i++) token += chars[buf[i] % chars.length];
+    return 'diamonds/' + publicId + '/' + token + '.' + (EXT_BY_TYPE[file.type] || 'jpg');
+  }
+
+  function mapStorageError(error) {
+    console.error('[NGD Admin Diamond] image upload failed:', error);
+    var msg = (error && error.message) || '';
+    if ((error && (error.statusCode === '403' || error.status === 403)) ||
+      /row-level security|not.?authorized|policy|access denied/i.test(msg)) {
+      return 'Your account is not allowed to upload diamond images — only an active admin can.';
+    }
+    if (/bucket.*not.*found/i.test(msg)) {
+      return 'The diamond-images bucket does not exist yet — run ' +
+        'supabase/diamond-images-storage.sql in the Supabase SQL Editor first.';
+    }
+    return 'The image could not be uploaded, so nothing was saved. ' +
+      'Check your connection and try again.';
+  }
+
+  async function uploadImage(path, file) {
+    var res = await window.ngdSupabase.storage.from(IMAGE_BUCKET)
+      .upload(path, file, { contentType: file.type, upsert: false });
+    if (res.error) throw res.error;
+    return path;
+  }
+
+  /** Best-effort delete — a leftover file must never block the save flow. */
+  async function removeImageQuietly(path) {
+    if (!path) return;
+    try {
+      var res = await window.ngdSupabase.storage.from(IMAGE_BUCKET).remove([path]);
+      if (res.error) console.warn('[NGD Admin Diamond] old image cleanup failed:', res.error);
+    } catch (err) {
+      console.warn('[NGD Admin Diamond] old image cleanup failed:', err);
+    }
   }
 
   /* ---------------- the live save (add mode) ---------------- */
@@ -255,8 +326,22 @@
       return false;
     }
 
+    /* image first: upload to Storage, then insert the row carrying its
+       path — an upload failure aborts the save with nothing written */
+    if (state.imageFile) {
+      try {
+        payload.image_path = await uploadImage(
+          imagePathFor(payload.public_id, state.imageFile), state.imageFile);
+      } catch (err) {
+        showAlert('danger', mapStorageError(err));
+        return false;
+      }
+    }
+
     var res = await sb.from('diamonds').insert(payload);
     if (res.error) {
+      /* never leave an orphan file when the row was rejected */
+      if (payload.image_path) removeImageQuietly(payload.image_path);
       if (isDuplicateError(res.error)) setInvalid(field('stock_number'), true);
       showAlert('danger', mapDbError(res.error));
       return false;
@@ -292,7 +377,7 @@
       return;
     }
     if (file.size > IMAGE_MAX_BYTES) {
-      imageError('That image is larger than 10 MB — please choose a smaller file.');
+      imageError('That image is larger than 5 MB — please choose a smaller file.');
       return;
     }
     imageError('');
@@ -365,7 +450,19 @@
 
     var artBox = $('dia-current-art');
     if (artBox) {
-      artBox.innerHTML = (window.NGD_GEM_ART || {})[String(record.shape).toLowerCase()] || '';
+      var photoUrl = record.image_path && window.ngdStorageUrl
+        ? window.ngdStorageUrl(IMAGE_BUCKET, record.image_path)
+        : '';
+      if (photoUrl) {
+        artBox.innerHTML = '';
+        var img = document.createElement('img');
+        img.className = 'ngd-media-photo';
+        img.src = photoUrl;
+        img.alt = 'Current photo of ' + (record.stock_number || 'this diamond');
+        artBox.appendChild(img);
+      } else {
+        artBox.innerHTML = (window.NGD_GEM_ART || {})[String(record.shape).toLowerCase()] || '';
+      }
     }
   }
 

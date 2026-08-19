@@ -338,8 +338,18 @@ inventory where the new stone appears in the re-read list. EDIT is live
 too: it loads the record by its immutable `public_id`, updates with
 duplicate protection and row verification, and Archive is a soft delete
 (`archived_at` + inactive — never a hard DELETE). The `.ngd-drop` image
-picker still previews locally only (JPG/JPEG/PNG/WEBP ≤ 10 MB — Storage
-uploads come later), and a dirty form warns via `beforeunload`.
+picker is LIVE: JPG/JPEG/PNG/WEBP up to 5 MB, validated before upload,
+stored in the `diamond-images` bucket as
+`diamonds/<public_id>/<random>.<ext>` (never the original filename) with
+the path saved into `diamonds.image_path`. Adds upload first and insert
+second (an upload failure saves nothing; a rejected insert cleans up the
+orphan file); replacements upload the new file, update the row, and only
+then remove the old one — a failed upload keeps the old image. Bucket +
+admin-only write policies live in `supabase/diamond-images-storage.sql`.
+Everywhere a diamond renders, `image_path` becomes an `.ngd-media-photo`
+via `ngdStorageUrl()` with the gem art as fallback (admin thumbs, the
+edit page's current photo, and the shared public card/details renderer).
+A dirty form warns via `beforeunload`.
 
 `admin/jewellery.html` mirrors the diamond manager for the jewellery
 collection: the same `.ngd-admin-table` density (10 columns — image, SKU,

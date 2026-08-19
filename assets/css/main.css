@@ -2783,6 +2783,18 @@ a.ngd-chip {
 
 .ngd-req-thumb svg { width: 74%; height: 74%; }
 
+/* Real product photography (diamonds.image_path) inside any media
+   frame; the gem/category art remains the fallback when unset. */
+.ngd-media-photo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+}
+
+.ngd-req-thumb { overflow: hidden; }
+
 .ngd-req-table tbody td { white-space: normal; vertical-align: middle; }
 .ngd-req-table tbody tr[data-req-row]:hover { background-color: rgba(180, 140, 71, 0.06); }
 .ngd-req-table .ngd-req-detail-row,

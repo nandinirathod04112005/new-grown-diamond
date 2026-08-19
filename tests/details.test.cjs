@@ -34,6 +34,12 @@ async function scenario(name, opts, fn) {
   const pageErrors = [];
   try {
     await installCdnRoutes(context);
+    await context.route('**/assets/js/supabase-config.js', (r) =>
+      r.fulfill({
+        status: 200,
+        contentType: 'application/javascript',
+        body: "window.NGD_SUPABASE_CONFIG = { SUPABASE_URL: 'YOUR_SUPABASE_PROJECT_URL', SUPABASE_PUBLISHABLE_KEY: 'YOUR_SUPABASE_PUBLISHABLE_KEY' };",
+      }));
     const page = await context.newPage();
     page.on('pageerror', (e) => pageErrors.push(String(e)));
     await fn(page);
@@ -136,14 +142,15 @@ async function open(page, query) {
       !document.getElementById('dd-stage').classList.contains('is-zoomed'));
   });
 
-  await scenario('CTAs: quote/inspection link with stone ref; favourite toggles', {}, async (page) => {
+  await scenario('CTAs: quote/inspection are live triggers (login first); favourite toggles', {}, async (page) => {
     await open(page, '?id=NGD-1002');
     const hrefs = await page.evaluate(() => ({
       quote: document.getElementById('dd-quote').getAttribute('href'),
       inspect: document.getElementById('dd-inspect').getAttribute('href'),
     }));
-    expect(hrefs.quote === 'contact.html?stone=NGD-1002&type=quote', 'quote href, got ' + hrefs.quote);
-    expect(hrefs.inspect === 'contact.html?stone=NGD-1002&type=inspection', 'inspection href');
+    expect(hrefs.quote === '#', 'Request Quote is the live modal trigger, got ' + hrefs.quote);
+    expect(hrefs.inspect === 'contact.html?stone=NGD-1002&type=enquiry',
+      'inspection routes to the contact enquiry with the stone ref, got ' + hrefs.inspect);
     await page.click('#dd-fav');
     let fav = await page.evaluate(() => ({
       pressed: document.getElementById('dd-fav').getAttribute('aria-pressed'),
@@ -157,6 +164,9 @@ async function open(page, query) {
     await page.click('#dd-fav');
     fav = await page.evaluate(() => document.getElementById('dd-fav').getAttribute('aria-pressed'));
     expect(fav === 'false', 'favourite toggles back off');
+    /* signed-out visitors are sent to login before the quote modal */
+    await page.click('#dd-quote');
+    await page.waitForURL('**/login.html', { timeout: 8000 });
   });
 
   await scenario('certificate card: lab, report number, placeholder button', {}, async (page) => {

@@ -76,6 +76,7 @@ function seedDiamonds() {
       availability: i % 4 === 0 ? 'On Request' : 'In Stock',
       price_per_carat: 1200, total_price: 1800, currency: 'USD', price_visible: false,
       featured: i % 5 === 0, active: i % 9 !== 4, internal_notes: null,
+      image_path: i === 27 ? 'diamonds/DIA-SEED0028/photo28aaaabbbb.png' : null,
       created_by: ADMIN.id,
       created_at: `2026-08-${day}T10:00:00Z`,
       updated_at: `2026-08-${day}T10:00:00Z`,
@@ -85,6 +86,10 @@ function seedDiamonds() {
 }
 
 const CORS = { 'access-control-allow-origin': '*', 'access-control-expose-headers': '*' };
+const PNG_1PX = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+  'base64');
+
 function makeMock(opts = {}) {
   const diamonds = opts.emptyInventory ? [] : seedDiamonds();
   const patches = [];
@@ -145,6 +150,9 @@ function makeMock(opts = {}) {
       Object.assign(target, changes);
       patches.push({ publicId: pubEq.slice(3), changes });
       return json(200, [{ id: target.id }]);
+    }
+    if (url.pathname.startsWith('/storage/v1/object/public/diamond-images/') && method === 'GET') {
+      return route.fulfill({ status: 200, contentType: 'image/png', headers: CORS, body: PNG_1PX });
     }
     return json(404, { message: 'mock: unhandled ' + method + ' ' + url.pathname });
   }
@@ -218,7 +226,8 @@ async function openInventory(page, query) {
         rows: document.querySelectorAll('#adm-table-body tr').length,
         firstStock: first.getAttribute('data-adm-row'),
         count: document.getElementById('adm-count').textContent,
-        thumb: !!first.querySelector('.ngd-req-thumb svg'),
+        thumbPhoto: (first.querySelector('.ngd-req-thumb img') || { getAttribute: () => '' }).getAttribute('src') || '',
+        secondThumbArt: !!document.querySelectorAll('#adm-table-body tr')[1].querySelector('.ngd-req-thumb svg'),
         actions: first.querySelectorAll('[data-adm-act]').length,
         addHref: document.getElementById('adm-add').getAttribute('href'),
         demoDataLoaded: !!window.NGD_DEMO_DIAMONDS,
@@ -239,7 +248,10 @@ async function openInventory(page, query) {
     expect(state.firstStock === 'NGD-1028', 'newest stone first, got ' + state.firstStock);
     expect(/of 28/.test(state.count) && /inventory: 28 stones/.test(state.count),
       'count reflects the table, got ' + state.count);
-    expect(state.thumb && state.actions === 5 && state.addHref === 'add-diamond.html', 'row anatomy kept');
+    expect(state.thumbPhoto.indexOf('diamonds/DIA-SEED0028/photo28aaaabbbb.png') !== -1,
+      'a stone with image_path renders its real photo, got ' + state.thumbPhoto);
+    expect(state.secondThumbArt, 'stones without a photo fall back to gem art');
+    expect(state.actions === 5 && state.addHref === 'add-diamond.html', 'row anatomy kept');
     expect(!state.demoDataLoaded, 'demo catalogue script no longer loads on this page');
     expect(!state.stateSwitch, 'demo state switch removed — states are real now');
   });

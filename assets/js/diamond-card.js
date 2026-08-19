@@ -10,6 +10,15 @@
   'use strict';
 
   function artFor(d) {
+    /* live rows carry image_path (Supabase Storage); demo rows fall back
+       to the gold gem art, as does anything without a usable URL */
+    if (d.image_path && window.ngdStorageUrl) {
+      var url = window.ngdStorageUrl('diamond-images', d.image_path);
+      if (url) {
+        return '<img class="ngd-media-photo" src="' + url + '" alt="' +
+          d.shape + ' lab-grown diamond" loading="lazy">';
+      }
+    }
     var art = window.NGD_GEM_ART || {};
     return art[d.shape.toLowerCase()] || art.round || '';
   }

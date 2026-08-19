@@ -54,6 +54,7 @@
       availability: d.availability || '—',
       featured: !!d.featured,
       active: d.active !== false,
+      imagePath: d.image_path || null,
       archivedAt: d.archived_at || null,
       updated: String(d.updated_at || d.created_at || '').slice(0, 10) || '—'
     };
@@ -173,6 +174,18 @@
     return (window.NGD_GEM_ART || {})[String(row.shape).toLowerCase()] || '';
   }
 
+  /** Real photo from Storage when image_path is set, gem art otherwise. */
+  function thumbHtml(row) {
+    if (row.imagePath && window.ngdStorageUrl) {
+      var url = window.ngdStorageUrl('diamond-images', row.imagePath);
+      if (url) {
+        return '<img class="ngd-media-photo" src="' + url +
+          '" alt="" loading="lazy">';
+      }
+    }
+    return art(row);
+  }
+
   function chips(row) {
     var availCls = row.availability === 'In Stock' ? 'is-good' : '';
     return {
@@ -220,7 +233,7 @@
       var c = chips(row);
       return (
         '<tr data-adm-row="' + row.id + '"' + (row.active ? '' : ' class="is-inactive"') + '>' +
-        '<td><span class="ngd-req-thumb">' + art(row) + '</span></td>' +
+        '<td><span class="ngd-req-thumb">' + thumbHtml(row) + '</span></td>' +
         '<td class="ngd-stock-cell">' + row.id + '</td>' +
         '<td>' + row.shape + '</td>' +
         '<td>' + row.carat.toFixed(2) + '</td>' +
@@ -243,7 +256,7 @@
       return (
         '<article class="ngd-req-card" data-adm-row="' + row.id + '">' +
         '<div class="d-flex align-items-center gap-3">' +
-        '<span class="ngd-req-thumb">' + art(row) + '</span>' +
+        '<span class="ngd-req-thumb">' + thumbHtml(row) + '</span>' +
         '<div class="flex-grow-1 min-w-0">' +
         '<strong>' + row.id + '</strong>' +
         '<span class="ngd-text-muted d-block small">' + row.shape + ' · ' + row.carat.toFixed(2) +

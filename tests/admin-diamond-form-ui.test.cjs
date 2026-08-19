@@ -71,6 +71,7 @@ function seedDiamonds() {
       growth_method: 'CVD', location: 'Surat atelier', availability: 'In Stock',
       price_per_carat: 1200, total_price: 1800, currency: 'USD', price_visible: false,
       featured: false, active: true, internal_notes: null,
+      image_path: i === 3 ? 'diamonds/DIA-SEED0004/oldphoto12345678.png' : null,
       created_by: USERS.admin.id,
       created_at: `2026-08-${n}T10:00:00Z`, updated_at: `2026-08-${n}T10:00:00Z`,
     });
@@ -84,6 +85,9 @@ function makeMock(opts = {}) {
   const diamonds = seedDiamonds();
   const inserts = [];
   const patches = [];
+  const uploads = [];
+  const removals = [];
+  const events = [];
   let newSeq = 0;
   async function handler(route) {
     const req = route.request();
@@ -146,12 +150,31 @@ function makeMock(opts = {}) {
       if (!target) return json(200, []);
       Object.assign(target, changes);
       patches.push({ publicId: pubEq.slice(3), changes });
+      events.push('patch');
       return json(200, [{ id: target.id }]);
+    }
+    if (url.pathname.startsWith('/storage/v1/object/public/diamond-images/') && method === 'GET') {
+      return route.fulfill({ status: 200, contentType: 'image/png', headers: CORS, body: PNG_1PX });
+    }
+    if (url.pathname.startsWith('/storage/v1/object/diamond-images/') && (method === 'POST' || method === 'PUT')) {
+      const p = decodeURIComponent(url.pathname.slice('/storage/v1/object/diamond-images/'.length));
+      if (opts.failUpload) {
+        return json(403, { statusCode: '403', error: 'Unauthorized', message: 'new row violates row-level security policy' });
+      }
+      uploads.push(p);
+      events.push('upload:' + p);
+      return json(200, { Key: 'diamond-images/' + p, path: p, id: 'img-' + uploads.length, fullPath: 'diamond-images/' + p });
+    }
+    if (url.pathname === '/storage/v1/object/diamond-images' && method === 'DELETE') {
+      const delBody = JSON.parse(req.postData() || '{}');
+      (delBody.prefixes || []).forEach((p) => { removals.push(p); events.push('remove:' + p); });
+      return json(200, []);
     }
     if (url.pathname === '/rest/v1/diamonds' && method === 'POST') {
       const body = JSON.parse(req.postData() || '{}');
       const rec = Array.isArray(body) ? body[0] : body;
       inserts.push(rec);
+      events.push('insert');
       if (opts.rlsDenyInsert) {
         return json(401, { code: '42501', message: 'new row violates row-level security policy for table "diamonds"', details: null, hint: null });
       }
@@ -169,7 +192,7 @@ function makeMock(opts = {}) {
     }
     return json(404, { message: 'mock: unhandled ' + method + ' ' + url.pathname });
   }
-  return { handler, diamonds, inserts, patches };
+  return { handler, diamonds, inserts, patches, uploads, removals, events };
 }
 
 const FIELD_NAMES = ['stock_number', 'report_number', 'shape', 'carat', 'color', 'clarity',
@@ -318,6 +341,9 @@ async function fillMinimumValid(page, stock) {
     await page.selectOption('[name="clarity"]', 'VVS1');
     await page.selectOption('[name="laboratory"]', 'IGI');
     await page.selectOption('[name="availability"]', 'In Stock');
+    await page.setInputFiles('#dia-file', {
+      name: 'original photo (1).png', mimeType: 'image/png', buffer: PNG_1PX,
+    });
     await page.click('#dia-submit');
     await page.waitForURL('**/admin/diamonds.html?added=TEST-001', { timeout: 10000 });
     await page.waitForFunction(() =>
@@ -331,12 +357,22 @@ async function fillMinimumValid(page, stock) {
       rec.color === 'E' && rec.clarity === 'VVS1' && rec.laboratory === 'IGI' &&
       rec.availability === 'In Stock' && rec.cut === null && rec.active === true,
       'recipe payload saved verbatim (optional cut null), got ' + JSON.stringify(rec).slice(0, 160));
+    expect(backend.uploads.length === 1 &&
+      /^diamonds\/DIA-[A-HJ-NP-Z2-9]{8}\/[a-z0-9]{16}\.png$/.test(backend.uploads[0]),
+      'photo stored under a unique safe name (never the original), got ' + backend.uploads[0]);
+    expect(rec.image_path === backend.uploads[0], 'image_path saved on the row');
+    expect(backend.events.indexOf('upload:' + backend.uploads[0]) < backend.events.indexOf('insert'),
+      'upload happens before the insert');
     expect(dialogSeen === null, 'no unsaved-changes warning after a successful save');
     let state = await page.evaluate(() => ({
       row: !!document.querySelector('[data-adm-row="TEST-001"]'),
       toast: (document.querySelector('#adm-toast .ngd-alert') || { textContent: '' }).textContent,
     }));
     expect(state.row, 'TEST-001 appears in the re-read live list');
+    const thumbSrc = await page.evaluate(() =>
+      (document.querySelector('[data-adm-row="TEST-001"] .ngd-req-thumb img') || { getAttribute: () => '' }).getAttribute('src') || '');
+    expect(thumbSrc.indexOf(backend.uploads[0]) !== -1,
+      'inventory thumb renders the uploaded photo, got ' + thumbSrc);
     expect(/TEST-001 was added to the inventory/.test(state.toast), 'arrival toast confirms it');
     /* a browser refresh re-queries the table — the record must persist */
     await page.reload({ waitUntil: 'domcontentloaded' });
@@ -415,7 +451,7 @@ async function fillMinimumValid(page, stock) {
       'each stone gets its own public_id');
   });
 
-  await scenario('image picker still previews locally only (no upload)', {}, async (page) => {
+  await scenario('image picker validates type and the 5 MB limit before any upload', {}, async (page, backend) => {
     await openAdd(page);
     await page.setInputFiles('#dia-file', {
       name: 'stone.png', mimeType: 'image/png', buffer: PNG_1PX,
@@ -432,6 +468,14 @@ async function fillMinimumValid(page, stock) {
       error: document.getElementById('dia-image-error').textContent,
     }));
     expect(/isn.t supported/i.test(state.error), 'wrong type rejected inline');
+    await page.setInputFiles('#dia-file', {
+      name: 'huge.png', mimeType: 'image/png', buffer: Buffer.alloc(5 * 1024 * 1024 + 1, 1),
+    });
+    state = await page.evaluate(() => ({
+      error: document.getElementById('dia-image-error').textContent,
+    }));
+    expect(/larger than 5/i.test(state.error), 'over-5MB rejected inline, got ' + state.error);
+    expect(backend.uploads.length === 0, 'invalid files never reach Storage');
   });
 
   await scenario('unsaved changes: dirty form warns before leaving; clean form does not', {}, async (page) => {
@@ -479,6 +523,70 @@ async function fillMinimumValid(page, stock) {
     }));
     expect(/NGD-1004 was updated successfully/.test(state.toast), 'arrival toast confirms the update');
     expect(state.caratCell === '1.50', 'list shows the updated carat, got ' + state.caratCell);
+  });
+
+  await scenario('replace image: new upload → database update → only then the old file removed', {}, async (page, backend) => {
+    await openEdit(page, 'DIA-SEED0004');
+    await page.waitForFunction(() =>
+      (document.querySelector('[name="stock_number"]') || {}).value === 'NGD-1004', null, { timeout: 10000 });
+    const current = await page.evaluate(() =>
+      (document.querySelector('#dia-current-art img') || { getAttribute: () => '' }).getAttribute('src') || '');
+    expect(current.indexOf('diamonds/DIA-SEED0004/oldphoto12345678.png') !== -1,
+      'current photo shown from Storage, got ' + current);
+    await page.setInputFiles('#dia-file', {
+      name: 'newphoto.png', mimeType: 'image/png', buffer: PNG_1PX,
+    });
+    await page.click('#dia-submit');
+    await page.waitForURL('**/admin/diamonds.html?updated=NGD-1004', { timeout: 10000 });
+    await page.waitForFunction(() =>
+      document.querySelectorAll('#adm-table-body tr').length > 0, null, { timeout: 10000 });
+    const newPath = backend.uploads[0];
+    expect(/^diamonds\/DIA-SEED0004\/[a-z0-9]{16}\.png$/.test(newPath),
+      'replacement stored under a unique safe name in the stone\'s folder, got ' + newPath);
+    const up = backend.events.indexOf('upload:' + newPath);
+    const patch = backend.events.indexOf('patch');
+    const rm = backend.events.indexOf('remove:diamonds/DIA-SEED0004/oldphoto12345678.png');
+    expect(up !== -1 && patch !== -1 && rm !== -1 && up < patch && patch < rm,
+      'strict order upload → update → remove-old, got ' + backend.events.join(' | '));
+    expect(backend.patches[0].changes.image_path === newPath, 'image_path updated on the row');
+    expect(backend.removals.length === 1, 'exactly the old file removed');
+    const thumb = await page.evaluate(() =>
+      (document.querySelector('[data-adm-row="NGD-1004"] .ngd-req-thumb img') || { getAttribute: () => '' }).getAttribute('src') || '');
+    expect(thumb.indexOf(newPath) !== -1, 'inventory thumb shows the replacement');
+  });
+
+  await scenario('failed upload is safe: add aborts, edit keeps the old image', { failUpload: true }, async (page, backend) => {
+    page.on('dialog', (d) => d.accept());
+    await openAdd(page);
+    await page.fill('[name="stock_number"]', 'TEST-002');
+    await page.selectOption('[name="shape"]', 'Round');
+    await page.fill('[name="carat"]', '1.10');
+    await page.setInputFiles('#dia-file', { name: 'x.png', mimeType: 'image/png', buffer: PNG_1PX });
+    await page.click('#dia-submit');
+    await page.waitForSelector('#dia-alert .ngd-alert-danger', { timeout: 8000 });
+    let state = await page.evaluate(() => ({
+      alert: document.querySelector('#dia-alert .ngd-alert').textContent,
+      url: location.pathname,
+    }));
+    expect(/not allowed to upload diamond images/i.test(state.alert),
+      'storage RLS denial mapped safely, got: ' + state.alert);
+    expect(/add-diamond\.html$/.test(state.url) && backend.inserts.length === 0,
+      'nothing inserted after a failed upload');
+    /* edit: a failed new upload leaves the old image and the row untouched */
+    await page.goto(SITE + '/admin/edit-diamond.html?id=DIA-SEED0004', { waitUntil: 'domcontentloaded' });
+    await page.waitForFunction(() =>
+      (document.querySelector('[name="stock_number"]') || {}).value === 'NGD-1004', null, { timeout: 10000 });
+    await page.setInputFiles('#dia-file', { name: 'y.png', mimeType: 'image/png', buffer: PNG_1PX });
+    await page.click('#dia-submit');
+    await page.waitForSelector('#dia-alert .ngd-alert-danger', { timeout: 8000 });
+    state = await page.evaluate(() => ({
+      alert: document.querySelector('#dia-alert .ngd-alert').textContent,
+      url: location.pathname,
+    }));
+    expect(/not allowed to upload diamond images/i.test(state.alert), 'edit upload failure surfaced safely');
+    expect(/edit-diamond\.html$/.test(state.url), 'stays on the edit page');
+    expect(backend.patches.length === 0 && backend.removals.length === 0,
+      'row not updated and the old image untouched');
   });
 
   await scenario('customer cannot open the add form — sent to their own dashboard', { role: 'customer' }, async (page) => {

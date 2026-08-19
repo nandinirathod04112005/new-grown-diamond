@@ -23,6 +23,21 @@
 (function () {
   'use strict';
 
+  /**
+   * Public URL for a file in a public Storage bucket, '' when the
+   * path is empty or the client is not ready. Used by the diamond
+   * pages to render diamonds.image_path with an art fallback.
+   */
+  window.ngdStorageUrl = function (bucket, path) {
+    if (!path || !window.ngdSupabase) return '';
+    try {
+      var res = window.ngdSupabase.storage.from(bucket).getPublicUrl(path);
+      return (res && res.data && res.data.publicUrl) || '';
+    } catch (err) {
+      return '';
+    }
+  };
+
   /* ---- Site root, derived from this script's own URL ---- */
   var SCRIPT_SUFFIX = 'assets/js/supabase-client.js';
   var scriptSrc =

@@ -34,6 +34,7 @@ Bootstrap 5 + vanilla JavaScript** frontend backed by **Supabase**
 | Admin Dashboard UI (13-route sidebar, KPIs, activity feed) | ✅ done — demo figures only |
 | Admin Diamond Inventory (12-col table, filters, pagination) | ✅ live — reads `public.diamonds` |
 | Admin Add/Edit Diamond + status/archive (`DIA-` public id, duplicate guard) | ✅ live |
+| Diamond image upload (`diamond-images` bucket, 5 MB, safe replace) | ✅ live — run `supabase/diamond-images-storage.sql` once |
 | Admin Jewellery Inventory UI (10-col table, 4 filters, demo actions) | ✅ done — demo/preview data only |
 | Admin Add/Edit Jewellery forms (9 sections, multi-image UI, honest no-save) | ✅ done — payload seam ready |
 | Admin Customers UI (9-col table, details panel, honest demo toggle) | ✅ done — demo/preview data only |

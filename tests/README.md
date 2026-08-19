@@ -122,11 +122,13 @@ tooling only** — the website itself is plain HTML/CSS/JS and has no Node backe
   inventory" note, search by stock AND report number, the filters + sort
   + pagination on loaded rows, feature/deactivate/archive PATCHing
   through Supabase (archive = `archived_at` soft delete, list re-read
-  and count updated), the `?added=` arrival toast, the REAL loading/empty/error
+  and count updated), a stone with image_path rendering its real Storage
+  photo while the rest fall back to gem art, the `?added=` arrival toast,
+  the REAL loading/empty/error
   lifecycle (an HTTP 500 then Retry re-queries; an empty table shows the
   Add CTA), guards and the cards-vs-contained-table behaviour at
   390/768/1440.
-- `admin-diamond-form-ui.test.cjs` — 12 Add/Edit-Diamond scenarios
+- `admin-diamond-form-ui.test.cjs` — 14 Add/Edit-Diamond scenarios
   (PostgREST-style mocked Supabase): the eight sections whose 27 field
   names are the real table columns (incl. the `price_visible` checkbox),
   client validation flagging exactly the required trio (stock number,
@@ -139,7 +141,13 @@ tooling only** — the website itself is plain HTML/CSS/JS and has no Node backe
   distinct public_ids, the preview-only image picker, the
   unsaved-changes warning, LIVE edit (loaded by `public_id`, PATCHed
   with verification, updated value shown back in the list), a customer
-  turned away to their own dashboard, and responsive checks at 1440/390.
+  turned away to their own dashboard, the image flows (TEST-001 saved
+  WITH a photo — unique diamonds/<public_id>/<random>.png name, upload
+  strictly before insert, image_path on the row, the thumb rendering it;
+  type + 5 MB validation with zero Storage traffic for invalid files;
+  replace ordering upload → update → only-then-remove-old; failed uploads
+  aborting the add and leaving an edit's old image untouched), and
+  responsive checks at 1440/390.
 - `admin-jewellery-ui.test.cjs` — 10 Admin-Jewellery-Inventory scenarios
   (mocked admin): the 10-column table over the augmented demo collection
   (incl. the null-weight all-metal piece), search + the four filters
