@@ -24,11 +24,12 @@
       weight: row.diamond_weight === null || row.diamond_weight === undefined ? null : Number(row.diamond_weight),
       availability: row.availability || '—', price: row.price === null || row.price === undefined ? null : Number(row.price),
       currency: row.currency || '', featured: !!row.featured, active: row.active !== false,
+      image: window.NGDJewelleryImages.primary(row.jewellery_images || []),
       updated: String(row.updated_at || row.created_at || '').slice(0, 10) || '—'
     };
   }
   async function load() {
-    var result = await window.ngdSupabase.from('jewellery').select('*').order('created_at', { ascending: false });
+    var result = await window.ngdSupabase.from('jewellery').select('*,jewellery_images(id,image_path,sort_order,is_primary)').order('created_at', { ascending: false });
     if (result.error) throw result.error;
     return (result.data || []).map(mapRow);
   }
@@ -63,7 +64,7 @@
     return rows.map(function (row) {
       var c = chips(row);
       return '<tr data-adm-row="' + escapeHtml(row.sku) + '">' +
-        '<td class="ngd-stock-cell">' + escapeHtml(row.sku) + '</td><td>' + escapeHtml(row.name) +
+        '<td class="ngd-stock-cell">' + escapeHtml(row.sku) + '</td><td><span class="ngd-admin-product"><span class="ngd-admin-thumb">' + (row.image ? '<img src="' + escapeHtml(window.NGDJewelleryImages.publicUrl(row.image.image_path)) + '" alt="">' : '◇') + '</span>' + escapeHtml(row.name) + '</span>' +
         '</td><td>' + escapeHtml(row.category) + '</td><td>' + escapeHtml(row.subcategory) +
         '</td><td>' + escapeHtml(row.metal) + '</td><td>' + (row.weight === null ? '—' : row.weight.toFixed(2) + ' ct') +
         '</td><td>' + c.availability + '</td><td>' + price(row) + '</td><td>' + c.featured +
@@ -72,7 +73,7 @@
   }
   function cardsHtml(rows) {
     return rows.map(function (row) { var c = chips(row); return '<article class="ngd-req-card"><strong>' +
-      escapeHtml(row.name) + '</strong><span class="ngd-text-muted d-block small">' + escapeHtml(row.sku) +
+      (row.image ? '<img class="ngd-admin-card-image" src="' + escapeHtml(window.NGDJewelleryImages.publicUrl(row.image.image_path)) + '" alt="">' : '') + escapeHtml(row.name) + '</strong><span class="ngd-text-muted d-block small">' + escapeHtml(row.sku) +
       ' · ' + escapeHtml(row.category) + ' · ' + escapeHtml(row.subcategory) + '</span><div class="mt-2">' +
       escapeHtml(row.metal) + ' · ' + (row.weight === null ? '—' : row.weight.toFixed(2) + ' ct') + ' · ' + price(row) +
       '</div><div class="d-flex flex-wrap gap-2 mt-2">' + c.availability + c.featured + c.active +

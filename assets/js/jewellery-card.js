@@ -14,6 +14,11 @@
     return art[p.category.toLowerCase()] || '';
   }
 
+  function mediaFor(p) {
+    var image = window.NGDJewelleryImages && window.NGDJewelleryImages.primary(p.images);
+    return image ? '<img class="ngd-jewel-photo" src="' + window.NGDJewelleryImages.publicUrl(image.image_path) + '" alt="' + p.name.replace(/"/g, '&quot;') + '">' : artFor(p);
+  }
+
   function availBadge(p) {
     var cls = p.availability === 'In Stock' ? 'ngd-avail-stock' : 'ngd-avail-request';
     return '<span class="ngd-avail ' + cls + '">' + p.availability + '</span>';
@@ -32,7 +37,7 @@
       '<article class="ngd-card ngd-card-3d ngd-jewel-card h-100" data-ngd-tilt ' +
       'data-jewellery-id="' + p.id + '" data-category="' + p.category.toLowerCase() + '">' +
       '<div class="ngd-jewel-media">' +
-      '<div class="ngd-jewel-figure">' + artFor(p) + '</div>' +
+      '<div class="ngd-jewel-figure">' + mediaFor(p) + '</div>' +
       '</div>' +
       '<div class="ngd-jewel-body">' +
       '<p class="ngd-jewel-cat">' + p.category + '</p>' +

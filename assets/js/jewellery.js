@@ -16,12 +16,24 @@
   if (!grid) return; // listing page only
 
   /* ---------- data source ---------- */
-  function loadJewellery() {
-    /* Future: return supabase.from('jewellery').select('*') … */
-    return window.NGD_DEMO_JEWELLERY || [];
+  async function loadJewellery() {
+    if (!window.ngdSupabase) return window.NGD_DEMO_JEWELLERY || [];
+    var result = await window.ngdSupabase.from('jewellery')
+      .select('id,public_id,sku,product_name,category,subcategory,short_description,full_description,metal,metal_karat,metal_colour,gross_weight,diamond_weight,diamond_pieces,diamond_quality,diamond_shape,certificate_number,size,availability,featured,jewellery_images(id,image_path,sort_order,is_primary)')
+      .eq('active', true).order('featured', { ascending: false });
+    if (result.error) throw result.error;
+    return (result.data || []).map(function (r) { return {
+      dbId: r.id, id: r.public_id || r.sku, sku: r.sku, name: r.product_name,
+      category: r.category, subcategory: r.subcategory || '', description: r.short_description || '',
+      fullDesc: r.full_description || '', metal: r.metal || '', metalKarat: r.metal_karat || '',
+      metalColour: r.metal_colour || '', grossWeight: Number(r.gross_weight || 0),
+      weightCt: r.diamond_weight == null ? null : Number(r.diamond_weight), diamondPieces: Number(r.diamond_pieces || 0),
+      diamondQuality: r.diamond_quality, diamondShape: r.diamond_shape, certificateNo: r.certificate_number,
+      size: r.size || '', availability: r.availability || 'Made to Order', featured: !!r.featured, images: r.jewellery_images || []
+    }; });
   }
 
-  var DATA = loadJewellery();
+  var DATA = [];
   var PAGE_SIZE = 8;
   var CATEGORIES = ['Rings', 'Earrings', 'Pendants', 'Necklaces', 'Bracelets', 'Bangles'];
 
@@ -191,5 +203,9 @@
     if (match) state.category = match;
   }
 
-  apply();
+  loadJewellery().then(function (rows) { DATA = rows; apply(); }).catch(function (error) {
+    console.error('[NGD Jewellery] public listing load failed:', error);
+    el.count.textContent = 'We couldn’t load jewellery. Please refresh and try again.';
+    el.grid.classList.add('d-none'); el.empty.classList.remove('d-none');
+  });
 })();

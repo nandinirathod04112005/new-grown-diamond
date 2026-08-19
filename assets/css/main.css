@@ -3031,6 +3031,12 @@ a.ngd-chip {
   pointer-events: none;
 }
 
+.ngd-admin-product { display: inline-flex; align-items: center; gap: .55rem; }
+.ngd-admin-thumb { width: 2.5rem; height: 2.5rem; display: grid; place-items: center; overflow: hidden; border-radius: .35rem; background: var(--ngd-pearl); }
+.ngd-admin-thumb img, .ngd-admin-card-image { width: 100%; height: 100%; object-fit: cover; }
+.ngd-admin-card-image { display: block; height: 9rem; margin-bottom: .75rem; border-radius: var(--ngd-radius-sm); }
+.ngd-jewel-photo { width: 100%; height: 100%; object-fit: cover; }
+
 /* People/enquiry admin extras: truncated table cells + initials avatar */
 .ngd-clip {
   display: inline-block;
