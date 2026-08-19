@@ -78,8 +78,8 @@ Bootstrap 5 + vanilla JavaScript** frontend backed by **Supabase**
 | `admin/dashboard.html` | Admin Dashboard (guarded) — 13-route sidebar (management routes marked Soon), KPI cards with demo-catalogue counts, quick actions, demo activity feed |
 | `admin/diamonds.html` | Admin Diamond Inventory (guarded, LIVE) — 12-column table over `public.diamonds`, search by stock/report number, filters, sort, pagination, live feature/status/archive actions, and real loading/empty/error states |
 | `admin/add-diamond.html` / `edit-diamond.html` | Add/Edit Diamond (guarded, LIVE) — generated `DIA-` public ids for adds; verified public-id loading, full-field updates, duplicate protection, archive, validation, and safe Supabase errors for edits |
-| `admin/jewellery.html` | Admin Jewellery Inventory (guarded) — 10-column table over the demo collection, search, category/availability/active/featured filters, sort incl. diamond weight, pagination, honest demo feature/activate/archive actions |
-| `admin/add-jewellery.html` / `edit-jewellery.html` | Add/Edit Jewellery forms (guarded) — 9 sections, 23 Supabase-ready fields, multi-image gallery (drag/drop, previews, primary badge, set-primary, reorder, remove — no upload), inline validation, unsaved-changes warning; honest no-save submits expose the payload for the future `saveJewellery()` |
+| `admin/jewellery.html` | Admin Jewellery Inventory (active-admin guarded) — live `public.jewellery` rows, SKU/name search, category/availability/active filters, sorting and pagination |
+| `admin/add-jewellery.html` | Add Jewellery (active-admin guarded) — validates and inserts all product fields into Supabase, rejects duplicate SKUs and redirects to the live inventory after success; images remain preview-only |
 | `admin/customers.html` | Admin Customers (guarded) — 9-column table over invented demo accounts, search, status/country filters, sort, pagination, honest demo activate/deactivate, details panel with recent quotes/holds/inspections/enquiries (all chipped Demo) and a deep link into the Enquiries console |
 | `admin/enquiries.html` | Admin Enquiries (guarded) — 10-column inbox joined to the demo accounts (guests flagged), search, status/type/date filters, honest status actions (New → In Progress → Responded → Closed, no email sent), details panel with message + not-saved internal notes area; supports `?customer=` deep links |
 | `supabase-status.html` | Connection diagnostics — Supabase client / Database API / Auth service / session, RLS-aware and secret-free |
@@ -91,6 +91,7 @@ Bootstrap 5 + vanilla JavaScript** frontend backed by **Supabase**
 - [`docs/SUPABASE_AUTH_SETUP.md`](docs/SUPABASE_AUTH_SETUP.md) — auth configuration & behaviour
 - [`docs/FIRST_ADMIN_SETUP.md`](docs/FIRST_ADMIN_SETUP.md) — promoting the first admin with `supabase/first-admin.sql`
 - [`supabase/diamond-edit-status-archive.sql`](supabase/diamond-edit-status-archive.sql) — soft-archive column and active-admin-only diamond update policy for Backend Step 5
+- [`supabase/jewellery-add-list.sql`](supabase/jewellery-add-list.sql) — case-insensitive SKU uniqueness plus active-admin-only jewellery reads and inserts
 - [`docs/SUPABASE_AUTH_TEST.md`](docs/SUPABASE_AUTH_TEST.md) — automated results + manual test checklist
 - [`tests/README.md`](tests/README.md) — optional automated browser tests
 
