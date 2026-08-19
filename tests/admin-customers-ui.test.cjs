@@ -19,6 +19,8 @@ assert.match(sql, /auth\.uid\(\) is null or not public\.is_active_admin\(\)/);
 assert.match(sql, /new_status not in \('active', 'inactive', 'suspended'\)/);
 assert.match(sql, /where id = target_user_id\s+and role = 'customer'/, 'RPC cannot target an admin');
 assert.doesNotMatch(sql, /set\s+role\s*=/i, 'RPC never changes a role');
+assert.match(sql, /returns text/, 'RPC returns only the confirmed status, not an entire profile');
+assert.match(js, /res\.data !== newStatus/, 'browser verifies the database-confirmed status before updating the UI');
 assert.match(sql, /revoke update on public\.profiles from authenticated/);
 assert.match(sql, /using \(role = 'customer' and public\.is_active_admin\(\)\)/);
 console.log('PASS  Admin Customers uses real Supabase data and secure status RPC');

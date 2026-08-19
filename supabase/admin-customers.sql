@@ -34,17 +34,20 @@ drop policy if exists "Customers can update own profile" on public.profiles;
 drop policy if exists "customers update own profile" on public.profiles;
 revoke update on public.profiles from authenticated;
 
-create or replace function public.admin_set_customer_status(
+-- Drop the earlier signature explicitly because PostgreSQL cannot change a
+-- function's return type with CREATE OR REPLACE. This also keeps reruns safe.
+drop function if exists public.admin_set_customer_status(uuid, text);
+create function public.admin_set_customer_status(
   target_user_id uuid,
   new_status text
 )
-returns public.profiles
+returns text
 language plpgsql
 security definer
 set search_path = ''
 as $$
 declare
-  changed public.profiles;
+  changed_status text;
 begin
   if auth.uid() is null or not public.is_active_admin() then
     raise exception 'Only an authenticated active admin may change customer status'
@@ -58,12 +61,12 @@ begin
      set account_status = new_status
    where id = target_user_id
      and role = 'customer'
-  returning * into changed;
+  returning account_status into changed_status;
 
-  if changed.id is null then
+  if changed_status is null then
     raise exception 'Customer profile not found' using errcode = 'P0002';
   end if;
-  return changed;
+  return changed_status;
 end;
 $$;
 revoke all on function public.admin_set_customer_status(uuid, text) from public;
