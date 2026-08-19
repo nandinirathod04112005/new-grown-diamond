@@ -17,6 +17,10 @@ assert.match(html, /data-admin-activity-loading/);
 assert.match(js, /No recent activity/);
 assert.match(js, /Some dashboard data could not be loaded/);
 assert.match(js, /count: 'exact', head: true/);
+assert.match(js, /key: 'jewellery'.*apply: notArchived/);
+assert.match(js, /function notArchived\(q\).*\.is\('archived_at', null\)/);
+assert.match(js, /\['new', 'in_progress'\]/);
+assert.doesNotMatch(js, /\['new', 'open'\]/);
 assert.doesNotMatch(js, /service_role|SUPABASE_SERVICE/);
 for (const page of ['diamonds', 'jewellery', 'customers', 'quotes', 'holds',
   'inspections', 'enquiries']) {

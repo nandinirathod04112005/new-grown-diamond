@@ -4,12 +4,13 @@
 
   var KPI_QUERIES = [
     { key: 'diamonds', table: 'diamonds', apply: function (q) { return q.is('archived_at', null); } },
-    { key: 'jewellery', table: 'jewellery' },
+    { key: 'jewellery', table: 'jewellery', apply: notArchived },
     { key: 'customers', table: 'profiles', apply: function (q) { return q.eq('role', 'customer'); } },
     { key: 'pending_quotes', table: 'quotes', apply: pending },
     { key: 'pending_holds', table: 'holds', apply: pending },
     { key: 'pending_inspections', table: 'inspections', apply: pending },
-    { key: 'enquiries', table: 'enquiries', apply: function (q) { return q.in('status', ['new', 'open']); } }
+    // An enquiry remains open while it is new or actively being handled.
+    { key: 'enquiries', table: 'enquiries', apply: function (q) { return q.in('status', ['new', 'in_progress']); } }
   ];
 
   var ACTIVITY_QUERIES = [
@@ -23,6 +24,7 @@
   ];
 
   function pending(q) { return q.eq('status', 'pending'); }
+  function notArchived(q) { return q.is('archived_at', null); }
   function join(values) { return values.filter(Boolean).join(' · ') || 'Record added'; }
   function requestDescription(r) { return join([r.public_id, r.status]); }
   function escapeHtml(value) {
