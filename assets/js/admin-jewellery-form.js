@@ -1,13 +1,20 @@
 /* ============================================================
-   NEW GROWN DIAMOND — ADMIN ADD / EDIT JEWELLERY FORM (STEP 27)
+   NEW GROWN DIAMOND — ADMIN ADD / EDIT JEWELLERY FORM (LIVE)
    ------------------------------------------------------------
    One controller powers both pages, selected by
    <body data-jewellery-form="add|edit">. Guarded by requireAdmin().
 
    ADD is live: it validates the form, rejects duplicate SKUs,
    generates JEW-XXXXXXXX, stamps the authenticated admin id and
-   inserts into public.jewellery. Images and Edit remain outside
-   this phase; the existing picker is a local preview only.
+   inserts into public.jewellery.
+
+   EDIT loads and updates a single row by its immutable public_id
+   (edit-jewellery.html?id=JEW-XXXXXXXX): every column prefills,
+   a save PATCHes the row (with updated_at) and verifies exactly
+   one record changed, duplicate SKUs are rejected excluding the
+   piece itself, and Archive soft-deletes — archived_at + inactive,
+   never a hard delete. The image picker stays a local preview;
+   jewellery photo uploads are a later phase.
    ============================================================ */
 (function () {
   'use strict';
@@ -20,11 +27,12 @@
   var state = {
     mode: 'add',
     userId: null,
-    record: null,     /* edit: the demo record being edited */
-    images: [],       /* ordered gallery: {uid, name, sizeLabel, src|art, file} */
+    record: null,     /* edit: the verified Supabase row */
+    images: [],       /* ordered gallery: {uid, name, sizeLabel, src, file} */
     primaryUid: null,
     nextUid: 1,
-    dirty: false
+    dirty: false,
+    saving: false
   };
 
   function $(id) {
@@ -33,51 +41,6 @@
 
   function field(name) {
     return document.querySelector('[name="' + name + '"]');
-  }
-
-  /* ---------------- demo record (edit mode) ---------------- */
-
-  /* Mirrors the deterministic admin augmentation used by
-     assets/js/admin-jewellery.js — keep the two in step. */
-  function adminAugment(p, i) {
-    return Object.assign({}, p, {
-      featured: i % 5 === 0 || i % 7 === 0,
-      active: i % 9 !== 4
-    });
-  }
-
-  function demoRecord(id) {
-    var list = window.NGD_DEMO_JEWELLERY || [];
-    for (var i = 0; i < list.length; i++) {
-      if (list[i].id === id) return adminAugment(list[i], i);
-    }
-    return null;
-  }
-
-  /* Deterministic demo pricing for fields the public demo collection
-     does not carry. Clearly samples, never claimed live. */
-  function demoCommercials(p) {
-    return {
-      price: Math.round((p.weightCt || 0.35) * 1450 + p.grossWeight * 42),
-      currency: 'USD',
-      price_visibility: 'on_request',
-      internal_notes: 'Demo record — sample note for layout preview.'
-    };
-  }
-
-  /* Edit mode opens with the piece's demo gallery: category artwork
-     stands in for photography until real uploads arrive. */
-  function demoGallery(record) {
-    var art = (window.NGD_JEWEL_ART || {})[record.category.toLowerCase()] || '';
-    return ['hero', 'angle', 'detail'].map(function (suffix) {
-      return {
-        uid: state.nextUid++,
-        name: record.id + '-' + suffix + '.webp',
-        sizeLabel: 'demo artwork',
-        art: art,
-        file: null
-      };
-    });
   }
 
   /* ---------------- alerts + dirty tracking ---------------- */
@@ -169,7 +132,7 @@
     });
   }
 
-  /* ---------------- live Supabase insert ---------------- */
+  /* ---------------- live Supabase save (add + edit) ---------------- */
 
   function generatePublicId() {
     var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -188,8 +151,12 @@
       else if (el.type === 'number') payload[el.name] = el.value === '' ? null : parseFloat(el.value);
       else payload[el.name] = el.value.trim() === '' ? null : el.value.trim();
     });
-    payload.public_id = generatePublicId();
-    payload.created_by = state.userId;
+    if (state.mode === 'add') {
+      payload.public_id = generatePublicId();
+      payload.created_by = state.userId;
+    } else {
+      payload.updated_at = new Date().toISOString();
+    }
     return payload;
   }
 
@@ -199,13 +166,26 @@
   }
 
   function dbMessage(error) {
-    console.error('[NGD Add Jewellery] insert failed:', error);
+    console.error('[NGD Admin Jewellery] save failed:', error);
     if (duplicateError(error)) return 'That SKU already exists in the inventory — SKUs must be unique.';
     if (error && (error.code === '42501' || /row-level security|permission denied/i.test(error.message || '')))
-      return 'Your account is not allowed to add jewellery — only an active admin can (enforced by Row Level Security).';
+      return 'Your account is not allowed to change jewellery — only an active admin can (enforced by Row Level Security).';
     if (error && (error.code === 'PGRST204' || error.code === '42703'))
       return 'The jewellery table does not match the form. Check its column names in Supabase.';
     return 'Supabase rejected the save: ' + ((error && error.message) || 'Please check your connection and try again.');
+  }
+
+  function setSaving(saving, label) {
+    state.saving = saving;
+    var btn = $('jw-submit');
+    if (btn) {
+      btn.disabled = saving;
+      btn.textContent = saving ? 'Saving…' : label;
+    }
+    var another = $('jw-save-another');
+    if (another) another.disabled = saving;
+    var archive = $('jw-archive');
+    if (archive) archive.disabled = saving;
   }
 
   async function saveJewellery(payload, mode, form) {
@@ -224,6 +204,69 @@
     else { showAlert('success', payload.sku + ' was added to the inventory. Returning to the list…'); window.location.replace('jewellery.html?added=' + encodeURIComponent(payload.sku)); }
     buttons.forEach(function (button) { button.disabled = false; });
     return true;
+  }
+
+  /* ---------------- live update + soft archive (edit mode) ---------------- */
+
+  async function updateJewellery(payload, form) {
+    var sb = window.ngdSupabase;
+    /* duplicate SKU check that ignores the piece being edited (the
+       case-insensitive unique index is the real enforcement) */
+    var duplicate = await sb.from('jewellery').select('id')
+      .ilike('sku', payload.sku).limit(2);
+    if (duplicate.error) throw duplicate.error;
+    if ((duplicate.data || []).some(function (row) { return row.id !== state.record.id; })) {
+      setInvalid(field('sku'), true);
+      field('sku').focus();
+      showAlert('danger', payload.sku + ' already exists in the inventory — SKUs must be unique.');
+      return false;
+    }
+
+    form.setAttribute('data-ngd-payload', JSON.stringify(payload));
+    var res = await sb.from('jewellery').update(payload)
+      .eq('public_id', state.record.public_id).eq('id', state.record.id).select('id');
+    if (res.error) {
+      if (duplicateError(res.error)) setInvalid(field('sku'), true);
+      showAlert('danger', dbMessage(res.error));
+      return false;
+    }
+    if (!res.data || res.data.length !== 1) {
+      showAlert('danger', 'This piece no longer exists or could not be verified. Nothing was changed.');
+      return false;
+    }
+    state.record = Object.assign({}, state.record, payload);
+    clearDirty();
+    showAlert('success', payload.sku + ' was updated successfully. Returning to the inventory…');
+    window.setTimeout(function () {
+      window.location.replace('jewellery.html?updated=' + encodeURIComponent(payload.sku));
+    }, 700);
+    return true;
+  }
+
+  /** Soft delete only: stamps archived_at + deactivates. Never a hard DELETE. */
+  async function archiveJewellery() {
+    if (!window.confirm('Archive ' + state.record.sku + '? It will be deactivated and removed from the normal inventory list.')) return;
+    setSaving(true, 'Update Jewellery');
+    try {
+      var res = await window.ngdSupabase.from('jewellery').update({
+        archived_at: new Date().toISOString(), active: false, updated_at: new Date().toISOString()
+      }).eq('public_id', state.record.public_id).eq('id', state.record.id).select('id');
+      if (res.error) throw res.error;
+      if (!res.data || res.data.length !== 1) throw new Error('record verification failed');
+      clearDirty();
+      showAlert('success', state.record.sku + ' was archived. Returning to the inventory…');
+      window.location.replace('jewellery.html?archived=' + encodeURIComponent(state.record.sku));
+    } catch (err) {
+      showAlert('danger', dbMessage(err));
+      setSaving(false, 'Update Jewellery');
+    }
+  }
+
+  async function loadEditRecord(publicId) {
+    var res = await window.ngdSupabase.from('jewellery').select('*')
+      .eq('public_id', publicId).limit(2);
+    if (res.error) throw res.error;
+    return res.data && res.data.length === 1 ? res.data[0] : null;
   }
 
   /* ---------------- multi-image gallery (preview only) ---------------- */
@@ -424,43 +467,16 @@
     });
   }
 
-  /* ---------------- edit-mode prefill ---------------- */
+  /* ---------------- edit-mode prefill (live row) ---------------- */
 
   function prefill(record) {
-    var extras = demoCommercials(record);
-    var values = {
-      sku: record.id,
-      product_name: record.name,
-      category: record.category,
-      subcategory: record.subcategory,
-      short_description: record.description,
-      full_description: record.fullDesc,
-      metal: record.metal,
-      metal_karat: record.metalKarat,
-      metal_colour: record.metalColour,
-      gross_weight: record.grossWeight,
-      diamond_weight: record.weightCt,
-      diamond_pieces: record.diamondPieces,
-      diamond_quality: record.diamondQuality,
-      diamond_shape: record.diamondShape,
-      certificate_number: record.certificateNo,
-      size: record.size,
-      price: extras.price,
-      currency: extras.currency,
-      price_visibility: extras.price_visibility,
-      internal_notes: extras.internal_notes,
-      availability: record.availability
-    };
-    Object.keys(values).forEach(function (name) {
+    Object.keys(record).forEach(function (name) {
       var el = field(name);
-      if (el && values[name] != null) el.value = values[name];
+      if (el && el.type !== 'checkbox' && record[name] != null) el.value = record[name];
     });
     field('featured').checked = !!record.featured;
     field('active').checked = !!record.active;
-
-    state.images = demoGallery(record);
-    state.primaryUid = state.images.length ? state.images[0].uid : null;
-    renderGallery();
+    field('price_visible').checked = !!record.price_visible;
   }
 
   function showNotFound(id) {
@@ -472,8 +488,11 @@
   /* ---------------- boot ---------------- */
 
   function initButtons(form) {
+    var submitLabel = state.mode === 'edit' ? 'Update Jewellery' : 'Save Jewellery';
+
     form.addEventListener('submit', async function (event) {
       event.preventDefault();
+      if (state.saving) return;
       clearAlert();
       if (!validate(form)) {
         showAlert('danger',
@@ -482,12 +501,20 @@
         return;
       }
       var payload = buildPayload(form);
-      await saveJewellery(payload, state.mode === 'edit' ? 'edit' : 'add', form);
+      setSaving(true, submitLabel);
+      try {
+        if (state.mode === 'edit') await updateJewellery(payload, form);
+        else await saveJewellery(payload, 'add', form);
+      } catch (err) {
+        showAlert('danger', dbMessage(err));
+      }
+      setSaving(false, submitLabel);
     });
 
     var another = $('jw-save-another');
     if (another) {
       another.addEventListener('click', async function () {
+        if (state.saving) return;
         clearAlert();
         if (!validate(form)) {
           showAlert('danger',
@@ -496,19 +523,20 @@
           return;
         }
         var payload = buildPayload(form);
-        await saveJewellery(payload, 'add-another', form);
+        setSaving(true, submitLabel);
+        try {
+          await saveJewellery(payload, 'add-another', form);
+        } catch (err) {
+          showAlert('danger', dbMessage(err));
+        }
+        setSaving(false, submitLabel);
       });
     }
 
     var archive = $('jw-archive');
     if (archive) {
       archive.addEventListener('click', function () {
-        var id = state.record ? state.record.id : 'This piece';
-        showAlert('info',
-          id + ' — Archive is UI-only for now: nothing was archived or ' +
-          'deleted anywhere. The Jewellery Inventory page previews the ' +
-          'archive behaviour, and the real action arrives with the ' +
-          'Supabase phase.');
+        if (!state.saving) archiveJewellery();
       });
     }
   }
@@ -529,12 +557,23 @@
 
     if (state.mode === 'edit') {
       var id = new URLSearchParams(window.location.search).get('id');
-      state.record = id ? demoRecord(id) : null;
+      if (!id || !/^JEW-[A-Z0-9]{8}$/i.test(id)) {
+        showNotFound(id);
+        return;
+      }
+      try {
+        state.record = await loadEditRecord(id);
+      } catch (err) {
+        console.error('[NGD Admin Jewellery] load failed:', err);
+        showAlert('danger', 'The piece could not be loaded. Check your connection and try again.');
+        $('jw-form-wrap').hidden = true;
+        return;
+      }
       if (!state.record) {
         showNotFound(id);
         return;
       }
-      $('jw-editing-id').textContent = state.record.id;
+      $('jw-editing-id').textContent = state.record.sku || state.record.public_id;
       prefill(state.record);
     }
 

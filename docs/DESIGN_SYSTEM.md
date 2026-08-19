@@ -352,34 +352,42 @@ edit page's current photo, and the shared public card/details renderer).
 A dirty form warns via `beforeunload`.
 
 `admin/jewellery.html` mirrors the diamond manager for the jewellery
-collection: the same `.ngd-admin-table` density (10 columns — image, SKU,
-name, category, diamond weight with an em-dash for all-metal pieces,
-availability, featured, active, updated, actions), `.ngd-icon-btn`
-actions, stacked `.ngd-req-card`s below 768px, and client-side search /
-category–availability–active–featured filters / sort (product name, SKU,
-diamond weight with nulls last) / pagination over the demo collection
-augmented with the same deterministic featured/active/updated formulas
-the diamond console uses. Category thumbnails come from
-`window.NGD_JEWEL_ART`. Add/Edit navigate to the shared jewellery form
-pages; `loadAdminJewellery()` in
-`assets/js/admin-jewellery.js` is the Supabase seam.
+collection, now fully live: `assets/js/admin-jewellery.js` reads
+`public.jewellery` through the shared client with archived rows excluded
+(`archived_at is null`), renders the 12-column `.ngd-admin-table` (SKU,
+name, category, subcategory, metal, diamond weight with an em-dash for
+all-metal pieces, availability, price, featured, active, updated,
+actions) plus stacked `.ngd-req-card`s below 768px, and runs client-side
+search / category–availability–active filters / sort / pagination over
+the loaded rows. The `.ngd-icon-btn` row actions write through Supabase
+with the diamond console's `mutateRow` pattern — `updated_at` stamped,
+PATCH verified against exactly one row, re-read after success, truthful
+toasts, `confirm()` before deactivation and archive, and archive as a
+soft delete (`archived_at` + inactive, never a DELETE). Edit links carry
+the piece's immutable `public_id`; `?added/?updated/?archived` arrivals
+toast over the refreshed list, and loading/empty/error states are real
+with a Retry that re-queries.
 
 `admin/add-jewellery.html` / `edit-jewellery.html` share one generated
 form (`assets/js/admin-jewellery-form.js`, mode from
 `body[data-jewellery-form]`): nine numbered `.ngd-form-sec-title`
-sections with 23 snake_case fields (the future `jewellery` columns) and
-the same required-star / inline-validation / sticky `.ngd-form-actions`
-patterns as the diamond form. Product Images is a multi-image gallery:
-the `.ngd-drop` zone accepts several files (JPG/JPEG/PNG/WEBP ≤ 10 MB
-each, validated client-side, never uploaded) and renders `.ngd-img-tile`
-cards in a `.ngd-img-gallery` grid — each tile has a local preview (or
-category artwork on the edit page's demo gallery), a gold `Primary`
-`.ngd-status-chip` (`.is-primary` border), and `.ngd-icon-btn` actions to
-move earlier/later, set as primary and remove. The payload's `images`
-array carries `{filename, position, is_primary}` for the future
-`jewellery_images` table; `saveJewellery()` is the single seam and every
-submit says honestly that nothing was saved. Archive on the edit page is
-UI-only and says so; a dirty form warns via `beforeunload`.
+sections whose 23 snake_case field names ARE the live `public.jewellery`
+columns, with the sku/product_name/category required trio and the same
+inline-validation / sticky `.ngd-form-actions` patterns as the diamond
+form. ADD generates a `JEW-XXXXXXXX` public id, stamps `created_by`,
+pre-checks the SKU case-insensitively (the DB's unique index is the real
+enforcement) and inserts; EDIT loads the row by `public_id` (exactly-one
+verified, not-found otherwise), prefills every column, and updates with
+`updated_at` plus a duplicate-SKU check that ignores the piece itself.
+Archive asks `confirm()` then stamps `archived_at` + `active=false` —
+a soft delete, never a DELETE — and returns to the list's arrival toast.
+Real Supabase errors map to safe messages (duplicate, RLS admin-only,
+column mismatch); the update policy lives in
+`supabase/jewellery-edit-status-archive.sql`. Product Images stays a
+validated local preview (`.ngd-drop` → `.ngd-img-tile` gallery with the
+gold `Primary` chip, reorder and remove; JPG/JPEG/PNG/WEBP ≤ 10 MB,
+nothing uploaded) until the jewellery photo upload phase. A dirty form
+warns via `beforeunload`.
 
 `admin/customers.html` and `admin/enquiries.html` reuse the same list
 shell for people: the dense `.ngd-admin-table` (long text cells truncate

@@ -148,26 +148,35 @@ tooling only** — the website itself is plain HTML/CSS/JS and has no Node backe
   replace ordering upload → update → only-then-remove-old; failed uploads
   aborting the add and leaving an edit's old image untouched), and
   responsive checks at 1440/390.
-- `admin-jewellery-ui.test.cjs` — 10 Admin-Jewellery-Inventory scenarios
-  (mocked admin): the 10-column table over the augmented demo collection
-  (incl. the null-weight all-metal piece), search + the four filters
-  (category with the six spec options, availability, active state,
-  featured) + weight sort with nulls last + pagination, the honest demo
-  actions (feature/activate toggles, archive with Undo — truthful toasts,
-  no fake success), Add/Edit form navigation, loading/empty/error
-  previews, guards (inventory + form pages) and the
-  cards-vs-contained-scrolling-table behaviour at 390/768/1440.
-- `admin-jewellery-form-ui.test.cjs` — 10 Add/Edit-Jewellery scenarios
-  (mocked admin): the nine sections with all 23 snake_case fields,
-  required stars and the seven categories (incl. Other), empty/number
-  validation, the honest no-save submits with their exposed payloads
-  (incl. the ordered `images` array), Save & Add Another, the multi-image
-  gallery (multiple previews, primary badge, set-primary, reorder with
-  edge-disabled arrows, remove, type + 10 MB rules — no upload), the
-  unsaved-changes beforeunload warning, edit prefill from the demo record
-  with its three-tile demo gallery (+ the null-weight all-metal piece),
-  the UI-only Archive, not-found, and 2-col→1-col responsive checks with
-  the sticky action bar at 1440/768/390.
+- `admin-jewellery-ui.test.cjs` — 10 LIVE Admin-Jewellery-Inventory
+  scenarios (PostgREST-style network mock): the 12-column table over the
+  loaded `public.jewellery` rows with the archived seed excluded (even
+  from search), search/filters/weight-sort/pagination on live rows, the
+  live feature → deactivate (confirmed) → reactivate → archive
+  (confirmed; `archived_at` + inactive, row leaves the list, never a
+  DELETE) chain with every PATCH captured and `updated_at` verified, the
+  `?added/?updated/?archived` arrival toasts, the real error state with
+  a re-querying Retry, the real empty state, the login guard, the
+  customer block and the cards-vs-contained-table behaviour at
+  390/768/1440.
+- `admin-jewellery-form-ui.test.cjs` — 18 LIVE Add/Edit-Jewellery
+  scenarios (PostgREST-style network mock): the nine sections whose 23
+  field names are the real columns (stale STEP-27 names asserted gone),
+  the sku/product_name/category required trio, number validation, the
+  live add (generated `JEW-` public_id + `created_by`, redirect, appears
+  in the list, survives refresh), the case-insensitive duplicate
+  pre-check, the 23505 race and RLS denial mapped to safe messages,
+  Save & Add Another with distinct public_ids, the preview-only gallery
+  (type/10 MB rules, primary badge, no image data in the insert), the
+  beforeunload warning, the TEST-JEW-001 edit recipe (load by public_id,
+  every column prefilled incl. checkboxes, rename + save → verified
+  PATCH with `updated_at` and no identity columns, arrival toast, list
+  cell updated, survives refresh), own-SKU saves never tripping the
+  duplicate check while another piece's SKU is rejected
+  case-insensitively, RLS-denied and vanished-record updates surfaced
+  honestly, the confirmed soft archive (cancel changes nothing), unknown
+  + malformed public_id not-found states, the customer block and
+  responsive checks at 1440/768/390.
 - `admin-customers-ui.test.cjs` — 10 Admin-Customers scenarios (mocked
   admin): the 9-column table over the invented demo accounts in
   recently-joined order, search + status/country filters + sort +
