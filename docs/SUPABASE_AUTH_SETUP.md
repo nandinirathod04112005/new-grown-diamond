@@ -195,3 +195,16 @@ option.
 | “Unable to reach the sign-in service…” | Offline, wrong Project URL, or Supabase down — check the browser console |
 | Login succeeds but bounces back with support message | The `profiles` row is missing, or `account_status` is `inactive`/`suspended` |
 | Stuck on a blank dashboard | The Supabase CDN script was blocked — the guard fails closed; check the console/network tab |
+
+## 10. Password recovery redirect
+
+Supabase Auth sends and verifies password-recovery links; the application does
+not maintain a reset-token table. In **Authentication → URL Configuration**, add
+the deployed `reset-password.html` URL to **Redirect URLs** (for example,
+`https://your-domain.example/reset-password.html`). Keep the matching local URL
+allowlisted while testing locally.
+
+The forgot-password page passes this URL to `resetPasswordForEmail`. The reset
+page remains locked until the Supabase client emits a verified
+`PASSWORD_RECOVERY` session, revalidates that session immediately before
+`updateUser`, and signs the user out after the password changes.
