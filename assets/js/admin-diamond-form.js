@@ -12,12 +12,8 @@
    (pre-checked, and the database unique constraint is handled
    too), maps real Supabase errors to safe messages, and on
    success redirects back to the inventory, which re-reads the
-   table so the new stone appears in the real list.
-
-   EDIT stays an honest demo until the Edit step: it prefills
-   from the demo catalogue and says plainly that updating is not
-   wired yet. The image picker previews locally only — Storage
-   uploads arrive in a later phase.
+   table so the new stone appears in the real list. Product images
+   are uploaded to Supabase Storage; only image_path is persisted.
    ============================================================ */
 (function () {
   'use strict';
@@ -25,13 +21,14 @@
   var REQUIRED = ['stock_number', 'shape', 'carat'];
 
   var IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-  var IMAGE_MAX_BYTES = 10 * 1024 * 1024;
+  var IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 
   var state = {
     mode: 'add',
     userId: null,     /* the signed-in admin (created_by) */
-    record: null,     /* edit: the demo record being edited */
-    imageFile: null,  /* File selected for preview (never uploaded) */
+    record: null,     /* edit: the live record being edited */
+    imageFile: null,
+    oldImagePath: null,
     dirty: false,
     saving: false
   };
@@ -189,9 +186,24 @@
       else if (el.type === 'number') payload[el.name] = el.value === '' ? null : parseFloat(el.value);
       else payload[el.name] = el.value.trim() === '' ? null : el.value.trim();
     });
-    payload.public_id = generatePublicId();
-    payload.created_by = state.userId;
+    payload.public_id = state.record ? state.record.public_id : generatePublicId();
+    if (!state.record) payload.created_by = state.userId;
     return payload;
+  }
+
+  async function uploadImage(publicId) {
+    if (!state.imageFile) return null;
+    var path = window.NGDDiamondImages.path(publicId, state.imageFile);
+    var result = await window.ngdSupabase.storage.from(window.NGDDiamondImages.bucket)
+      .upload(path, state.imageFile, { cacheControl: '3600', contentType: state.imageFile.type, upsert: false });
+    if (result.error) throw result.error;
+    return path;
+  }
+
+  async function removeImage(path) {
+    if (!path) return;
+    var result = await window.ngdSupabase.storage.from(window.NGDDiamondImages.bucket).remove([path]);
+    if (result.error) console.error('[NGD Diamond Image] old image cleanup failed:', result.error);
   }
 
   /* ---------------- real Supabase errors → safe messages ---------------- */
@@ -242,8 +254,11 @@
       return false;
     }
 
+    var uploadedPath = await uploadImage(payload.public_id);
+    if (uploadedPath) payload.image_path = uploadedPath;
     var res = await sb.from('diamonds').insert(payload);
     if (res.error) {
+      if (uploadedPath) await removeImage(uploadedPath);
       if (isDuplicateError(res.error)) setInvalid(field('stock_number'), true);
       showAlert('danger', mapDbError(res.error));
       return false;
@@ -264,7 +279,25 @@
     return true;
   }
 
-  /* ---------------- image picker (preview only) ---------------- */
+  async function updateDiamond(payload, form) {
+    var uploadedPath = await uploadImage(payload.public_id);
+    if (uploadedPath) payload.image_path = uploadedPath;
+    var result = await window.ngdSupabase.from('diamonds').update(payload).eq('id', state.record.id);
+    if (result.error) {
+      if (uploadedPath) await removeImage(uploadedPath);
+      showAlert('danger', mapDbError(result.error));
+      return false;
+    }
+    if (uploadedPath && state.oldImagePath && state.oldImagePath !== uploadedPath) {
+      await removeImage(state.oldImagePath);
+    }
+    clearDirty();
+    showAlert('success', payload.stock_number + ' was updated. Returning to the inventory…');
+    window.location.replace('diamonds.html?updated=' + encodeURIComponent(payload.stock_number));
+    return true;
+  }
+
+  /* ---------------- image picker ---------------- */
 
   function imageError(message) {
     var box = $('dia-image-error');
@@ -279,7 +312,7 @@
       return;
     }
     if (file.size > IMAGE_MAX_BYTES) {
-      imageError('That image is larger than 10 MB — please choose a smaller file.');
+      imageError('That image is larger than 5 MB — please choose a smaller file.');
       return;
     }
     imageError('');
@@ -341,32 +374,32 @@
   /* ---------------- edit-mode prefill (demo until the Edit step) ---------------- */
 
   function prefill(record) {
-    var extras = demoCommercials(record);
+    var extras = record.public_id ? {} : demoCommercials(record);
     var values = {
-      stock_number: record.id,
-      report_number: record.report,
+      stock_number: record.stock_number || record.id,
+      report_number: record.report_number || record.report,
       shape: record.shape,
       carat: record.carat,
-      color: record.colour,
+      color: record.color || record.colour,
       clarity: record.clarity,
       cut: record.cut,
       polish: record.polish,
       symmetry: record.symmetry,
       fluorescence: record.fluorescence,
-      laboratory: record.lab,
-      certificate_number: record.report,
-      certificate_url: extras.certificate_url,
+      laboratory: record.laboratory || record.lab,
+      certificate_number: record.certificate_number || record.report,
+      certificate_url: record.certificate_url || extras.certificate_url,
       measurements: record.measurements,
-      depth_percentage: record.depthPct,
-      table_percentage: record.tablePct,
+      depth_percentage: record.depth_percentage || record.depthPct,
+      table_percentage: record.table_percentage || record.tablePct,
       ratio: record.ratio,
-      growth_method: record.growth,
-      location: record.growth === 'CVD' ? 'Surat atelier' : 'Mumbai vault',
+      growth_method: record.growth_method || record.growth,
+      location: record.location || (record.growth === 'CVD' ? 'Surat atelier' : 'Mumbai vault'),
       availability: record.availability,
-      price_per_carat: extras.price_per_carat,
-      total_price: extras.total_price,
-      currency: extras.currency,
-      internal_notes: extras.internal_notes
+      price_per_carat: record.price_per_carat || extras.price_per_carat,
+      total_price: record.total_price || extras.total_price,
+      currency: record.currency || extras.currency,
+      internal_notes: record.internal_notes || extras.internal_notes
     };
     Object.keys(values).forEach(function (name) {
       var el = field(name);
@@ -375,6 +408,14 @@
     field('featured').checked = !!record.featured;
     field('active').checked = !!record.active;
     field('price_visible').checked = false;
+
+    state.oldImagePath = record.image_path || null;
+    if (state.oldImagePath) {
+      $('dia-preview-img').src = window.NGDDiamondImages.url(state.oldImagePath);
+      $('dia-preview-name').textContent = 'Current diamond image';
+      $('dia-drop').hidden = true;
+      $('dia-preview').hidden = false;
+    }
 
     var artBox = $('dia-current-art');
     if (artBox) {
@@ -434,12 +475,10 @@
           return;
         }
         var payload = buildPayload(form);
-        form.setAttribute('data-ngd-payload', JSON.stringify(payload));
-        clearDirty();
-        showAlert('info',
-          (payload.stock_number || 'The diamond') + ' is valid and its update ' +
-          'payload is ready — but updating is not wired yet: it arrives with ' +
-          'the Edit step, so nothing in the database was changed.');
+        setSaving(true, submitLabel);
+        updateDiamond(payload, form).catch(function (err) {
+          showAlert('danger', mapDbError(err));
+        }).finally(function () { setSaving(false, submitLabel); });
         return;
       }
 
@@ -475,12 +514,16 @@
 
     if (state.mode === 'edit') {
       var id = new URLSearchParams(window.location.search).get('id');
-      state.record = id ? demoRecord(id) : null;
+      if (id) {
+        var live = await window.ngdSupabase.from('diamonds').select('*')
+          .or('id.eq.' + id + ',public_id.eq.' + id + ',stock_number.eq.' + id).limit(1);
+        state.record = !live.error && live.data && live.data[0] ? live.data[0] : demoRecord(id);
+      }
       if (!state.record) {
         showNotFound(id);
         return;
       }
-      $('dia-editing-id').textContent = state.record.id;
+      $('dia-editing-id').textContent = state.record.stock_number || state.record.public_id || state.record.id;
       prefill(state.record);
     }
 

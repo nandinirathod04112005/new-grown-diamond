@@ -10,6 +10,10 @@
   'use strict';
 
   function artFor(d) {
+    if (d.image_path && window.NGDDiamondImages) {
+      return '<img class="ngd-diamond-photo" src="' + window.NGDDiamondImages.url(d.image_path) +
+        '" alt="' + d.shape + ' diamond" loading="lazy">';
+    }
     var art = window.NGD_GEM_ART || {};
     return art[d.shape.toLowerCase()] || art.round || '';
   }

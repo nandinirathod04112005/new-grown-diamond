@@ -28,8 +28,16 @@
 
   /* ---------- data source ---------- */
   function loadDiamonds() {
-    /* Future: return supabase.from('diamonds').select('*') … */
     return window.NGD_DEMO_DIAMONDS || [];
+  }
+
+  function storefrontRow(d) {
+    return {
+      id: d.public_id || d.stock_number, shape: d.shape, carat: Number(d.carat),
+      colour: d.color, clarity: d.clarity, cut: d.cut, lab: d.laboratory,
+      growth: d.growth_method, availability: d.availability,
+      featured: !!d.featured, image_path: d.image_path || null
+    };
   }
 
   var DATA = loadDiamonds();
@@ -335,4 +343,17 @@
   }
 
   apply(false);
+
+  /* Prefer the public, active Supabase inventory. The design-time catalogue
+     remains a graceful fallback when Supabase is not configured/reachable. */
+  if (window.ngdSupabase) {
+    window.ngdSupabase.from('diamonds').select(
+      'public_id,stock_number,shape,carat,color,clarity,cut,laboratory,growth_method,availability,featured,image_path'
+    ).eq('active', true).then(function (result) {
+      if (result.error || !result.data) return;
+      DATA = result.data.map(storefrontRow);
+      state.page = 1;
+      apply(false);
+    });
+  }
 })();
