@@ -1,8 +1,8 @@
 /* ============================================================
    NEW GROWN DIAMOND — DIAMOND INVENTORY CONTROLLER
    ------------------------------------------------------------
-   Vanilla-JS inventory over the static demo dataset in
-   diamonds-data.js. Search, filters, sorting, grid/table views,
+   Vanilla-JS inventory over the public Supabase dataset. Search,
+   filters, sorting, grid/table views,
    pagination and the details modal all run client-side.
 
    Supabase-ready: loadDiamonds() is the single data source —
@@ -27,12 +27,7 @@
   }
 
   /* ---------- data source ---------- */
-  function loadDiamonds() {
-    /* Future: return supabase.from('diamonds').select('*') … */
-    return window.NGD_DEMO_DIAMONDS || [];
-  }
-
-  var DATA = loadDiamonds();
+  var DATA = [];
   var PAGE_SIZE = 9;
 
   var FILTER_GROUPS = [
@@ -164,7 +159,7 @@
   function rowHtml(d) {
     return (
       '<tr data-diamond-id="' + d.id + '">' +
-      '<td class="ngd-stock-cell">' + d.id + '</td>' +
+      '<td class="ngd-stock-cell">' + (d.stock || d.id) + '</td>' +
       '<td>' + d.shape + '</td>' +
       '<td>' + d.carat.toFixed(2) + '</td>' +
       '<td>' + d.colour + '</td>' +
@@ -334,5 +329,16 @@
     }
   }
 
-  apply(false);
+  el.count.textContent = 'Loading diamonds…';
+  el.grid.setAttribute('aria-busy', 'true');
+  window.NGDPublicProducts.diamonds().then(function (rows) {
+    DATA = rows;
+    el.grid.removeAttribute('aria-busy');
+    apply(false);
+  }).catch(function () {
+    el.grid.classList.add('d-none');
+    el.empty.classList.remove('d-none');
+    el.count.textContent = 'Diamonds could not be loaded';
+    el.empty.querySelector('p').textContent = 'We could not reach the collection. Please check your connection and try again.';
+  });
 })();

@@ -10,6 +10,7 @@
   'use strict';
 
   function artFor(d) {
+    if (d.imageUrl) return '<img src="' + d.imageUrl + '" alt="' + d.shape + ' diamond" loading="lazy">';
     var art = window.NGD_GEM_ART || {};
     return art[d.shape.toLowerCase()] || art.round || '';
   }
@@ -24,6 +25,9 @@
   }
 
   function cardHtml(d) {
+    var price = d.priceVisible && d.price != null
+      ? window.NGDPublicProducts.money(d.price, d.currency)
+      : 'Price on Request';
     return (
       '<div class="col-12 col-md-6 col-xl-4">' +
       '<article class="ngd-card ngd-card-dark ngd-card-3d ngd-diamond-card h-100" data-ngd-tilt data-diamond-id="' + d.id + '">' +
@@ -34,8 +38,9 @@
       '<span class="ngd-diamond-carat">' + d.carat.toFixed(2) + ' ct</span>' +
       '</div>' +
       '<div class="d-flex justify-content-between align-items-center mt-1">' +
-      '<span class="ngd-stock-no">' + d.id + '</span>' + availBadge(d) +
+      '<span class="ngd-stock-no">' + (d.stock || d.id) + '</span>' + availBadge(d) +
       '</div>' +
+      '<p class="ngd-jewel-cat mt-2 mb-0">' + price + '</p>' +
       '<dl class="ngd-diamond-specs">' +
       '<div><dt>Shape</dt><dd>' + d.shape + '</dd></div>' +
       '<div><dt>Carat</dt><dd>' + d.carat.toFixed(2) + '</dd></div>' +

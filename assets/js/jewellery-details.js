@@ -16,28 +16,43 @@
   var product = document.getElementById('jd-product');
   if (!product) return; // jewellery details page only
 
-  /* ---------- data ---------- */
-  function findPiece(id) {
-    /* Future: supabase.from('jewellery').select('*').eq('id', id).single() */
-    var data = window.NGD_DEMO_JEWELLERY || [];
-    for (var i = 0; i < data.length; i++) {
-      if (data[i].id === id) return data[i];
+  /* ---------- public Supabase data ---------- */
+  async function init() {
+    product.setAttribute('aria-busy', 'true');
+    var statusPanel = document.getElementById('jd-notfound');
+    statusPanel.classList.remove('d-none');
+    statusPanel.querySelector('.ngd-title').textContent = 'Loading jewellery…';
+    statusPanel.querySelector('.ngd-text-muted').textContent = 'Retrieving the latest product information.';
+    statusPanel.querySelector('a').classList.add('d-none');
+    var requestedId = new URLSearchParams(window.location.search).get('id');
+    var piece = null;
+    try {
+      if (requestedId) {
+        var rows = await window.NGDPublicProducts.jewellery(requestedId);
+        piece = rows[0] || null;
+      }
+    } catch (error) {
+      showUnavailable('We could not load this piece. Please check your connection and try again.');
+      return;
     }
-    return null;
-  }
+    product.removeAttribute('aria-busy');
+    if (!piece) {
+      showUnavailable('This piece is not available. It may have been retired from the collection.');
+      return;
+    }
+    statusPanel.classList.add('d-none');
 
-  var params = new URLSearchParams(window.location.search);
-  var requestedId = params.get('id');
-  var piece = requestedId ? findPiece(requestedId) : (window.NGD_DEMO_JEWELLERY || [])[0];
-
-  if (!piece) {
-    product.classList.add('d-none');
-    var stickyBar = document.getElementById('jd-sticky');
-    if (stickyBar) stickyBar.classList.add('d-none');
-    document.getElementById('jd-notfound').classList.remove('d-none');
-    document.title = 'Piece not found — New Grown Diamond';
-    return;
-  }
+    function showUnavailable(message) {
+      product.classList.add('d-none');
+      var sticky = document.getElementById('jd-sticky');
+      if (sticky) sticky.classList.add('d-none');
+      var panel = document.getElementById('jd-notfound');
+      panel.classList.remove('d-none');
+      panel.querySelector('.ngd-title').textContent = 'Product not available';
+      panel.querySelector('.ngd-text-muted').textContent = message;
+      panel.querySelector('a').classList.remove('d-none');
+      document.title = 'Product not available — New Grown Diamond';
+    }
 
   var shared = window.NGDJewelCard;
 
@@ -77,7 +92,10 @@
     '<path d="M21 12a9 9 0 1 1-3-6.7"/><polyline points="21 3 21 8 16 8"/>' +
     '<ellipse cx="12" cy="12" rx="4" ry="6.5" opacity="0.55"/></svg>';
 
-  var VIEWS = [
+  var VIEWS = piece.images.length ? piece.images.map(function (img, index) {
+    return { key: 'image-' + index, label: img.alt_text || piece.name + ' image ' + (index + 1),
+      svg: '<img src="' + img.image_url + '" alt="' + (img.alt_text || piece.name) + '">' };
+  }) : [
     { key: 'front', label: 'Front view', svg: baseArt },
     { key: 'detail', label: 'Setting detail', svg: detailArt() },
     { key: 'profile', label: 'Alternate angle', svg: profileArt() },
@@ -88,7 +106,7 @@
   var stageInner = document.getElementById('jd-stage-inner');
   var thumbs = document.getElementById('jd-thumbs');
   var zoomHint = document.getElementById('jd-zoomhint');
-  var activeView = 'front';
+  var activeView = VIEWS[0].key;
 
   function renderStage() {
     var view = VIEWS.filter(function (v) { return v.key === activeView; })[0];
@@ -168,6 +186,9 @@
     (piece.weightCt !== null
       ? '<span class="ngd-weight-chip">' + piece.weightCt.toFixed(2) + ' ct diamonds</span>'
       : '');
+  document.getElementById('jd-chips').insertAdjacentHTML('afterend',
+    '<p class="ngd-title mb-3">' + (piece.priceVisible && piece.price != null
+      ? window.NGDPublicProducts.money(piece.price, piece.currency) : 'Price on Request') + '</p>');
   document.getElementById('jd-short').textContent = piece.description;
   document.getElementById('jd-fulldesc').textContent = piece.fullDesc;
 
@@ -270,7 +291,7 @@
   }).join('');
 
   /* ---------- similar pieces ---------- */
-  var pool = (window.NGD_DEMO_JEWELLERY || []).filter(function (p) { return p.id !== piece.id; });
+  var pool = []; // Similar products are intentionally not fetched on this detail request.
   var sameCat = pool.filter(function (p) { return p.category === piece.category; });
   var others = pool.filter(function (p) { return p.category !== piece.category; });
   var similar = sameCat.concat(others).slice(0, 3);
@@ -280,4 +301,7 @@
 
   renderStage();
   renderFav();
+  }
+
+  init();
 })();

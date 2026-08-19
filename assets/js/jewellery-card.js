@@ -10,6 +10,7 @@
   'use strict';
 
   function artFor(p) {
+    if (p.imageUrl) return '<img src="' + p.imageUrl + '" alt="' + p.name + '" loading="lazy">';
     var art = window.NGD_JEWEL_ART || {};
     return art[p.category.toLowerCase()] || '';
   }
@@ -41,6 +42,7 @@
       '<div class="d-flex align-items-center gap-2 flex-wrap mb-3">' +
       availBadge(p) + weight +
       '</div>' +
+      '<p class="ngd-jewel-cat">' + (p.priceVisible && p.price != null ? window.NGDPublicProducts.money(p.price, p.currency) : 'Price on Request') + '</p>' +
       '<a class="ngd-btn ngd-btn-outline ngd-btn-sm ngd-btn-block" href="' + detailsUrl(p) + '">View Details</a>' +
       '</div></article></div>'
     );

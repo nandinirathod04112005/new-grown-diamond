@@ -16,29 +16,44 @@
   var product = document.getElementById('dd-product');
   if (!product) return; // details page only
 
-  /* ---------- data ---------- */
-  function findStone(id) {
-    /* Future: supabase.from('diamonds').select('*').eq('id', id).single() */
-    var data = window.NGD_DEMO_DIAMONDS || [];
-    var mapped = (window.NGD_LEGACY_IDS || {})[id] || id;
-    for (var i = 0; i < data.length; i++) {
-      if (data[i].id === mapped) return data[i];
+  /* ---------- public Supabase data ---------- */
+  async function init() {
+    product.setAttribute('aria-busy', 'true');
+    var statusPanel = document.getElementById('dd-notfound');
+    statusPanel.classList.remove('d-none');
+    statusPanel.querySelector('.ngd-title').textContent = 'Loading diamond…';
+    statusPanel.querySelector('.ngd-text-muted').textContent = 'Retrieving the latest specifications.';
+    statusPanel.querySelector('a').classList.add('d-none');
+    var params = new URLSearchParams(window.location.search);
+    var requestedId = params.get('id');
+    var stone = null;
+    try {
+      if (requestedId) {
+        var rows = await window.NGDPublicProducts.diamonds(requestedId);
+        stone = rows[0] || null;
+      }
+    } catch (error) {
+      showUnavailable('We could not load this diamond. Please check your connection and try again.');
+      return;
     }
-    return null;
-  }
+    product.removeAttribute('aria-busy');
+    if (!stone) {
+      showUnavailable('This diamond is not available. It may have been sold or removed from the collection.');
+      return;
+    }
+    statusPanel.classList.add('d-none');
 
-  var params = new URLSearchParams(window.location.search);
-  var requestedId = params.get('id');
-  var stone = requestedId ? findStone(requestedId) : (window.NGD_DEMO_DIAMONDS || [])[0];
-
-  if (!stone) {
-    product.classList.add('d-none');
-    var sticky = document.getElementById('dd-sticky');
-    if (sticky) sticky.classList.add('d-none');
-    document.getElementById('dd-notfound').classList.remove('d-none');
-    document.title = 'Stone not found — New Grown Diamond';
-    return;
-  }
+    function showUnavailable(message) {
+      product.classList.add('d-none');
+      var sticky = document.getElementById('dd-sticky');
+      if (sticky) sticky.classList.add('d-none');
+      var panel = document.getElementById('dd-notfound');
+      panel.classList.remove('d-none');
+      panel.querySelector('.ngd-title').textContent = 'Diamond not available';
+      panel.querySelector('.ngd-text-muted').textContent = message;
+      panel.querySelector('a').classList.remove('d-none');
+      document.title = 'Diamond not available — New Grown Diamond';
+    }
 
   var shared = window.NGDDiamondCard;
 
@@ -152,12 +167,15 @@
     shared.availBadge(stone) +
     '<span class="ngd-badge">' + stone.lab + ' · ' + stone.report + '</span>' +
     '<span class="ngd-badge">' + stone.growth + ' grown</span>';
+  document.getElementById('dd-chips').insertAdjacentHTML('afterend',
+    '<p class="ngd-title mb-3">' + (stone.priceVisible && stone.price != null
+      ? window.NGDPublicProducts.money(stone.price, stone.currency) : 'Price on Request') + '</p>');
   document.getElementById('dd-sub').textContent =
     stone.colour + ' colour · ' + stone.clarity + ' clarity · ' + stone.cut +
     ' cut — grown, cut and certified as a ' + stone.growth + ' lab diamond.';
 
   var SPEC_FIELDS = [
-    ['Stock Number', stone.id],
+    ['Stock Number', stone.stock || stone.id],
     ['Shape', stone.shape],
     ['Carat', stone.carat.toFixed(2)],
     ['Colour', stone.colour],
@@ -227,7 +245,7 @@
       ['Ratio', stone.ratio.toFixed(2)]
     ] },
     { title: 'Origin & Status', rows: [
-      ['Stock Number', stone.id], ['Growth Method', stone.growth],
+      ['Stock Number', stone.stock || stone.id], ['Growth Method', stone.growth],
       ['Laboratory', stone.lab], ['Report Number', stone.report],
       ['Availability', stone.availability]
     ] }
@@ -246,7 +264,7 @@
   }).join('');
 
   /* ---------- similar stones ---------- */
-  var pool = (window.NGD_DEMO_DIAMONDS || []).filter(function (d) { return d.id !== stone.id; });
+  var pool = []; // Similar products are intentionally not fetched on this detail request.
   var sameShape = pool.filter(function (d) { return d.shape === stone.shape; });
   var others = pool
     .filter(function (d) { return d.shape !== stone.shape; })
@@ -260,4 +278,7 @@
 
   renderStage();
   renderFav();
+  }
+
+  init();
 })();

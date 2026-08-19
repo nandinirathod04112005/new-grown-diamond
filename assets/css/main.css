@@ -3197,3 +3197,14 @@ a.ngd-chip {
   .ngd-btn-block-sm { width: 100%; }
   .ngd-card { padding: 1.25rem; }
 }
+
+/* Live storefront photography preserves the established gallery proportions. */
+.ngd-diamond-media img,
+.ngd-jewel-media img,
+.ngd-detail-stage-inner img,
+.ngd-jd-stage-inner img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}

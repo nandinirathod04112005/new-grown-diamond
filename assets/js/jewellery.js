@@ -1,8 +1,8 @@
 /* ============================================================
    NEW GROWN DIAMOND — JEWELLERY LISTING CONTROLLER
    ------------------------------------------------------------
-   Vanilla-JS listing over the static demo dataset in
-   jewellery-data.js: search, category chips, sorting and
+   Vanilla-JS listing over the public Supabase dataset: search,
+   category chips, sorting and
    pagination all run client-side.
 
    Supabase-ready: loadJewellery() is the single data seam —
@@ -16,12 +16,7 @@
   if (!grid) return; // listing page only
 
   /* ---------- data source ---------- */
-  function loadJewellery() {
-    /* Future: return supabase.from('jewellery').select('*') … */
-    return window.NGD_DEMO_JEWELLERY || [];
-  }
-
-  var DATA = loadJewellery();
+  var DATA = [];
   var PAGE_SIZE = 8;
   var CATEGORIES = ['Rings', 'Earrings', 'Pendants', 'Necklaces', 'Bracelets', 'Bangles'];
 
@@ -191,5 +186,16 @@
     if (match) state.category = match;
   }
 
-  apply();
+  el.count.textContent = 'Loading jewellery…';
+  el.grid.setAttribute('aria-busy', 'true');
+  window.NGDPublicProducts.jewellery().then(function (rows) {
+    DATA = rows;
+    el.grid.removeAttribute('aria-busy');
+    apply();
+  }).catch(function () {
+    el.grid.classList.add('d-none');
+    el.empty.classList.remove('d-none');
+    el.count.textContent = 'Jewellery could not be loaded';
+    el.empty.querySelector('p').textContent = 'We could not reach the collection. Please check your connection and try again.';
+  });
 })();
