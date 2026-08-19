@@ -2,6 +2,7 @@
 (function () {
   'use strict';
   var recoverySession = false;
+  var recoveryUserId = '';
   var submitted = false;
   function $(id) { return document.getElementById(id); }
 
@@ -18,8 +19,16 @@
     $('ngd-reset-form').hidden = true;
     $('reset-invalid').hidden = false;
   }
-  function showForm() {
+  function sessionIsUsable(session) {
+    if (!session || !session.user || !session.user.id || !session.access_token) return false;
+    /* Supabase timestamps are seconds since epoch. Leave a small margin so a
+       token that expires during the update cannot enable the form. */
+    return !session.expires_at || session.expires_at > Math.floor(Date.now() / 1000) + 5;
+  }
+  function showForm(session) {
+    if (!sessionIsUsable(session)) { showInvalid(); return; }
     recoverySession = true;
+    recoveryUserId = session.user.id;
     $('reset-checking').hidden = true;
     $('reset-invalid').hidden = true;
     $('ngd-reset-form').hidden = false;
@@ -57,11 +66,21 @@
     var form = $('ngd-reset-form');
     if (!recoverySession) { showInvalid(); return; }
     if (!form.checkValidity()) { form.classList.add('was-validated'); return; }
-    submitted = true;
     var button = $('reset-submit');
     button.disabled = true;
     button.textContent = 'Updating…';
     try {
+      /* Re-read the SDK-managed session immediately before changing the
+         password. The PASSWORD_RECOVERY event is still required, so an
+         unrelated signed-in session can never unlock this page. */
+      var current = await window.ngdSupabase.auth.getSession();
+      var session = current.data && current.data.session;
+      if (current.error || !sessionIsUsable(session) || session.user.id !== recoveryUserId) {
+        recoverySession = false;
+        showInvalid();
+        return;
+      }
+      submitted = true;
       var result = await window.ngdSupabase.auth.updateUser({ password: $('reset-password').value });
       if (result.error) {
         recoverySession = false;
@@ -94,7 +113,7 @@
     var listener = window.ngdSupabase.auth.onAuthStateChange(function (event, session) {
       if (event === 'PASSWORD_RECOVERY' && session) {
         settled = true;
-        showForm();
+        showForm(session);
       } else if (event === 'SIGNED_OUT' && !submitted && !recoverySession) {
         showInvalid();
       }

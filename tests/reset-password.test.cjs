@@ -12,9 +12,10 @@ async function scenario(name, fn) {
     await context.route('**/assets/js/supabase-client.js', (route) => route.fulfill({
       contentType: 'application/javascript',
       body: `window.NGD_SITE_ROOT=new URL('./',location.href).href;
-        window.__updates=[];
+        window.__updates=[]; window.__recoverySession=null;
         window.ngdSupabase={auth:{
-          onAuthStateChange:function(cb){setTimeout(function(){if(new URLSearchParams(location.search).has('valid'))cb('PASSWORD_RECOVERY',{user:{id:'user-1'}});},20);return {data:{subscription:{unsubscribe:function(){}}}}},
+          onAuthStateChange:function(cb){setTimeout(function(){if(new URLSearchParams(location.search).has('valid')){window.__recoverySession={user:{id:'user-1'},access_token:'recovery-token',expires_at:Math.floor(Date.now()/1000)+3600};cb('PASSWORD_RECOVERY',window.__recoverySession);}},20);return {data:{subscription:{unsubscribe:function(){}}}}},
+          getSession:async function(){return {data:{session:window.__recoverySession},error:null}},
           updateUser:async function(payload){window.__updates.push(payload);return {data:{user:{id:'user-1'}},error:null}},
           signOut:async function(){return {error:null}}
         }};`,
@@ -53,6 +54,16 @@ async function scenario(name, fn) {
     expect(await page.evaluate(() => window.__updates[0].password === 'NewSecure#123'), 'password passed directly to updateUser');
     expect(await page.isHidden('#ngd-reset-form'), 'form hidden following update');
     expect(/updated/i.test(await page.textContent('#reset-alert')), 'success is shown');
+  });
+  await scenario('expired recovery session cannot update a password', async (page) => {
+    await page.goto(SITE + '/reset-password.html?valid=1');
+    await page.waitForSelector('#ngd-reset-form:not([hidden])');
+    await page.fill('#reset-password', 'NewSecure#123');
+    await page.fill('#reset-confirm', 'NewSecure#123');
+    await page.evaluate(() => { window.__recoverySession.expires_at = Math.floor(Date.now() / 1000) - 1; });
+    await page.click('#reset-submit');
+    await page.waitForSelector('#reset-invalid:not([hidden])');
+    expect((await page.evaluate(() => window.__updates.length)) === 0, 'expired session never calls updateUser');
   });
   await browser.close(); started.server.close();
   const failed = results.filter((result) => !result.ok).length;
