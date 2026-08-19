@@ -1,5 +1,5 @@
 /* ============================================================
-   NEW GROWN DIAMOND — ADMIN ADD / EDIT DIAMOND FORM (STEP 5)
+   NEW GROWN DIAMOND — ADMIN ADD / EDIT DIAMOND FORM (STEP 4)
    ------------------------------------------------------------
    One controller powers both pages, selected by
    <body data-diamond-form="add|edit">. Guarded by requireAdmin().
@@ -14,15 +14,15 @@
    success redirects back to the inventory, which re-reads the
    table so the new stone appears in the real list.
 
-   EDIT loads and updates a single row by its immutable public_id.
-   The image picker remains preview-only; image upload is outside
-   this step.
+   EDIT stays an honest demo until the Edit step: it prefills
+   from the demo catalogue and says plainly that updating is not
+   wired yet. The image picker previews locally only — Storage
+   uploads arrive in a later phase.
    ============================================================ */
 (function () {
   'use strict';
 
-  var REQUIRED = ['stock_number', 'shape', 'carat', 'color', 'clarity', 'cut',
-    'laboratory', 'availability'];
+  var REQUIRED = ['stock_number', 'shape', 'carat'];
 
   var IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
   var IMAGE_MAX_BYTES = 10 * 1024 * 1024;
@@ -30,7 +30,7 @@
   var state = {
     mode: 'add',
     userId: null,     /* the signed-in admin (created_by) */
-    record: null,     /* edit: the verified Supabase row */
+    record: null,     /* edit: the demo record being edited */
     imageFile: null,  /* File selected for preview (never uploaded) */
     dirty: false,
     saving: false
@@ -42,6 +42,35 @@
 
   function field(name) {
     return document.querySelector('[name="' + name + '"]');
+  }
+
+  /* ---------------- demo record (edit mode only) ---------------- */
+
+  function adminAugment(d, i) {
+    return Object.assign({}, d, {
+      featured: i % 5 === 0 || i % 7 === 0,
+      active: i % 9 !== 4
+    });
+  }
+
+  function demoRecord(id) {
+    var list = window.NGD_DEMO_DIAMONDS || [];
+    for (var i = 0; i < list.length; i++) {
+      if (list[i].id === id) return adminAugment(list[i], i);
+    }
+    return null;
+  }
+
+  function demoCommercials(d) {
+    var base = { D: 1350, E: 1250, F: 1150, G: 1050, H: 950 }[d.colour] || 900;
+    var perCarat = Math.round(base + d.carat * 220);
+    return {
+      price_per_carat: perCarat,
+      total_price: Math.round(perCarat * d.carat),
+      currency: 'USD',
+      certificate_url: 'https://example.com/reports/' + d.report,
+      internal_notes: 'Demo record — sample note for layout preview.'
+    };
   }
 
   /* ---------------- alerts + dirty tracking ---------------- */
@@ -160,12 +189,8 @@
       else if (el.type === 'number') payload[el.name] = el.value === '' ? null : parseFloat(el.value);
       else payload[el.name] = el.value.trim() === '' ? null : el.value.trim();
     });
-    if (state.mode === 'add') {
-      payload.public_id = generatePublicId();
-      payload.created_by = state.userId;
-    } else {
-      payload.updated_at = new Date().toISOString();
-    }
+    payload.public_id = generatePublicId();
+    payload.created_by = state.userId;
     return payload;
   }
 
@@ -177,52 +202,22 @@
   }
 
   function mapDbError(error) {
-    console.error('[NGD Admin Diamond] save failed:', error);
+    console.error('[NGD Add Diamond] insert failed:', error);
     if (!error) return 'Saving failed. Please try again.';
     var msg = error.message || '';
     if (isDuplicateError(error)) {
       return 'That stock number already exists in the inventory — stock numbers must be unique.';
     }
     if (error.code === '42501' || /row-level security|permission denied/i.test(msg)) {
-      return 'Your account is not allowed to change diamonds. Only an active admin can do that.';
+      return 'Your account is not allowed to add diamonds — only an active admin can (enforced by Row Level Security).';
     }
     if (error.code === 'PGRST204' || error.code === '42703') {
-      return 'The inventory could not accept this change. Please contact an administrator.';
+      return 'The diamonds table does not match the form (' + msg + '). Check the column names in Supabase.';
     }
     if (/failed to fetch|networkerror|fetch failed|load failed/i.test(msg) || error.code === '') {
       return 'Could not reach Supabase — check your connection and try again. Nothing was saved.';
     }
-    return 'The diamond could not be saved. Please review the form and try again.';
-  }
-
-  async function updateDiamond(payload, form) {
-    var sb = window.ngdSupabase;
-    var duplicate = await sb.from('diamonds').select('id, public_id')
-      .eq('stock_number', payload.stock_number).limit(2);
-    if (duplicate.error) throw duplicate.error;
-    if ((duplicate.data || []).some(function (row) { return row.id !== state.record.id; })) {
-      setInvalid(field('stock_number'), true);
-      field('stock_number').focus();
-      showAlert('danger', 'That stock number already exists in the inventory — stock numbers must be unique.');
-      return false;
-    }
-
-    form.setAttribute('data-ngd-payload', JSON.stringify(payload));
-    var res = await sb.from('diamonds').update(payload)
-      .eq('public_id', state.record.public_id).eq('id', state.record.id).select('id');
-    if (res.error) {
-      if (isDuplicateError(res.error)) setInvalid(field('stock_number'), true);
-      showAlert('danger', mapDbError(res.error));
-      return false;
-    }
-    if (!res.data || res.data.length !== 1) {
-      showAlert('danger', 'This diamond no longer exists or could not be verified. Nothing was changed.');
-      return false;
-    }
-    state.record = Object.assign({}, state.record, payload);
-    clearDirty();
-    showAlert('success', payload.stock_number + ' was updated successfully.');
-    return true;
+    return 'Supabase rejected the save: ' + msg;
   }
 
   /* ---------------- the live save (add mode) ---------------- */
@@ -343,53 +338,54 @@
     });
   }
 
-  /* ---------------- edit-mode live load + prefill ---------------- */
+  /* ---------------- edit-mode prefill (demo until the Edit step) ---------------- */
 
   function prefill(record) {
-    var values = record;
+    var extras = demoCommercials(record);
+    var values = {
+      stock_number: record.id,
+      report_number: record.report,
+      shape: record.shape,
+      carat: record.carat,
+      color: record.colour,
+      clarity: record.clarity,
+      cut: record.cut,
+      polish: record.polish,
+      symmetry: record.symmetry,
+      fluorescence: record.fluorescence,
+      laboratory: record.lab,
+      certificate_number: record.report,
+      certificate_url: extras.certificate_url,
+      measurements: record.measurements,
+      depth_percentage: record.depthPct,
+      table_percentage: record.tablePct,
+      ratio: record.ratio,
+      growth_method: record.growth,
+      location: record.growth === 'CVD' ? 'Surat atelier' : 'Mumbai vault',
+      availability: record.availability,
+      price_per_carat: extras.price_per_carat,
+      total_price: extras.total_price,
+      currency: extras.currency,
+      internal_notes: extras.internal_notes
+    };
     Object.keys(values).forEach(function (name) {
       var el = field(name);
       if (el && values[name] != null) el.value = values[name];
     });
     field('featured').checked = !!record.featured;
     field('active').checked = !!record.active;
-    field('price_visible').checked = !!record.price_visible;
+    field('price_visible').checked = false;
 
     var artBox = $('dia-current-art');
     if (artBox) {
-      artBox.innerHTML = (window.NGD_GEM_ART || {})[String(record.shape).toLowerCase()] || '';
+      artBox.innerHTML = (window.NGD_GEM_ART || {})[record.shape.toLowerCase()] || '';
     }
   }
 
   function showNotFound(id) {
     $('dia-form-wrap').hidden = true;
     $('dia-notfound').hidden = false;
-    $('dia-notfound-id').textContent = id || '(missing id)';
-  }
-
-  async function loadEditRecord(publicId) {
-    var res = await window.ngdSupabase.from('diamonds').select('*')
-      .eq('public_id', publicId).limit(2);
-    if (res.error) throw res.error;
-    return res.data && res.data.length === 1 ? res.data[0] : null;
-  }
-
-  async function archiveDiamond() {
-    if (!window.confirm('Archive ' + state.record.stock_number + '? It will be deactivated and removed from the normal inventory list.')) return;
-    setSaving(true, 'Update Diamond');
-    try {
-      var res = await window.ngdSupabase.from('diamonds').update({
-        archived_at: new Date().toISOString(), active: false, updated_at: new Date().toISOString()
-      }).eq('public_id', state.record.public_id).eq('id', state.record.id).select('id');
-      if (res.error) throw res.error;
-      if (!res.data || res.data.length !== 1) throw new Error('record verification failed');
-      clearDirty();
-      showAlert('success', state.record.stock_number + ' was archived. Returning to the inventory…');
-      window.location.replace('diamonds.html?archived=' + encodeURIComponent(state.record.stock_number));
-    } catch (err) {
-      showAlert('danger', mapDbError(err));
-      setSaving(false, 'Update Diamond');
-    }
+    $('dia-notfound-id').textContent = id || '(no id)';
   }
 
   /* ---------------- boot ---------------- */
@@ -438,10 +434,12 @@
           return;
         }
         var payload = buildPayload(form);
-        setSaving(true, submitLabel);
-        updateDiamond(payload, form).catch(function (err) {
-          showAlert('danger', mapDbError(err));
-        }).finally(function () { setSaving(false, submitLabel); });
+        form.setAttribute('data-ngd-payload', JSON.stringify(payload));
+        clearDirty();
+        showAlert('info',
+          (payload.stock_number || 'The diamond') + ' is valid and its update ' +
+          'payload is ready — but updating is not wired yet: it arrives with ' +
+          'the Edit step, so nothing in the database was changed.');
         return;
       }
 
@@ -457,7 +455,12 @@
 
     var archive = $('dia-archive');
     if (archive) {
-      archive.addEventListener('click', archiveDiamond);
+      archive.addEventListener('click', function () {
+        var id = state.record ? state.record.id : 'This diamond';
+        showAlert('info',
+          id + ' — Archive is UI-only for now: nothing was archived or ' +
+          'deleted anywhere. The real action arrives with the Edit step.');
+      });
     }
   }
 
@@ -472,23 +475,12 @@
 
     if (state.mode === 'edit') {
       var id = new URLSearchParams(window.location.search).get('id');
-      if (!id || !/^DIA-[A-Z0-9]{8}$/i.test(id)) {
-        showNotFound(id);
-        return;
-      }
-      try {
-        state.record = await loadEditRecord(id);
-      } catch (err) {
-        console.error('[NGD Admin Diamond] load failed:', err);
-        showAlert('danger', 'The diamond could not be loaded. Check your connection and try again.');
-        $('dia-form-wrap').hidden = true;
-        return;
-      }
+      state.record = id ? demoRecord(id) : null;
       if (!state.record) {
         showNotFound(id);
         return;
       }
-      $('dia-editing-id').textContent = state.record.stock_number;
+      $('dia-editing-id').textContent = state.record.id;
       prefill(state.record);
     }
 
