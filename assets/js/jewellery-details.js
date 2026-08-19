@@ -204,6 +204,10 @@
     [document.getElementById('jd-quote'), document.getElementById('jd-sticky-quote')],
     { type: 'jewellery', reference: piece.id, title: piece.name }
   );
+  window.NGDBindHoldButtons(
+    [document.getElementById('jd-hold'), document.getElementById('jd-sticky-hold')],
+    { type: 'jewellery', reference: piece.id, title: piece.name }
+  );
 
   var favButtons = [document.getElementById('jd-fav'), document.getElementById('jd-sticky-fav')];
   var favActive = false;

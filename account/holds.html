@@ -95,32 +95,14 @@
     <!-- ══════════ MAIN ══════════ -->
     <main class="ngd-dash-main">
 
-      <!-- Title + UI-state preview -->
       <section class="d-flex flex-wrap align-items-end justify-content-between gap-3" data-dash-section="req-head">
         <div>
           <span class="ngd-eyebrow">Customer account</span>
           <h1 class="ngd-display-2 mt-2 mb-1">Holds</h1>
           <p class="ngd-text-muted small mb-0">Stones and pieces set aside while you decide.</p>
         </div>
-        <!-- Demo-only preview control for the loading/empty/error designs.
-             Nothing is loaded from anywhere in any of these states. -->
-        <div class="text-lg-end">
-          <span class="ngd-dash-metric-note d-block mb-1">UI preview (demo only)</span>
-          <div class="ngd-dash-state-switch" id="req-state-switch" role="group" aria-label="Preview a UI state">
-            <button type="button" class="is-on" data-req-state="demo">Demo rows</button>
-            <button type="button" data-req-state="loading">Loading</button>
-            <button type="button" data-req-state="empty">Empty</button>
-            <button type="button" data-req-state="error">Error</button>
-          </div>
-        </div>
+        <div id="req-state-switch" hidden><button type="button" data-req-state="demo">Live</button></div>
       </section>
-
-      <!-- Demo notice; the future Supabase phase replaces loadRequests()
-           in assets/js/account-requests.js with real per-user selects. -->
-      <aside class="ngd-edu-note mt-4" id="req-demo-note">
-        <span class="ngd-edu-bullet" aria-hidden="true">&#9670;</span>
-        <p class="mb-0"><strong>Demo preview.</strong> These holds are sample records showing how your holds will appear once the account backend arrives. Nothing here was submitted anywhere and nothing is stored.</p>
-      </aside>
 
       <!-- Toolbar: search, status filter, date range -->
       <section class="mt-4 ngd-form" data-dash-section="req-toolbar">
@@ -178,7 +160,7 @@
         <div class="ngd-dash-empty">
           <span class="ngd-icon-tile ngd-depth-1 mb-3">◔</span>
           <h2 class="ngd-title fs-6">No holds yet</h2>
-          <p class="ngd-text-muted small mb-3">Ask us to hold a stone while you decide — holds you request will be tracked here once your account backend arrives.</p>
+          <p class="ngd-text-muted small mb-3">Ask us to hold a stone or piece while you decide.</p>
           <a class="ngd-btn ngd-btn-outline ngd-btn-sm" href="../diamonds.html">Browse diamonds</a>
         </div>
       </div>
