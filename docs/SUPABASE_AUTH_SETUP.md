@@ -174,8 +174,11 @@ back to login.
 1. Apply `supabase/migrations/20260818000000_admin_signup_attempts.sql`.
    Its table has RLS enabled and no browser policies; it supports a five-failed-
    attempts-per-15-minutes limit keyed by a hash of client IP and email.
-2. Store the shared code in the hosted function environment:
-   `supabase secrets set ADMIN_SIGNUP_CODE=123456`.
+2. Store the shared code in the hosted function environment without placing it
+   in shell history or documentation:
+   `read -rsp "Admin signup code: " ADMIN_SIGNUP_CODE && echo`, then
+   `supabase secrets set ADMIN_SIGNUP_CODE="$ADMIN_SIGNUP_CODE"` and
+   `unset ADMIN_SIGNUP_CODE`.
 3. Deploy with `supabase functions deploy register-admin`.
 
 Do not put the code in HTML, frontend JavaScript, configuration, or a committed
