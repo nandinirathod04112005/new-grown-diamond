@@ -9,7 +9,9 @@
    stamped, redirect + arrival toast, survives refresh), the
    case-insensitive duplicate-SKU pre-check, the 23505 race and
    RLS denial mapped to safe messages, Save & Add Another and the
-   preview-only image gallery.
+   validated image queue (type + 5 MB) that uploads to the
+   jewellery-images bucket + public.jewellery_images right after
+   the insert (unique safe names, order, one primary).
 
    EDIT — loads the live record by public_id (TEST-JEW-001
    recipe), prefills every column, updates with updated_at +
@@ -17,7 +19,12 @@
    itself, surfaces RLS/vanished-record failures safely, archives
    softly (confirm → archived_at + inactive → gone from the normal
    list, never a DELETE), shows not-found for unknown/malformed
-   ids and blocks customers.
+   ids and blocks customers. The LIVE gallery recipe: upload 3 →
+   Storage files + rows + first-is-primary, re-star (exactly one
+   primary), arrow reorder writing sort_order, refresh
+   persistence, confirmed delete (row → file → promote the first
+   remaining), refused uploads surfaced safely and orphan cleanup
+   when a row insert fails.
    Run:  node tests/admin-jewellery-form-ui.test.cjs
    ============================================================ */
 'use strict';
@@ -110,7 +117,15 @@ function makeMock(opts = {}) {
   const jewellery = seedJewellery();
   const inserts = [];
   const patches = [];
+  const images = [];        /* live public.jewellery_images store */
+  const imageInserts = [];
+  const imagePatches = [];
+  const imageDeletes = [];
+  const uploads = [];       /* Storage object paths, in upload order */
+  const removals = [];
+  const events = [];
   let newSeq = 0;
+  let imgSeq = 0;
   async function handler(route) {
     const req = route.request();
     const url = new URL(req.url());
@@ -196,11 +211,74 @@ function makeMock(opts = {}) {
         archived_at: null,
         ...rec,
       });
+      if (url.searchParams.get('select')) return json(201, [{ id: 'uuid-new-' + newSeq }]);
       return route.fulfill({ status: 201, headers: CORS, body: '' });
+    }
+    if (url.pathname === '/rest/v1/jewellery_images' && method === 'GET') {
+      let rows = images.slice().sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+      const jewEq = url.searchParams.get('jewellery_id');
+      if (jewEq && jewEq.startsWith('eq.')) rows = rows.filter((i) => i.jewellery_id === jewEq.slice(3));
+      if (url.searchParams.get('is_primary') === 'eq.true') rows = rows.filter((i) => i.is_primary);
+      return json(200, rows);
+    }
+    if (url.pathname === '/rest/v1/jewellery_images' && method === 'POST') {
+      const body = JSON.parse(req.postData() || '{}');
+      const rec = Array.isArray(body) ? body[0] : body;
+      imageInserts.push(rec);
+      if (opts.failImageInsert) {
+        return json(500, { code: 'XX000', message: 'internal error' });
+      }
+      imgSeq++;
+      const row = { id: 'img-' + imgSeq, created_at: '2026-08-31T12:00:00Z', ...rec };
+      images.push(row);
+      events.push('imginsert:' + rec.image_path);
+      if (url.searchParams.get('select')) return json(201, [{ id: row.id }]);
+      return route.fulfill({ status: 201, headers: CORS, body: '' });
+    }
+    if (url.pathname === '/rest/v1/jewellery_images' && method === 'PATCH') {
+      const changes = JSON.parse(req.postData() || '{}');
+      let targets = images.slice();
+      const idEq = url.searchParams.get('id');
+      if (idEq && idEq.startsWith('eq.')) targets = targets.filter((i) => i.id === idEq.slice(3));
+      const jewEq = url.searchParams.get('jewellery_id');
+      if (jewEq && jewEq.startsWith('eq.')) targets = targets.filter((i) => i.jewellery_id === jewEq.slice(3));
+      targets.forEach((t) => Object.assign(t, changes));
+      imagePatches.push({
+        id: idEq && idEq.startsWith('eq.') ? idEq.slice(3) : null,
+        jewelleryId: jewEq && jewEq.startsWith('eq.') ? jewEq.slice(3) : null,
+        changes,
+      });
+      return json(200, targets.map((t) => ({ id: t.id })));
+    }
+    if (url.pathname === '/rest/v1/jewellery_images' && method === 'DELETE') {
+      const idEq = url.searchParams.get('id') || '';
+      const idx = images.findIndex((i) => 'eq.' + i.id === idEq);
+      if (idx === -1) return json(200, []);
+      const removed = images.splice(idx, 1)[0];
+      imageDeletes.push(removed.id);
+      events.push('imgdelete:' + removed.image_path);
+      return json(200, [{ id: removed.id }]);
+    }
+    if (url.pathname.startsWith('/storage/v1/object/public/jewellery-images/') && method === 'GET') {
+      return route.fulfill({ status: 200, contentType: 'image/png', headers: CORS, body: PNG_1PX });
+    }
+    if (url.pathname.startsWith('/storage/v1/object/jewellery-images/') && (method === 'POST' || method === 'PUT')) {
+      const p = decodeURIComponent(url.pathname.slice('/storage/v1/object/jewellery-images/'.length));
+      if (opts.failUpload) {
+        return json(403, { statusCode: '403', error: 'Unauthorized', message: 'new row violates row-level security policy' });
+      }
+      uploads.push(p);
+      events.push('upload:' + p);
+      return json(200, { Key: 'jewellery-images/' + p, path: p, id: 'obj-' + uploads.length, fullPath: 'jewellery-images/' + p });
+    }
+    if (url.pathname === '/storage/v1/object/jewellery-images' && method === 'DELETE') {
+      const delBody = JSON.parse(req.postData() || '{}');
+      (delBody.prefixes || []).forEach((p) => { removals.push(p); events.push('remove:' + p); });
+      return json(200, []);
     }
     return json(404, { message: 'mock: unhandled ' + method + ' ' + url.pathname });
   }
-  return { handler, jewellery, inserts, patches };
+  return { handler, jewellery, inserts, patches, images, imageInserts, imagePatches, imageDeletes, uploads, removals, events };
 }
 
 const FIELD_NAMES = ['sku', 'product_name', 'size', 'short_description', 'description',
@@ -435,10 +513,10 @@ async function fillMinimumValid(page, sku) {
       'each piece gets its own public_id');
   });
 
-  await scenario('image gallery stays a validated local preview — nothing uploaded on save', {}, async (page, backend) => {
+  await scenario('add: validated queue (type + 5 MB) uploads after the insert with order + primary', {}, async (page, backend) => {
     await openAdd(page);
     await page.setInputFiles('#jw-file', [
-      { name: 'a.png', mimeType: 'image/png', buffer: PNG_1PX },
+      { name: 'original photo (1).png', mimeType: 'image/png', buffer: PNG_1PX },
       { name: 'b.png', mimeType: 'image/png', buffer: PNG_1PX },
     ]);
     await page.waitForFunction(() =>
@@ -455,21 +533,31 @@ async function fillMinimumValid(page, sku) {
       'wrong type rejected inline, got: ' + state.error);
     expect(state.badge === 'Primary', 'first image is primary by default');
     await page.setInputFiles('#jw-file', {
-      name: 'huge.png', mimeType: 'image/png', buffer: Buffer.alloc(10 * 1024 * 1024 + 1, 1),
+      name: 'huge.png', mimeType: 'image/png', buffer: Buffer.alloc(5 * 1024 * 1024 + 1, 1),
     });
     state = await page.evaluate(() => ({
       error: document.getElementById('jw-image-error').textContent,
       tiles: document.querySelectorAll('#jw-gallery .ngd-img-tile').length,
     }));
-    expect(/larger than 10/i.test(state.error) && state.tiles === 2,
-      'oversize rejected inline, got: ' + state.error);
+    expect(/larger than 5/i.test(state.error) && state.tiles === 2,
+      'over-5MB rejected inline, got: ' + state.error);
+    expect(backend.uploads.length === 0, 'nothing reaches Storage before the save');
     await fillMinimumValid(page, 'JW-2004');
     await page.click('#jw-submit');
     await page.waitForURL('**/admin/jewellery.html?added=JW-2004', { timeout: 10000 });
-    const noStorage = await page.evaluate(() => true);
-    expect(noStorage && backend.inserts.length === 1 && !('images' in backend.inserts[0]) &&
+    expect(backend.inserts.length === 1 && !('images' in backend.inserts[0]) &&
       !('image_path' in backend.inserts[0]),
-      'the insert carries no image data — jewellery uploads are a later phase');
+      'the product insert itself carries no image data');
+    expect(backend.uploads.length === 2 &&
+      backend.uploads.every((p) => /^jewellery\/JEW-[A-HJ-NP-Z2-9]{8}\/[a-z0-9]{16}\.png$/.test(p)),
+      'both photos stored under unique safe names (never the original), got ' + backend.uploads.join(','));
+    expect(backend.imageInserts.length === 2 &&
+      backend.imageInserts.every((r) => r.jewellery_id === 'uuid-new-1') &&
+      backend.imageInserts[0].sort_order === 1 && backend.imageInserts[0].is_primary === true &&
+      backend.imageInserts[1].sort_order === 2 && backend.imageInserts[1].is_primary === false &&
+      backend.imageInserts[0].image_path === backend.uploads[0],
+      'jewellery_images rows carry the real row id, order and one primary, got ' +
+      JSON.stringify(backend.imageInserts));
   });
 
   await scenario('unsaved changes: dirty form warns before leaving; clean form does not', {}, async (page) => {
@@ -555,7 +643,7 @@ async function fillMinimumValid(page, sku) {
       'immutable identity columns never sent on update');
     const state = await page.evaluate(() => ({
       toast: (document.querySelector('#adm-toast .ngd-alert') || { textContent: '' }).textContent,
-      nameCell: (document.querySelector('[data-adm-row="TEST-JEW-001"] td:nth-child(2)') || { textContent: '' }).textContent.trim(),
+      nameCell: (document.querySelector('[data-adm-row="TEST-JEW-001"] td:nth-child(3)') || { textContent: '' }).textContent.trim(),
     }));
     expect(/TEST-JEW-001 was updated successfully/.test(state.toast), 'arrival toast confirms the update');
     expect(state.nameCell === 'Test Aurora Ring V2', 'list shows the new name, got ' + state.nameCell);
@@ -564,7 +652,7 @@ async function fillMinimumValid(page, sku) {
     await page.waitForFunction(() =>
       document.querySelectorAll('#adm-table-body tr').length > 0, null, { timeout: 10000 });
     const kept = await page.evaluate(() =>
-      (document.querySelector('[data-adm-row="TEST-JEW-001"] td:nth-child(2)') || { textContent: '' }).textContent.trim());
+      (document.querySelector('[data-adm-row="TEST-JEW-001"] td:nth-child(3)') || { textContent: '' }).textContent.trim());
     expect(kept === 'Test Aurora Ring V2', 'update survives a refresh');
   });
 
@@ -584,6 +672,127 @@ async function fillMinimumValid(page, sku) {
     await page.click('#jw-submit');
     await page.waitForURL('**/admin/jewellery.html?updated=JW-1006', { timeout: 10000 });
     expect(backend.patches.length === 1, 'own-SKU save goes through');
+  });
+
+  await scenario('edit gallery recipe: upload 3 → rows + primary → re-star → reorder → refresh → delete', {}, async (page, backend) => {
+    const dialogs = [];
+    await openEdit(page, 'JEW-SEED0001');
+    await page.waitForFunction(() =>
+      (document.querySelector('[name="sku"]') || {}).value === 'TEST-JEW-001', null, { timeout: 10000 });
+    page.on('dialog', (d) => { if (d.type() !== 'beforeunload') dialogs.push(d.message()); d.accept(); });
+    /* three photos upload immediately; the very first becomes primary */
+    await page.setInputFiles('#jw-file', [
+      { name: 'IMG 0001.png', mimeType: 'image/png', buffer: PNG_1PX },
+      { name: 'IMG 0002.png', mimeType: 'image/png', buffer: PNG_1PX },
+      { name: 'IMG 0003.png', mimeType: 'image/png', buffer: PNG_1PX },
+    ]);
+    await page.waitForFunction(() =>
+      document.querySelectorAll('#jw-gallery .ngd-img-tile').length === 3, null, { timeout: 10000 });
+    expect(backend.uploads.length === 3 &&
+      backend.uploads.every((p) => /^jewellery\/JEW-SEED0001\/[a-z0-9]{16}\.png$/.test(p)),
+      'three files in Storage under unique safe names (never the original), got ' + backend.uploads.join(','));
+    expect(backend.imageInserts.length === 3 &&
+      backend.imageInserts.every((r) => r.jewellery_id === 'uuid-jew-01') &&
+      backend.imageInserts.map((r) => r.sort_order).join(',') === '1,2,3' &&
+      backend.imageInserts.map((r) => r.is_primary).join(',') === 'true,false,false',
+      'three jewellery_images rows with real row id, order and one primary, got ' +
+      JSON.stringify(backend.imageInserts));
+    backend.uploads.forEach((p) => {
+      expect(backend.events.indexOf('upload:' + p) < backend.events.indexOf('imginsert:' + p),
+        'upload strictly before the row insert for ' + p);
+    });
+    let gallery = await page.evaluate(() => ({
+      firstPrimary: document.querySelector('#jw-gallery .ngd-img-tile').classList.contains('is-primary'),
+      badge: (document.querySelector('#jw-gallery .ngd-status-chip') || { textContent: '' }).textContent.trim(),
+      srcs: [...document.querySelectorAll('#jw-gallery .ngd-img-tile-frame img')].map((i) => i.getAttribute('src') || ''),
+    }));
+    expect(gallery.firstPrimary && gallery.badge === 'Primary', 'first photo is the primary');
+    expect(gallery.srcs.length === 3 && gallery.srcs[0].indexOf(backend.uploads[0]) !== -1,
+      'tiles render the real Storage photos, got ' + gallery.srcs[0]);
+    /* set the third photo as primary — the old flag clears, exactly one true */
+    await page.click('#jw-gallery .ngd-img-tile:nth-child(3) [data-img-act="primary"]');
+    await page.waitForFunction(() => {
+      const tiles = document.querySelectorAll('#jw-gallery .ngd-img-tile');
+      return tiles.length === 3 && tiles[2].classList.contains('is-primary');
+    }, null, { timeout: 8000 });
+    const clearPatch = backend.imagePatches.find((p) => p.jewelleryId === 'uuid-jew-01' && p.changes.is_primary === false);
+    const setPatch = backend.imagePatches.find((p) => p.id === 'img-3' && p.changes.is_primary === true);
+    expect(!!clearPatch && !!setPatch,
+      'primary switch clears the piece then sets one row, got ' + JSON.stringify(backend.imagePatches));
+    expect(backend.images.filter((i) => i.is_primary).length === 1 &&
+      backend.images.find((i) => i.id === 'img-3').is_primary === true,
+      'exactly ONE primary in the table');
+    /* reorder — move the (primary) third photo one step earlier */
+    await page.click('#jw-gallery .ngd-img-tile:nth-child(3) [data-img-act="left"]');
+    await page.waitForFunction((expected) => {
+      const imgs = [...document.querySelectorAll('#jw-gallery .ngd-img-tile-frame img')];
+      return imgs.length === 3 && (imgs[1].getAttribute('src') || '').indexOf(expected) !== -1;
+    }, backend.uploads[2], { timeout: 8000 });
+    expect(backend.images.find((i) => i.id === 'img-3').sort_order === 2 &&
+      backend.images.find((i) => i.id === 'img-2').sort_order === 3,
+      'sort_order renumbered in the table');
+    /* refresh — order and primary come back from the table, not page state */
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await page.waitForFunction(() =>
+      document.querySelectorAll('#jw-gallery .ngd-img-tile').length === 3, null, { timeout: 10000 });
+    gallery = await page.evaluate(() => ({
+      srcs: [...document.querySelectorAll('#jw-gallery .ngd-img-tile-frame img')].map((i) => i.getAttribute('src') || ''),
+      primaryIdx: [...document.querySelectorAll('#jw-gallery .ngd-img-tile')].findIndex((t) => t.classList.contains('is-primary')),
+    }));
+    expect(gallery.srcs[0].indexOf(backend.uploads[0]) !== -1 &&
+      gallery.srcs[1].indexOf(backend.uploads[2]) !== -1 &&
+      gallery.srcs[2].indexOf(backend.uploads[1]) !== -1,
+      'order survives a refresh (read back from sort_order)');
+    expect(gallery.primaryIdx === 1, 'primary survives a refresh, got index ' + gallery.primaryIdx);
+    /* delete the primary — confirm first, row + file removed, first remaining promoted */
+    await page.click('#jw-gallery .ngd-img-tile:nth-child(2) [data-img-act="remove"]');
+    await page.waitForFunction(() =>
+      document.querySelectorAll('#jw-gallery .ngd-img-tile').length === 2, null, { timeout: 8000 });
+    expect(dialogs.length === 1 && /Remove this image from TEST-JEW-001/.test(dialogs[0]),
+      'deletion confirmed first, got: ' + dialogs.join(' | '));
+    expect(backend.imageDeletes.length === 1 && backend.imageDeletes[0] === 'img-3',
+      'the jewellery_images row was deleted');
+    expect(backend.removals.length === 1 && backend.removals[0] === backend.uploads[2],
+      'the Storage file was deleted too');
+    expect(backend.events.indexOf('imgdelete:' + backend.uploads[2]) <
+      backend.events.indexOf('remove:' + backend.uploads[2]),
+      'the row goes first, then the Storage object — a stray file is invisible');
+    expect(backend.images.length === 2 &&
+      backend.images.find((i) => i.id === 'img-1').is_primary === true,
+      'the first remaining image was promoted to primary');
+    const promoted = await page.evaluate(() =>
+      document.querySelector('#jw-gallery .ngd-img-tile').classList.contains('is-primary'));
+    expect(promoted, 'the promoted primary shows its badge');
+  });
+
+  await scenario('edit gallery: a refused upload is surfaced safely, nothing inserted', { failUpload: true }, async (page, backend) => {
+    await openEdit(page, 'JEW-SEED0001');
+    await page.waitForFunction(() =>
+      (document.querySelector('[name="sku"]') || {}).value === 'TEST-JEW-001', null, { timeout: 10000 });
+    await page.setInputFiles('#jw-file', { name: 'x.png', mimeType: 'image/png', buffer: PNG_1PX });
+    await page.waitForFunction(() =>
+      /not allowed to upload jewellery images/i.test(document.getElementById('jw-image-error').textContent),
+      null, { timeout: 8000 });
+    expect(backend.imageInserts.length === 0 && backend.images.length === 0,
+      'no jewellery_images row without a stored file');
+    const tiles = await page.evaluate(() => document.querySelectorAll('#jw-gallery .ngd-img-tile').length);
+    expect(tiles === 0, 'gallery stays empty after the refused upload');
+  });
+
+  await scenario('edit gallery: a failed row insert removes the orphaned Storage file', { failImageInsert: true }, async (page, backend) => {
+    await openEdit(page, 'JEW-SEED0001');
+    await page.waitForFunction(() =>
+      (document.querySelector('[name="sku"]') || {}).value === 'TEST-JEW-001', null, { timeout: 10000 });
+    await page.setInputFiles('#jw-file', { name: 'y.png', mimeType: 'image/png', buffer: PNG_1PX });
+    await page.waitForFunction(() =>
+      /could not be added/i.test(document.getElementById('jw-image-error').textContent),
+      null, { timeout: 8000 });
+    expect(backend.uploads.length === 1, 'the file reached Storage first');
+    expect(backend.removals.length === 1 && backend.removals[0] === backend.uploads[0],
+      'the orphaned file was removed after the row insert failed');
+    expect(backend.images.length === 0, 'no jewellery_images row exists');
+    const tiles = await page.evaluate(() => document.querySelectorAll('#jw-gallery .ngd-img-tile').length);
+    expect(tiles === 0, 'gallery stays empty — nothing half-saved');
   });
 
   await scenario('edit: duplicate SKU of another piece rejected case-insensitively, no PATCH', {}, async (page, backend) => {

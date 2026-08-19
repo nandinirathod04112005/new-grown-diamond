@@ -149,9 +149,11 @@ tooling only** — the website itself is plain HTML/CSS/JS and has no Node backe
   aborting the add and leaving an edit's old image untouched), and
   responsive checks at 1440/390.
 - `admin-jewellery-ui.test.cjs` — 10 LIVE Admin-Jewellery-Inventory
-  scenarios (PostgREST-style network mock): the 12-column table over the
+  scenarios (PostgREST-style network mock): the 13-column table over the
   loaded `public.jewellery` rows with the archived seed excluded (even
-  from search), search/filters/weight-sort/pagination on live rows, the
+  from search) and each row's PRIMARY photo from `jewellery_images`
+  (category-art fallback for pieces without one),
+  search/filters/weight-sort/pagination on live rows, the
   live feature → deactivate (confirmed) → reactivate → archive
   (confirmed; `archived_at` + inactive, row leaves the list, never a
   DELETE) chain with every PATCH captured and `updated_at` verified, the
@@ -159,24 +161,31 @@ tooling only** — the website itself is plain HTML/CSS/JS and has no Node backe
   a re-querying Retry, the real empty state, the login guard, the
   customer block and the cards-vs-contained-table behaviour at
   390/768/1440.
-- `admin-jewellery-form-ui.test.cjs` — 18 LIVE Add/Edit-Jewellery
-  scenarios (PostgREST-style network mock): the nine sections whose 23
-  field names are the real columns (stale STEP-27 names asserted gone),
-  the sku/product_name/category required trio, number validation, the
-  live add (generated `JEW-` public_id + `created_by`, redirect, appears
-  in the list, survives refresh), the case-insensitive duplicate
+- `admin-jewellery-form-ui.test.cjs` — 21 LIVE Add/Edit-Jewellery
+  scenarios (PostgREST + Storage network mock): the nine sections whose
+  23 field names are the real columns (stale STEP-27 names asserted
+  gone), the sku/product_name/category required trio, number validation,
+  the live add (generated `JEW-` public_id + `created_by`, redirect,
+  appears in the list, survives refresh), the case-insensitive duplicate
   pre-check, the 23505 race and RLS denial mapped to safe messages,
-  Save & Add Another with distinct public_ids, the preview-only gallery
-  (type/10 MB rules, primary badge, no image data in the insert), the
-  beforeunload warning, the TEST-JEW-001 edit recipe (load by public_id,
-  every column prefilled incl. checkboxes, rename + save → verified
-  PATCH with `updated_at` and no identity columns, arrival toast, list
-  cell updated, survives refresh), own-SKU saves never tripping the
-  duplicate check while another piece's SKU is rejected
-  case-insensitively, RLS-denied and vanished-record updates surfaced
-  honestly, the confirmed soft archive (cancel changes nothing), unknown
-  + malformed public_id not-found states, the customer block and
-  responsive checks at 1440/768/390.
+  Save & Add Another with distinct public_ids, the add-mode image queue
+  (type/5 MB validation with zero Storage traffic before the save, then
+  uploads under unique `jewellery/<public_id>/…` names + one
+  `jewellery_images` row each with the real row id, order and one
+  primary), the beforeunload warning, the TEST-JEW-001 edit recipe (load
+  by public_id, every column prefilled incl. checkboxes, rename + save →
+  verified PATCH with `updated_at` and no identity columns, arrival
+  toast, list cell updated, survives refresh), the LIVE edit gallery
+  recipe (upload 3 → Storage files + rows + first-is-primary → re-star
+  with exactly one primary → arrow reorder renumbering `sort_order` →
+  refresh persistence → confirmed delete: row first, Storage object
+  second, first remaining image promoted), refused uploads surfaced
+  safely, orphan cleanup when an image row insert fails, own-SKU saves
+  never tripping the duplicate check while another piece's SKU is
+  rejected case-insensitively, RLS-denied and vanished-record updates
+  surfaced honestly, the confirmed soft archive (cancel changes
+  nothing), unknown + malformed public_id not-found states, the customer
+  block and responsive checks at 1440/768/390.
 - `admin-customers-ui.test.cjs` — 10 Admin-Customers scenarios (mocked
   admin): the 9-column table over the invented demo accounts in
   recently-joined order, search + status/country filters + sort +

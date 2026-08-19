@@ -99,9 +99,17 @@ function seedJewellery() {
 }
 
 const CORS = { 'access-control-allow-origin': '*', 'access-control-expose-headers': '*' };
+const PNG_1PX = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+  'base64');
 function makeMock(opts = {}) {
   const user = USERS[opts.role || 'admin'];
   const jewellery = opts.emptyInventory ? [] : seedJewellery();
+  /* the newest piece carries a primary photo; every other row falls back to art */
+  const images = opts.emptyInventory ? [] : [{
+    id: 'img-28', jewellery_id: 'uuid-jew-28',
+    image_path: 'jewellery/JEW-SEED0028/photo28aaaabbbb.png', sort_order: 1, is_primary: true,
+  }];
   const patches = [];
   async function handler(route) {
     const req = route.request();
@@ -161,9 +169,23 @@ function makeMock(opts = {}) {
       patches.push({ publicId: pubEq.slice(3), changes });
       return json(200, [{ id: target.id }]);
     }
+    if (url.pathname === '/rest/v1/jewellery_images' && method === 'GET') {
+      let rows = images.slice();
+      if (url.searchParams.get('is_primary') === 'eq.true') {
+        rows = rows.filter((i) => i.is_primary);
+      }
+      const jewEq = url.searchParams.get('jewellery_id');
+      if (jewEq && jewEq.startsWith('eq.')) {
+        rows = rows.filter((i) => i.jewellery_id === jewEq.slice(3));
+      }
+      return json(200, rows);
+    }
+    if (url.pathname.startsWith('/storage/v1/object/public/jewellery-images/') && method === 'GET') {
+      return route.fulfill({ status: 200, contentType: 'image/png', headers: CORS, body: PNG_1PX });
+    }
     return json(404, { message: 'mock: unhandled ' + method + ' ' + url.pathname });
   }
-  return { handler, jewellery, patches };
+  return { handler, jewellery, patches, images };
 }
 
 const results = [];
@@ -222,7 +244,7 @@ async function openInventory(page, query) {
   SITE = started.origin;
   browser = await chromium.launch(chromiumOptions());
 
-  await scenario('live list: 12 columns over public.jewellery, archived rows excluded', {}, async (page) => {
+  await scenario('live list: 13 columns with the primary photo, archived rows excluded', {}, async (page) => {
     await openInventory(page);
     const state = await page.evaluate(() => {
       const first = document.querySelector('#adm-table-body tr');
@@ -234,6 +256,8 @@ async function openInventory(page, query) {
         rows: document.querySelectorAll('#adm-table-body tr').length,
         firstSku: first.getAttribute('data-adm-row'),
         count: document.getElementById('adm-count').textContent,
+        thumbPhoto: (first.querySelector('.ngd-req-thumb img') || { getAttribute: () => '' }).getAttribute('src') || '',
+        secondThumbArt: !!document.querySelectorAll('#adm-table-body tr')[1].querySelector('.ngd-req-thumb svg'),
         actions: first.querySelectorAll('[data-adm-act]').length,
         editHref: first.querySelector('[data-adm-act="edit"]').getAttribute('href'),
         archivedListed: !!document.querySelector('[data-adm-row="JW-1099"]'),
@@ -244,13 +268,16 @@ async function openInventory(page, query) {
     expect(state.visible && state.active === 'jewellery', 'guard + route');
     expect(state.title === 'Jewellery Inventory', 'page title, got ' + state.title);
     expect(JSON.stringify(state.heads) === JSON.stringify(
-      ['SKU', 'Product Name', 'Category', 'Subcategory', 'Metal', 'Diamond Wt.',
+      ['Image', 'SKU', 'Product Name', 'Category', 'Subcategory', 'Metal', 'Diamond Wt.',
         'Availability', 'Price', 'Featured', 'Active', 'Updated', 'Actions']),
-      'twelve columns incl. Actions, got ' + state.heads.join(','));
+      'thirteen columns incl. Image + Actions, got ' + state.heads.join(','));
     expect(state.rows === 10, 'first page holds 10 rows, got ' + state.rows);
     expect(state.firstSku === 'JW-1028', 'most recently updated piece first, got ' + state.firstSku);
     expect(/of 28/.test(state.count) && /\(28 total\)/.test(state.count),
       'count excludes the archived seed, got ' + state.count);
+    expect(state.thumbPhoto.indexOf('jewellery/JEW-SEED0028/photo28aaaabbbb.png') !== -1,
+      'a piece with a primary photo renders it, got ' + state.thumbPhoto);
+    expect(state.secondThumbArt, 'pieces without a photo fall back to category art');
     expect(state.actions === 4, 'edit + feature + active + archive per row, got ' + state.actions);
     expect(state.editHref === 'edit-jewellery.html?id=JEW-SEED0028',
       'Edit targets the editor by public_id, got ' + state.editHref);
@@ -276,7 +303,7 @@ async function openInventory(page, query) {
     await page.waitForSelector('#adm-filters.show', { timeout: 4000 });
     await page.selectOption('#adm-f-category', 'Rings');
     let state = await page.evaluate(() => ({
-      cats: [...document.querySelectorAll('#adm-table-body tr td:nth-child(3)')].map((t) => t.textContent.trim()),
+      cats: [...document.querySelectorAll('#adm-table-body tr td:nth-child(4)')].map((t) => t.textContent.trim()),
       chip: document.getElementById('adm-filter-count').textContent.trim(),
     }));
     expect(state.cats.length === 5 && state.cats.every((c) => c === 'Rings'),
@@ -292,7 +319,7 @@ async function openInventory(page, query) {
     await page.click('#adm-clear');
     await page.selectOption('#adm-sort', 'weight-desc');
     const weights = await page.evaluate(() =>
-      [...document.querySelectorAll('#adm-table-body tr td:nth-child(6)')].map((t) => parseFloat(t.textContent)));
+      [...document.querySelectorAll('#adm-table-body tr td:nth-child(7)')].map((t) => parseFloat(t.textContent)));
     const sorted = [...weights].sort((a, b) => b - a);
     expect(weights.every((w) => !Number.isNaN(w)) &&
       JSON.stringify(weights) === JSON.stringify(sorted), 'weight sort orders the page');
@@ -320,7 +347,7 @@ async function openInventory(page, query) {
       /was unfeatured/.test((document.querySelector('#adm-toast .ngd-alert-success') || { textContent: '' }).textContent),
       null, { timeout: 8000 });
     let state = await page.evaluate(() => ({
-      featured: document.querySelector('[data-adm-row="JW-1001"] td:nth-child(9)').textContent.trim(),
+      featured: document.querySelector('[data-adm-row="JW-1001"] td:nth-child(10)').textContent.trim(),
     }));
     expect(state.featured === '—', 'badge re-read as unfeatured after the update');
     expect(backend.patches.length === 1 && backend.patches[0].changes.featured === false &&

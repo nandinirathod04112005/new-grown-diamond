@@ -2,7 +2,9 @@
    Rows load live (archived pieces excluded); the feature / active /
    archive actions write through Supabase with verification and the
    list re-reads after every successful change. Archive is a soft
-   delete: archived_at + inactive — rows are never hard-deleted. */
+   delete: archived_at + inactive — rows are never hard-deleted.
+   Each row shows its PRIMARY photo from public.jewellery_images
+   (jewellery-images bucket), falling back to the category art. */
 (function () {
   'use strict';
 
@@ -29,6 +31,7 @@
       weight: row.diamond_weight === null || row.diamond_weight === undefined ? null : Number(row.diamond_weight),
       availability: row.availability || '—', price: row.price === null || row.price === undefined ? null : Number(row.price),
       currency: row.currency || '', featured: !!row.featured, active: row.active !== false,
+      imagePath: null,
       updated: String(row.updated_at || row.created_at || '').slice(0, 10) || '—'
     };
   }
@@ -37,7 +40,24 @@
     var result = await window.ngdSupabase.from('jewellery').select(columns)
       .is('archived_at', null).order('updated_at', { ascending: false });
     if (result.error) throw result.error;
-    return (result.data || []).map(mapRow);
+    var rows = (result.data || []).map(mapRow);
+    await attachPrimaryImages(rows);
+    return rows;
+  }
+  /** Primary photo per piece from public.jewellery_images. A missing table
+      must never break the inventory — failures only fall back to art. */
+  async function attachPrimaryImages(rows) {
+    if (!rows.length) return;
+    try {
+      var res = await window.ngdSupabase.from('jewellery_images')
+        .select('jewellery_id,image_path').eq('is_primary', true);
+      if (res.error) throw res.error;
+      var byId = {};
+      (res.data || []).forEach(function (img) { byId[img.jewellery_id] = img.image_path; });
+      rows.forEach(function (row) { row.imagePath = byId[row.id] || null; });
+    } catch (err) {
+      console.warn('[NGD Admin] jewellery primary images unavailable:', err);
+    }
   }
 
   /* ---------------- live mutations ---------------- */
@@ -113,6 +133,17 @@
     if (row.price === null || !isFinite(row.price)) return '—';
     return escapeHtml((row.currency ? row.currency + ' ' : '') + row.price.toFixed(2));
   }
+  function art(row) {
+    return (window.NGD_JEWEL_ART || {})[String(row.category).toLowerCase()] || '';
+  }
+  /** The real primary photo from Storage when one exists, category art otherwise. */
+  function thumbHtml(row) {
+    if (row.imagePath && window.ngdStorageUrl) {
+      var url = window.ngdStorageUrl('jewellery-images', row.imagePath);
+      if (url) return '<img class="ngd-media-photo" src="' + escapeHtml(url) + '" alt="" loading="lazy">';
+    }
+    return art(row);
+  }
   var ICONS = {
     edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19.5 8.5a2.1 2.1 0 0 0-3-3L5 17Z"/><path d="m13.5 6.5 3 3"/></svg>',
     star: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3.5 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9Z"/></svg>',
@@ -139,6 +170,7 @@
     return rows.map(function (row) {
       var c = chips(row);
       return '<tr data-adm-row="' + escapeHtml(row.sku) + '"' + (row.active ? '' : ' class="is-inactive"') + '>' +
+        '<td><span class="ngd-req-thumb">' + thumbHtml(row) + '</span></td>' +
         '<td class="ngd-stock-cell">' + escapeHtml(row.sku) + '</td><td>' + escapeHtml(row.name) +
         '</td><td>' + escapeHtml(row.category) + '</td><td>' + escapeHtml(row.subcategory) +
         '</td><td>' + escapeHtml(row.metal) + '</td><td>' + (row.weight === null ? '—' : row.weight.toFixed(2) + ' ct') +
@@ -148,9 +180,11 @@
     }).join('');
   }
   function cardsHtml(rows) {
-    return rows.map(function (row) { var c = chips(row); return '<article class="ngd-req-card" data-adm-row="' + escapeHtml(row.sku) + '"><strong>' +
+    return rows.map(function (row) { var c = chips(row); return '<article class="ngd-req-card" data-adm-row="' + escapeHtml(row.sku) + '">' +
+      '<div class="d-flex align-items-center gap-3"><span class="ngd-req-thumb">' + thumbHtml(row) + '</span>' +
+      '<div class="flex-grow-1 min-w-0"><strong>' +
       escapeHtml(row.name) + '</strong><span class="ngd-text-muted d-block small">' + escapeHtml(row.sku) +
-      ' · ' + escapeHtml(row.category) + ' · ' + escapeHtml(row.subcategory) + '</span><div class="mt-2">' +
+      ' · ' + escapeHtml(row.category) + ' · ' + escapeHtml(row.subcategory) + '</span></div></div><div class="mt-2">' +
       escapeHtml(row.metal) + ' · ' + (row.weight === null ? '—' : row.weight.toFixed(2) + ' ct') + ' · ' + price(row) +
       '</div><div class="d-flex flex-wrap gap-2 mt-2">' + c.availability + c.featured + c.active +
       '</div><small class="ngd-text-muted">Updated ' + escapeHtml(row.updated) + '</small>' +

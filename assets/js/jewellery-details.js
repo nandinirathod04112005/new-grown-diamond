@@ -77,18 +77,43 @@
     '<path d="M21 12a9 9 0 1 1-3-6.7"/><polyline points="21 3 21 8 16 8"/>' +
     '<ellipse cx="12" cy="12" rx="4" ry="6.5" opacity="0.55"/></svg>';
 
-  var VIEWS = [
-    { key: 'front', label: 'Front view', svg: baseArt },
-    { key: 'detail', label: 'Setting detail', svg: detailArt() },
-    { key: 'profile', label: 'Alternate angle', svg: profileArt() },
-    { key: 'spin', label: '360° view (coming soon)', spin: true }
-  ];
+  /* Live galleries: a piece carrying images[] (rows or paths from
+     public.jewellery_images) shows its real photos in sort_order; demo
+     pieces and pieces without photos keep the category artwork views. */
+  function photoViews() {
+    var list = (piece.images || []).slice().sort(function (a, b) {
+      return ((a && a.sort_order) || 0) - ((b && b.sort_order) || 0);
+    });
+    var views = [];
+    for (var i = 0; i < list.length; i++) {
+      var path = list[i] && list[i].image_path ? list[i].image_path : list[i];
+      var url = path && window.ngdStorageUrl ? window.ngdStorageUrl('jewellery-images', path) : '';
+      if (!url) continue;
+      views.push({
+        key: 'photo-' + (i + 1),
+        label: 'Photo ' + (i + 1),
+        svg: '<img class="ngd-media-photo" src="' + url + '" alt="' +
+          piece.name + ' — photo ' + (i + 1) + '">'
+      });
+    }
+    return views;
+  }
+
+  var livePhotos = photoViews();
+  var VIEWS = livePhotos.length
+    ? livePhotos.concat([{ key: 'spin', label: '360° view (coming soon)', spin: true }])
+    : [
+      { key: 'front', label: 'Front view', svg: baseArt },
+      { key: 'detail', label: 'Setting detail', svg: detailArt() },
+      { key: 'profile', label: 'Alternate angle', svg: profileArt() },
+      { key: 'spin', label: '360° view (coming soon)', spin: true }
+    ];
 
   var stage = document.getElementById('jd-stage');
   var stageInner = document.getElementById('jd-stage-inner');
   var thumbs = document.getElementById('jd-thumbs');
   var zoomHint = document.getElementById('jd-zoomhint');
-  var activeView = 'front';
+  var activeView = VIEWS[0].key;
 
   function renderStage() {
     var view = VIEWS.filter(function (v) { return v.key === activeView; })[0];

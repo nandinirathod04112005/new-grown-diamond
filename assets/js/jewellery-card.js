@@ -10,6 +10,16 @@
   'use strict';
 
   function artFor(p) {
+    /* live rows carry image_path (the piece's primary photo in Supabase
+       Storage, bucket jewellery-images); demo pieces fall back to the
+       category art, as does anything without a usable URL */
+    if (p.image_path && window.ngdStorageUrl) {
+      var url = window.ngdStorageUrl('jewellery-images', p.image_path);
+      if (url) {
+        return '<img class="ngd-media-photo" src="' + url + '" alt="' +
+          p.name + '" loading="lazy">';
+      }
+    }
     var art = window.NGD_JEWEL_ART || {};
     return art[p.category.toLowerCase()] || '';
   }

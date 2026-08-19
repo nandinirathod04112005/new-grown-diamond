@@ -219,8 +219,13 @@ shared `.ngd-thumb` for light stages, `.ngd-thumb-tag` marks the prepared 360°
 slot, and `.ngd-jd-360` is its coming-soon panel. `.ngd-jd-desc` styles the
 long-form description. The shared light product card lives in
 `assets/js/jewellery-card.js` (window.NGDJewelCard) and is used by both the
-listing grid and the Similar-pieces row. Spec table, sticky CTAs and favourite
-button reuse the diamond-details classes.
+listing grid and the Similar-pieces row; like the diamond card, its `artFor`
+prefers a live `image_path` (an `.ngd-media-photo` from the
+`jewellery-images` bucket via `ngdStorageUrl()`) and falls back to the
+category art. The details stage renders `piece.images[]` (jewellery_images
+rows in `sort_order`) as real photo views when a piece carries them — demo
+pieces and pieces without photos keep the artwork views. Spec table, sticky
+CTAs and favourite button reuse the diamond-details classes.
 
 ### Education components
 Learning-page building blocks (`education.html`): `.ngd-accordion` skins the
@@ -354,7 +359,10 @@ A dirty form warns via `beforeunload`.
 `admin/jewellery.html` mirrors the diamond manager for the jewellery
 collection, now fully live: `assets/js/admin-jewellery.js` reads
 `public.jewellery` through the shared client with archived rows excluded
-(`archived_at is null`), renders the 12-column `.ngd-admin-table` (SKU,
+(`archived_at is null`), attaches each piece's PRIMARY photo from
+`public.jewellery_images` (`.ngd-media-photo` thumb in an
+`.ngd-req-thumb`, category art fallback — a missing images table never
+breaks the list), renders the 13-column `.ngd-admin-table` (image, SKU,
 name, category, subcategory, metal, diamond weight with an em-dash for
 all-metal pieces, availability, price, featured, active, updated,
 actions) plus stacked `.ngd-req-card`s below 768px, and runs client-side
@@ -383,11 +391,21 @@ Archive asks `confirm()` then stamps `archived_at` + `active=false` —
 a soft delete, never a DELETE — and returns to the list's arrival toast.
 Real Supabase errors map to safe messages (duplicate, RLS admin-only,
 column mismatch); the update policy lives in
-`supabase/jewellery-edit-status-archive.sql`. Product Images stays a
-validated local preview (`.ngd-drop` → `.ngd-img-tile` gallery with the
-gold `Primary` chip, reorder and remove; JPG/JPEG/PNG/WEBP ≤ 10 MB,
-nothing uploaded) until the jewellery photo upload phase. A dirty form
-warns via `beforeunload`.
+`supabase/jewellery-edit-status-archive.sql`. Product Images is LIVE
+against the `jewellery-images` bucket + `public.jewellery_images`
+(`supabase/jewellery-images.sql`): the `.ngd-drop` → `.ngd-img-tile`
+gallery validates JPG/JPEG/PNG/WEBP ≤ 5 MB, stores files as
+`jewellery/<public_id>/<random>.<ext>` (never the original name) and
+keeps one gold `Primary` chip per piece. On ADD the queue uploads right
+after the row insert (order → `sort_order`, starred image → primary); on
+EDIT every gallery change saves immediately — uploads append (a piece's
+first photo becomes primary), the star clears-then-sets `is_primary`,
+the arrows renumber `sort_order` 1..N, and remove asks `confirm()` then
+deletes the row first, the Storage object second, and promotes the first
+remaining image when the primary was removed. A row insert that fails
+after its upload removes the fresh file again (no orphans), and
+edit-mode uploads don't arm the unsaved-changes warning — they are
+already saved. A dirty form still warns via `beforeunload`.
 
 `admin/customers.html` and `admin/enquiries.html` reuse the same list
 shell for people: the dense `.ngd-admin-table` (long text cells truncate

@@ -13,8 +13,20 @@
    a save PATCHes the row (with updated_at) and verifies exactly
    one record changed, duplicate SKUs are rejected excluding the
    piece itself, and Archive soft-deletes — archived_at + inactive,
-   never a hard delete. The image picker stays a local preview;
-   jewellery photo uploads are a later phase.
+   never a hard delete.
+
+   IMAGES are live in both modes, backed by the `jewellery-images`
+   Storage bucket + the public.jewellery_images table
+   (jewellery_id, image_path, sort_order, is_primary). Files are
+   stored under jewellery/<public_id>/<random>.<ext> — never the
+   original filename. ADD queues the validated previews and
+   uploads them right after the product row is inserted (first /
+   starred image becomes primary); EDIT operates on the real
+   gallery immediately — upload, set-primary (exactly one), arrow
+   reorder writing sort_order, and confirmed delete (row first,
+   then the Storage object, then re-electing the first remaining
+   image as primary). A failed row insert removes the just
+   uploaded file so no orphan is left behind.
    ============================================================ */
 (function () {
   'use strict';
@@ -22,17 +34,21 @@
   var REQUIRED = ['sku', 'product_name', 'category'];
 
   var IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-  var IMAGE_MAX_BYTES = 10 * 1024 * 1024;
+  var IMAGE_MAX_BYTES = 5 * 1024 * 1024;
+  var IMAGE_BUCKET = 'jewellery-images';
+  var EXT_BY_TYPE = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
 
   var state = {
     mode: 'add',
     userId: null,
     record: null,     /* edit: the verified Supabase row */
-    images: [],       /* ordered gallery: {uid, name, sizeLabel, src, file} */
+    images: [],       /* add: queued {uid, name, sizeLabel, src, file}
+                         edit: live {uid, rowId, path, src, name, sortOrder, isPrimary} */
     primaryUid: null,
     nextUid: 1,
     dirty: false,
-    saving: false
+    saving: false,
+    galleryBusy: false
   };
 
   function $(id) {
@@ -69,8 +85,14 @@
   }
 
   function initUnsavedWarning(form) {
-    form.addEventListener('input', markDirty);
-    form.addEventListener('change', markDirty);
+    function markFromEvent(event) {
+      /* edit-mode gallery uploads save immediately — only field changes
+         leave unsaved work behind */
+      if (state.mode === 'edit' && event.target && event.target.id === 'jw-file') return;
+      markDirty();
+    }
+    form.addEventListener('input', markFromEvent);
+    form.addEventListener('change', markFromEvent);
     window.addEventListener('beforeunload', function (event) {
       if (!state.dirty) return;
       event.preventDefault();
@@ -197,13 +219,64 @@
       setInvalid(field('sku'), true); field('sku').focus(); showAlert('danger', payload.sku + ' already exists in the inventory — SKUs must be unique.');
       buttons.forEach(function (button) { button.disabled = false; }); return false;
     }
-    var result = await window.ngdSupabase.from('jewellery').insert(payload);
+    var result = await window.ngdSupabase.from('jewellery').insert(payload).select('id');
     if (result.error) { if (duplicateError(result.error)) setInvalid(field('sku'), true); showAlert('danger', dbMessage(result.error)); buttons.forEach(function (button) { button.disabled = false; }); return false; }
     clearDirty();
+
+    /* the queued gallery uploads right after the product row exists */
+    var queued = state.images.length;
+    if (queued) {
+      var newId = result.data && result.data[0] && result.data[0].id;
+      var outcome = newId
+        ? await uploadQueuedImages(newId, payload.public_id)
+        : { done: 0, reason: 'the new row could not be read back' };
+      if (outcome.done < queued) {
+        showAlert('danger', payload.sku + ' was added with ' + outcome.done + ' of ' + queued +
+          ' image(s). The rest could not be uploaded — ' + outcome.reason +
+          ' Open the piece in Edit Jewellery to add the remaining photos.');
+        resetGallery();
+        buttons.forEach(function (button) { button.disabled = false; });
+        return false;
+      }
+    }
+
     if (mode === 'add-another') { showAlert('success', payload.sku + ' was added. The form is ready for another piece.'); form.reset(); resetGallery(); window.scrollTo({ top: 0 }); }
     else { showAlert('success', payload.sku + ' was added to the inventory. Returning to the list…'); window.location.replace('jewellery.html?added=' + encodeURIComponent(payload.sku)); }
     buttons.forEach(function (button) { button.disabled = false; });
     return true;
+  }
+
+  /** ADD mode: upload the queued previews in gallery order and insert one
+      jewellery_images row per photo. Stops at the first failure so
+      sort_order stays contiguous; a row that fails after its upload has
+      the fresh Storage file removed again (no orphans). */
+  async function uploadQueuedImages(jewelleryId, publicId) {
+    var ordered = state.images.slice();
+    var primaryUid = state.primaryUid !== null ? state.primaryUid
+      : (ordered.length ? ordered[0].uid : null);
+    var done = 0;
+    for (var i = 0; i < ordered.length; i++) {
+      var entry = ordered[i];
+      var path = imagePathFor(publicId, entry.file);
+      try {
+        await uploadImage(path, entry.file);
+      } catch (err) {
+        return { done: done, reason: mapStorageError(err) };
+      }
+      var ins = await window.ngdSupabase.from('jewellery_images').insert({
+        jewellery_id: jewelleryId,
+        image_path: path,
+        sort_order: i + 1,
+        is_primary: entry.uid === primaryUid
+      }).select('id');
+      if (ins.error || !ins.data || ins.data.length !== 1) {
+        await removeImageQuietly(path);
+        console.error('[NGD Admin Jewellery] image row insert failed:', ins.error);
+        return { done: done, reason: 'the image row could not be saved.' };
+      }
+      done++;
+    }
+    return { done: done, reason: '' };
   }
 
   /* ---------------- live update + soft archive (edit mode) ---------------- */
@@ -269,7 +342,217 @@
     return res.data && res.data.length === 1 ? res.data[0] : null;
   }
 
-  /* ---------------- multi-image gallery (preview only) ---------------- */
+  /* ---------------- Storage upload (jewellery-images bucket) ---------------- */
+
+  /** Never the original filename: jewellery/<public_id>/<random>.<ext> */
+  function imagePathFor(publicId, file) {
+    var chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    var buf = new Uint32Array(16);
+    if (window.crypto && window.crypto.getRandomValues) {
+      window.crypto.getRandomValues(buf);
+    } else {
+      for (var j = 0; j < 16; j++) buf[j] = Math.floor(Math.random() * 4294967296);
+    }
+    var token = '';
+    for (var i = 0; i < 16; i++) token += chars[buf[i] % chars.length];
+    return 'jewellery/' + publicId + '/' + token + '.' + (EXT_BY_TYPE[file.type] || 'jpg');
+  }
+
+  function mapStorageError(error) {
+    console.error('[NGD Admin Jewellery] image upload failed:', error);
+    var msg = (error && error.message) || '';
+    if ((error && (error.statusCode === '403' || error.status === 403)) ||
+      /row-level security|not.?authorized|policy|access denied/i.test(msg)) {
+      return 'Your account is not allowed to upload jewellery images — only an active admin can.';
+    }
+    if (/bucket.*not.*found/i.test(msg)) {
+      return 'The jewellery-images bucket does not exist yet — run ' +
+        'supabase/jewellery-images.sql in the Supabase SQL Editor first.';
+    }
+    return 'The image could not be uploaded. Check your connection and try again.';
+  }
+
+  async function uploadImage(path, file) {
+    var res = await window.ngdSupabase.storage.from(IMAGE_BUCKET)
+      .upload(path, file, { contentType: file.type, upsert: false });
+    if (res.error) throw res.error;
+    return path;
+  }
+
+  /** Best-effort delete — a leftover file must never block the flow. */
+  async function removeImageQuietly(path) {
+    if (!path) return;
+    try {
+      var res = await window.ngdSupabase.storage.from(IMAGE_BUCKET).remove([path]);
+      if (res.error) console.warn('[NGD Admin Jewellery] image cleanup failed:', res.error);
+    } catch (err) {
+      console.warn('[NGD Admin Jewellery] image cleanup failed:', err);
+    }
+  }
+
+  /* ---------------- live gallery (edit mode) ---------------- */
+
+  async function loadImages(jewelleryId) {
+    var res = await window.ngdSupabase.from('jewellery_images')
+      .select('id,image_path,sort_order,is_primary')
+      .eq('jewellery_id', jewelleryId)
+      .order('sort_order', { ascending: true });
+    if (res.error) throw res.error;
+    return res.data || [];
+  }
+
+  /** Re-read the piece's gallery from the table — the DB is the truth. */
+  async function reloadImages() {
+    var rows = await loadImages(state.record.id);
+    state.images = rows.map(function (row, idx) {
+      return {
+        uid: state.nextUid++,
+        rowId: row.id,
+        path: row.image_path,
+        src: window.ngdStorageUrl ? window.ngdStorageUrl(IMAGE_BUCKET, row.image_path) : '',
+        name: 'Image ' + (idx + 1),
+        sizeLabel: row.is_primary ? 'primary' : '',
+        sortOrder: row.sort_order,
+        isPrimary: !!row.is_primary,
+        file: null
+      };
+    });
+    var primary = state.images.filter(function (e) { return e.isPrimary; })[0];
+    state.primaryUid = primary ? primary.uid
+      : (state.images.length ? state.images[0].uid : null);
+    renderGallery();
+  }
+
+  function mapImagesError(error) {
+    console.error('[NGD Admin Jewellery] gallery change failed:', error);
+    if (error && (error.code === '42501' || /row-level security|permission denied/i.test(error.message || ''))) {
+      return 'Your account is not allowed to change jewellery images — only an active admin can.';
+    }
+    if (error && (error.code === '42P01' || /jewellery_images/.test(error.message || ''))) {
+      return 'The jewellery_images table is missing — run supabase/jewellery-images.sql in the Supabase SQL Editor first.';
+    }
+    return 'The gallery change could not be saved. Check your connection and try again.';
+  }
+
+  function setGalleryBusy(busy) {
+    state.galleryBusy = busy;
+    var browse = $('jw-browse');
+    if (browse) browse.disabled = busy;
+  }
+
+  /** EDIT mode: validated files upload immediately — Storage first, then
+      the jewellery_images row (sort_order appended; the very first photo
+      of a piece becomes primary). A failed row insert removes the fresh
+      file again so no orphan is left. */
+  async function uploadEditFiles(files, rejectedNote) {
+    setGalleryBusy(true);
+    var failed = 0;
+    var reason = '';
+    for (var i = 0; i < files.length; i++) {
+      var file = files[i];
+      var path = imagePathFor(state.record.public_id, file);
+      try {
+        await uploadImage(path, file);
+      } catch (err) {
+        failed++; if (!reason) reason = mapStorageError(err);
+        continue;
+      }
+      var nextOrder = state.images.reduce(function (max, e) {
+        return Math.max(max, e.sortOrder || 0);
+      }, 0) + 1;
+      var ins = await window.ngdSupabase.from('jewellery_images').insert({
+        jewellery_id: state.record.id,
+        image_path: path,
+        sort_order: nextOrder,
+        is_primary: state.images.length === 0
+      }).select('id');
+      if (ins.error || !ins.data || ins.data.length !== 1) {
+        await removeImageQuietly(path);
+        console.error('[NGD Admin Jewellery] image row insert failed:', ins.error);
+        failed++; if (!reason) reason = 'the image row could not be saved.';
+        continue;
+      }
+      state.images.push({ uid: state.nextUid++, rowId: ins.data[0].id, path: path, sortOrder: nextOrder, isPrimary: state.images.length === 0 });
+    }
+    try {
+      await reloadImages();
+    } catch (err) {
+      if (!reason) reason = mapImagesError(err);
+    }
+    setGalleryBusy(false);
+    var notes = [];
+    if (rejectedNote) notes.push(rejectedNote);
+    if (failed) notes.push(failed + ' image(s) could not be added — ' + reason);
+    imageError(notes.join(' '));
+  }
+
+  /** EDIT mode: set-primary / reorder / delete write through Supabase and
+      the gallery re-reads after every change. */
+  async function liveGalleryAction(act, uid) {
+    if (state.galleryBusy) return;
+    var idx = findImage(uid);
+    if (idx === -1) return;
+    var entry = state.images[idx];
+    var sb = window.ngdSupabase;
+    if (act === 'remove' &&
+      !window.confirm('Remove this image from ' + (state.record.sku || state.record.public_id) +
+        '? The photo will be deleted permanently.')) return;
+    imageError('');
+    setGalleryBusy(true);
+    try {
+      if (act === 'primary') {
+        /* exactly ONE primary: clear the piece's flags, then set the chosen
+           row (the DB's partial unique index enforces the invariant too) */
+        var clear = await sb.from('jewellery_images').update({ is_primary: false })
+          .eq('jewellery_id', state.record.id).select('id');
+        if (clear.error) throw clear.error;
+        var set = await sb.from('jewellery_images').update({ is_primary: true })
+          .eq('id', entry.rowId).eq('jewellery_id', state.record.id).select('id');
+        if (set.error) throw set.error;
+        if (!set.data || set.data.length !== 1) throw new Error('primary verification failed');
+      } else if (act === 'left' || act === 'right') {
+        var target = act === 'left' ? idx - 1 : idx + 1;
+        if (target < 0 || target >= state.images.length) { setGalleryBusy(false); return; }
+        var order = state.images.slice();
+        var moved = order.splice(idx, 1)[0];
+        order.splice(target, 0, moved);
+        /* renumber 1..N — also heals gaps or duplicate sort values */
+        for (var i = 0; i < order.length; i++) {
+          if (order[i].sortOrder === i + 1) continue;
+          var res = await sb.from('jewellery_images').update({ sort_order: i + 1 })
+            .eq('id', order[i].rowId).select('id');
+          if (res.error) throw res.error;
+        }
+      } else if (act === 'remove') {
+        /* the row first (a stray Storage file is invisible; a row without
+           its file would render broken), then the object, then re-elect
+           the first remaining image as primary if needed */
+        var del = await sb.from('jewellery_images').delete()
+          .eq('id', entry.rowId).eq('jewellery_id', state.record.id).select('id');
+        if (del.error) throw del.error;
+        if (!del.data || del.data.length !== 1) throw new Error('delete verification failed');
+        await removeImageQuietly(entry.path);
+        if (entry.isPrimary) {
+          var rest = await loadImages(state.record.id);
+          if (rest.length) {
+            var promote = await sb.from('jewellery_images').update({ is_primary: true })
+              .eq('id', rest[0].id).select('id');
+            if (promote.error) throw promote.error;
+          }
+        }
+      } else {
+        setGalleryBusy(false);
+        return;
+      }
+      await reloadImages();
+    } catch (err) {
+      imageError(mapImagesError(err));
+      try { await reloadImages(); } catch (ignored) { /* keep the message */ }
+    }
+    setGalleryBusy(false);
+  }
+
+  /* ---------------- multi-image gallery UI ---------------- */
 
   var TILE_ICONS = {
     left: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>',
@@ -361,6 +644,10 @@
   }
 
   function galleryAction(act, uid) {
+    if (state.mode === 'edit') {
+      liveGalleryAction(act, uid);
+      return;
+    }
     var idx = findImage(uid);
     if (idx === -1) return;
     if (act === 'left' && idx > 0) {
@@ -389,6 +676,7 @@
     var files = Array.prototype.slice.call(fileList || []);
     if (!files.length) return;
     var rejected = [];
+    var accepted = [];
 
     files.forEach(function (file) {
       if (IMAGE_TYPES.indexOf(file.type) === -1) {
@@ -396,9 +684,27 @@
         return;
       }
       if (file.size > IMAGE_MAX_BYTES) {
-        rejected.push(file.name + ' (larger than 10 MB)');
+        rejected.push(file.name + ' (larger than 5 MB)');
         return;
       }
+      accepted.push(file);
+    });
+
+    var rejectedNote = rejected.length ? 'Not added — ' + rejected.join('; ') + '.' : '';
+
+    /* EDIT: valid files upload to Storage + jewellery_images immediately */
+    if (state.mode === 'edit') {
+      if (state.galleryBusy) {
+        imageError('Please wait — the gallery is still saving the previous change.');
+        return;
+      }
+      if (accepted.length) uploadEditFiles(accepted, rejectedNote);
+      else imageError(rejectedNote);
+      return;
+    }
+
+    /* ADD: valid files queue locally and upload right after the save */
+    accepted.forEach(function (file) {
       var entry = {
         uid: state.nextUid++,
         name: file.name,
@@ -417,9 +723,7 @@
       markDirty();
     });
 
-    imageError(rejected.length
-      ? 'Not added — ' + rejected.join('; ') + '.'
-      : '');
+    imageError(rejectedNote);
     renderGallery();
   }
 
@@ -575,6 +879,12 @@
       }
       $('jw-editing-id').textContent = state.record.sku || state.record.public_id;
       prefill(state.record);
+      try {
+        await reloadImages();
+      } catch (err) {
+        console.error('[NGD Admin Jewellery] images load failed:', err);
+        imageError(mapImagesError(err));
+      }
     }
 
     initImagePicker();
