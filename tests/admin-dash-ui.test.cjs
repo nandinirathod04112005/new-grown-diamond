@@ -1,13 +1,14 @@
 /* ============================================================
-   Admin Dashboard UI tests (STEP 23).
+   Admin Dashboard tests (LIVE).
    Logs in against a compact mocked Supabase backend (role
    parameterised per scenario) and verifies the admin shell:
-   topbar profile area, the 13-route sidebar (Dashboard active,
-   eight honest Soon items) + logout, KPI cards with
-   demo-catalogue counts and chipped demo figures, the quick
-   actions (four live, one Soon) + storefront link, the demo activity
-   feed, role/guard redirects, logout and responsive layouts at
-   1440/768/390.
+   topbar profile area, the 13-route sidebar (eight live pages,
+   five honest Soon items) + logout, the seven head-count KPI
+   cards fed by exact PostgREST count responses, the live quick
+   action links, the merged live activity feed (escaped, newest
+   first), per-widget failure isolation with the honest degraded
+   status, role/guard redirects, logout and responsive layouts
+   at 1440/768/390.
    Run:  node tests/admin-dash-ui.test.cjs
    ============================================================ */
 'use strict';
@@ -38,6 +39,22 @@ const USERS = {
   },
 };
 
+/* Exact head-count answers per table (the KPI filters are fixed, so a
+   per-table figure is unambiguous). */
+const COUNTS = { diamonds: 28, jewellery: 12, profiles: 9, quotes: 3, holds: 2, inspections: 1, enquiries: 5 };
+const ACTIVITY = {
+  diamonds: [
+    { id: 'd1', stock_number: 'NGD-2201', shape: 'Round', created_at: '2026-08-19T10:05:00Z' },
+    { id: 'd2', stock_number: 'NGD-2202', shape: '<img src=x onerror="window.__xss=1">', created_at: '2026-08-19T10:04:00Z' },
+  ],
+  jewellery: [{ id: 'j1', sku: 'JW-3101', product_name: 'Aurora Ring', created_at: '2026-08-19T09:00:00Z' }],
+  profiles: [{ id: 'p1', full_name: 'Nisha Mehta', created_at: '2026-08-19T08:00:00Z' }],
+  quotes: [{ id: 'q1', public_id: 'QTE-11111111', status: 'pending', created_at: '2026-08-19T11:00:00Z' }],
+  holds: [{ id: 'h1', public_id: 'HLD-22222222', status: 'pending', created_at: '2026-08-19T07:00:00Z' }],
+  inspections: [{ id: 'i1', public_id: 'INS-33333333', status: 'pending', created_at: '2026-08-19T06:00:00Z' }],
+  enquiries: [{ id: 'e1', public_id: 'ENQ-44444444', subject: 'Bulk order', status: 'new', created_at: '2026-08-19T12:00:00Z' }],
+};
+
 function b64url(obj) {
   return Buffer.from(JSON.stringify(obj)).toString('base64url');
 }
@@ -57,11 +74,12 @@ function userObject(user) {
   };
 }
 const CORS = { 'access-control-allow-origin': '*', 'access-control-expose-headers': '*' };
-function makeMock(user) {
+function makeMock(user, opts) {
   return async function mockBackend(route) {
     const req = route.request();
     const url = new URL(req.url());
     const method = req.method();
+    const table = url.pathname.split('/').pop();
     const json = (status, obj) =>
       route.fulfill({ status, contentType: 'application/json', headers: CORS, body: JSON.stringify(obj) });
     if (method === 'OPTIONS') {
@@ -89,6 +107,19 @@ function makeMock(user) {
     }
     if (url.pathname === '/auth/v1/logout' && method === 'POST') {
       return route.fulfill({ status: 204, headers: CORS, body: '' });
+    }
+    /* KPI head counts — supabase-js head:true issues a HEAD request. */
+    if (url.pathname.startsWith('/rest/v1/') && method === 'HEAD') {
+      if ((opts.failKpis || []).includes(table)) return json(500, { message: 'mock kpi failure' });
+      const n = COUNTS[table] != null ? COUNTS[table] : 0;
+      return route.fulfill({ status: 200, headers: { ...CORS, 'content-range': '0-0/' + n }, body: '' });
+    }
+    /* Activity queries all order by created_at (the auth profile fetch
+       never does), so the order param routes them here. */
+    if (url.pathname.startsWith('/rest/v1/') && method === 'GET' &&
+        (url.searchParams.get('order') || '').startsWith('created_at')) {
+      if ((opts.failActivity || []).includes(table)) return json(500, { message: 'mock activity failure' });
+      return json(200, ACTIVITY[table] || []);
     }
     if (url.pathname === '/rest/v1/profiles' && method === 'GET') {
       const row = { id: user.id, email: user.email, ...user.profile, created_at: '2026-01-01T00:00:00Z' };
@@ -118,7 +149,7 @@ async function scenario(name, opts, fn) {
     await installCdnRoutes(context);
     await context.route('**/assets/js/supabase-config.js', (r) =>
       r.fulfill({ status: 200, contentType: 'application/javascript', body: TEST_CONFIG }));
-    await context.route(SB_HOST + '/**', makeMock(user));
+    await context.route(SB_HOST + '/**', makeMock(user, opts));
     const page = await context.newPage();
     page.on('pageerror', (e) => pageErrors.push(String(e)));
     await fn(page, user);
@@ -144,6 +175,13 @@ async function openAdmin(page, user) {
     document.querySelector('[data-ngd-field="full_name"]').textContent.trim() !== '—');
 }
 
+async function waitSettled(page) {
+  await page.waitForFunction(() => {
+    const note = document.querySelector('[data-admin-dashboard-status]');
+    return note && !/Loading live dashboard data/.test(note.textContent);
+  }, null, { timeout: 10000 });
+}
+
 const ROUTES = ['dashboard', 'diamonds', 'jewellery', 'customers', 'quotes', 'holds',
   'inspections', 'enquiries', 'media', 'content', 'seo', 'settings', 'users'];
 
@@ -152,7 +190,7 @@ const ROUTES = ['dashboard', 'diamonds', 'jewellery', 'customers', 'quotes', 'ho
   SITE = started.origin;
   browser = await chromium.launch(chromiumOptions());
 
-  await scenario('shell: topbar profile area, 13-route sidebar, title and profile fill', {}, async (page, user) => {
+  await scenario('shell: topbar profile area, 13-route sidebar (8 live), title and profile fill', {}, async (page, user) => {
     await openAdmin(page, user);
     const state = await page.evaluate(() => {
       const nav = document.querySelector('.ngd-dash-nav');
@@ -163,10 +201,12 @@ const ROUTES = ['dashboard', 'diamonds', 'jewellery', 'customers', 'quotes', 'ho
         topbarLogout: !!document.querySelector('.ngd-dash-topbar [data-ngd-logout]'),
         routes: items.map((i) => i.getAttribute('data-admin-route')),
         soonCount: items.filter((i) => i.classList.contains('is-soon')).length,
+        liveHrefs: items.filter((i) => i.tagName === 'A').map((i) => i.getAttribute('href')),
         active: nav.querySelector('.is-active').getAttribute('data-admin-route'),
         navLogout: !!nav.querySelector('button[data-ngd-logout]'),
         title: document.querySelector('h1').textContent.trim(),
         welcome: document.querySelector('[data-admin-section="welcome"]').textContent,
+        liveChip: (document.querySelector('[data-admin-section="welcome"] .ngd-status-chip') || { textContent: '' }).textContent.trim(),
         fields: {
           name: document.querySelector('#admin-profile [data-ngd-field="full_name"]').textContent.trim(),
           role: document.querySelector('#admin-profile [data-ngd-field="role"]').textContent.trim(),
@@ -181,99 +221,115 @@ const ROUTES = ['dashboard', 'diamonds', 'jewellery', 'customers', 'quotes', 'ho
     expect(state.topbarLogout && state.navLogout, 'sign-out in topbar and sidebar');
     expect(JSON.stringify(state.routes) === JSON.stringify(ROUTES),
       'all 13 sidebar routes in order, got ' + state.routes.join(','));
-    expect(state.soonCount === 8,
-      'eight Soon items — Diamonds, Jewellery, Customers and Enquiries are real pages, got ' + state.soonCount);
+    expect(state.soonCount === 5,
+      'five honest Soon items — the eight management pages are live, got ' + state.soonCount);
+    expect(['diamonds.html', 'jewellery.html', 'customers.html', 'quotes.html', 'holds.html',
+      'inspections.html', 'enquiries.html'].every((h) => state.liveHrefs.includes(h)),
+      'every management console linked from the sidebar, got ' + state.liveHrefs.join(','));
     expect(state.active === 'dashboard', 'Dashboard route active');
     expect(state.title === 'Admin Dashboard', 'page title, got ' + state.title);
     expect(/Welcome, Asha/.test(state.welcome), 'first-name welcome');
+    expect(state.liveChip === 'Live data', 'live-data chip, got ' + state.liveChip);
     expect(state.fields.name === 'Asha Admin' && state.fields.role === 'admin' &&
       state.fields.status === 'active', 'signed-in-as card filled');
   });
 
-  await scenario('KPIs: six cards, catalogue-true inventory counts, everything chipped demo', {}, async (page, user) => {
+  await scenario('KPIs: seven live head-count cards, no demo chips, honest live note', {}, async (page, user) => {
     await openAdmin(page, user);
-    await page.waitForFunction(() =>
-      document.querySelector('[data-admin-kpi="diamonds"] [data-admin-kpi-value]').textContent !== '—');
+    await waitSettled(page);
     const state = await page.evaluate(() => ({
       cards: [...document.querySelectorAll('[data-admin-kpi]')].map((c) => ({
         key: c.getAttribute('data-admin-kpi'),
         value: c.querySelector('[data-admin-kpi-value]').textContent.trim(),
-        chip: !!c.querySelector('[data-admin-kpi-chip]'),
+        unavailable: c.classList.contains('is-unavailable'),
         label: c.querySelector('.ngd-dash-metric-label').textContent.trim(),
       })),
-      catalogue: {
-        diamonds: (window.NGD_DEMO_DIAMONDS || []).length,
-        jewellery: (window.NGD_DEMO_JEWELLERY || []).length,
-      },
-      note: document.querySelector('[data-admin-kpi-note]').textContent.replace(/\s+/g, ' '),
+      demoChips: document.querySelectorAll('#admin-kpis [data-admin-kpi-chip], #admin-kpis .ngd-demo-chip').length,
+      demoWording: /demo/i.test(document.getElementById('admin-kpis').textContent),
+      note: document.querySelector('[data-admin-dashboard-status]').textContent.replace(/\s+/g, ' ').trim(),
     }));
-    expect(state.cards.length === 6, 'six KPI cards, got ' + state.cards.length);
-    const byKey = Object.fromEntries(state.cards.map((c) => [c.key, c]));
-    expect(byKey.diamonds.value === String(state.catalogue.diamonds) &&
-      byKey.jewellery.value === String(state.catalogue.jewellery),
-      `inventory KPIs mirror the demo catalogue (${byKey.diamonds.value}/${byKey.jewellery.value})`);
-    expect(['customers', 'pending_quotes', 'pending_holds', 'enquiries']
-      .every((k) => /^\d+$/.test(byKey[k].value)), 'sample figures for the rest');
-    expect(state.cards.every((c) => c.chip), 'every KPI chipped Demo');
+    expect(state.cards.length === 7, 'seven KPI cards, got ' + state.cards.length);
+    const byKey = Object.fromEntries(state.cards.map((c) => [c.key, c.value]));
+    expect(byKey.diamonds === '28' && byKey.jewellery === '12', 'inventory counts from the head queries, got ' + byKey.diamonds + '/' + byKey.jewellery);
+    expect(byKey.customers === '9', 'customer count, got ' + byKey.customers);
+    expect(byKey.pending_quotes === '3' && byKey.pending_holds === '2' && byKey.pending_inspections === '1',
+      'pending request counts, got ' + [byKey.pending_quotes, byKey.pending_holds, byKey.pending_inspections].join('/'));
+    expect(byKey.enquiries === '5', 'open/new enquiries count, got ' + byKey.enquiries);
+    expect(state.cards.every((c) => !c.unavailable), 'no card degraded on a clean load');
     expect(state.cards.map((c) => c.label).join('|') ===
-      'Total Diamonds|Total Jewellery|Customers|Pending Quotes|Pending Holds|Enquiries',
-      'KPI labels per spec');
-    expect(/Nothing here is live business data/i.test(state.note), 'honest KPI note');
+      'Total Diamonds|Total Jewellery|Customers|Pending Quotes|Pending Holds|Pending Inspections|Open/New Enquiries',
+      'KPI labels per spec, got ' + state.cards.map((c) => c.label).join('|'));
+    expect(state.demoChips === 0 && !state.demoWording, 'nothing chipped or worded demo');
+    expect(state.note === 'Live counts from Supabase. Values update when records are added or their status changes.',
+      'honest live note, got ' + state.note);
   });
 
-  await scenario('quick actions: four live links, one honest Soon button, storefront link', {}, async (page, user) => {
+  await scenario('quick actions: seven live console links, nothing disabled or Soon', {}, async (page, user) => {
     await openAdmin(page, user);
     const state = await page.evaluate(() => ({
-      labels: [...document.querySelectorAll('#admin-action-buttons [data-admin-action]')]
-        .map((b) => b.textContent.replace(/Soon/i, '').trim()),
-      soonChips: document.querySelectorAll('#admin-action-buttons [data-admin-action] .ngd-soon-chip').length,
-      disabled: [...document.querySelectorAll('#admin-action-buttons button[data-admin-action]')]
-        .every((b) => b.getAttribute('aria-disabled') === 'true'),
-      addHref: document.querySelector('[data-admin-action="add-diamond"]').getAttribute('href'),
-      addJwHref: document.querySelector('[data-admin-action="add-jewellery"]').getAttribute('href'),
-      custHref: document.querySelector('[data-admin-action="view-customers"]').getAttribute('href'),
-      enqHref: document.querySelector('[data-admin-action="view-enquiries"]').getAttribute('href'),
-      store: document.querySelector('#admin-action-buttons a.ngd-btn-gold').getAttribute('href'),
-    }));
-    expect(JSON.stringify(state.labels) === JSON.stringify(
-      ['Add Diamond', 'Add Jewellery', 'View Customers', 'Review Quotes', 'View Enquiries']),
-      'action labels per spec, got ' + state.labels.join(','));
-    expect(state.soonChips === 1 && state.disabled,
-      'only Review Quotes still Soon; the other four actions are live pages');
-    expect(state.addHref === 'add-diamond.html', 'Add Diamond links its page');
-    expect(state.addJwHref === 'add-jewellery.html', 'Add Jewellery links its page');
-    expect(state.custHref === 'customers.html' && state.enqHref === 'enquiries.html',
-      'View Customers and View Enquiries link their pages');
-    /* aria-disabled makes Playwright refuse a normal click — dispatch one
-       directly to prove a Soon button still navigates nowhere */
-    await page.$eval('#admin-action-buttons [data-admin-action="review-quotes"]', (el) => el.click());
-    await page.waitForTimeout(300);
-    const stayed = await page.evaluate(() => /admin\/dashboard\.html$/.test(location.pathname));
-    expect(stayed, 'Soon action navigates nowhere');
-    expect(state.store === '../diamonds.html', 'storefront link is live');
-    await page.click('#admin-action-buttons a.ngd-btn-gold');
-    await page.waitForURL('**/diamonds.html', { timeout: 8000 });
-  });
-
-  await scenario('recent activity: five labelled demo items with working catalogue links', {}, async (page, user) => {
-    await openAdmin(page, user);
-    const state = await page.evaluate(() => ({
-      rows: [...document.querySelectorAll('[data-admin-feed] .ngd-dash-row')].map((r) => ({
-        title: r.querySelector('strong').textContent.trim(),
-        chip: !!r.querySelector('.ngd-demo-chip'),
+      actions: [...document.querySelectorAll('#admin-action-buttons [data-admin-action]')].map((el) => ({
+        tag: el.tagName, key: el.getAttribute('data-admin-action'),
+        href: el.getAttribute('href'), label: el.textContent.trim(),
+        disabled: el.getAttribute('aria-disabled') === 'true',
       })),
-      links: [...document.querySelectorAll('[data-admin-feed] a.ngd-link')].map((a) => a.getAttribute('href')),
-      statusChips: document.querySelectorAll('[data-admin-feed] .ngd-status-chip').length,
+      soonChips: document.querySelectorAll('#admin-action-buttons .ngd-soon-chip').length,
     }));
-    expect(JSON.stringify(state.rows.map((r) => r.title)) === JSON.stringify(
-      ['Diamond added', 'Jewellery updated', 'Quote received', 'Customer registered', 'Enquiry received']),
-      'activity items per spec, got ' + state.rows.map((r) => r.title).join(','));
-    expect(state.rows.every((r) => r.chip), 'every activity item chipped Demo');
-    expect(state.links.some((h) => /diamond-details/.test(h)) &&
-      state.links.some((h) => /jewellery-details/.test(h)), 'feed links resolve to the catalogue');
-    expect(state.statusChips >= 3, 'status badges in the feed');
-    await page.click('[data-admin-feed] a[href="../diamond-details.html?id=NGD-1022"]');
-    await page.waitForURL('**/diamond-details.html?id=NGD-1022', { timeout: 8000 });
+    expect(state.actions.length === 7, 'seven quick actions, got ' + state.actions.length);
+    expect(state.actions.every((a) => a.tag === 'A' && a.href === a.key + '.html' && !a.disabled),
+      'every action is a live link to its console, got ' + state.actions.map((a) => a.href).join(','));
+    expect(JSON.stringify(state.actions.map((a) => a.label)) === JSON.stringify(
+      ['Diamonds', 'Jewellery', 'Customers', 'Quotes', 'Holds', 'Inspections', 'Enquiries']),
+      'action labels per spec, got ' + state.actions.map((a) => a.label).join(','));
+    expect(state.soonChips === 0, 'no Soon chips left in the actions');
+  });
+
+  await scenario('recent activity: merged live feed, newest first, escaped, console links', {}, async (page, user) => {
+    await openAdmin(page, user);
+    await waitSettled(page);
+    await page.waitForFunction(() => document.querySelectorAll('[data-admin-feed] .ngd-dash-row').length >= 8);
+    const state = await page.evaluate(() => ({
+      busy: document.querySelector('[data-admin-feed]').getAttribute('aria-busy'),
+      titles: [...document.querySelectorAll('[data-admin-feed] .ngd-dash-row strong')].map((s) => s.textContent.trim()),
+      text: document.querySelector('[data-admin-feed]').textContent,
+      links: [...document.querySelectorAll('[data-admin-feed] a.ngd-link')].map((a) => a.getAttribute('href')),
+      injectedImg: !!document.querySelector('[data-admin-feed] img'),
+      xss: window.__xss === 1,
+    }));
+    expect(state.busy === 'false', 'feed no longer busy');
+    expect(JSON.stringify(state.titles) === JSON.stringify(
+      ['Enquiry received', 'Quote requested', 'Diamond added', 'Diamond added', 'Jewellery added',
+        'Customer registered', 'Hold requested', 'Inspection requested']),
+      'merged feed newest first, got ' + state.titles.join(','));
+    expect(/NGD-2201 · Round/.test(state.text) && /JW-3101 · Aurora Ring/.test(state.text) &&
+      /QTE-11111111 · pending/.test(state.text) && /ENQ-44444444 · Bulk order/.test(state.text) &&
+      /Nisha Mehta/.test(state.text), 'live descriptions rendered');
+    expect(['diamonds.html', 'jewellery.html', 'customers.html', 'quotes.html', 'holds.html',
+      'inspections.html', 'enquiries.html'].every((h) => state.links.includes(h)),
+      'every row links its console, got ' + state.links.join(','));
+    expect(!state.injectedImg && !state.xss && /onerror/.test(state.text),
+      'database text is escaped, never executed');
+  });
+
+  await scenario('failure isolation: one broken KPI and one broken feed source degrade honestly', { failKpis: ['enquiries'], failActivity: ['quotes'] }, async (page, user) => {
+    await openAdmin(page, user);
+    await waitSettled(page);
+    const state = await page.evaluate(() => ({
+      enquiries: {
+        value: document.querySelector('[data-admin-kpi="enquiries"] [data-admin-kpi-value]').textContent.trim(),
+        unavailable: document.querySelector('[data-admin-kpi="enquiries"]').classList.contains('is-unavailable'),
+      },
+      diamonds: document.querySelector('[data-admin-kpi="diamonds"] [data-admin-kpi-value]').textContent.trim(),
+      note: document.querySelector('[data-admin-dashboard-status]').textContent.replace(/\s+/g, ' ').trim(),
+      role: document.querySelector('[data-admin-dashboard-status]').getAttribute('role'),
+      titles: [...document.querySelectorAll('[data-admin-feed] .ngd-dash-row strong')].map((s) => s.textContent.trim()),
+    }));
+    expect(state.enquiries.unavailable && state.enquiries.value === '—', 'broken KPI shows an em dash, not a fake zero');
+    expect(state.diamonds === '28', 'healthy KPIs unaffected');
+    expect(state.note === 'Some dashboard data could not be loaded. Available figures are still shown.',
+      'honest degraded status, got ' + state.note);
+    expect(state.role === 'alert', 'degraded status announced as an alert');
+    expect(state.titles.length >= 6 && !state.titles.includes('Quote requested'),
+      'feed still renders the healthy sources, got ' + state.titles.join(','));
   });
 
   await scenario('guards: no session → login; customer role → own dashboard', { role: 'customer' }, async (page, user) => {
