@@ -3126,10 +3126,11 @@ a.ngd-chip {
 
 .ngd-fav-actions {
   display: flex;
+  flex-wrap: wrap; /* long labels must never escape the card */
   gap: 0.6rem;
 }
 
-.ngd-fav-actions .ngd-btn { flex: 1 1 0; }
+.ngd-fav-actions .ngd-btn { flex: 1 1 auto; min-width: 0; }
 
 /* Demo-state switcher (clearly a preview control, not data) */
 .ngd-dash-state-switch {

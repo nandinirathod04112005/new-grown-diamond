@@ -24,7 +24,7 @@ Bootstrap 5 + vanilla JavaScript** frontend backed by **Supabase**
 | Manufacturing page (9-stage cinematic journey) | ✅ done |
 | Education page (comparison, 4Cs, shapes, certification, FAQ) | ✅ done |
 | About page (story, mission/vision, journey, trust, responsibility) | ✅ done |
-| Contact page (7-field enquiry form, info cards, trade desk, map slot) | ✅ done — connect your inbox |
+| Contact page (7-field enquiry form, info cards, trade desk, map slot) | ✅ live — guest + customer enquiries into `public.enquiries` |
 | Login page premium UI (split card, show/hide, remember me) | ✅ done |
 | Signup page premium UI (country, strength meter, terms, toggles) | ✅ done |
 | Forgot + Reset Password (recovery session, non-disclosing copy) | ✅ live |
@@ -69,7 +69,7 @@ Bootstrap 5 + vanilla JavaScript** frontend backed by **Supabase**
 | `manufacturing.html` | Manufacturing — cinematic 9-stage journey, quality control, certification, inventory CTA |
 | `education.html` | Diamond Education — natural vs lab-grown, CVD vs HPHT, the 4Cs, shapes, certification, report guide, care, FAQ |
 | `about.html` | About — story, mission & vision, four-movement journey, why choose us, quality & trust, innovation, responsibility |
-| `contact.html` | Contact — info cards, validated 7-field enquiry form (no fake sends; optional mailto-draft via `assets/js/contact.js`), business desk, map placeholder |
+| `contact.html` | Contact (LIVE) — info cards, validated 7-field enquiry form inserting real `ENQ-` enquiries (guest or signed-in, honeypot-guarded, honest errors), business desk, map placeholder |
 | `privacy.html` / `terms.html` | Placeholder pages behind the footer navigation |
 | `login.html` | Sign in → role-based redirect from `public.profiles` |
 | `register.html` | Customer signup (`role` is assigned by the DB trigger, never the browser) |
