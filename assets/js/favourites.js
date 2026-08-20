@@ -81,13 +81,15 @@
     var title = diamond ? [value(r, ['shape'], 'Diamond'), value(r, ['carat'], '') ? Number(r.carat).toFixed(2) + ' ct' : ''].join(' · ') : value(r, ['product_name', 'name'], 'Jewellery');
     var category = diamond ? value(r, ['diamond_type', 'type', 'shape'], 'Diamond') : value(r, ['category', 'type'], 'Jewellery');
     var art = diamond ? ((window.NGD_GEM_ART || {})[String(r.shape || '').toLowerCase()] || '') : ((window.NGD_JEWEL_ART || {})[String(r.category || '').toLowerCase()] || '');
+    /* The details pages resolve only immutable DIA-/JEW- public ids. */
     var details = diamond ? '../diamond-details.html?id=' : '../jewellery-details.html?id=';
+    var detailsRef = value(r, ['public_id'], '') || ref || item.productId;
     return '<div class="col-12 col-sm-6 col-xl-4 col-xxl-3"><article class="ngd-card ngd-fav-card h-100" data-fav-row="' + esc(item.id) + '">' +
       '<div class="' + (diamond ? 'ngd-diamond-media' : 'ngd-jewel-media') + '">' + media(r, art) + '</div>' +
       '<div class="' + (diamond ? 'ngd-diamond-body' : 'ngd-jewel-body') + '"><p class="ngd-jewel-cat">' + esc(category) + '</p>' +
       '<h2 class="ngd-title fs-5">' + esc(title) + '</h2><p class="ngd-stock-no">' + esc(ref) + '</p>' +
-      '<div class="ngd-fav-actions mt-3"><a class="ngd-btn ngd-btn-gold ngd-btn-sm" href="' + details + encodeURIComponent(ref || item.productId) + '">View Details</a>' +
-      '<button type="button" class="ngd-btn ngd-btn-outline ngd-btn-sm" data-fav-remove>Remove from Favourites</button></div></div></article></div>';
+      '<div class="ngd-fav-actions mt-3"><a class="ngd-btn ngd-btn-gold ngd-btn-sm" href="' + details + encodeURIComponent(detailsRef) + '">View Details</a>' +
+      '<button type="button" class="ngd-btn ngd-btn-outline ngd-btn-sm" data-fav-remove aria-label="Remove from favourites">Remove</button></div></div></article></div>';
   }
 
   function apply() {

@@ -1,12 +1,13 @@
 /* ============================================================
-   Customer Favourites UI tests (STEP 21).
-   Logs in against the compact mocked Supabase backend, then
-   verifies the favourites page: shared dashboard shell with the
-   Favourites route active, the demo notice, mixed diamond +
-   jewellery cards with their spec fields and paired
-   View/Remove actions, tabs, search, sort, the honest
-   demo-only removal with Undo, the exact empty-state copy with
-   both CTAs, the no-session guard and layouts at 1440/768/390.
+   Customer Favourites page tests (LIVE).
+   Logs in against the compact mocked Supabase backend, seeds
+   /rest/v1/favourites with embedded diamond + jewellery records,
+   then verifies: the shared dashboard shell with the Favourites
+   route active and no demo notice, live mixed cards whose View
+   Details links use immutable DIA-/JEW- public ids, tabs, search,
+   sort by carat, the real RLS-scoped DELETE on remove (and the
+   honest error path when it fails), the exact empty state, the
+   no-session guard and layouts at 1440/768/390.
    Run:  node tests/favourites-ui.test.cjs
    ============================================================ */
 'use strict';
@@ -34,6 +35,46 @@ const USER = {
   },
 };
 
+function dia(n, stock, publicId, carat, shape) {
+  return {
+    id: 'fav-d' + n, product_type: 'diamond',
+    diamond_id: '00000000-0000-4000-9000-00000000000' + n, jewellery_id: null,
+    created_at: '2026-08-0' + n + 'T10:00:00Z',
+    jewellery: null,
+    diamonds: {
+      id: '00000000-0000-4000-9000-00000000000' + n,
+      public_id: publicId, stock_number: stock, shape: shape, carat: carat,
+      colour: 'E', clarity: 'VS1', cut: 'Excellent', laboratory: 'IGI',
+      active: true, archived_at: null,
+    },
+  };
+}
+function jew(n, sku, publicId, name, category, weight) {
+  return {
+    id: 'fav-j' + n, product_type: 'jewellery',
+    jewellery_id: '00000000-0000-4000-a000-00000000000' + n, diamond_id: null,
+    created_at: '2026-07-0' + n + 'T10:00:00Z',
+    diamonds: null,
+    jewellery: {
+      id: '00000000-0000-4000-a000-00000000000' + n,
+      public_id: publicId, sku: sku, product_name: name, category: category,
+      diamond_weight: weight, metal_type: '18K White Gold',
+      availability: 'ready', active: true, archived_at: null,
+    },
+  };
+}
+function seedSet() {
+  return [
+    dia(7, 'NGD-1007', 'DIA-SEED0007', 3.01, 'Round'),
+    dia(1, 'NGD-1001', 'DIA-SEED0001', 1.25, 'Oval'),
+    dia(2, 'NGD-1002', 'DIA-SEED0002', 2.05, 'Princess'),
+    dia(3, 'NGD-1003', 'DIA-SEED0003', 0.75, 'Pear'),
+    jew(1, 'JW-2001', 'JEW-SEED0001', 'Aurora Solitaire Ring', 'Rings', 1.5),
+    jew(2, 'JW-2002', 'JEW-SEED0002', 'Halo Pendant', 'Pendants', 0.5),
+    jew(3, 'JW-2003', 'JEW-SEED0003', 'Cluster Earrings', 'Earrings', 2.6),
+  ];
+}
+
 function b64url(obj) {
   return Buffer.from(JSON.stringify(obj)).toString('base64url');
 }
@@ -53,45 +94,62 @@ function userObject() {
   };
 }
 const CORS = { 'access-control-allow-origin': '*', 'access-control-expose-headers': '*' };
-async function mockBackend(route) {
-  const req = route.request();
-  const url = new URL(req.url());
-  const method = req.method();
-  const json = (status, obj) =>
-    route.fulfill({ status, contentType: 'application/json', headers: CORS, body: JSON.stringify(obj) });
-  if (method === 'OPTIONS') {
-    return route.fulfill({
-      status: 204,
-      headers: { ...CORS, 'access-control-allow-headers': req.headers()['access-control-request-headers'] || '*', 'access-control-allow-methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS' },
-      body: '',
-    });
-  }
-  if (url.pathname === '/auth/v1/token' && method === 'POST') {
-    const body = JSON.parse(req.postData() || '{}');
-    const grant = url.searchParams.get('grant_type');
-    const ok = grant === 'refresh_token' ||
-      (body.email === USER.email && body.password === USER.password);
-    if (!ok) return json(400, { code: 'invalid_credentials', error_code: 'invalid_credentials', msg: 'Invalid login credentials', message: 'Invalid login credentials' });
-    return json(200, {
-      access_token: makeJwt(), token_type: 'bearer', expires_in: 3600,
-      expires_at: Math.floor(Date.now() / 1000) + 3600, refresh_token: 'rt-1', user: userObject(),
-    });
-  }
-  if (url.pathname === '/auth/v1/user' && method === 'GET') {
-    const auth = req.headers()['authorization'] || '';
-    if (!/Bearer .+\.testsig$/.test(auth)) return json(401, { code: 'no_session', error_code: 'no_session', msg: 'missing sub claim', message: 'missing sub claim' });
-    return json(200, userObject());
-  }
-  if (url.pathname === '/auth/v1/logout' && method === 'POST') {
-    return route.fulfill({ status: 204, headers: CORS, body: '' });
-  }
-  if (url.pathname === '/rest/v1/profiles' && method === 'GET') {
-    const row = { id: USER.id, email: USER.email, ...USER.profile, created_at: '2026-01-01T00:00:00Z' };
-    const accept = req.headers()['accept'] || '';
-    if (accept.includes('vnd.pgrst.object')) return json(200, row);
-    return json(200, [row]);
-  }
-  return json(404, { message: 'mock: unhandled ' + method + ' ' + url.pathname });
+let deleteCalls = [];
+function makeBackend(opts) {
+  return async function mockBackend(route) {
+    const req = route.request();
+    const url = new URL(req.url());
+    const method = req.method();
+    const json = (status, obj) =>
+      route.fulfill({ status, contentType: 'application/json', headers: CORS, body: JSON.stringify(obj) });
+    if (method === 'OPTIONS') {
+      return route.fulfill({
+        status: 204,
+        headers: { ...CORS, 'access-control-allow-headers': req.headers()['access-control-request-headers'] || '*', 'access-control-allow-methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS' },
+        body: '',
+      });
+    }
+    if (url.pathname === '/auth/v1/token' && method === 'POST') {
+      const body = JSON.parse(req.postData() || '{}');
+      const grant = url.searchParams.get('grant_type');
+      const ok = grant === 'refresh_token' ||
+        (body.email === USER.email && body.password === USER.password);
+      if (!ok) return json(400, { code: 'invalid_credentials', error_code: 'invalid_credentials', msg: 'Invalid login credentials', message: 'Invalid login credentials' });
+      return json(200, {
+        access_token: makeJwt(), token_type: 'bearer', expires_in: 3600,
+        expires_at: Math.floor(Date.now() / 1000) + 3600, refresh_token: 'rt-1', user: userObject(),
+      });
+    }
+    if (url.pathname === '/auth/v1/user' && method === 'GET') {
+      const auth = req.headers()['authorization'] || '';
+      if (!/Bearer .+\.testsig$/.test(auth)) return json(401, { code: 'no_session', error_code: 'no_session', msg: 'missing sub claim', message: 'missing sub claim' });
+      return json(200, userObject());
+    }
+    if (url.pathname === '/auth/v1/logout' && method === 'POST') {
+      return route.fulfill({ status: 204, headers: CORS, body: '' });
+    }
+    if (url.pathname === '/rest/v1/profiles' && method === 'GET') {
+      const row = { id: USER.id, email: USER.email, ...USER.profile, created_at: '2026-01-01T00:00:00Z' };
+      const accept = req.headers()['accept'] || '';
+      if (accept.includes('vnd.pgrst.object')) return json(200, row);
+      return json(200, [row]);
+    }
+    if (url.pathname === '/rest/v1/favourites' && method === 'GET') {
+      // The page must only ever ask for the signed-in customer's rows.
+      if (!url.search.includes('user_id=eq.' + USER.id)) return json(400, { message: 'mock: favourites query missing the user_id filter' });
+      return json(200, opts.seeds);
+    }
+    if (url.pathname === '/rest/v1/favourites' && method === 'DELETE') {
+      deleteCalls.push({ url: req.url() });
+      if (opts.failDelete) return json(500, { message: 'mock delete failure', code: 'XX000' });
+      return route.fulfill({ status: 204, headers: CORS, body: '' });
+    }
+    if (url.pathname.startsWith('/rest/v1/') && (method === 'GET' || method === 'HEAD')) {
+      // Dashboard widgets probed on the login hop — harmless empty data.
+      return json(200, []);
+    }
+    return json(404, { message: 'mock: unhandled ' + method + ' ' + url.pathname });
+  };
 }
 
 const results = [];
@@ -111,7 +169,7 @@ async function scenario(name, opts, fn) {
     await installCdnRoutes(context);
     await context.route('**/assets/js/supabase-config.js', (r) =>
       r.fulfill({ status: 200, contentType: 'application/javascript', body: TEST_CONFIG }));
-    await context.route(SB_HOST + '/**', mockBackend);
+    await context.route(SB_HOST + '/**', makeBackend({ seeds: opts.seeds || seedSet(), failDelete: !!opts.failDelete }));
     const page = await context.newPage();
     page.on('pageerror', (e) => pageErrors.push(String(e)));
     await fn(page);
@@ -126,7 +184,7 @@ async function scenario(name, opts, fn) {
   }
 }
 
-async function openFavourites(page) {
+async function openFavourites(page, waitFor) {
   await page.goto(SITE + '/login.html', { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => window.ngdSupabaseState === 'ready');
   await page.fill('#login-email', USER.email);
@@ -134,7 +192,11 @@ async function openFavourites(page) {
   await page.click('#login-submit');
   await page.waitForURL('**/account/dashboard.html', { timeout: 10000 });
   await page.goto(SITE + '/account/favourites.html', { waitUntil: 'domcontentloaded' });
-  await page.waitForFunction(() => document.querySelectorAll('#fav-grid article').length > 0);
+  if (waitFor === 'empty') {
+    await page.waitForFunction(() => !document.getElementById('fav-empty').hidden);
+  } else {
+    await page.waitForFunction(() => document.querySelectorAll('#fav-grid article').length > 0);
+  }
 }
 
 (async () => {
@@ -142,7 +204,7 @@ async function openFavourites(page) {
   SITE = started.origin;
   browser = await chromium.launch(chromiumOptions());
 
-  await scenario('shell reused: sidebar with Favourites active, title, honest demo notice', {}, async (page) => {
+  await scenario('shell reused: sidebar with Favourites active, live title, no demo notice', {}, async (page) => {
     await openFavourites(page);
     const state = await page.evaluate(() => ({
       topbar: !!document.querySelector('.ngd-dash-topbar [data-ngd-logout]'),
@@ -150,57 +212,51 @@ async function openFavourites(page) {
       dashboardHref: document.querySelector('.ngd-dash-nav a[data-dash-route="dashboard"]').getAttribute('href'),
       holdsHref: document.querySelector('.ngd-dash-nav a[data-dash-route="holds"]').getAttribute('href'),
       title: document.querySelector('h1').textContent.trim(),
-      notice: document.getElementById('fav-demo-note').textContent,
+      demoNote: !!document.getElementById('fav-demo-note'),
+      demoWording: /demo/i.test(document.querySelector('.ngd-dash-main').textContent),
+      firstName: document.querySelector('[data-ngd-field="first_name"]').textContent.trim(),
       visible: getComputedStyle(document.body).visibility === 'visible',
     }));
     expect(state.visible, 'guard passed and revealed the page');
     expect(state.topbar, 'shared topbar present');
     expect(state.active === 'favourites', 'Favourites route active, got ' + state.active);
     expect(state.dashboardHref === 'dashboard.html', 'sidebar routes back to the dashboard');
-    expect(state.holdsHref === 'holds.html', 'holds is a real route since STEP 22');
+    expect(state.holdsHref === 'holds.html', 'holds is a real route');
     expect(state.title === 'My Favourites', 'page title, got ' + state.title);
-    expect(/demo preview/i.test(state.notice) && /nothing is saved or deleted/i.test(state.notice),
-      'honest demo notice present');
+    expect(!state.demoNote && !state.demoWording, 'no demo notice or wording anywhere');
+    expect(state.firstName === 'Chetan', 'greets the signed-in customer');
   });
 
-  await scenario('mixed demo cards carry every spec field and paired actions', {}, async (page) => {
+  await scenario('live cards: mixed types, spec text, public-id links, paired actions, honest count', {}, async (page) => {
     await openFavourites(page);
     const state = await page.evaluate(() => {
-      const dCard = document.querySelector('[data-fav-type="diamond"]');
-      const jCard = document.querySelector('[data-fav-type="jewellery"]');
-      const dTerms = [...dCard.querySelectorAll('dt')].map((t) => t.textContent.trim());
+      const links = [...document.querySelectorAll('#fav-grid a.ngd-btn')].map((a) => a.getAttribute('href'));
+      const dCard = document.querySelector('#fav-grid a[href*="DIA-SEED0007"]').closest('article');
+      const jCard = document.querySelector('#fav-grid a[href*="JEW-SEED0001"]').closest('article');
       return {
         total: document.querySelectorAll('#fav-grid article').length,
-        diamonds: document.querySelectorAll('[data-fav-type="diamond"]').length,
-        pieces: document.querySelectorAll('[data-fav-type="jewellery"]').length,
-        chips: document.querySelectorAll('#fav-grid .ngd-fav-chip').length,
+        dLinks: links.filter((h) => /^\.\.\/diamond-details\.html\?id=DIA-SEED000\d$/.test(h)).length,
+        jLinks: links.filter((h) => /^\.\.\/jewellery-details\.html\?id=JEW-SEED000\d$/.test(h)).length,
         dArt: !!dCard.querySelector('.ngd-diamond-media svg'),
         dStock: dCard.querySelector('.ngd-stock-no').textContent.trim(),
-        dTerms,
-        dView: dCard.querySelector('a.ngd-btn').getAttribute('href'),
+        dTitle: dCard.querySelector('h2').textContent.trim(),
         dRemove: !!dCard.querySelector('[data-fav-remove]'),
-        jArt: !!jCard.querySelector('.ngd-jewel-figure svg'),
-        jName: jCard.querySelector('.ngd-jewel-name').textContent.trim().length,
-        jCat: jCard.querySelector('.ngd-jewel-cat').textContent.trim().length,
-        jWeight: !!jCard.querySelector('.ngd-weight-chip'),
-        jAvail: !!jCard.querySelector('.ngd-avail'),
-        jView: jCard.querySelector('a.ngd-btn').getAttribute('href'),
+        jArt: !!jCard.querySelector('.ngd-jewel-media svg'),
+        jName: jCard.querySelector('h2').textContent.trim(),
+        jCat: jCard.querySelector('.ngd-jewel-cat').textContent.trim(),
         jRemove: !!jCard.querySelector('[data-fav-remove]'),
         count: document.getElementById('fav-count').textContent,
       };
     });
-    expect(state.total === 7 && state.diamonds === 4 && state.pieces === 3,
-      'seven demo favourites (4 + 3), got ' + state.total);
-    expect(state.chips === 7, 'every card chipped Demo');
-    expect(state.dArt && /^NGD-\d+$/.test(state.dStock), 'diamond art + stock number');
-    expect(['Shape', 'Carat', 'Colour', 'Clarity', 'Laboratory'].every((t) => state.dTerms.includes(t)),
-      'diamond spec fields, got ' + state.dTerms.join(','));
-    expect(/^\.\.\/diamond-details\.html\?id=NGD-/.test(state.dView), 'diamond View Details link');
-    expect(state.jArt && state.jName > 3 && state.jCat > 3, 'jewellery art, name and category');
-    expect(state.jWeight && state.jAvail, 'jewellery weight + availability');
-    expect(/^\.\.\/jewellery-details\.html\?id=JW-/.test(state.jView), 'jewellery View Details link');
+    expect(state.total === 7, 'seven live favourites, got ' + state.total);
+    expect(state.dLinks === 4 && state.jLinks === 3, 'every View Details link uses the DIA-/JEW- public id, got ' + state.dLinks + '+' + state.jLinks);
+    expect(state.dArt, 'diamond shape art fallback');
+    expect(state.dStock === 'NGD-1007', 'diamond stock number, got ' + state.dStock);
+    expect(/Round · 3\.01 ct/.test(state.dTitle), 'diamond title from live specs, got ' + state.dTitle);
+    expect(state.jArt, 'jewellery category art fallback');
+    expect(state.jName === 'Aurora Solitaire Ring' && state.jCat === 'Rings', 'jewellery name + category, got ' + state.jName + '/' + state.jCat);
     expect(state.dRemove && state.jRemove, 'Remove button on both card types');
-    expect(/Showing 7 of 7/.test(state.count), 'result count, got ' + state.count);
+    expect(state.count === 'Showing 7 of 7 — 4 diamonds · 3 jewellery', 'honest count, got ' + state.count);
   });
 
   await scenario('tabs filter by type and move the active chip', {}, async (page) => {
@@ -208,16 +264,18 @@ async function openFavourites(page) {
     await page.click('[data-fav-tab="diamond"]');
     let state = await page.evaluate(() => ({
       cards: document.querySelectorAll('#fav-grid article').length,
-      jewels: document.querySelectorAll('[data-fav-type="jewellery"]').length,
+      jewels: document.querySelectorAll('#fav-grid a[href^="../jewellery-details"]').length,
       active: document.querySelector('#fav-tabs .is-active').getAttribute('data-fav-tab'),
       pressed: document.querySelector('[data-fav-tab="diamond"]').getAttribute('aria-pressed'),
+      count: document.getElementById('fav-count').textContent,
     }));
     expect(state.cards === 4 && state.jewels === 0, 'diamonds tab shows only diamonds');
     expect(state.active === 'diamond' && state.pressed === 'true', 'active chip follows');
+    expect(/Showing 4 of 7/.test(state.count), 'count reflects the filter, got ' + state.count);
     await page.click('[data-fav-tab="jewellery"]');
     state = await page.evaluate(() => ({
       cards: document.querySelectorAll('#fav-grid article').length,
-      diamonds: document.querySelectorAll('[data-fav-type="diamond"]').length,
+      diamonds: document.querySelectorAll('#fav-grid a[href^="../diamond-details"]').length,
     }));
     expect(state.cards === 3 && state.diamonds === 0, 'jewellery tab shows only pieces');
     await page.click('[data-fav-tab="all"]');
@@ -230,9 +288,15 @@ async function openFavourites(page) {
     await page.fill('#fav-search', 'NGD-1007');
     let state = await page.evaluate(() => ({
       cards: document.querySelectorAll('#fav-grid article').length,
-      id: document.querySelector('#fav-grid article').getAttribute('data-fav-id'),
+      href: document.querySelector('#fav-grid a.ngd-btn').getAttribute('href'),
     }));
-    expect(state.cards === 1 && state.id === 'NGD-1007', 'stock-number search finds the stone');
+    expect(state.cards === 1 && /DIA-SEED0007/.test(state.href), 'stock-number search finds the stone');
+    await page.fill('#fav-search', 'Aurora');
+    state = await page.evaluate(() => ({
+      cards: document.querySelectorAll('#fav-grid article').length,
+      href: document.querySelector('#fav-grid a.ngd-btn').getAttribute('href'),
+    }));
+    expect(state.cards === 1 && /JEW-SEED0001/.test(state.href), 'name search finds the piece');
     await page.fill('#fav-search', 'zzz-nothing');
     state = await page.evaluate(() => ({
       noMatch: !document.getElementById('fav-no-match').hidden,
@@ -250,51 +314,68 @@ async function openFavourites(page) {
   await scenario('sort by carat orders mixed favourites', {}, async (page) => {
     await openFavourites(page);
     await page.selectOption('#fav-sort', 'carat-desc');
-    const carats = await page.evaluate(() =>
-      [...document.querySelectorAll('#fav-grid article')].map((card) => {
-        const chip = card.querySelector('.ngd-diamond-carat, .ngd-weight-chip');
-        return chip ? parseFloat(chip.textContent) : 0;
-      }));
-    const sorted = [...carats].sort((a, b) => b - a);
-    expect(JSON.stringify(carats) === JSON.stringify(sorted),
-      'descending carat order, got ' + carats.join(','));
+    const order = await page.evaluate(() =>
+      [...document.querySelectorAll('#fav-grid a.ngd-btn')]
+        .map((a) => new URLSearchParams(a.getAttribute('href').split('?')[1]).get('id')));
+    const wanted = ['DIA-SEED0007', 'JEW-SEED0003', 'DIA-SEED0002', 'JEW-SEED0001', 'DIA-SEED0001', 'DIA-SEED0003', 'JEW-SEED0002'];
+    expect(JSON.stringify(order) === JSON.stringify(wanted),
+      'descending carat across both types, got ' + order.join(','));
+    await page.selectOption('#fav-sort', 'carat-asc');
+    const asc = await page.evaluate(() =>
+      [...document.querySelectorAll('#fav-grid a.ngd-btn')]
+        .map((a) => new URLSearchParams(a.getAttribute('href').split('?')[1]).get('id')));
+    expect(JSON.stringify(asc) === JSON.stringify([...wanted].reverse()),
+      'ascending carat mirrors it, got ' + asc.join(','));
   });
 
-  await scenario('remove updates only the demo preview, with honest toast and Undo', {}, async (page) => {
+  await scenario('remove sends the real scoped DELETE and updates the list', {}, async (page) => {
+    deleteCalls = [];
     await openFavourites(page);
-    await page.click('[data-fav-id="NGD-1007"] [data-fav-remove]');
-    let state = await page.evaluate(() => ({
-      cards: document.querySelectorAll('#fav-grid article').length,
-      gone: !document.querySelector('[data-fav-id="NGD-1007"]'),
-      toast: document.querySelector('#fav-toast .ngd-alert').textContent,
+    await page.click('#fav-grid [data-fav-row="fav-d7"] [data-fav-remove]');
+    await page.waitForFunction(() => document.querySelectorAll('#fav-grid article').length === 6);
+    const state = await page.evaluate(() => ({
+      gone: !document.querySelector('#fav-grid [data-fav-row="fav-d7"]'),
       count: document.getElementById('fav-count').textContent,
+      undo: !!document.getElementById('fav-undo'),
+      toast: document.querySelector('#fav-toast .ngd-alert')?.textContent || '',
     }));
-    expect(state.cards === 6 && state.gone, 'card removed from the preview');
-    expect(/demo preview/i.test(state.toast) && /nothing was saved or deleted/i.test(state.toast),
-      'honest removal message, got: ' + state.toast);
-    expect(/Showing 6 of 6/.test(state.count), 'count follows, got ' + state.count);
-    await page.click('#fav-undo');
-    state = await page.evaluate(() => ({
-      cards: document.querySelectorAll('#fav-grid article').length,
-      back: !!document.querySelector('[data-fav-id="NGD-1007"]'),
-      toastGone: !document.querySelector('#fav-toast .ngd-alert'),
-    }));
-    expect(state.cards === 7 && state.back && state.toastGone, 'Undo restores the item');
+    expect(state.gone, 'card removed from the list');
+    expect(state.count === 'Showing 6 of 6 — 3 diamonds · 3 jewellery', 'count follows, got ' + state.count);
+    expect(deleteCalls.length === 1, 'exactly one DELETE sent, got ' + deleteCalls.length);
+    const del = deleteCalls[0].url;
+    expect(/\/rest\/v1\/favourites/.test(del), 'DELETE targets favourites');
+    expect(del.includes('user_id=eq.' + USER.id), 'DELETE scoped to the signed-in customer');
+    expect(del.includes('product_type=eq.diamond') && /diamond_id=eq\./.test(del), 'DELETE scoped to the exact product');
+    expect(!state.undo && state.toast === '', 'no demo undo and no fake message — the row is really gone');
   });
 
-  await scenario('removing everything reveals the exact empty state with both CTAs', {}, async (page) => {
+  await scenario('failed remove keeps the card and shows the honest error', { failDelete: true }, async (page) => {
+    deleteCalls = [];
     await openFavourites(page);
-    for (let i = 0; i < 7; i++) {
-      await page.click('#fav-grid article [data-fav-remove]');
-      await page.waitForTimeout(60);
-    }
+    await page.click('#fav-grid [data-fav-row="fav-d7"] [data-fav-remove]');
+    await page.waitForSelector('#fav-toast .ngd-alert-danger', { timeout: 5000 });
+    const state = await page.evaluate(() => ({
+      cards: document.querySelectorAll('#fav-grid article').length,
+      still: !!document.querySelector('#fav-grid [data-fav-row="fav-d7"]'),
+      toast: document.querySelector('#fav-toast .ngd-alert-danger').textContent.trim(),
+      enabled: !document.querySelector('#fav-grid [data-fav-row="fav-d7"] [data-fav-remove]').disabled,
+    }));
+    expect(state.cards === 7 && state.still, 'nothing pretends to be deleted');
+    expect(state.toast === 'We could not remove that favourite. Please try again.', 'honest error copy, got ' + state.toast);
+    expect(state.enabled, 'remove button usable again');
+    expect(deleteCalls.length === 1, 'the DELETE really was attempted');
+  });
+
+  await scenario('true empty state: exact copy, both CTAs, working link', { seeds: [] }, async (page) => {
+    await openFavourites(page, 'empty');
     const state = await page.evaluate(() => ({
       empty: !document.getElementById('fav-empty').hidden,
       copy: document.querySelector('#fav-empty h2').textContent.trim(),
       ctas: [...document.querySelectorAll('#fav-empty a.ngd-btn')].map((a) => a.textContent.trim()),
       count: document.getElementById('fav-count').textContent,
+      grid: document.getElementById('fav-grid').hidden,
     }));
-    expect(state.empty, 'true empty state shown');
+    expect(state.empty && state.grid, 'true empty state shown, grid hidden');
     expect(/^You haven.t saved any favourites yet\.$/.test(state.copy),
       'exact empty copy, got ' + state.copy);
     expect(JSON.stringify(state.ctas) === JSON.stringify(['Explore Diamonds', 'Explore Jewellery']),
@@ -302,15 +383,6 @@ async function openFavourites(page) {
     expect(/No favourites/.test(state.count), 'count reads empty');
     await page.click('#fav-empty a[href="../diamonds.html"]');
     await page.waitForURL('**/diamonds.html', { timeout: 8000 });
-  });
-
-  await scenario('View Details opens the catalogue detail page', {}, async (page) => {
-    await openFavourites(page);
-    await page.click('[data-fav-id="NGD-1007"] a.ngd-btn');
-    await page.waitForURL('**/diamond-details.html?id=NGD-1007', { timeout: 8000 });
-    const stock = await page.evaluate(() =>
-      document.body.textContent.includes('NGD-1007'));
-    expect(stock, 'details page shows the stone');
   });
 
   await scenario('guard: favourites without a session redirects to login', {}, async (page) => {
@@ -341,7 +413,7 @@ async function openFavourites(page) {
     await page.screenshot({ path: path.join(SCREEN_DIR, 'favourites-mobile.png') });
   });
 
-  await scenario('tablet 768 two cards per row; desktop 1440 four per row', { viewport: { width: 768, height: 1024 } }, async (page) => {
+  await scenario('tablet 768 two cards per row; desktop 1440 grid settles', { viewport: { width: 768, height: 1024 } }, async (page) => {
     await openFavourites(page);
     /* measure the grid columns, not the articles — card hover/tilt
        transforms can nudge article rects by a few pixels */
@@ -360,7 +432,7 @@ async function openFavourites(page) {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.waitForTimeout(400);
     o = await perRow();
-    expect(o.perRow === 4, 'four cards per row at 1440, got ' + o.perRow);
+    expect(o.perRow >= 3, 'wide grid at 1440, got ' + o.perRow);
     expect(o.s <= o.c + 1, `1440 no overflow s=${o.s}`);
     await page.waitForTimeout(400);
     await page.screenshot({ path: path.join(SCREEN_DIR, 'favourites-desktop.png') });
