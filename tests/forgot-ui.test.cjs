@@ -40,7 +40,9 @@ async function scenario(name, opts, fn) {
     await context.route('https://forgot-test.supabase.co/**', async (route) => {
       const request = route.request();
       if (request.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*' } });
-      recoveryCalls.push({ url: request.url(), body: request.postDataJSON() });
+      // supabase-js transmits redirectTo as the redirect_to query parameter.
+      recoveryCalls.push({ url: request.url(), body: request.postDataJSON(),
+        redirectTo: new URL(request.url()).searchParams.get('redirect_to') });
       return route.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: '{}' });
     });
     const page = await context.newPage();
@@ -136,7 +138,7 @@ async function open(page) {
       'privacy-safe message, got: ' + state.alert);
     expect(recoveryCalls.length === 1 && /\/auth\/v1\/recover/.test(recoveryCalls[0].url), 'Supabase recovery endpoint called once');
     expect(recoveryCalls[0].body.email === 'asha@example.com', 'email sent to Supabase');
-    expect(/reset-password\.html/.test(recoveryCalls[0].body.redirect_to), 'recovery redirects to reset page');
+    expect(/reset-password\.html$/.test(recoveryCalls[0].redirectTo), 'recovery redirects to reset page');
     expect(/forgot-password\.html$/.test(state.url), 'stays on the page');
     expect(state.emailCleared === '', 'email field cleared after accepted request');
   });
