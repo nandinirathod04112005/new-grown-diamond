@@ -4,7 +4,7 @@
 
   var KPI_QUERIES = [
     { key: 'diamonds', table: 'diamonds', apply: function (q) { return q.is('archived_at', null); } },
-    { key: 'jewellery', table: 'jewellery' },
+    { key: 'jewellery', table: 'jewellery', apply: function (q) { return q.is('archived_at', null); } },
     { key: 'customers', table: 'profiles', apply: function (q) { return q.eq('role', 'customer'); } },
     { key: 'pending_quotes', table: 'quotes', apply: pending },
     { key: 'pending_holds', table: 'holds', apply: pending },
@@ -14,7 +14,7 @@
 
   var ACTIVITY_QUERIES = [
     { table: 'diamonds', select: 'id,stock_number,shape,created_at', title: 'Diamond added', icon: '◆', href: 'diamonds.html', describe: function (r) { return join([r.stock_number, r.shape]); } },
-    { table: 'jewellery', select: 'id,sku,name,created_at', title: 'Jewellery added', icon: '✦', href: 'jewellery.html', describe: function (r) { return join([r.sku, r.name]); } },
+    { table: 'jewellery', select: 'id,sku,product_name,created_at', title: 'Jewellery added', icon: '✦', href: 'jewellery.html', describe: function (r) { return join([r.sku, r.product_name]); } },
     { table: 'profiles', select: 'id,full_name,created_at', title: 'Customer registered', icon: '●', href: 'customers.html', apply: function (q) { return q.eq('role', 'customer'); }, describe: function (r) { return r.full_name || 'Customer'; } },
     { table: 'quotes', select: 'id,public_id,status,created_at', title: 'Quote requested', icon: '❐', href: 'quotes.html', describe: requestDescription },
     { table: 'holds', select: 'id,public_id,status,created_at', title: 'Hold requested', icon: '◔', href: 'holds.html', describe: requestDescription },
