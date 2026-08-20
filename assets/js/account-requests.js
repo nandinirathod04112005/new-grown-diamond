@@ -1,27 +1,18 @@
 /* ============================================================
-   NEW GROWN DIAMOND — ACCOUNT REQUEST LISTS (STEP 22 UI)
+   NEW GROWN DIAMOND — ACCOUNT REQUEST LISTS (LIVE)
    ------------------------------------------------------------
    One controller powers the three guarded request pages —
    Quote History, Holds and Inspections — selected by
    <body data-requests-page="quotes|holds|inspections">.
 
-   DEMO ONLY beyond the guard: no request backend exists. The
-   rows are static samples resolved against the public demo
-   catalogue, the page says so in its notice, and the state
-   switcher only previews the loading/empty/error designs.
-   Nothing is submitted, stored or deleted anywhere.
-
-   FUTURE SUPABASE SEAM
-   --------------------
-   Replace loadRequests() with selects from the matching tables
-   (quotes / holds / inspections; user_id, item_type, item_id,
-   status, requested_at, …). Rendering, search and filters need
-   no changes — the row shape below mirrors those columns.
+   All three lists are LIVE: they read the signed-in customer's
+   own rows from public.quotes / public.holds / public.inspections
+   (RLS scopes every query to auth.uid()), joined to the live
+   products for display. Rendering, search and the filters run
+   client-side over the loaded rows.
    ============================================================ */
 (function () {
   'use strict';
-
-  /* ---------------- demo data ---------------- */
 
   var CONFIGS = {
     quotes: {
@@ -30,21 +21,7 @@
       statuses: { Pending: '', Reviewed: 'is-gold', Responded: 'is-good', Closed: 'is-dim' },
       extra: { key: 'price', head: 'Quoted Price' },
       emptyTitle: 'No quote requests yet',
-      emptyText: 'Request Quote buttons across the site will file requests here once your account backend arrives.',
-      rows: [
-        { id: 'Q-0106', kind: 'diamond', ref: 'NGD-1007', requested: '2026-08-11', status: 'Pending',
-          note: 'Asked for the best price on this stone with express delivery.' },
-        { id: 'Q-0105', kind: 'jewellery', ref: 'JW-1003', requested: '2026-08-08', status: 'Reviewed',
-          note: 'Requested a quote in ring size 54 with a rush engraving.' },
-        { id: 'Q-0104', kind: 'diamond', ref: 'NGD-1015', requested: '2026-08-01', status: 'Responded',
-          note: 'Quote sent by email — awaiting your confirmation.' },
-        { id: 'Q-0103', kind: 'diamond', ref: 'NGD-1012', requested: '2026-07-22', status: 'Responded',
-          note: 'Quote sent with a matched-pair option included.' },
-        { id: 'Q-0102', kind: 'jewellery', ref: 'JW-1006', requested: '2026-07-10', status: 'Closed',
-          note: 'Closed at your request — piece reserved elsewhere.' },
-        { id: 'Q-0101', kind: 'diamond', ref: 'NGD-1001', requested: '2026-06-28', status: 'Closed',
-          note: 'Quote expired after fourteen days without a reply.' }
-      ]
+      emptyText: 'Use the Request Quote button on any diamond or jewellery page — your requests are tracked here.'
     },
     holds: {
       title: 'Holds',
@@ -52,29 +29,22 @@
       statuses: { Pending: '', Active: 'is-gold', Released: 'is-dim', Expired: 'is-dim', Rejected: 'is-dim' },
       extra: { key: 'expires', head: 'Expires' },
       emptyTitle: 'No holds yet',
-      emptyText: 'Ask us to hold a stone or piece while you decide.',
-      rows: []
+      emptyText: 'Ask us to hold a stone or piece while you decide — use Request Hold on any product page.'
     },
     inspections: {
       title: 'Inspections',
       idHead: 'Inspection',
-      statuses: { Requested: '', Scheduled: 'is-gold', Completed: 'is-good', Cancelled: 'is-dim' },
+      statuses: { Pending: '', Scheduled: 'is-gold', Completed: 'is-good', Cancelled: 'is-dim', Rejected: 'is-dim' },
       extra: { key: 'type', head: 'Preferred type' },
       emptyTitle: 'No inspections yet',
-      emptyText: 'Book a viewing of any stone or piece — inspection requests will be tracked here once your account backend arrives.',
-      rows: [
-        { id: 'INS-0031', kind: 'diamond', ref: 'NGD-1015', requested: '2026-08-13', type: 'In person · atelier',
-          status: 'Requested', note: 'Preferred slot: weekday mornings.' },
-        { id: 'INS-0030', kind: 'diamond', ref: 'NGD-1007', requested: '2026-08-06', type: 'Video call',
-          status: 'Scheduled', note: 'Video inspection confirmed with a gemmologist.' },
-        { id: 'INS-0029', kind: 'jewellery', ref: 'JW-1012', requested: '2026-07-28', type: 'In person · atelier',
-          status: 'Completed', note: 'Viewed at the atelier — notes shared by email.' },
-        { id: 'INS-0028', kind: 'diamond', ref: 'NGD-1001', requested: '2026-07-15', type: 'Third-party lab',
-          status: 'Completed', note: 'Independent verification completed at the laboratory.' },
-        { id: 'INS-0027', kind: 'jewellery', ref: 'JW-1006', requested: '2026-07-02', type: 'Video call',
-          status: 'Cancelled', note: 'Cancelled at your request before scheduling.' }
-      ]
+      emptyText: 'Book a viewing from any diamond page — your inspection requests are tracked here.'
     }
+  };
+
+  var INSPECTION_TYPES = {
+    in_person: 'In person · atelier',
+    video_call: 'Video call',
+    third_party_lab: 'Third-party lab'
   };
 
   var state = { config: null, rows: [], query: '', status: 'all', from: '', to: '', ui: 'demo' };
@@ -83,32 +53,13 @@
     return document.getElementById(id);
   }
 
-  /* ---------------- catalogue resolution ---------------- */
-
-  function resolveProduct(row) {
-    if (row.kind === 'diamond') {
-      var d = (window.NGD_DEMO_DIAMONDS || []).find(function (x) { return x.id === row.ref; });
-      return d ? {
-        name: d.shape + ' · ' + d.carat.toFixed(2) + ' ct',
-        sub: d.colour + ' · ' + d.clarity + ' · ' + d.lab,
-        stock: d.id,
-        art: (window.NGD_GEM_ART || {})[d.shape.toLowerCase()] || '',
-        url: '../diamond-details.html?id=' + encodeURIComponent(d.id),
-        typeLabel: 'Diamond'
-      } : null;
-    }
-    var p = (window.NGD_DEMO_JEWELLERY || []).find(function (x) { return x.id === row.ref; });
-    return p ? {
-      name: p.name,
-      sub: p.category,
-      stock: p.id,
-      art: (window.NGD_JEWEL_ART || {})[p.category.toLowerCase()] || '',
-      url: '../jewellery-details.html?id=' + encodeURIComponent(p.id),
-      typeLabel: 'Jewellery'
-    } : null;
+  function esc(value) {
+    var node = document.createElement('span');
+    node.textContent = value == null ? '' : String(value);
+    return node.innerHTML;
   }
 
-  /** Load quote and hold requests from Supabase; inspections retain their preview. */
+  /** Load the signed-in customer's own requests from Supabase. */
   async function loadRequests(kind) {
     if (kind === 'quotes') {
       var result = await window.ngdSupabase.from('quotes')
@@ -139,7 +90,7 @@
               : (item.category || 'Jewellery'),
             stock: ref,
             art: diamond ? ((window.NGD_GEM_ART || {})[String(item.shape || '').toLowerCase()] || '') : '',
-            url: '../' + (diamond ? 'diamond' : 'jewellery') + '-details.html?id=' + encodeURIComponent(ref),
+            url: '../' + (diamond ? 'diamond' : 'jewellery') + '-details.html?id=' + encodeURIComponent(item.public_id || ref),
             typeLabel: diamond ? 'Diamond' : 'Jewellery'
           }
         };
@@ -165,15 +116,37 @@
             name: diamond ? (item.shape || 'Diamond') + ' · ' + Number(item.carat || 0).toFixed(2) + ' ct' : (item.name || item.product_name || 'Jewellery'),
             sub: diamond ? [item.color, item.clarity, item.laboratory].filter(Boolean).join(' · ') : (item.category || 'Jewellery'),
             stock: ref, art: diamond ? ((window.NGD_GEM_ART || {})[String(item.shape || '').toLowerCase()] || '') : '',
-            url: '../' + (diamond ? 'diamond' : 'jewellery') + '-details.html?id=' + encodeURIComponent(ref),
+            url: '../' + (diamond ? 'diamond' : 'jewellery') + '-details.html?id=' + encodeURIComponent(item.public_id || ref),
             typeLabel: diamond ? 'Diamond' : 'Jewellery'
           }
         };
       }).filter(Boolean);
     }
-    return (CONFIGS[kind].rows || []).map(function (row) {
-      var product = resolveProduct(row);
-      return product ? Object.assign({ product: product }, row) : null;
+    var inspections = await window.ngdSupabase.from('inspections')
+      .select('*, diamonds(*), jewellery(*)')
+      .order('created_at', { ascending: false });
+    if (inspections.error) throw inspections.error;
+    return (inspections.data || []).map(function (inspection) {
+      var item = inspection.product_type === 'diamond' ? inspection.diamonds : inspection.jewellery;
+      if (!item) return null;
+      var diamond = inspection.product_type === 'diamond';
+      var ref = diamond ? (item.stock_number || item.public_id || item.id) : (item.sku || item.public_id || item.id);
+      return {
+        id: inspection.public_id, kind: inspection.product_type, ref: ref,
+        requested: String(inspection.created_at).slice(0, 10),
+        type: INSPECTION_TYPES[inspection.inspection_type] || inspection.inspection_type || '—',
+        preferred: inspection.preferred_date || null,
+        scheduled: inspection.scheduled_at ? String(inspection.scheduled_at).slice(0, 10) : null,
+        status: inspection.status.charAt(0).toUpperCase() + inspection.status.slice(1),
+        note: inspection.customer_message || '—', adminNote: inspection.admin_note,
+        product: {
+          name: diamond ? (item.shape || 'Diamond') + ' · ' + Number(item.carat || 0).toFixed(2) + ' ct' : (item.name || item.product_name || 'Jewellery'),
+          sub: diamond ? [item.color, item.clarity, item.laboratory].filter(Boolean).join(' · ') : (item.category || 'Jewellery'),
+          stock: ref, art: diamond ? ((window.NGD_GEM_ART || {})[String(item.shape || '').toLowerCase()] || '') : '',
+          url: '../' + (diamond ? 'diamond' : 'jewellery') + '-details.html?id=' + encodeURIComponent(item.public_id || ref),
+          typeLabel: diamond ? 'Diamond' : 'Jewellery'
+        }
+      };
     }).filter(Boolean);
   }
 
@@ -195,7 +168,7 @@
 
   function chip(row) {
     var cls = state.config.statuses[row.status] || '';
-    return '<span class="ngd-status-chip ' + cls + '">' + row.status + '</span>';
+    return '<span class="ngd-status-chip ' + cls + '">' + esc(row.status) + '</span>';
   }
 
   function extraValue(row) {
@@ -211,8 +184,8 @@
     return (
       '<div class="ngd-req-product">' +
       '<span class="ngd-req-thumb" aria-hidden="true">' + row.product.art + '</span>' +
-      '<span class="min-w-0"><strong>' + row.product.name + '</strong>' +
-      '<span class="ngd-text-muted d-block small">' + row.product.stock + ' · ' + row.product.sub + '</span></span>' +
+      '<span class="min-w-0"><strong>' + esc(row.product.name) + '</strong>' +
+      '<span class="ngd-text-muted d-block small">' + esc(row.product.stock) + ' · ' + esc(row.product.sub) + '</span></span>' +
       '</div>'
     );
   }
@@ -221,19 +194,20 @@
     return (
       '<div class="ngd-req-detail" data-req-detail hidden>' +
       '<dl class="row small mb-2">' +
-      '<dt class="col-sm-3 ngd-stat-label py-1">Reference</dt><dd class="col-sm-9 py-1 mb-0">' + row.id + '</dd>' +
-      '<dt class="col-sm-3 ngd-stat-label py-1">Item</dt><dd class="col-sm-9 py-1 mb-0">' + row.product.name + ' (' + row.product.stock + ')</dd>' +
+      '<dt class="col-sm-3 ngd-stat-label py-1">Reference</dt><dd class="col-sm-9 py-1 mb-0">' + esc(row.id) + '</dd>' +
+      '<dt class="col-sm-3 ngd-stat-label py-1">Item</dt><dd class="col-sm-9 py-1 mb-0">' + esc(row.product.name) + ' (' + esc(row.product.stock) + ')</dd>' +
       '<dt class="col-sm-3 ngd-stat-label py-1">Requested</dt><dd class="col-sm-9 py-1 mb-0">' + row.requested + '</dd>' +
-      (row.expires ? '<dt class="col-sm-3 ngd-stat-label py-1">Expires</dt><dd class="col-sm-9 py-1 mb-0">' + row.expires + '</dd>' : '') +
-      (row.type ? '<dt class="col-sm-3 ngd-stat-label py-1">Type</dt><dd class="col-sm-9 py-1 mb-0">' + row.type + '</dd>' : '') +
+      (row.expires ? '<dt class="col-sm-3 ngd-stat-label py-1">Expires</dt><dd class="col-sm-9 py-1 mb-0">' + esc(row.expires) + '</dd>' : '') +
+      (row.type ? '<dt class="col-sm-3 ngd-stat-label py-1">Type</dt><dd class="col-sm-9 py-1 mb-0">' + esc(row.type) + '</dd>' : '') +
+      (row.preferred ? '<dt class="col-sm-3 ngd-stat-label py-1">Preferred date</dt><dd class="col-sm-9 py-1 mb-0">' + esc(row.preferred) + '</dd>' : '') +
+      (row.scheduled ? '<dt class="col-sm-3 ngd-stat-label py-1">Scheduled</dt><dd class="col-sm-9 py-1 mb-0">' + esc(row.scheduled) + '</dd>' : '') +
       '<dt class="col-sm-3 ngd-stat-label py-1">Status</dt><dd class="col-sm-9 py-1 mb-0">' + chip(row) + '</dd>' +
-      '<dt class="col-sm-3 ngd-stat-label py-1">Customer message</dt><dd class="col-sm-9 py-1 mb-0">' + row.note + '</dd>' +
-      (row.adminNote ? '<dt class="col-sm-3 ngd-stat-label py-1">Admin response</dt><dd class="col-sm-9 py-1 mb-0">' + row.adminNote + '</dd>' : '') +
+      '<dt class="col-sm-3 ngd-stat-label py-1">Customer message</dt><dd class="col-sm-9 py-1 mb-0">' + esc(row.note) + '</dd>' +
+      (row.adminNote ? '<dt class="col-sm-3 ngd-stat-label py-1">Admin response</dt><dd class="col-sm-9 py-1 mb-0">' + esc(row.adminNote) + '</dd>' : '') +
       (row.price != null ? '<dt class="col-sm-3 ngd-stat-label py-1">Quoted price</dt><dd class="col-sm-9 py-1 mb-0">' + extraValue(row) + '</dd>' : '') +
       '</dl>' +
       '<div class="d-flex flex-wrap align-items-center gap-3">' +
       '<a class="ngd-link small" href="' + row.product.url + '">View this item in the catalogue</a>' +
-      (state.config === CONFIGS.quotes ? '' : '<span class="ngd-demo-chip">Demo record</span>') +
       '</div>' +
       '</div>'
     );
@@ -247,8 +221,8 @@
       '<th scope="col">Status</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>';
     var body = rows.map(function (row) {
       return (
-        '<tr data-req-row="' + row.id + '">' +
-        '<td class="ngd-stock-cell">' + row.id + '</td>' +
+        '<tr data-req-row="' + esc(row.id) + '">' +
+        '<td class="ngd-stock-cell">' + esc(row.id) + '</td>' +
         '<td>' + productCell(row) + '</td>' +
         '<td>' + row.requested + '</td>' +
         '<td>' + extraValue(row) + '</td>' +
@@ -269,9 +243,9 @@
   function cardsHtml(rows) {
     return rows.map(function (row) {
       return (
-        '<article class="ngd-req-card" data-req-row="' + row.id + '">' +
+        '<article class="ngd-req-card" data-req-row="' + esc(row.id) + '">' +
         '<div class="d-flex justify-content-between align-items-center gap-2 mb-2">' +
-        '<span class="ngd-stock-no">' + row.id + '</span>' + chip(row) +
+        '<span class="ngd-stock-no">' + esc(row.id) + '</span>' + chip(row) +
         '</div>' +
         productCell(row) +
         '<dl class="ngd-req-meta">' +
@@ -311,7 +285,7 @@
     bindToggles($('req-table-wrap'));
     bindToggles($('req-cards-wrap'));
 
-    $('req-count').textContent = 'Showing ' + rows.length + ' of ' + total + (state.config === CONFIGS.inspections ? ' demo records' : ' requests');
+    $('req-count').textContent = 'Showing ' + rows.length + ' of ' + total + ' requests';
     $('req-no-match').hidden = !(total > 0 && rows.length === 0);
     $('req-stage-empty').hidden = total !== 0;
     $('req-stage-loading').hidden = true;

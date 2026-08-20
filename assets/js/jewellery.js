@@ -1,13 +1,14 @@
 /* ============================================================
-   NEW GROWN DIAMOND — JEWELLERY LISTING CONTROLLER
+   NEW GROWN DIAMOND — JEWELLERY LISTING CONTROLLER (LIVE)
    ------------------------------------------------------------
-   Vanilla-JS listing over the static demo dataset in
-   jewellery-data.js: search, category chips, sorting and
-   pagination all run client-side.
-
-   Supabase-ready: loadJewellery() is the single data seam —
-   the future phase swaps its body for a `jewellery` table
-   select without touching the state or rendering logic.
+   The public collection reads the REAL public.jewellery table
+   through the shared Supabase client: only active, non-archived
+   pieces, selected with an explicit storefront column list (no
+   internal notes, no creator ids — RLS remains the enforcement),
+   each carrying its PRIMARY photo from public.jewellery_images.
+   Search, category chips, sorting and pagination run client-side
+   over the loaded rows; loading / empty / error states are real
+   and Retry re-queries. Demo data is gone.
    ============================================================ */
 (function () {
   'use strict';
@@ -15,13 +16,57 @@
   var grid = document.getElementById('jw-grid');
   if (!grid) return; // listing page only
 
-  /* ---------- data source ---------- */
-  function loadJewellery() {
-    /* Future: return supabase.from('jewellery').select('*') … */
-    return window.NGD_DEMO_JEWELLERY || [];
+  /* ---------- live data source ---------- */
+
+  var AVAIL_LABELS = { available: 'In Stock', made_to_order: 'Made to Order', sold: 'Sold' };
+
+  /* Storefront columns only — internal_notes / created_by are never
+     requested by the public pages. */
+  var COLUMNS = 'id,public_id,sku,product_name,category,subcategory,short_description,' +
+    'diamond_weight,availability,featured,created_at';
+
+  function mapRow(p) {
+    return {
+      id: p.sku || p.public_id || '—',
+      publicId: p.public_id || '',
+      rowId: p.id,
+      name: p.product_name || '—',
+      category: p.category || 'Other',
+      subcategory: p.subcategory || '',
+      description: p.short_description || '',
+      weightCt: p.diamond_weight === null || p.diamond_weight === undefined
+        ? null : Number(p.diamond_weight),
+      availability: AVAIL_LABELS[p.availability] || p.availability || 'On Request',
+      image_path: null,
+      featured: !!p.featured
+    };
   }
 
-  var DATA = loadJewellery();
+  /** Only what the storefront may show: active, never archived — each
+      piece with its primary photo (category art when it has none). */
+  async function loadJewellery() {
+    var res = await window.ngdSupabase.from('jewellery').select(COLUMNS)
+      .eq('active', true).is('archived_at', null)
+      .order('created_at', { ascending: false });
+    if (res.error) throw res.error;
+    var rows = (res.data || []).map(mapRow);
+    if (rows.length) {
+      try {
+        var imgs = await window.ngdSupabase.from('jewellery_images')
+          .select('jewellery_id,image_path').eq('is_primary', true);
+        if (imgs.error) throw imgs.error;
+        var byId = {};
+        (imgs.data || []).forEach(function (img) { byId[img.jewellery_id] = img.image_path; });
+        rows.forEach(function (row) { row.image_path = byId[row.rowId] || null; });
+      } catch (err) {
+        /* photos are an enhancement — the collection still renders */
+        console.warn('[NGD Jewellery] primary images unavailable:', err);
+      }
+    }
+    return rows;
+  }
+
+  var DATA = [];
   var PAGE_SIZE = 8;
   var CATEGORIES = ['Rings', 'Earrings', 'Pendants', 'Necklaces', 'Bracelets', 'Bangles'];
 
@@ -34,6 +79,9 @@
     count: document.getElementById('jw-count'),
     grid: grid,
     empty: document.getElementById('jw-empty'),
+    none: document.getElementById('jw-none'),
+    loading: document.getElementById('jw-loading'),
+    error: document.getElementById('jw-error'),
     pagination: document.getElementById('jw-pagination'),
     results: document.getElementById('jw-results')
   };
@@ -129,13 +177,17 @@
     var start = (state.page - 1) * PAGE_SIZE;
     var pageItems = filtered.slice(start, start + PAGE_SIZE);
 
-    el.count.textContent = total === 0
-      ? 'No pieces match your search'
-      : 'Showing ' + (start + 1) + '–' + (start + pageItems.length) + ' of ' + total +
-        (total === 1 ? ' piece' : ' pieces');
+    var catalogueEmpty = DATA.length === 0;
+    el.count.textContent = catalogueEmpty
+      ? 'No pieces in the collection yet'
+      : total === 0
+        ? 'No pieces match your search'
+        : 'Showing ' + (start + 1) + '–' + (start + pageItems.length) + ' of ' + total +
+          (total === 1 ? ' piece' : ' pieces');
 
     el.grid.classList.toggle('d-none', total === 0);
-    el.empty.classList.toggle('d-none', total !== 0);
+    el.none.classList.toggle('d-none', !catalogueEmpty);
+    el.empty.classList.toggle('d-none', catalogueEmpty || total !== 0);
 
     el.grid.innerHTML = pageItems.map(cardHtml).join('');
     if (window.NGDTilt) window.NGDTilt(el.grid);
@@ -191,5 +243,37 @@
     if (match) state.category = match;
   }
 
-  apply();
+  /* ---------- real load lifecycle ---------- */
+  function setStage(stage) {
+    el.loading.classList.toggle('d-none', stage !== 'loading');
+    el.error.classList.toggle('d-none', stage !== 'error');
+    if (stage !== 'ready') {
+      el.grid.classList.add('d-none');
+      el.empty.classList.add('d-none');
+      el.none.classList.add('d-none');
+      el.pagination.innerHTML = '';
+      el.count.textContent = stage === 'loading'
+        ? 'Loading the collection…'
+        : 'The collection could not be loaded';
+      renderChips();
+    }
+  }
+
+  async function boot() {
+    setStage('loading');
+    try {
+      DATA = await loadJewellery();
+    } catch (err) {
+      /* customers never see raw Supabase internals */
+      console.error('[NGD Jewellery] load failed:', err);
+      setStage('error');
+      return;
+    }
+    setStage('ready');
+    apply();
+  }
+
+  document.getElementById('jw-retry').addEventListener('click', boot);
+
+  boot();
 })();

@@ -108,20 +108,6 @@
             Your saved stones, quotes and enquiries — all in one quiet place.
           </p>
         </div>
-        <!-- Demo-only preview control: switches the UI state designs
-             below. It never pretends data exists — demo rows are
-             labelled, and Live simply shows today's honest empty
-             states until the account backend arrives. -->
-        <div class="text-lg-end">
-          <span class="ngd-dash-metric-note d-block mb-1">UI preview (demo only)</span>
-          <div class="ngd-dash-state-switch" id="dash-state-switch" role="group" aria-label="Preview a UI state">
-            <button type="button" class="is-on" data-dash-state="live">Live</button>
-            <button type="button" data-dash-state="demo">Demo data</button>
-            <button type="button" data-dash-state="loading">Loading</button>
-            <button type="button" data-dash-state="empty">Empty</button>
-            <button type="button" data-dash-state="error">Error</button>
-          </div>
-        </div>
       </section>
 
       <!-- Summary cards -->
@@ -193,7 +179,7 @@
           </div>
         </div>
         <p class="ngd-dash-metric-note mt-2 mb-0" data-dash-metric-note>
-          Counts connect to your account in the Supabase phase — nothing here is live data yet.
+          Live counts from your account.
         </p>
       </section>
 
@@ -226,7 +212,7 @@
                 <h3 class="ngd-title fs-6">Nothing saved yet</h3>
                 <p class="ngd-text-muted small mb-3">
                   Tap the heart on any diamond or piece and it will wait for
-                  you here once favourites sync with your account.
+                  you here.
                 </p>
                 <a class="ngd-btn ngd-btn-outline ngd-btn-sm" href="../diamonds.html">Browse diamonds</a>
               </div>
@@ -240,35 +226,8 @@
               </div>
             </div>
             <div data-dash-show="data" hidden>
-              <!-- Demo rows reference the public demo catalogue so the
-                   links genuinely work; every row is chipped DEMO. -->
-              <div class="ngd-dash-row">
-                <span class="ngd-icon-tile">◆</span>
-                <div class="flex-grow-1 min-w-0">
-                  <strong>NGD-1007</strong>
-                  <span class="ngd-text-muted d-block small">Oval · lab-grown diamond</span>
-                </div>
-                <span class="ngd-demo-chip">Demo</span>
-                <a class="ngd-link small" href="../diamond-details.html?id=NGD-1007">View</a>
-              </div>
-              <div class="ngd-dash-row">
-                <span class="ngd-icon-tile">◆</span>
-                <div class="flex-grow-1 min-w-0">
-                  <strong>NGD-1015</strong>
-                  <span class="ngd-text-muted d-block small">Princess · lab-grown diamond</span>
-                </div>
-                <span class="ngd-demo-chip">Demo</span>
-                <a class="ngd-link small" href="../diamond-details.html?id=NGD-1015">View</a>
-              </div>
-              <div class="ngd-dash-row">
-                <span class="ngd-icon-tile">✦</span>
-                <div class="flex-grow-1 min-w-0">
-                  <strong>JW-1003</strong>
-                  <span class="ngd-text-muted d-block small">Fine jewellery piece</span>
-                </div>
-                <span class="ngd-demo-chip">Demo</span>
-                <a class="ngd-link small" href="../jewellery-details.html?id=JW-1003">View</a>
-              </div>
+              <div data-dash-list="favourites"></div>
+              <a class="ngd-link small d-inline-block mt-2" href="favourites.html">All favourites →</a>
             </div>
           </section>
         </div>
@@ -289,8 +248,8 @@
                 <span class="ngd-icon-tile ngd-depth-1 mb-3">❐</span>
                 <h3 class="ngd-title fs-6">No quote requests yet</h3>
                 <p class="ngd-text-muted small mb-0">
-                  The Request Quote buttons across the site will file
-                  requests here once your account backend arrives.
+                  Use the Request Quote button on any diamond or jewellery
+                  page — your requests appear here.
                 </p>
               </div>
             </div>
@@ -303,30 +262,8 @@
               </div>
             </div>
             <div data-dash-show="data" hidden>
-              <div class="ngd-dash-row">
-                <div class="flex-grow-1 min-w-0">
-                  <strong>Q-0104</strong>
-                  <span class="ngd-text-muted d-block small">NGD-1012 · loose stone</span>
-                </div>
-                <span class="ngd-demo-chip">Demo</span>
-                <span class="ngd-status-chip is-gold">Quoted</span>
-              </div>
-              <div class="ngd-dash-row">
-                <div class="flex-grow-1 min-w-0">
-                  <strong>Q-0103</strong>
-                  <span class="ngd-text-muted d-block small">NGD-1001 · loose stone</span>
-                </div>
-                <span class="ngd-demo-chip">Demo</span>
-                <span class="ngd-status-chip">Awaiting reply</span>
-              </div>
-              <div class="ngd-dash-row">
-                <div class="flex-grow-1 min-w-0">
-                  <strong>Q-0101</strong>
-                  <span class="ngd-text-muted d-block small">JW-1006 · jewellery</span>
-                </div>
-                <span class="ngd-demo-chip">Demo</span>
-                <span class="ngd-status-chip is-good">Accepted</span>
-              </div>
+              <div data-dash-list="quotes"></div>
+              <a class="ngd-link small d-inline-block mt-2" href="quotes.html">All quote requests →</a>
             </div>
           </section>
         </div>
@@ -361,30 +298,8 @@
               </div>
             </div>
             <div data-dash-show="data" hidden>
-              <div class="ngd-dash-row">
-                <div class="flex-grow-1 min-w-0">
-                  <strong>Certification question — NGD-1019</strong>
-                  <span class="ngd-text-muted d-block small">“Could you confirm the report number matches…”</span>
-                </div>
-                <span class="ngd-demo-chip">Demo</span>
-                <span class="ngd-status-chip is-good">Answered</span>
-              </div>
-              <div class="ngd-dash-row">
-                <div class="flex-grow-1 min-w-0">
-                  <strong>Custom pendant enquiry</strong>
-                  <span class="ngd-text-muted d-block small">“We are looking for a pear-shaped centre stone…”</span>
-                </div>
-                <span class="ngd-demo-chip">Demo</span>
-                <span class="ngd-status-chip is-gold">Open</span>
-              </div>
-              <div class="ngd-dash-row">
-                <div class="flex-grow-1 min-w-0">
-                  <strong>Trade terms</strong>
-                  <span class="ngd-text-muted d-block small">“Please share your wholesale onboarding…”</span>
-                </div>
-                <span class="ngd-demo-chip">Demo</span>
-                <span class="ngd-status-chip is-good">Answered</span>
-              </div>
+              <div data-dash-list="enquiries"></div>
+              <a class="ngd-link small d-inline-block mt-2" href="enquiries.html">All enquiries →</a>
             </div>
           </section>
         </div>
@@ -405,7 +320,36 @@
                 <dd class="col-sm-8 py-2 mb-0" data-ngd-field="company_name">—</dd>
                 <dt class="col-sm-4 ngd-stat-label py-2">Mobile</dt>
                 <dd class="col-sm-8 py-2 mb-0" data-ngd-field="phone">—</dd>
+                <dt class="col-sm-4 ngd-stat-label py-2">Country</dt>
+                <dd class="col-sm-8 py-2 mb-0" data-ngd-field="country">—</dd>
               </dl>
+              <hr class="ngd-hairline my-3">
+              <!-- Safe fields only. Saves go through the
+                   customer_update_own_profile RPC — role and account
+                   status can never be changed from the browser. -->
+              <h3 class="ngd-title fs-6 mb-3">Edit profile</h3>
+              <form class="ngd-form" id="profile-form" novalidate>
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <label class="form-label" for="profile-full-name">Full name</label>
+                    <input class="form-control" id="profile-full-name" type="text" maxlength="160" required>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label" for="profile-company">Company <span class="ngd-text-muted">(optional)</span></label>
+                    <input class="form-control" id="profile-company" type="text" maxlength="160">
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label" for="profile-phone">Mobile <span class="ngd-text-muted">(optional)</span></label>
+                    <input class="form-control" id="profile-phone" type="tel" maxlength="40">
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label" for="profile-country">Country <span class="ngd-text-muted">(optional)</span></label>
+                    <input class="form-control" id="profile-country" type="text" maxlength="80">
+                  </div>
+                </div>
+                <div id="profile-alert" class="mt-3" aria-live="polite"></div>
+                <button class="ngd-btn ngd-btn-gold mt-3" id="profile-save" type="submit">Save Profile</button>
+              </form>
             </div>
           </div>
           <div class="col-lg-5">
@@ -416,7 +360,8 @@
                 <span class="ngd-badge ngd-badge-dark">Status: <span data-ngd-field="account_status">—</span></span>
               </div>
               <p class="ngd-text-muted small mb-0" style="color: rgba(244,242,238,0.6);">
-                Profile editing arrives with the account backend phase.
+                Your email, role and account status are managed by New Grown
+                Diamond — contact us if anything needs to change.
               </p>
             </div>
           </div>

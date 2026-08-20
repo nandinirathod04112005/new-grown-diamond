@@ -1,14 +1,13 @@
 /* ============================================================
-   NEW GROWN DIAMOND — DIAMOND INVENTORY CONTROLLER
+   NEW GROWN DIAMOND — DIAMOND INVENTORY CONTROLLER (LIVE)
    ------------------------------------------------------------
-   Vanilla-JS inventory over the static demo dataset in
-   diamonds-data.js. Search, filters, sorting, grid/table views,
-   pagination and the details modal all run client-side.
-
-   Supabase-ready: loadDiamonds() is the single data source —
-   the future phase swaps its body for a `diamonds` table select
-   (and can push filtering server-side) without touching the
-   rendering or state logic below.
+   The public inventory reads the REAL public.diamonds table
+   through the shared Supabase client: only active, non-archived
+   stones, selected with an explicit storefront column list (no
+   internal notes, no creator ids — RLS remains the enforcement).
+   Search, filters, sorting, grid/table views and pagination run
+   client-side over the loaded rows; loading / empty / error
+   states are real and Retry re-queries. Demo data is gone.
    ============================================================ */
 (function () {
   'use strict';
@@ -16,23 +15,49 @@
   var grid = document.getElementById('inv-grid');
   if (!grid) return; // inventory page only
 
-  /* Legacy deep links (homepage Featured cards, old bookmarks):
-     diamonds.html?id=… now lives on the details page. */
+  /* Legacy deep links (old bookmarks): diamonds.html?id=… now
+     lives on the details page. */
   var earlyParams = new URLSearchParams(window.location.search);
   var earlyId = earlyParams.get('id');
   if (earlyId) {
-    var mappedId = (window.NGD_LEGACY_IDS || {})[earlyId] || earlyId;
-    window.location.replace('diamond-details.html?id=' + encodeURIComponent(mappedId));
+    window.location.replace('diamond-details.html?id=' + encodeURIComponent(earlyId));
     return;
   }
 
-  /* ---------- data source ---------- */
-  function loadDiamonds() {
-    /* Future: return supabase.from('diamonds').select('*') … */
-    return window.NGD_DEMO_DIAMONDS || [];
+  /* ---------- live data source ---------- */
+
+  /* Storefront columns only — internal_notes / created_by are never
+     requested by the public pages. */
+  var COLUMNS = 'public_id,stock_number,shape,carat,color,clarity,cut,laboratory,' +
+    'growth_method,availability,image_path,featured,created_at';
+
+  function mapRow(d) {
+    return {
+      id: d.stock_number || d.public_id || '—',
+      publicId: d.public_id || '',
+      shape: d.shape || '—',
+      carat: Number(d.carat) || 0,
+      colour: d.color || '—',
+      clarity: d.clarity || '—',
+      cut: d.cut || '—',
+      lab: d.laboratory || '—',
+      growth: d.growth_method || '—',
+      availability: d.availability || 'On Request',
+      image_path: d.image_path || null,
+      featured: !!d.featured
+    };
   }
 
-  var DATA = loadDiamonds();
+  /** Only what the storefront may show: active, never archived. */
+  async function loadDiamonds() {
+    var res = await window.ngdSupabase.from('diamonds').select(COLUMNS)
+      .eq('active', true).is('archived_at', null)
+      .order('created_at', { ascending: false });
+    if (res.error) throw res.error;
+    return (res.data || []).map(mapRow);
+  }
+
+  var DATA = [];
   var PAGE_SIZE = 9;
 
   var FILTER_GROUPS = [
@@ -66,6 +91,9 @@
     tableWrap: document.getElementById('inv-table-wrap'),
     tableBody: document.getElementById('inv-table-body'),
     empty: document.getElementById('inv-empty'),
+    none: document.getElementById('inv-none'),
+    loading: document.getElementById('inv-loading'),
+    error: document.getElementById('inv-error'),
     pagination: document.getElementById('inv-pagination'),
     viewGrid: document.getElementById('inv-view-grid'),
     viewTable: document.getElementById('inv-view-table'),
@@ -161,17 +189,19 @@
   var availBadge = shared.availBadge;
   var cardHtml = shared.cardHtml;
 
+  var esc = shared.esc;
+
   function rowHtml(d) {
     return (
-      '<tr data-diamond-id="' + d.id + '">' +
-      '<td class="ngd-stock-cell">' + d.id + '</td>' +
-      '<td>' + d.shape + '</td>' +
+      '<tr data-diamond-id="' + esc(d.id) + '">' +
+      '<td class="ngd-stock-cell">' + esc(d.id) + '</td>' +
+      '<td>' + esc(d.shape) + '</td>' +
       '<td>' + d.carat.toFixed(2) + '</td>' +
-      '<td>' + d.colour + '</td>' +
-      '<td>' + d.clarity + '</td>' +
-      '<td>' + d.cut + '</td>' +
-      '<td>' + d.lab + '</td>' +
-      '<td>' + d.growth + '</td>' +
+      '<td>' + esc(d.colour) + '</td>' +
+      '<td>' + esc(d.clarity) + '</td>' +
+      '<td>' + esc(d.cut) + '</td>' +
+      '<td>' + esc(d.lab) + '</td>' +
+      '<td>' + esc(d.growth) + '</td>' +
       '<td>' + availBadge(d) + '</td>' +
       '<td class="text-end"><a class="ngd-link small" href="' + shared.detailsUrl(d) + '">View</a></td>' +
       '</tr>'
@@ -216,16 +246,20 @@
     var pageItems = filtered.slice(start, start + PAGE_SIZE);
 
     /* count */
-    el.count.textContent = total === 0
-      ? 'No stones match your filters'
-      : 'Showing ' + (start + 1) + '–' + (start + pageItems.length) + ' of ' + total +
-        (total === 1 ? ' stone' : ' stones');
+    var catalogueEmpty = DATA.length === 0;
+    el.count.textContent = catalogueEmpty
+      ? 'No stones in the inventory yet'
+      : total === 0
+        ? 'No stones match your filters'
+        : 'Showing ' + (start + 1) + '–' + (start + pageItems.length) + ' of ' + total +
+          (total === 1 ? ' stone' : ' stones');
 
     /* views */
     var isGrid = state.view === 'grid';
     el.grid.classList.toggle('d-none', !isGrid || total === 0);
     el.tableWrap.classList.toggle('d-none', isGrid || total === 0);
-    el.empty.classList.toggle('d-none', total !== 0);
+    el.none.classList.toggle('d-none', !catalogueEmpty);
+    el.empty.classList.toggle('d-none', catalogueEmpty || total !== 0);
     el.viewGrid.classList.toggle('is-active', isGrid);
     el.viewGrid.setAttribute('aria-pressed', String(isGrid));
     el.viewTable.classList.toggle('is-active', !isGrid);
@@ -334,5 +368,37 @@
     }
   }
 
-  apply(false);
+  /* ---------- real load lifecycle ---------- */
+  function setStage(stage) {
+    el.loading.classList.toggle('d-none', stage !== 'loading');
+    el.error.classList.toggle('d-none', stage !== 'error');
+    if (stage !== 'ready') {
+      el.grid.classList.add('d-none');
+      el.tableWrap.classList.add('d-none');
+      el.empty.classList.add('d-none');
+      el.none.classList.add('d-none');
+      el.pagination.innerHTML = '';
+      el.count.textContent = stage === 'loading'
+        ? 'Loading the inventory…'
+        : 'The inventory could not be loaded';
+    }
+  }
+
+  async function boot() {
+    setStage('loading');
+    try {
+      DATA = await loadDiamonds();
+    } catch (err) {
+      /* customers never see raw Supabase internals */
+      console.error('[NGD Inventory] load failed:', err);
+      setStage('error');
+      return;
+    }
+    setStage('ready');
+    apply(false);
+  }
+
+  document.getElementById('inv-retry').addEventListener('click', boot);
+
+  boot();
 })();
