@@ -82,6 +82,16 @@
     } else if (requestedSubject && Array.from(f.subject.options).some(function (o) { return o.value === requestedSubject; })) {
       f.subject.value = requestedSubject;
     }
+    /* Trade CTA (and any future button) preselects its subject */
+    document.querySelectorAll('[data-contact-subject]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var value = btn.getAttribute('data-contact-subject');
+        if (Array.from(f.subject.options).some(function (o) { return o.value === value; })) {
+          f.subject.value = value;
+          invalid(f.subject, false);
+        }
+      });
+    });
     form.addEventListener('submit', async function (event) {
       event.preventDefault();
       if (f.website.value) return; // honeypot: deliberately silent

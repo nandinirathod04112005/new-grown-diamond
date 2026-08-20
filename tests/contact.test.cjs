@@ -1,9 +1,11 @@
 /* ============================================================
-   Contact page tests (STEP 16).
+   Contact page tests (LIVE enquiries).
    Verifies the hero + intro, the four contact-information cards
    with their CMS slots, the seven-field enquiry form (labels,
-   validation, honest no-backend behaviour, configured
-   mailto-draft seam), the business-enquiry section with its
+   validation, the LIVE guest submit into public.enquiries with
+   its ENQ- reference and honest failure handling — mocked at the
+   network layer so the real project is never touched — plus the
+   silent honeypot), the business-enquiry section with its
    subject shortcut, the map placeholder, the support CTA and
    responsive behaviour at 1440/768/390.
    Run:  node tests/contact.test.cjs
@@ -16,6 +18,39 @@ const { startServer, chromiumOptions, installCdnRoutes } = require('./lib.cjs');
 
 const SCREEN_DIR = path.join(__dirname, 'screens');
 fs.mkdirSync(SCREEN_DIR, { recursive: true });
+
+const SB_HOST = 'https://ngd-test.supabase.co';
+const TEST_CONFIG = `window.NGD_SUPABASE_CONFIG = {
+  SUPABASE_URL: '${SB_HOST}',
+  SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_test_key_1234567890'
+};`;
+const CORS = { 'access-control-allow-origin': '*', 'access-control-expose-headers': '*' };
+
+function makeMock(opts = {}) {
+  const inserts = [];
+  async function handler(route) {
+    const req = route.request();
+    const url = new URL(req.url());
+    const method = req.method();
+    const json = (status, obj) =>
+      route.fulfill({ status, contentType: 'application/json', headers: CORS, body: JSON.stringify(obj) });
+    if (method === 'OPTIONS') {
+      return route.fulfill({
+        status: 204,
+        headers: { ...CORS, 'access-control-allow-headers': req.headers()['access-control-request-headers'] || '*', 'access-control-allow-methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS' },
+        body: '',
+      });
+    }
+    if (url.pathname === '/rest/v1/enquiries' && method === 'POST') {
+      const body = JSON.parse(req.postData() || '{}');
+      inserts.push(Array.isArray(body) ? body[0] : body);
+      if (opts.failInsert) return json(500, { code: 'XX000', message: 'internal error' });
+      return route.fulfill({ status: 201, headers: CORS, body: '' });
+    }
+    return json(404, { message: 'mock: unhandled ' + method + ' ' + url.pathname });
+  }
+  return { handler, inserts };
+}
 
 const SECTIONS = ['hero', 'channels', 'form', 'business', 'map', 'cta'];
 const FIELD_IDS = ['contact-name', 'contact-company', 'contact-email',
@@ -37,9 +72,13 @@ async function scenario(name, opts, fn) {
   const pageErrors = [];
   try {
     await installCdnRoutes(context);
+    await context.route('**/assets/js/supabase-config.js', (r) =>
+      r.fulfill({ status: 200, contentType: 'application/javascript', body: TEST_CONFIG }));
+    const backend = makeMock(opts);
+    await context.route(SB_HOST + '/**', backend.handler);
     const page = await context.newPage();
     page.on('pageerror', (e) => pageErrors.push(String(e)));
-    await fn(page);
+    await fn(page, backend);
     expect(pageErrors.length === 0, 'no uncaught page errors, got: ' + pageErrors.join(' | '));
     results.push({ name, ok: true });
     console.log('PASS  ' + name);
@@ -137,7 +176,7 @@ async function fillValid(page) {
     expect(/send enquiry/i.test(state.submit), 'clear submit button, got ' + state.submit);
   });
 
-  await scenario('validation: empty submit flags six fields, sends nothing', {}, async (page) => {
+  await scenario('validation: empty submit flags the required fields, sends nothing', {}, async (page, backend) => {
     await open(page);
     await page.click('#contact-submit');
     const state = await page.evaluate(() => ({
@@ -146,13 +185,14 @@ async function fillValid(page) {
       ariaInvalid: document.getElementById('contact-name').getAttribute('aria-invalid'),
       alert: (document.querySelector('#contact-alert .ngd-alert') || { textContent: '' }).textContent,
       alertDanger: !!document.querySelector('#contact-alert .ngd-alert-danger'),
-      mailto: document.querySelector('#ngd-contact-form').getAttribute('data-ngd-mailto'),
     }));
-    expect(state.invalid.length === 6, '6 required fields flagged, got ' + state.invalid.join(','));
+    expect(JSON.stringify(state.invalid) ===
+      JSON.stringify(['contact-name', 'contact-email', 'contact-subject', 'contact-message']),
+      'required fields flagged (mobile stays optional), got ' + state.invalid.join(','));
     expect(!state.companyInvalid, 'optional company never flagged');
     expect(state.ariaInvalid === 'true', 'aria-invalid set for assistive tech');
-    expect(state.alertDanger && /highlighted fields/i.test(state.alert), 'error summary shown');
-    expect(!state.mailto, 'no draft prepared on invalid submit');
+    expect(state.alertDanger && /highlighted required fields/i.test(state.alert), 'error summary shown');
+    expect(backend.inserts.length === 0, 'nothing reaches Supabase while invalid');
   });
 
   await scenario('validation: bad email, bad mobile and short message flagged; typing clears', {}, async (page) => {
@@ -177,47 +217,51 @@ async function fillValid(page) {
     expect(!state.emailInvalid, 'typing clears the email flag');
   });
 
-  await scenario('honest no-backend submit: nothing sent, nothing cleared, no fake success', {}, async (page) => {
-    await open(page);
-    await fillValid(page);
-    await page.click('#contact-submit');
-    const state = await page.evaluate(() => ({
-      alert: (document.querySelector('#contact-alert .ngd-alert') || { textContent: '' }).textContent,
-      info: !!document.querySelector('#contact-alert .ngd-alert-info'),
-      mailto: document.querySelector('#ngd-contact-form').getAttribute('data-ngd-mailto'),
-      nameKept: document.getElementById('contact-name').value,
-      url: location.pathname,
-    }));
-    expect(state.info, 'informational (not success) alert shown');
-    expect(/isn.t connected|not connected/i.test(state.alert) && /nothing/i.test(state.alert),
-      'honest not-connected explanation, got: ' + state.alert);
-    expect(!/thank you|sent!|message sent|we received/i.test(state.alert),
-      'no fake success wording');
-    expect(!state.mailto, 'no mailto prepared without an inbox');
-    expect(state.nameKept === 'Asha Verma', 'form values preserved (nothing happened)');
-    expect(/contact\.html$/.test(state.url), 'no fake redirect');
-  });
-
-  await scenario('configured inbox: valid submit prepares a full mailto draft', {}, async (page) => {
-    await page.addInitScript(() => { window.NGD_CONTACT_EMAIL = 'enquiries@example.com'; });
+  await scenario('live guest submit: enquiry inserted with an ENQ reference, form cleared', {}, async (page, backend) => {
     await open(page);
     await fillValid(page);
     await page.fill('#contact-company', 'Verma Fine Jewels');
     await page.click('#contact-submit');
+    await page.waitForSelector('#contact-alert .ngd-alert-success', { timeout: 8000 });
     const state = await page.evaluate(() => ({
-      mailto: document.querySelector('#ngd-contact-form').getAttribute('data-ngd-mailto') || '',
-      alert: (document.querySelector('#contact-alert .ngd-alert') || { textContent: '' }).textContent,
-      info: !!document.querySelector('#contact-alert .ngd-alert-info'),
+      alert: document.querySelector('#contact-alert .ngd-alert').textContent,
+      nameCleared: document.getElementById('contact-name').value,
+      counter: document.getElementById('contact-message-count').textContent.trim(),
     }));
-    expect(state.mailto.startsWith('mailto:enquiries@example.com?subject='),
-      'draft addressed to the configured inbox, got ' + state.mailto.slice(0, 60));
-    expect(/subject=%5BDiamond%20enquiry%5D/.test(state.mailto), 'subject line carries the topic');
-    expect(/Asha%20Verma/.test(state.mailto) && /Verma%20Fine%20Jewels/.test(state.mailto),
-      'draft carries name + company');
-    expect(/Country%3A%20India/.test(state.mailto) && /NGD-1001/.test(state.mailto),
-      'draft carries country + message');
-    expect(state.info && /draft/i.test(state.alert) && /nothing is sent by this website/i.test(state.alert),
-      'draft behaviour explained honestly, got: ' + state.alert);
+    expect(/Thank you — your enquiry ENQ-[A-Z0-9]{8} has been received/.test(state.alert),
+      'success names the real reference, got: ' + state.alert);
+    expect(state.nameCleared === '' && state.counter === '0 / 1000', 'form cleared after the real insert');
+    expect(backend.inserts.length === 1, 'exactly one insert sent');
+    const rec = backend.inserts[0];
+    expect(rec.full_name === 'Asha Verma' && rec.email === 'asha@example.com' &&
+      rec.company_name === 'Verma Fine Jewels' && rec.country === 'India' &&
+      /^ENQ-[A-Z0-9]{8}$/.test(rec.public_id) && rec.user_id === null &&
+      /NGD-1001/.test(rec.message),
+      'guest payload persisted verbatim, got ' + JSON.stringify(rec).slice(0, 200));
+    expect(!('status' in rec) && !('admin_note' in rec), 'admin fields never sent from the browser');
+    /* the honeypot swallows bot submissions silently */
+    await fillValid(page);
+    await page.fill('#contact-website', 'https://spam.example');
+    await page.click('#contact-submit');
+    await page.waitForTimeout(400);
+    expect(backend.inserts.length === 1, 'honeypot blocks the insert silently');
+  });
+
+  await scenario('failed insert: honest error message, values preserved', { failInsert: true }, async (page, backend) => {
+    await open(page);
+    await fillValid(page);
+    await page.click('#contact-submit');
+    await page.waitForSelector('#contact-alert .ngd-alert-danger', { timeout: 8000 });
+    const state = await page.evaluate(() => ({
+      alert: document.querySelector('#contact-alert .ngd-alert').textContent,
+      nameKept: document.getElementById('contact-name').value,
+      button: document.getElementById('contact-submit').textContent.trim(),
+    }));
+    expect(/could not send your enquiry/i.test(state.alert) && !/XX000|internal error/i.test(state.alert),
+      'safe failure message, got: ' + state.alert);
+    expect(state.nameKept === 'Asha Verma', 'form values preserved for a retry');
+    expect(state.button === 'Send enquiry', 'submit button restored');
+    expect(backend.inserts.length >= 1, 'the insert genuinely reached the (failing) backend');
   });
 
   await scenario('business enquiry: dark section, trade points, button preselects the subject', {}, async (page) => {
