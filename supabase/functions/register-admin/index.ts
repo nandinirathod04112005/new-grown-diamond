@@ -1,3 +1,6 @@
+// @ts-nocheck — Deno Edge Function: URL imports and the Deno global are
+// resolved by the Deno runtime; plain TypeScript editors without the Deno
+// extension would report false errors here. No effect on deployment.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.4';
 
 const corsHeaders = {
@@ -25,7 +28,7 @@ const safeEqual = async (left: string, right: string) => {
   return mismatch === 0;
 };
 
-Deno.serve(async (request) => {
+Deno.serve(async (request: Request) => {
   if (request.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
   if (request.method !== 'POST') return response(405, 'method_not_allowed');
 
