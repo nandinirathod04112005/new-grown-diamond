@@ -1,8 +1,13 @@
 /* ============================================================
-   Homepage Fine Jewellery section tests (STEP 6).
-   Verifies the atelier section below Featured Diamonds: heading,
-   six category cards with art/description/CTA, tilt + zoom hover
-   effects, links, and the 3/2/1 responsive grid at 1440/768/390.
+   Homepage Fine Jewellery section tests (LIVE).
+   The six category cards are storefront navigation (each opens
+   the live listing pre-filtered) and keep their design checks:
+   heading, art/description/CTA, tilt + zoom hover, links, the
+   3/2/1 responsive grid and the reveal animation. Above them, a
+   featured row renders live from public.jewellery (active +
+   non-archived + featured, primary photo from
+   public.jewellery_images) and stays hidden when nothing is
+   featured — including on any Supabase failure.
    Run:  node tests/jewellery-section.test.cjs
    ============================================================ */
 'use strict';
@@ -16,12 +21,56 @@ fs.mkdirSync(SCREEN_DIR, { recursive: true });
 
 const CATEGORIES = ['Rings', 'Earrings', 'Pendants', 'Necklaces', 'Bracelets', 'Bangles'];
 
+const SB_HOST = 'https://home-test.supabase.co';
+const TEST_CONFIG = `window.NGD_SUPABASE_CONFIG = {
+  SUPABASE_URL: '${SB_HOST}',
+  SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_test_key_1234567890'
+};`;
+
+const FEATURED_PIECES = [
+  { id: 'j-uuid-1', public_id: 'JEW-SEED0001', sku: 'JW-4001', product_name: 'Aurora Solitaire Ring',
+    category: 'Rings', subcategory: '', short_description: 'A solitaire that lets the stone speak.',
+    diamond_weight: 1.5, availability: 'available', featured: true, created_at: '2026-08-12T10:00:00Z' },
+  { id: 'j-uuid-2', public_id: 'JEW-SEED0002', sku: 'JW-4002', product_name: 'Halo Pendant',
+    category: 'Pendants', subcategory: '', short_description: 'A halo of light for every day.',
+    diamond_weight: 0.5, availability: 'made_to_order', featured: true, created_at: '2026-08-10T10:00:00Z' },
+];
+const PRIMARY_IMAGES = [
+  { jewellery_id: 'j-uuid-1', image_path: 'jewellery/JEW-SEED0001/primary.webp' },
+];
+
 const results = [];
 let browser;
 let SITE;
+let jewelleryCalls = [];
 
 function expect(cond, msg) {
   if (!cond) throw new Error('Expectation failed: ' + msg);
+}
+
+const CORS = { 'access-control-allow-origin': '*', 'access-control-expose-headers': '*' };
+function makeMock(opts) {
+  return async (route) => {
+    const req = route.request();
+    const url = new URL(req.url());
+    const json = (status, obj) =>
+      route.fulfill({ status, contentType: 'application/json', headers: CORS, body: JSON.stringify(obj) });
+    if (req.method() === 'OPTIONS') {
+      return route.fulfill({ status: 204, headers: { ...CORS, 'access-control-allow-headers': '*', 'access-control-allow-methods': 'GET,POST,OPTIONS' }, body: '' });
+    }
+    if (url.pathname === '/rest/v1/jewellery') {
+      jewelleryCalls.push(req.url());
+      if (opts.failJewellery) return json(500, { message: 'mock outage' });
+      return json(200, opts.jewellery);
+    }
+    if (url.pathname === '/rest/v1/jewellery_images') {
+      return json(200, opts.images);
+    }
+    if (url.pathname === '/rest/v1/diamonds') {
+      return json(200, []); // the diamonds showcase has its own suite
+    }
+    return json(404, { message: 'mock: unhandled ' + url.pathname });
+  };
 }
 
 async function scenario(name, opts, fn) {
@@ -31,6 +80,13 @@ async function scenario(name, opts, fn) {
   const pageErrors = [];
   try {
     await installCdnRoutes(context);
+    await context.route('**/assets/js/supabase-config.js', (r) =>
+      r.fulfill({ contentType: 'application/javascript', body: TEST_CONFIG }));
+    await context.route(SB_HOST + '/**', makeMock({
+      jewellery: opts.jewellery || [],
+      images: opts.images || [],
+      failJewellery: !!opts.failJewellery,
+    }));
     const page = await context.newPage();
     page.on('pageerror', (e) => pageErrors.push(String(e)));
     await fn(page);
@@ -47,7 +103,7 @@ async function scenario(name, opts, fn) {
 
 async function rowsCount(page) {
   return page.evaluate(() => {
-    const tops = [...document.querySelectorAll('#fine-jewellery .ngd-jewel-card')]
+    const tops = [...document.querySelectorAll('#fine-jewellery-grid .ngd-jewel-card')]
       .map((c) => Math.round(c.getBoundingClientRect().top));
     return [...new Set(tops)].length;
   });
@@ -65,12 +121,12 @@ async function overflow(page) {
   SITE = started.origin;
   browser = await chromium.launch(chromiumOptions());
 
-  await scenario('section below Featured Diamonds: heading, subtitle, six cards', {}, async (page) => {
+  await scenario('section below Featured Diamonds: heading, subtitle, six category cards', {}, async (page) => {
     await page.goto(SITE + '/index.html', { waitUntil: 'networkidle' });
     const state = await page.evaluate(() => {
       const section = document.querySelector('#fine-jewellery');
       const featured = document.querySelector('#featured-diamonds');
-      const cards = [...section.querySelectorAll('.ngd-jewel-card')];
+      const cards = [...section.querySelectorAll('#fine-jewellery-grid .ngd-jewel-card')];
       return {
         belowFeatured:
           section.getBoundingClientRect().top + window.scrollY >
@@ -102,9 +158,72 @@ async function overflow(page) {
     }
   });
 
+  await scenario('featured block stays hidden when nothing is featured', {}, async (page) => {
+    await page.goto(SITE + '/index.html', { waitUntil: 'networkidle' });
+    const state = await page.evaluate(() => ({
+      hidden: document.getElementById('featured-jewellery').hidden,
+      featuredCards: document.querySelectorAll('#featured-jewellery-grid .ngd-jewel-card').length,
+      categoryCards: document.querySelectorAll('#fine-jewellery-grid .ngd-jewel-card').length,
+    }));
+    expect(state.hidden && state.featuredCards === 0, 'no featured pieces, no block');
+    expect(state.categoryCards === 6, 'category navigation untouched');
+  });
+
+  await scenario('featured pieces render live above the categories with public-id links', {
+    jewellery: FEATURED_PIECES, images: PRIMARY_IMAGES,
+  }, async (page) => {
+    jewelleryCalls = [];
+    await page.goto(SITE + '/index.html', { waitUntil: 'networkidle' });
+    await page.waitForFunction(() => !document.getElementById('featured-jewellery').hidden);
+    const state = await page.evaluate(() => {
+      const wrap = document.getElementById('featured-jewellery');
+      const cards = [...document.querySelectorAll('#featured-jewellery-grid .ngd-jewel-card')];
+      const ring = cards.find((c) => /Aurora/.test(c.textContent));
+      const pendant = cards.find((c) => /Halo/.test(c.textContent));
+      return {
+        eyebrow: wrap.querySelector('.ngd-eyebrow').textContent.trim(),
+        count: cards.length,
+        ringName: ring.querySelector('.ngd-jewel-name').textContent.trim(),
+        ringCat: ring.querySelector('.ngd-jewel-cat').textContent.trim(),
+        ringPhoto: ring.querySelector('img.ngd-media-photo') &&
+          ring.querySelector('img.ngd-media-photo').getAttribute('src'),
+        ringHref: ring.querySelector('a.ngd-btn').getAttribute('href'),
+        pendantArt: !!pendant.querySelector('.ngd-jewel-figure svg') && !pendant.querySelector('img'),
+        pendantHref: pendant.querySelector('a.ngd-btn').getAttribute('href'),
+        aboveCategories: wrap.getBoundingClientRect().top + window.scrollY <
+          document.getElementById('fine-jewellery-grid').getBoundingClientRect().top + window.scrollY,
+        categoryCards: document.querySelectorAll('#fine-jewellery-grid .ngd-jewel-card').length,
+      };
+    });
+    expect(/Featured/.test(state.eyebrow), 'featured eyebrow, got ' + state.eyebrow);
+    expect(state.count === 2, 'both featured pieces render, got ' + state.count);
+    expect(state.ringName === 'Aurora Solitaire Ring' && state.ringCat === 'Rings', 'live name + category');
+    expect(/\/storage\/v1\/object\/public\/jewellery-images\/jewellery\/JEW-SEED0001\/primary\.webp$/.test(state.ringPhoto || ''),
+      'primary photo from the jewellery-images bucket, got ' + state.ringPhoto);
+    expect(state.ringHref === 'jewellery-details.html?id=JEW-SEED0001', 'ring links by public id, got ' + state.ringHref);
+    expect(state.pendantArt, 'piece without a photo falls back to category art');
+    expect(state.pendantHref === 'jewellery-details.html?id=JEW-SEED0002', 'pendant links by public id');
+    expect(state.aboveCategories, 'featured row sits above the category navigation');
+    expect(state.categoryCards === 6, 'category cards remain');
+    expect(jewelleryCalls.length === 1 && jewelleryCalls[0].includes('featured=eq.true') &&
+      jewelleryCalls[0].includes('active=eq.true') && jewelleryCalls[0].includes('archived_at=is.null'),
+      'query asks only for featured, active, non-archived pieces: ' + jewelleryCalls[0]);
+  });
+
+  await scenario('jewellery failure leaves the section calm and hidden', { failJewellery: true }, async (page) => {
+    await page.goto(SITE + '/index.html', { waitUntil: 'networkidle' });
+    const state = await page.evaluate(() => ({
+      hidden: document.getElementById('featured-jewellery').hidden,
+      categoryCards: document.querySelectorAll('#fine-jewellery-grid .ngd-jewel-card').length,
+      raw: /mock outage|500/i.test(document.getElementById('fine-jewellery').textContent),
+    }));
+    expect(state.hidden, 'featured block hidden on failure');
+    expect(state.categoryCards === 6 && !state.raw, 'categories untouched, no raw errors');
+  });
+
   await scenario('card tilt applies and resets with the pointer', {}, async (page) => {
     await page.goto(SITE + '/index.html', { waitUntil: 'networkidle' });
-    const card = page.locator('.ngd-jewel-card').first();
+    const card = page.locator('#fine-jewellery-grid .ngd-jewel-card').first();
     await card.scrollIntoViewIfNeeded();
     const box = await card.boundingBox();
     await page.mouse.move(box.x + box.width * 0.7, box.y + box.height * 0.3);
@@ -119,7 +238,7 @@ async function overflow(page) {
 
   await scenario('hover floats and zooms the piece smoothly', {}, async (page) => {
     await page.goto(SITE + '/index.html', { waitUntil: 'networkidle' });
-    const card = page.locator('.ngd-jewel-card').first();
+    const card = page.locator('#fine-jewellery-grid .ngd-jewel-card').first();
     await card.scrollIntoViewIfNeeded();
     const before = await card.evaluate(
       (el) => getComputedStyle(el.querySelector('.ngd-jewel-figure')).transform

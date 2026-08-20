@@ -13,8 +13,8 @@ Bootstrap 5 + vanilla JavaScript** frontend backed by **Supabase**
 | Premium header + mobile navigation (glass, dropdown, offcanvas) | ✅ done |
 | Homepage 3D hero (Three.js diamond, SVG/WebGL fallback) | ✅ done |
 | Homepage Diamond section (8 cut cards, 3D tilt) | ✅ done |
-| Homepage Featured Diamonds showcase (6 demo stones) | ✅ done |
-| Homepage Fine Jewellery section (6 category cards) | ✅ done |
+| Homepage Featured Diamonds showcase | ✅ live — featured `public.diamonds`, newest-active fallback |
+| Homepage Fine Jewellery section (6 category cards + live featured row) | ✅ live |
 | Homepage manufacturing story (6-stage journey, parallax) | ✅ done |
 | Global footer + back-to-top (all public pages) | ✅ done |
 | Diamond Inventory page (search, filters, views, pagination) | ✅ live — active, non-archived `public.diamonds` |
@@ -61,7 +61,7 @@ Bootstrap 5 + vanilla JavaScript** frontend backed by **Supabase**
 
 | Page | Purpose |
 |---|---|
-| `index.html` | Homepage with 3D diamond hero (Three.js + static SVG fallback) |
+| `index.html` | Homepage (LIVE showcases) — 3D diamond hero, Signature Stones from featured `public.diamonds` (newest-active fallback, safe empty/error states), Fine Jewellery categories plus a featured-pieces row from `public.jewellery` with primary photos |
 | `diamonds.html` | Diamond Inventory (LIVE) — active, non-archived `public.diamonds` with real photos, search, 8 filters, grid/table views, pagination, and real loading/empty/error states |
 | `diamond-details.html` | Diamond Details (LIVE) — one stone by `?id=DIA-XXXXXXXX`, real 17-field specs, Storage photo, `price_visible`-gated price ("Price on Request"), live quote/hold/inspection/favourite CTAs, similar stones, clean not-available state |
 | `jewellery.html` | Jewellery Listing (LIVE) — active, non-archived `public.jewellery` with primary photos from `jewellery_images`, search, category chips, sort, pagination, real states |

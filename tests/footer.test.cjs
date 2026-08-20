@@ -46,6 +46,13 @@ async function scenario(name, opts, fn) {
   const pageErrors = [];
   try {
     await installCdnRoutes(context);
+    await context.route('**/assets/js/supabase-config.js', (r) => r.fulfill({
+      contentType: 'application/javascript',
+      body: "window.NGD_SUPABASE_CONFIG={SUPABASE_URL:'https://home-test.supabase.co',SUPABASE_PUBLISHABLE_KEY:'sb_publishable_test_key_1234567890'};",
+    }));
+    await context.route('https://home-test.supabase.co/**', (r) => r.request().method() === 'OPTIONS'
+      ? r.fulfill({ status: 204, headers: { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': 'GET,POST,OPTIONS' }, body: '' })
+      : r.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: '[]' }));
     const page = await context.newPage();
     page.on('pageerror', (e) => pageErrors.push(String(e)));
     await fn(page);
