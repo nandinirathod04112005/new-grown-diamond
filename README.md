@@ -101,6 +101,7 @@ Bootstrap 5 + vanilla JavaScript** frontend backed by **Supabase**
 - [`supabase/profiles.sql`](supabase/profiles.sql) — `country`/`updated_at` columns and the `customer_update_own_profile` RPC (safe fields only)
 - [`supabase/favourites.sql`](supabase/favourites.sql) · [`supabase/quotes.sql`](supabase/quotes.sql) · [`supabase/holds.sql`](supabase/holds.sql) · [`supabase/inspections.sql`](supabase/inspections.sql) · [`supabase/enquiries.sql`](supabase/enquiries.sql) — the customer request tables (own-rows RLS, admin management, guest enquiry INSERT-only)
 - [`docs/PRODUCTION_BACKEND_SETUP.md`](docs/PRODUCTION_BACKEND_SETUP.md) — exact production steps: SQL order, buckets, Edge Functions, secrets (names only), auth URLs, RLS verification and the manual test matrix
+- [`supabase/verify-production.sql`](supabase/verify-production.sql) — read-only, one-grid verification of the whole backend: tables, RLS, policies, buckets, functions, the signup trigger and constraints, each row PASS/MISSING/FAIL with the file to run
 - [`docs/SUPABASE_AUTH_TEST.md`](docs/SUPABASE_AUTH_TEST.md) — automated results + manual test checklist
 - [`tests/README.md`](tests/README.md) — optional automated browser tests
 

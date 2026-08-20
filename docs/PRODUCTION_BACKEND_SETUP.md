@@ -86,7 +86,16 @@ unverified accounts cannot sign in.
 
 ## 9. RLS verification
 
-Run in the SQL Editor and confirm every table below reports `rowsecurity = true`:
+**One-shot check**: run [`supabase/verify-production.sql`](../supabase/verify-production.sql)
+in the SQL Editor. It is strictly read-only and reports one grid covering
+required tables, RLS, every policy, the two Storage buckets, the RPC
+functions and `updated_at` triggers, the signup→profiles trigger
+(including that it assigns `role = 'customer'`), and the unique/CHECK
+constraints — each row marked PASS / MISSING / FAIL / CHECK / INFO with
+the exact `supabase/*.sql` file to run when something is missing.
+
+Or run the individual spot checks below — confirm every table reports
+`rowsecurity = true`:
 
 ```sql
 select tablename, rowsecurity from pg_tables
