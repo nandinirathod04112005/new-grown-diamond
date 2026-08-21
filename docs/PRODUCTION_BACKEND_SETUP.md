@@ -34,6 +34,7 @@ safe):
 | 15 | `supabase/inspections.sql` | inspection requests (INS-…) |
 | 16 | `supabase/enquiries.sql` | guest + customer enquiries (ENQ-…), guest INSERT-only |
 | 17 | `supabase/site-media.sql` | `site-media` bucket + policies for the admin Media Library |
+| 18 | `supabase/site-content.sql` | `site_content` CMS table (public reads active rows, admin writes) |
 
 ## 2. Storage buckets
 
@@ -134,6 +135,8 @@ Expected shape:
   update policy (admin fields unreachable from the browser).
 - **enquiries** — guests INSERT only (no read); customers read their own;
   admins read/update all.
+- **site_content** — everyone reads ACTIVE rows only; active admins read
+  drafts and are the only writers; public pages fall back to built-in copy.
 
 ## 10. Final smoke test
 
