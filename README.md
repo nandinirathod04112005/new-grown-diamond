@@ -43,6 +43,7 @@ Bootstrap 5 + vanilla JavaScript** frontend backed by **Supabase**
 | Login / Signup / Logout connected to Supabase Auth | ✅ done — role + status checked from `profiles` |
 | First Admin promotion (`supabase/first-admin.sql`) + admin protection | ✅ done — see `docs/FIRST_ADMIN_SETUP.md` |
 | Admin Quotes / Holds / Inspections consoles | ✅ live |
+| Admin Media Library (`site-media` bucket, categories, drag-drop) | ✅ live — run `supabase/site-media.sql` once |
 | Favourites, quote/hold/inspection requests, enquiries, secure admin registration (Edge Function) | ✅ live — see `docs/PRODUCTION_BACKEND_SETUP.md` |
 
 ## Quick start
@@ -84,6 +85,7 @@ Bootstrap 5 + vanilla JavaScript** frontend backed by **Supabase**
 | `admin/add-jewellery.html` / `edit-jewellery.html` | Add/Edit Jewellery (active-admin guarded, LIVE) — generated `JEW-` public ids and duplicate-SKU protection for adds; verified public-id loading, full-field updates with `updated_at`, soft archive (`archived_at`, never a delete) and safe Supabase errors for edits; multi-image gallery live against the `jewellery-images` bucket + `public.jewellery_images` (JPG/JPEG/PNG/WEBP ≤ 5 MB, unique safe filenames, sort_order reorder, exactly one primary, confirmed delete with primary re-election) |
 | `admin/customers.html` | Admin Customers (guarded, LIVE) — real customer profiles, search/status filters, status changes through the `admin_set_customer_status` RPC, details with related request history |
 | `admin/quotes.html` / `admin/holds.html` / `admin/inspections.html` | Admin request consoles (guarded, LIVE) — every customer quote / hold / inspection with search + status filters and a detail form to update status, expiry / schedule and the admin note |
+| `admin/media.html` | Admin Media Library (guarded, LIVE) — website imagery in the public `site-media` bucket organised by category folders (Diamonds, Jewellery, Homepage, Manufacturing, Education, About, Blog/Content, General); drag-and-drop or click upload (JPG/PNG/WEBP/SVG ≤ 5 MB, sanitized readable filenames, duplicate protection), search + category filter, size/dimensions/date per file, copy-public-URL and confirmed delete; product photos stay on their product records |
 | `admin/enquiries.html` | Admin Enquiries (guarded, LIVE) — 10-column inbox over `public.enquiries` (guests flagged, related products joined live), search, status/type/date filters, details panel with the full message, and status + internal admin note saved through a real RLS-guarded update with truthful toasts (no email sent) |
 | `supabase-status.html` | Connection diagnostics — Supabase client / Database API / Auth service / session, RLS-aware and secret-free |
 | `styleguide.html` | Living reference for the design system |
@@ -97,6 +99,7 @@ Bootstrap 5 + vanilla JavaScript** frontend backed by **Supabase**
 - [`supabase/jewellery-add-list.sql`](supabase/jewellery-add-list.sql) — case-insensitive SKU uniqueness plus active-admin-only jewellery reads and inserts
 - [`supabase/jewellery-edit-status-archive.sql`](supabase/jewellery-edit-status-archive.sql) — `archived_at` soft-archive column and the active-admin-only jewellery update policy
 - [`supabase/jewellery-images.sql`](supabase/jewellery-images.sql) — `public.jewellery_images` table (single-primary index, public read, active-admin-only writes) plus the `jewellery-images` Storage bucket and its policies
+- [`supabase/site-media.sql`](supabase/site-media.sql) — the public `site-media` bucket + storage policies for the admin Media Library (public read, active-admin writes)
 - [`supabase/public-product-reads.sql`](supabase/public-product-reads.sql) — storefront read policies: anyone may read ONLY active, non-archived products
 - [`supabase/profiles.sql`](supabase/profiles.sql) — `country`/`updated_at` columns and the `customer_update_own_profile` RPC (safe fields only)
 - [`supabase/favourites.sql`](supabase/favourites.sql) · [`supabase/quotes.sql`](supabase/quotes.sql) · [`supabase/holds.sql`](supabase/holds.sql) · [`supabase/inspections.sql`](supabase/inspections.sql) · [`supabase/enquiries.sql`](supabase/enquiries.sql) — the customer request tables (own-rows RLS, admin management, guest enquiry INSERT-only)

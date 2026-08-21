@@ -33,6 +33,7 @@ safe):
 | 14 | `supabase/holds.sql` | hold requests (HLD-…) |
 | 15 | `supabase/inspections.sql` | inspection requests (INS-…) |
 | 16 | `supabase/enquiries.sql` | guest + customer enquiries (ENQ-…), guest INSERT-only |
+| 17 | `supabase/site-media.sql` | `site-media` bucket + policies for the admin Media Library |
 
 ## 2. Storage buckets
 
@@ -40,6 +41,7 @@ Created by the SQL above — verify both exist and stay **RLS-enabled**:
 
 - `diamond-images` — public read, active-admin write, 5 MB, jpeg/png/webp
 - `jewellery-images` — public read, active-admin write, 5 MB, jpeg/png/webp
+- `site-media` — public read, active-admin write, 5 MB, jpeg/png/webp/svg (admin Media Library)
 
 ## 3. Edge Functions to deploy
 
