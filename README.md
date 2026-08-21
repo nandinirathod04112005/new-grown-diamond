@@ -47,6 +47,7 @@ Bootstrap 5 + vanilla JavaScript** frontend backed by **Supabase**
 | Admin Content Manager (`site_content` CMS + live public wiring) | ✅ live — run `supabase/site-content.sql` once |
 | Admin SEO Manager (`seo_pages` + live public tags, previews, JSON-LD) | ✅ live — run `supabase/seo-pages.sql` once |
 | Admin Settings (`site_settings` — company, contact, social, features, display) | ✅ live — run `supabase/site-settings.sql` once |
+| Diamond Compare (up to 4 stones side-by-side, live from Supabase) | ✅ live — no SQL needed |
 | Favourites, quote/hold/inspection requests, enquiries, secure admin registration (Edge Function) | ✅ live — see `docs/PRODUCTION_BACKEND_SETUP.md` |
 
 ## Quick start
@@ -68,6 +69,7 @@ Bootstrap 5 + vanilla JavaScript** frontend backed by **Supabase**
 | `index.html` | Homepage (LIVE showcases) — 3D diamond hero, Signature Stones from featured `public.diamonds` (newest-active fallback, safe empty/error states), Fine Jewellery categories plus a featured-pieces row from `public.jewellery` with primary photos |
 | `diamonds.html` | Diamond Inventory (LIVE) — active, non-archived `public.diamonds` with real photos, search, 8 filters, grid/table views, pagination, and real loading/empty/error states |
 | `diamond-details.html` | Diamond Details (LIVE) — one stone by `?id=DIA-XXXXXXXX`, real 17-field specs, Storage photo, `price_visible`-gated price ("Price on Request"), live quote/hold/inspection/favourite CTAs, similar stones, clean not-available state |
+| `compare-diamonds.html` | Diamond Compare (public, LIVE) — up to four stones side-by-side; the selection lives in localStorage as public ids only (`ngdDiamondCompare`) and every visit re-fetches the LATEST active, non-archived rows from `public.diamonds` (ids that vanished are removed with an honest notice); shape/carat/colour/clarity/cut/polish/symmetry/fluorescence/lab/certificate/measurements/table/depth/ratio/growth/availability rows with differing rows tinted (no “better” verdicts), price only where `price_visible` allows; per-column View Details / Favourite / Request Quote (existing services reused) / Remove; a floating compare bar on the inventory and details pages with a 4-stone cap; horizontal-scroll comparison with a sticky attribute column on mobile |
 | `jewellery.html` | Jewellery Listing (LIVE) — active, non-archived `public.jewellery` with primary photos from `jewellery_images`, search, category chips, sort, pagination, real states |
 | `jewellery-details.html` | Jewellery Details (LIVE) — one piece by `?id=JEW-XXXXXXXX`, gallery with the primary photo first then `sort_order`, 15-field specs, `price_visible`-gated price, live CTAs, similar pieces, clean not-available state |
 | `manufacturing.html` | Manufacturing — cinematic 9-stage journey, quality control, certification, inventory CTA |

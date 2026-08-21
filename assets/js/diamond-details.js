@@ -357,6 +357,14 @@
     }
     showOnly('product');
     render(stone);
+    /* Compare: the static button becomes live once we know the real
+       public id — shared state + behaviour live in diamond-compare.js. */
+    var compareButton = document.getElementById('dd-compare');
+    if (compareButton && window.NGDDiamondCompare && stone.publicId) {
+      compareButton.setAttribute('data-ngd-compare', stone.publicId);
+      compareButton.hidden = false;
+      window.NGDDiamondCompare.refresh();
+    }
     /* Public facts go to the SEO engine — a saved admin override still
        wins; without one the page's tags are generated from this stone. */
     if (window.NGDSeo && window.NGDSeo.applyProduct) {
