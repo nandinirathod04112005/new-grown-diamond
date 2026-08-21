@@ -27,15 +27,16 @@ with
 expected_tables(name) as (values
   ('profiles'), ('diamonds'), ('jewellery'), ('jewellery_images'),
   ('favourites'), ('quotes'), ('holds'), ('inspections'), ('enquiries'),
-  ('admin_signup_attempts')),
+  ('admin_signup_attempts'), ('site_content')),
 -- admin_signup_attempts also has RLS enabled — by design with NO policies,
 -- so only the Edge Function's service-role client can touch it.
 app_policy_tables(name) as (values
   ('profiles'), ('diamonds'), ('jewellery'), ('jewellery_images'),
-  ('favourites'), ('quotes'), ('holds'), ('inspections'), ('enquiries')),
+  ('favourites'), ('quotes'), ('holds'), ('inspections'), ('enquiries'), ('site_content')),
 expected_buckets(id, source) as (values
   ('diamond-images',   'supabase/diamond-images-storage.sql'),
-  ('jewellery-images', 'supabase/jewellery-images.sql')),
+  ('jewellery-images', 'supabase/jewellery-images.sql'),
+  ('site-media',       'supabase/site-media.sql')),
 expected_functions(name, purpose, source) as (values
   ('is_active_admin',            'security-definer admin check used by every admin RLS policy', 'supabase/admin-customers.sql'),
   ('admin_set_customer_status',  'the only way account_status changes from the app',            'supabase/admin-customers.sql'),

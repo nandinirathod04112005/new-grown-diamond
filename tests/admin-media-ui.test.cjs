@@ -237,7 +237,7 @@ async function openMedia(page, user, waitFor) {
     });
     expect(state.visible, 'admin guard passed and revealed the page');
     expect(state.navIsLink && state.navActive && !state.navSoon, 'Media is a live, active sidebar route without a Soon chip');
-    expect(state.soonCount === 4, 'the other four future modules stay honestly Soon, got ' + state.soonCount);
+    expect(state.soonCount === 3, 'SEO, Settings and Users stay honestly Soon, got ' + state.soonCount);
     expect(state.cards === 3, 'three seeded files render, got ' + state.cards);
     expect(state.heroName === 'hero-velvet.webp', 'file name shown');
     expect(/Homepage/.test(state.heroMeta) && /0\.24 MB|244 KB/.test(state.heroMeta) && /2026/.test(state.heroMeta),

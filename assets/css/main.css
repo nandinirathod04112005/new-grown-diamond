@@ -3166,6 +3166,33 @@ a.ngd-chip {
 }
 .ngd-media-meta { margin-bottom: 0.65rem; }
 
+/* Admin content manager */
+.ngd-cms-preview {
+  max-width: 220px;
+  max-height: 140px;
+  border-radius: 0.6rem;
+  border: 1px solid var(--ngd-line);
+  object-fit: cover;
+}
+.ngd-cms-pick {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 1px solid var(--ngd-line);
+  border-radius: 0.6rem;
+  overflow: hidden;
+  background: none;
+  cursor: pointer;
+}
+.ngd-cms-pick img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  display: block;
+}
+.ngd-cms-pick:hover { border-color: #b48c47; }
+#cnt-list .ngd-dash-row.is-active { outline: 1.5px solid #b48c47; border-radius: 0.6rem; }
+
 /* Demo-state switcher (clearly a preview control, not data) */
 .ngd-dash-state-switch {
   display: inline-flex;

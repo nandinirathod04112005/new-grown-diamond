@@ -44,6 +44,7 @@ Bootstrap 5 + vanilla JavaScript** frontend backed by **Supabase**
 | First Admin promotion (`supabase/first-admin.sql`) + admin protection | ✅ done — see `docs/FIRST_ADMIN_SETUP.md` |
 | Admin Quotes / Holds / Inspections consoles | ✅ live |
 | Admin Media Library (`site-media` bucket, categories, drag-drop) | ✅ live — run `supabase/site-media.sql` once |
+| Admin Content Manager (`site_content` CMS + live public wiring) | ✅ live — run `supabase/site-content.sql` once |
 | Favourites, quote/hold/inspection requests, enquiries, secure admin registration (Edge Function) | ✅ live — see `docs/PRODUCTION_BACKEND_SETUP.md` |
 
 ## Quick start
@@ -86,6 +87,7 @@ Bootstrap 5 + vanilla JavaScript** frontend backed by **Supabase**
 | `admin/customers.html` | Admin Customers (guarded, LIVE) — real customer profiles, search/status filters, status changes through the `admin_set_customer_status` RPC, details with related request history |
 | `admin/quotes.html` / `admin/holds.html` / `admin/inspections.html` | Admin request consoles (guarded, LIVE) — every customer quote / hold / inspection with search + status filters and a detail form to update status, expiry / schedule and the admin note |
 | `admin/media.html` | Admin Media Library (guarded, LIVE) — website imagery in the public `site-media` bucket organised by category folders (Diamonds, Jewellery, Homepage, Manufacturing, Education, About, Blog/Content, General); drag-and-drop or click upload (JPG/PNG/WEBP/SVG ≤ 5 MB, sanitized readable filenames, duplicate protection), search + category filter, size/dimensions/date per file, copy-public-URL and confirmed delete; product photos stay on their product records |
+| `admin/content.html` | Admin Content Manager (guarded, LIVE) — edits `public.site_content` by stable section key: homepage hero/diamonds/jewellery/story, the About/Manufacturing/Education/Contact intros and the footer line; per-section fields (eyebrow, lead/body, CTAs, image URLs with preview and a site-media picker), Save/Cancel, active switch; public pages apply active rows via text-only rendering and fall back to their built-in copy so nothing can go blank |
 | `admin/enquiries.html` | Admin Enquiries (guarded, LIVE) — 10-column inbox over `public.enquiries` (guests flagged, related products joined live), search, status/type/date filters, details panel with the full message, and status + internal admin note saved through a real RLS-guarded update with truthful toasts (no email sent) |
 | `supabase-status.html` | Connection diagnostics — Supabase client / Database API / Auth service / session, RLS-aware and secret-free |
 | `styleguide.html` | Living reference for the design system |
@@ -99,6 +101,7 @@ Bootstrap 5 + vanilla JavaScript** frontend backed by **Supabase**
 - [`supabase/jewellery-add-list.sql`](supabase/jewellery-add-list.sql) — case-insensitive SKU uniqueness plus active-admin-only jewellery reads and inserts
 - [`supabase/jewellery-edit-status-archive.sql`](supabase/jewellery-edit-status-archive.sql) — `archived_at` soft-archive column and the active-admin-only jewellery update policy
 - [`supabase/jewellery-images.sql`](supabase/jewellery-images.sql) — `public.jewellery_images` table (single-primary index, public read, active-admin-only writes) plus the `jewellery-images` Storage bucket and its policies
+- [`supabase/site-content.sql`](supabase/site-content.sql) — the `site_content` CMS table (public reads active rows; active-admin writes) behind the admin Content Manager
 - [`supabase/site-media.sql`](supabase/site-media.sql) — the public `site-media` bucket + storage policies for the admin Media Library (public read, active-admin writes)
 - [`supabase/public-product-reads.sql`](supabase/public-product-reads.sql) — storefront read policies: anyone may read ONLY active, non-archived products
 - [`supabase/profiles.sql`](supabase/profiles.sql) — `country`/`updated_at` columns and the `customer_update_own_profile` RPC (safe fields only)
