@@ -12,10 +12,15 @@ async function scenario(name, fn) {
     await context.route('**/assets/js/supabase-client.js', (route) => route.fulfill({
       contentType: 'application/javascript',
       body: `window.NGD_SITE_ROOT=new URL('./',location.href).href;
-        window.__updates=[]; window.__recoverySession=null;
+        window.__updates=[]; window.__recoverySession=null; window.__verifies=[];
+        window.__initialSearch=location.search; window.__initialHash=location.hash;
         window.ngdSupabase={auth:{
           onAuthStateChange:function(cb){setTimeout(function(){if(new URLSearchParams(location.search).has('valid')){window.__recoverySession={user:{id:'user-1'},access_token:'recovery-token',expires_at:Math.floor(Date.now()/1000)+3600};cb('PASSWORD_RECOVERY',window.__recoverySession);}},20);return {data:{subscription:{unsubscribe:function(){}}}}},
           getSession:async function(){return {data:{session:window.__recoverySession},error:null}},
+          verifyOtp:async function(args){window.__verifies.push(args);
+            if(args.token_hash!=='th_GOODTOKEN'){return {data:{session:null},error:{message:'Token has expired or is invalid',status:403}}}
+            window.__recoverySession={user:{id:'user-1'},access_token:'recovery-token',expires_at:Math.floor(Date.now()/1000)+3600};
+            return {data:{session:window.__recoverySession},error:null}},
           updateUser:async function(payload){window.__updates.push(payload);return {data:{user:{id:'user-1'}},error:null}},
           signOut:async function(){return {error:null}}
         }};`,
@@ -64,6 +69,56 @@ async function scenario(name, fn) {
     await page.click('#reset-submit');
     await page.waitForSelector('#reset-invalid:not([hidden])');
     expect((await page.evaluate(() => window.__updates.length)) === 0, 'expired session never calls updateUser');
+  });
+  await scenario('scanner-safe link: loading consumes nothing; a real click verifies, then updates', async (page) => {
+    await page.goto(SITE + '/reset-password.html?token_hash=th_GOODTOKEN&type=recovery');
+    await page.waitForSelector('#reset-confirm-link:not([hidden])', { timeout: 4000 });
+    let state = await page.evaluate(() => ({
+      verifies: window.__verifies.length,
+      hadToken: /token_hash=/.test(window.__initialSearch),
+      scrubbed: location.search === '' && location.hash === '',
+      formHidden: document.getElementById('ngd-reset-form').hidden,
+      checkingHidden: document.getElementById('reset-checking').hidden,
+    }));
+    expect(state.hadToken, 'link arrived carrying the token hash');
+    expect(state.verifies === 0, 'nothing consumed by merely loading the page (scanner-safe)');
+    expect(state.scrubbed, 'token scrubbed from the address bar');
+    expect(state.formHidden && state.checkingHidden, 'password form waits for the click');
+    await page.click('#reset-continue');
+    await page.waitForSelector('#ngd-reset-form:not([hidden])', { timeout: 4000 });
+    state = await page.evaluate(() => ({ verifies: window.__verifies }));
+    expect(state.verifies.length === 1 &&
+      state.verifies[0].type === 'recovery' && state.verifies[0].token_hash === 'th_GOODTOKEN',
+      'one verifyOtp call with the recovery token hash, got ' + JSON.stringify(state.verifies));
+    await page.fill('#reset-password', 'NewSecure#123');
+    await page.fill('#reset-confirm', 'NewSecure#123');
+    await page.click('#reset-submit');
+    await page.waitForFunction(() => window.__updates.length === 1);
+    expect(await page.evaluate(() => window.__updates[0].password === 'NewSecure#123'), 'updateUser called after click-verified session');
+    expect(/updated/i.test(await page.textContent('#reset-alert')), 'success shown, then sign-out + redirect');
+  });
+  await scenario('used or expired token hash: honest invalid stage after the click', async (page) => {
+    await page.goto(SITE + '/reset-password.html?token_hash=th_ALREADYUSED&type=recovery');
+    await page.waitForSelector('#reset-confirm-link:not([hidden])', { timeout: 4000 });
+    await page.click('#reset-continue');
+    await page.waitForSelector('#reset-invalid:not([hidden])', { timeout: 4000 });
+    expect(/invalid or has expired/i.test(await page.textContent('#reset-invalid')), 'exact invalid-link copy');
+    expect((await page.evaluate(() => window.__updates.length)) === 0, 'no password change possible');
+    expect(await page.isHidden('#ngd-reset-form'), 'form never unlocks');
+  });
+  await scenario('supabase error redirect (otp_expired) fails cleanly without any token use', async (page) => {
+    await page.goto(SITE + '/reset-password.html#error=access_denied&error_code=otp_expired&error_description=Email+link+is+invalid+or+has+expired');
+    await page.waitForSelector('#reset-invalid:not([hidden])', { timeout: 4000 });
+    const state = await page.evaluate(() => ({
+      verifies: window.__verifies.length,
+      scrubbed: location.hash === '',
+      hadError: /otp_expired/.test(window.__initialHash),
+      link: document.querySelector('#reset-invalid a').getAttribute('href'),
+    }));
+    expect(state.hadError, 'arrived with the supabase error params');
+    expect(state.verifies === 0, 'no verification attempted');
+    expect(state.scrubbed, 'error params scrubbed from the address bar');
+    expect(state.link === 'forgot-password.html', 'Request New Reset Link action offered');
   });
   await browser.close(); started.server.close();
   const failed = results.filter((result) => !result.ok).length;

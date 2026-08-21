@@ -56,7 +56,7 @@ Created by the SQL above — verify both exist and stay **RLS-enabled**:
 | `SUPABASE_URL` | provided automatically to hosted functions | — |
 | `SUPABASE_SERVICE_ROLE_KEY` | provided automatically to hosted functions | never copy into any frontend file |
 
-## 5. Auth redirect URLs
+## 5. Auth redirect URLs + recovery email template
 
 Supabase Dashboard → Authentication → URL Configuration:
 
@@ -64,6 +64,11 @@ Supabase Dashboard → Authentication → URL Configuration:
 - **Redirect URLs**: add
   - `https://your-domain.example/reset-password.html`
   - `https://your-domain.example/login.html`
+  - each local origin while testing, e.g.
+    `http://127.0.0.1:5500/reset-password.html`
+
+Also set the scanner-safe **Reset Password email template** — exact template
+and why in [`docs/SUPABASE_AUTH_SETUP.md`](SUPABASE_AUTH_SETUP.md) §10b.
 
 ## 6. Site URL in the frontend
 

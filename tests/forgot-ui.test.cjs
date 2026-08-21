@@ -43,6 +43,10 @@ async function scenario(name, opts, fn) {
       // supabase-js transmits redirectTo as the redirect_to query parameter.
       recoveryCalls.push({ url: request.url(), body: request.postDataJSON(),
         redirectTo: new URL(request.url()).searchParams.get('redirect_to') });
+      if (opts.rateLimit) {
+        return route.fulfill({ status: 429, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' },
+          body: JSON.stringify({ code: 'over_email_send_rate_limit', error_code: 'over_email_send_rate_limit', msg: 'For security purposes, you can only request this once every 60 seconds', message: 'For security purposes, you can only request this once every 60 seconds' }) });
+      }
       return route.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: '{}' });
     });
     const page = await context.newPage();
@@ -141,6 +145,32 @@ async function open(page) {
     expect(/reset-password\.html$/.test(recoveryCalls[0].redirectTo), 'recovery redirects to reset page');
     expect(/forgot-password\.html$/.test(state.url), 'stays on the page');
     expect(state.emailCleared === '', 'email field cleared after accepted request');
+    const cooled = await page.evaluate(() => ({
+      disabled: document.getElementById('forgot-submit').disabled,
+      text: document.getElementById('forgot-submit').textContent.trim(),
+    }));
+    expect(cooled.disabled && /^Wait \d+s$/.test(cooled.text),
+      'send button cools down after success so it cannot be spammed, got ' + cooled.text);
+  });
+
+  await scenario('rate limited: friendly wait message and a visible cooldown', { rateLimit: true }, async (page) => {
+    recoveryCalls = [];
+    await open(page);
+    await page.fill('#forgot-email', 'asha@example.com');
+    await page.click('#forgot-submit');
+    await page.waitForSelector('#forgot-alert .ngd-alert-warning', { timeout: 5000 });
+    const state = await page.evaluate(() => ({
+      alert: document.querySelector('#forgot-alert .ngd-alert-warning').textContent.trim(),
+      disabled: document.getElementById('forgot-submit').disabled,
+      text: document.getElementById('forgot-submit').textContent.trim(),
+    }));
+    expect(state.alert === 'Too many reset requests. Please wait a minute and try again.',
+      'friendly rate-limit copy, got: ' + state.alert);
+    expect(state.disabled && /^Wait \d+s$/.test(state.text),
+      'button locked with a visible countdown, got ' + state.text);
+    await page.click('#forgot-submit', { force: true }).catch(() => {});
+    await page.waitForTimeout(300);
+    expect(recoveryCalls.length === 1, 'no second request while cooling down, got ' + recoveryCalls.length);
   });
 
   await scenario('back-to-login link navigates', {}, async (page) => {

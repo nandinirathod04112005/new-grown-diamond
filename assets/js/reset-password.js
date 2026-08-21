@@ -17,7 +17,15 @@
   function showInvalid() {
     $('reset-checking').hidden = true;
     $('ngd-reset-form').hidden = true;
+    var confirmStage = $('reset-confirm-link');
+    if (confirmStage) confirmStage.hidden = true;
     $('reset-invalid').hidden = false;
+  }
+  function showConfirmStage() {
+    $('reset-checking').hidden = true;
+    $('reset-invalid').hidden = true;
+    $('ngd-reset-form').hidden = true;
+    $('reset-confirm-link').hidden = false;
   }
   function sessionIsUsable(session) {
     if (!session || !session.user || !session.user.id || !session.access_token) return false;
@@ -164,12 +172,54 @@
     $('ngd-reset-form').addEventListener('submit', submit);
     if (!window.ngdSupabase) { showInvalid(); return; }
 
+    /* Read the recovery link parameters, then scrub them from the address
+       bar so one-time values never linger in history, logs or referrers. */
+    var search = new URLSearchParams(location.search);
+    var hashParams = new URLSearchParams((location.hash || '').replace(/^#/, ''));
+    var tokenHash = search.get('token_hash') || hashParams.get('token_hash') || '';
+    var linkType = search.get('type') || hashParams.get('type') || '';
+    var linkError = search.get('error') || search.get('error_code') ||
+      hashParams.get('error') || hashParams.get('error_code') || '';
+    if (tokenHash || linkError) {
+      try { history.replaceState(null, '', location.pathname); } catch (_e) { /* older browsers */ }
+    }
+
+    /* Supabase redirected here with an explicit failure (expired/used link). */
+    if (linkError) { showInvalid(); return; }
+
+    if (tokenHash && linkType === 'recovery') {
+      /* Scanner-safe path: the emailed link carries only a token_hash into
+         this page, so merely loading the page consumes nothing — an email
+         security scanner that prefetches the URL burns nothing. The
+         one-time token is exchanged only when a person clicks Continue. */
+      showConfirmStage();
+      $('reset-continue').addEventListener('click', async function () {
+        var button = $('reset-continue');
+        button.disabled = true;
+        button.textContent = 'Verifying…';
+        try {
+          var result = await window.ngdSupabase.auth.verifyOtp({ type: 'recovery', token_hash: tokenHash });
+          var session = result.data && result.data.session;
+          if (result.error || !sessionIsUsable(session)) { showInvalid(); return; }
+          $('reset-confirm-link').hidden = true;
+          showForm(session);
+        } catch (_error) {
+          showInvalid();
+        }
+      });
+      return;
+    }
+
+    /* Alternate scanner-safe template: the one-time ConfirmationURL hidden
+       in the fragment — validated against this project, followed on click. */
     var protectedConfirmationUrl = pendingRecoveryConfirmationUrl();
     if (protectedConfirmationUrl) {
       showRecoveryContinue(protectedConfirmationUrl);
       return;
     }
 
+    /* Legacy links (the default Supabase template) still work: the SDK
+       consumes the hash tokens itself and emits PASSWORD_RECOVERY. */
     var settled = false;
     var listener = window.ngdSupabase.auth.onAuthStateChange(function (event, session) {
       if (event === 'PASSWORD_RECOVERY' && session) {
