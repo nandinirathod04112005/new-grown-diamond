@@ -204,7 +204,7 @@ const IN_RANGE_DESC = 'From plasma reactor to polishing wheel — meet the certi
     });
     expect(state.visible, 'admin guard passed');
     expect(state.navIsLink && state.navActive && !state.navSoon, 'SEO is a live, active route without a Soon chip');
-    expect(state.soonCount === 2, 'Settings and Users stay honestly Soon, got ' + state.soonCount);
+    expect(state.soonCount === 1, 'Users & Roles stays honestly Soon, got ' + state.soonCount);
     expect(state.pages === 9 && state.editButtons === 9, 'all nine registry pages listed, got ' + state.pages);
     expect(state.aboutLive, 'a saved active record shows Live + Index');
     expect(state.contactNoindex, 'robots_index=false shows Noindex');

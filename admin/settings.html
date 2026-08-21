@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Customers — New Grown Diamond</title>
+  <title>Admin — New Grown Diamond</title>
   <meta name="robots" content="noindex">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50 8 88 38 50 92 12 38' fill='%23b48c47'/%3E%3C/svg%3E">
 
@@ -71,7 +71,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="14" r="6.5"/><path d="m9.5 4 2.5 3.5L14.5 4M9.5 4h5"/></svg>
             Jewellery
           </a>
-          <a href="customers.html" class="is-active" data-admin-route="customers" aria-current="page">
+          <a href="customers.html" data-admin-route="customers">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 19a6 6 0 0 1 12 0"/><circle cx="17" cy="9" r="2.4"/><path d="M15.5 14.5a5 5 0 0 1 5.5 4.5"/></svg>
             Customers
           </a>
@@ -103,7 +103,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 18V9M10 18V5M16 18v-7M21 18H3"/></svg>
             SEO
           </a>
-          <a href="settings.html" data-admin-route="settings">
+          <a href="settings.html" class="is-active" data-admin-route="settings" aria-current="page">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 3v2.4M12 18.6V21M3 12h2.4M18.6 12H21M5.6 5.6l1.7 1.7M16.7 16.7l1.7 1.7M18.4 5.6l-1.7 1.7M7.3 16.7l-1.7 1.7"/></svg>
             Settings
           </a>
@@ -126,129 +126,44 @@
     <!-- ══════════ MAIN ══════════ -->
     <main class="ngd-dash-main">
 
-      <section class="d-flex flex-wrap align-items-end justify-content-between gap-3" data-admin-section="head">
+      <!-- Page title -->
+      <section class="d-flex flex-wrap align-items-end justify-content-between gap-3" data-admin-section="settings-head">
         <div>
           <span class="ngd-eyebrow">Admin console</span>
-          <h1 class="ngd-display-2 mt-2 mb-1">Customers</h1>
+          <h1 class="ngd-display-2 mt-2 mb-1">Settings</h1>
           <p class="ngd-text-muted small mb-0">
-            Every account in the house — search, review and manage access.
+            Global company, contact, social and website configuration. Public
+            pages keep their built-in design for anything left empty — and
+            secrets (keys, passwords, codes) never belong in these fields.
           </p>
         </div>
+        <span class="ngd-status-chip" id="set-dirty" hidden>Unsaved changes</span>
       </section>
 
-      <aside class="ngd-edu-note mt-4" id="adm-live-note">
-        <span class="ngd-edu-bullet" aria-hidden="true">&#9670;</span>
-        <p class="mb-0"><strong>Live customer accounts.</strong> Customer profiles and account status are loaded from the secured Supabase database.</p>
-      </aside>
+      <div id="set-toast" class="mt-3" aria-live="polite"></div>
 
-      <!-- Toolbar -->
-      <section class="mt-4 ngd-form" data-admin-section="toolbar">
-        <div class="row g-2 align-items-end">
-          <div class="col-12 col-md-5 col-xl-4">
-            <label class="form-label" for="adm-search">Search</label>
-            <input type="search" class="form-control" id="adm-search"
-                   placeholder="Name, company or phone">
-          </div>
-          <div class="col-6 col-md-3 col-xl-3">
-            <label class="form-label" for="adm-sort">Sort</label>
-            <select class="form-select" id="adm-sort">
-              <option value="joined-desc" selected>Recently joined</option>
-              <option value="name">Name A&ndash;Z</option>
-              <option value="company">Company A&ndash;Z</option>
-            </select>
-          </div>
-          <div class="col-6 col-md-2 col-xl-2 d-grid">
-            <button class="ngd-btn ngd-btn-outline ngd-btn-sm" type="button"
-                    data-bs-toggle="collapse" data-bs-target="#adm-filters"
-                    aria-expanded="false" aria-controls="adm-filters" id="adm-filters-toggle">
-              Filters <span class="ngd-demo-chip d-none ms-1" id="adm-filter-count"></span>
-            </button>
-          </div>
-          <div class="col-6 col-md-2 col-xl-2 d-grid">
-            <button type="button" class="ngd-btn ngd-btn-outline ngd-btn-sm" id="adm-clear">Clear</button>
-          </div>
+      <section class="ngd-dash-panel mt-3" data-admin-section="settings-editor">
+        <div class="ngd-settings-tabs d-flex flex-wrap gap-2 mb-4" id="set-tabs" role="tablist">
+          <!-- section tabs render here -->
         </div>
-
-        <div class="collapse mt-2" id="adm-filters">
-          <div class="ngd-dash-panel">
-            <div class="row g-2">
-              <div class="col-6 col-md-3">
-                <label class="form-label" for="adm-f-status">Account status</label>
-                <select class="form-select" id="adm-f-status"><option value="all" selected>All</option></select>
-              </div>
-            </div>
+        <form id="set-form" class="ngd-form" novalidate>
+          <div id="set-panels"><!-- section panels render here --></div>
+          <hr class="ngd-hairline my-4">
+          <div class="d-flex flex-wrap align-items-center gap-3">
+            <button type="submit" class="ngd-btn ngd-btn-gold" id="set-save">Save changes</button>
+            <span class="ngd-text-muted small" id="set-status">Loading saved settings…</span>
           </div>
-        </div>
-
-        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mt-2">
-          <p class="ngd-dash-metric-note mb-0" id="adm-count" aria-live="polite">—</p>
-        </div>
+        </form>
       </section>
 
-      <!-- Database-confirmed action feedback -->
-      <div id="adm-toast" class="mt-3" aria-live="polite"></div>
-
-      <!-- Customer details panel (rendered by the View action) -->
-      <div class="ngd-dash-panel mt-3" id="cust-detail" data-admin-section="detail" hidden></div>
-
-      <!-- Table (≥768px, horizontal scroll inside the card if needed) -->
-      <section class="mt-3 d-none d-md-block" data-admin-section="table">
-        <div class="ngd-table-card" id="adm-table-card">
-          <div class="table-responsive">
-            <table class="table ngd-table ngd-req-table ngd-admin-table mb-0">
-              <thead>
-                <tr>
-                  <th scope="col">Customer Name</th>
-                  <th scope="col">Company</th>
-                  <th scope="col">Phone</th>
-                  <th scope="col">Account Status</th>
-                  <th scope="col">Joined</th>
-                  <th scope="col" class="text-end">View Details</th>
-                </tr>
-              </thead>
-              <tbody id="adm-table-body"></tbody>
-            </table>
-          </div>
+      <!-- Media picker (fed by the site-media library) -->
+      <section class="ngd-dash-panel mt-4" id="set-media-picker" data-admin-section="settings-media" hidden>
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h2 class="ngd-title fs-6 mb-0">Choose from the Media Library</h2>
+          <button type="button" class="ngd-icon-btn" id="set-media-close" aria-label="Close media picker">×</button>
         </div>
+        <div class="row g-2" id="set-media-grid"><p class="ngd-text-muted small mb-0">Loading media…</p></div>
       </section>
-
-      <!-- Stacked cards (<768px) -->
-      <section class="mt-3 d-md-none ngd-req-cards" id="adm-cards-wrap" data-admin-section="cards"></section>
-
-      <div class="d-flex justify-content-center mt-3" id="adm-pagination"></div>
-
-      <!-- No-match (filters active, inbox not empty) -->
-      <div id="adm-no-match" class="ngd-dash-panel mt-3" hidden>
-        <div class="ngd-dash-empty">
-          <span class="ngd-icon-tile ngd-depth-1 mb-3">◌</span>
-          <h2 class="ngd-title fs-6">Nothing matches those filters</h2>
-          <p class="ngd-text-muted small mb-3">Try a different term, status or date range.</p>
-          <button type="button" class="ngd-btn ngd-btn-outline ngd-btn-sm"
-                  onclick="document.getElementById('adm-clear').click()">Clear filters</button>
-        </div>
-      </div>
-
-      <!-- UI states -->
-      <div id="adm-stage-loading" class="ngd-dash-panel mt-3" hidden>
-        <div class="ngd-dash-row"><span class="ngd-skeleton w-100"></span></div>
-        <div class="ngd-dash-row"><span class="ngd-skeleton w-75"></span></div>
-        <div class="ngd-dash-row"><span class="ngd-skeleton w-50"></span></div>
-      </div>
-      <div id="adm-stage-empty" class="ngd-dash-panel mt-3" hidden>
-        <div class="ngd-dash-empty">
-          <span class="ngd-icon-tile ngd-depth-1 mb-3">◆</span>
-          <h2 class="ngd-title fs-6">No customers yet</h2>
-          <p class="ngd-text-muted small mb-0">Accounts appear here as buyers register on the storefront.</p>
-        </div>
-      </div>
-      <div id="adm-stage-error" class="ngd-dash-panel mt-3" hidden>
-        <div class="ngd-dash-error">
-          <span class="ngd-icon-tile mb-3">!</span>
-          <h2 class="ngd-title fs-6">We couldn&rsquo;t load the customers</h2>
-          <p class="ngd-text-muted small mb-3">Check your connection and try again.</p>
-          <button type="button" class="ngd-btn ngd-btn-outline ngd-btn-sm" id="adm-retry">Retry</button>
-        </div>
-      </div>
 
     </main>
   </div>
@@ -259,6 +174,7 @@
   <script defer src="../assets/js/auth.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script defer src="../assets/js/ui.js"></script>
-  <script defer src="../assets/js/admin-customers.js"></script>
+  <script defer src="../assets/js/settings-registry.js"></script>
+  <script defer src="../assets/js/admin-settings.js"></script>
 </body>
 </html>

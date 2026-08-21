@@ -3,7 +3,7 @@
    Logs in against a compact mocked Supabase backend (role
    parameterised per scenario) and verifies the admin shell:
    topbar profile area, the 13-route sidebar (ten live pages,
-   two honest Soon items) + logout, the seven head-count KPI
+   one honest Soon item) + logout, the seven head-count KPI
    cards fed by exact PostgREST count responses, the live quick
    action links, the merged live activity feed (escaped, newest
    first), per-widget failure isolation with the honest degraded
@@ -221,10 +221,10 @@ const ROUTES = ['dashboard', 'diamonds', 'jewellery', 'customers', 'quotes', 'ho
     expect(state.topbarLogout && state.navLogout, 'sign-out in topbar and sidebar');
     expect(JSON.stringify(state.routes) === JSON.stringify(ROUTES),
       'all 13 sidebar routes in order, got ' + state.routes.join(','));
-    expect(state.soonCount === 2,
-      'two honest Soon items — Media, Content and SEO are live management pages, got ' + state.soonCount);
+    expect(state.soonCount === 1,
+      'one honest Soon item — Users & Roles; every other console is live, got ' + state.soonCount);
     expect(['diamonds.html', 'jewellery.html', 'customers.html', 'quotes.html', 'holds.html',
-      'inspections.html', 'enquiries.html', 'media.html', 'content.html', 'seo.html'].every((h) => state.liveHrefs.includes(h)),
+      'inspections.html', 'enquiries.html', 'media.html', 'content.html', 'seo.html', 'settings.html'].every((h) => state.liveHrefs.includes(h)),
       'every management console linked from the sidebar, got ' + state.liveHrefs.join(','));
     expect(state.active === 'dashboard', 'Dashboard route active');
     expect(state.title === 'Admin Dashboard', 'page title, got ' + state.title);

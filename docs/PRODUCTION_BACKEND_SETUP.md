@@ -36,6 +36,7 @@ safe):
 | 17 | `supabase/site-media.sql` | `site-media` bucket + policies for the admin Media Library |
 | 18 | `supabase/site-content.sql` | `site_content` CMS table (public reads active rows, admin writes) |
 | 19 | `supabase/seo-pages.sql` | `seo_pages` SEO table (public reads active rows, admin writes; pages keep their built-in tags as fallback) |
+| 20 | `supabase/site-settings.sql` | `site_settings` key/value configuration (public reads storefront keys — the contact-form recipient stays admin-only; admin writes) |
 
 ## 2. Storage buckets
 

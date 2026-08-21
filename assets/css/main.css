@@ -3291,6 +3291,93 @@ a.ngd-chip {
   margin-top: 0.15rem;
 }
 
+/* Admin settings manager */
+.ngd-settings-tab {
+  border: 1px solid var(--ngd-line);
+  background: transparent;
+  border-radius: 999px;
+  padding: 0.45rem 1.1rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ngd-ink-soft, #6e6e76);
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+}
+.ngd-settings-tab:hover { border-color: #b48c47; color: #8f6d31; }
+.ngd-settings-tab.is-active {
+  border-color: #b48c47;
+  background: rgba(217, 192, 138, 0.16);
+  color: #8f6d31;
+}
+
+/* Settings-managed brand logo (replaces the ◆ glyph when configured) */
+.ngd-brand-logo {
+  height: 1.5em;
+  width: auto;
+  max-width: 3.2em;
+  display: block;
+  object-fit: contain;
+}
+
+/* Announcement bar (settings-managed, above the header) */
+.ngd-announce {
+  background: var(--ngd-black, #17130a);
+  color: var(--ngd-gold-soft, #d9c08a);
+  text-align: center;
+  font-size: 0.8rem;
+  letter-spacing: 0.02em;
+  padding: 0.5rem 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+.ngd-announce a {
+  color: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Maintenance holding screen (public pages only — admin console never loads it) */
+.ngd-maintenance {
+  position: fixed;
+  inset: 0;
+  z-index: 4000;
+  background: var(--ngd-black, #17130a);
+  color: #f4f2ee;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 0.9rem;
+  padding: 2rem;
+}
+.ngd-maintenance-mark {
+  color: var(--ngd-gold-soft, #d9c08a);
+  font-size: 2.2rem;
+  line-height: 1;
+}
+.ngd-maintenance h1 {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  margin: 0;
+}
+.ngd-maintenance p {
+  max-width: 34rem;
+  color: rgba(244, 242, 238, 0.72);
+  margin: 0;
+}
+.ngd-maintenance-admin {
+  color: var(--ngd-gold-soft, #d9c08a);
+  font-size: 0.85rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+body.ngd-maintenance-on { overflow: hidden; }
+
 /* Demo-state switcher (clearly a preview control, not data) */
 .ngd-dash-state-switch {
   display: inline-flex;
