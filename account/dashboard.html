@@ -306,6 +306,18 @@
       </div>
 
       <!-- Profile -->
+      <!-- Recently Viewed (device-local ids; live product rows) -->
+      <section class="mt-4" data-dash-section="recent" data-ngd-recent
+               data-recent-type="all" data-recent-limit="3" hidden>
+        <div class="ngd-dash-panel">
+          <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+            <h2 class="ngd-title fs-5 mb-0">Recently Viewed</h2>
+            <button type="button" class="ngd-btn ngd-btn-outline ngd-btn-sm" data-recent-clear>Clear</button>
+          </div>
+          <div class="row g-4" data-recent-grid aria-live="polite"></div>
+        </div>
+      </section>
+
       <section class="mt-4" id="dash-profile" data-dash-section="profile">
         <div class="row g-4">
           <div class="col-lg-7">
@@ -377,6 +389,11 @@
   <script defer src="../assets/js/auth.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script defer src="../assets/js/ui.js"></script>
+  <script defer src="../assets/js/gem-art.js"></script>
+  <script defer src="../assets/js/jewellery-art.js"></script>
+  <script defer src="../assets/js/diamond-card.js"></script>
+  <script defer src="../assets/js/jewellery-card.js"></script>
+  <script defer src="../assets/js/recently-viewed.js"></script>
   <script defer src="../assets/js/customer-dashboard.js"></script>
 </body>
 </html>
