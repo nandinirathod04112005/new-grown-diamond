@@ -3566,6 +3566,20 @@ body.ngd-compare-open .ngd-totop { bottom: 6.5rem; }
   margin-left: 0.3rem;
 }
 
+/* WhatsApp enquiry CTA — the site's outline button with the brand's hover */
+.ngd-wa-btn svg {
+  width: 1.1em;
+  height: 1.1em;
+  flex-shrink: 0;
+  margin-right: 0.45em;
+  vertical-align: -0.18em;
+}
+.ngd-wa-btn:hover {
+  border-color: #1e9e52;
+  background: #1e9e52;
+  color: #fff;
+}
+
 /* Demo-state switcher (clearly a preview control, not data) */
 .ngd-dash-state-switch {
   display: inline-flex;

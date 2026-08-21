@@ -440,6 +440,19 @@
     }
     showOnly('product');
     render(piece);
+    /* WhatsApp enquiry: public facts + the current page URL only —
+       the shared helper owns the number, encoding and analytics. */
+    var whatsappCta = document.getElementById('jd-whatsapp');
+    if (whatsappCta && window.NGDWhatsApp) {
+      window.NGDWhatsApp.bind(whatsappCta, {
+        productType: 'jewellery',
+        productId: piece.publicId,
+        message: window.NGDWhatsApp.buildJewelleryMessage({
+          name: piece.name, sku: piece.sku, category: piece.category,
+          url: window.location.href
+        })
+      });
+    }
     /* Public facts go to the SEO engine — a saved admin override still
        wins; without one the page's tags are generated from this piece. */
     if (window.NGDSeo && window.NGDSeo.applyProduct) {

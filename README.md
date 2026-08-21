@@ -48,6 +48,7 @@ Bootstrap 5 + vanilla JavaScript** frontend backed by **Supabase**
 | Admin SEO Manager (`seo_pages` + live public tags, previews, JSON-LD) | ✅ live — run `supabase/seo-pages.sql` once |
 | Admin Settings (`site_settings` — company, contact, social, features, display) | ✅ live — run `supabase/site-settings.sql` once |
 | Diamond Compare (up to 4 stones side-by-side, live from Supabase) | ✅ live — no SQL needed |
+| WhatsApp Product Enquiry (details-page CTAs + contact card, official no. fallback) | ✅ live — no SQL needed |
 | Favourites, quote/hold/inspection requests, enquiries, secure admin registration (Edge Function) | ✅ live — see `docs/PRODUCTION_BACKEND_SETUP.md` |
 
 ## Quick start

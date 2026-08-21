@@ -140,6 +140,12 @@
               <a class="ngd-btn ngd-btn-gold" id="jd-quote" href="#">Request Quote</a>
               <a class="ngd-btn ngd-btn-outline" id="jd-hold" href="#">Request Hold</a>
               <a class="ngd-btn ngd-btn-outline" id="jd-enquire" href="#">Enquire Now</a>
+              <!-- Wired by jewellery-details.js via the shared WhatsApp helper
+                   once the piece loads — public facts only, never prices -->
+              <a class="ngd-btn ngd-btn-outline ngd-wa-btn" id="jd-whatsapp" href="#" hidden>
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm5.2 14.2c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.4-.7-2.9-1.1-4.7-4-4.9-4.2-.1-.2-1.1-1.5-1.1-2.9s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5s.8 1.9.8 2c.1.1.1.3 0 .5l-.4.6c-.1.2-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1l.8-1c.2-.2.4-.2.6-.1l1.9.9c.2.1.4.2.4.3s.1.5-.1 1Z"/></svg>
+                Enquire on WhatsApp
+              </a>
               <button type="button" class="ngd-btn ngd-btn-outline ngd-fav-btn" id="jd-fav" aria-pressed="false">
                 <span class="ngd-fav-icon" aria-hidden="true">♡</span>
                 <span id="jd-fav-label">Add to Favourites</span>
@@ -301,6 +307,7 @@
   <script defer src="assets/js/seo-registry.js"></script>
   <script defer src="assets/js/site-seo.js"></script>
   <script defer src="assets/js/site-settings.js"></script>
+  <script defer src="assets/js/whatsapp-enquiry.js"></script>
   <script defer src="assets/js/auth.js"></script>
   <script defer src="assets/js/favourites-service.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
