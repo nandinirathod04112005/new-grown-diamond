@@ -1,0 +1,7 @@
+{
+  // supabase/functions is Deno code (URL imports, the Deno global) — let the
+  // Deno extension type-check it so plain TypeScript stops reporting false
+  // errors like "Cannot find name 'Deno'". Requires the "Deno" extension
+  // (denoland.vscode-deno); the rest of the project stays plain JS/TS.
+  "deno.enablePaths": ["supabase/functions"]
+}

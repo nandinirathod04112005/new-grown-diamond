@@ -196,15 +196,77 @@ option.
 | Login succeeds but bounces back with support message | The `profiles` row is missing, or `account_status` is `inactive`/`suspended` |
 | Stuck on a blank dashboard | The Supabase CDN script was blocked — the guard fails closed; check the console/network tab |
 
-## 10. Password recovery redirect
+## 10. Password recovery — exact dashboard configuration
 
 Supabase Auth sends and verifies password-recovery links; the application does
-not maintain a reset-token table. In **Authentication → URL Configuration**, add
-the deployed `reset-password.html` URL to **Redirect URLs** (for example,
-`https://your-domain.example/reset-password.html`). Keep the matching local URL
-allowlisted while testing locally.
+not maintain a reset-token table. Two dashboard settings must match the code.
 
-The forgot-password page passes this URL to `resetPasswordForEmail`. The reset
-page remains locked until the Supabase client emits a verified
-`PASSWORD_RECOVERY` session, revalidates that session immediately before
-`updateUser`, and signs the user out after the password changes.
+### 10a. Authentication → URL Configuration
+
+Every origin you serve the site from needs its `reset-password.html` in
+**Redirect URLs** (exact strings — the URL must match or Supabase falls back
+to the Site URL):
+
+```
+http://127.0.0.1:5500/reset-password.html
+http://localhost:8080/reset-password.html
+https://your-domain.example/reset-password.html
+```
+
+Set **Site URL** to the production origin (`https://your-domain.example`).
+The forgot-password page passes the current origin's `reset-password.html`
+as `redirectTo`, so the same build works locally and deployed — as long as
+the origin is allowlisted here.
+
+### 10b. Authentication → Email Templates → Reset Password (scanner-safe)
+
+Corporate mail filters and link scanners prefetch URLs in emails. The default
+`{{ .ConfirmationURL }}` is a one-time Supabase link, so a scanner's prefetch
+consumes it and the real person then sees "One-time token not found" /
+"Email link is invalid or has expired". Replace the template body's link with
+one that lands on our page **without consuming anything** — the token is
+exchanged only when the person clicks the Continue button on
+`reset-password.html`:
+
+```html
+<h2>Reset your password</h2>
+<p>Click below to choose a new password for your New Grown Diamond account.</p>
+<p>
+  <a href="{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=recovery">
+    Reset my password
+  </a>
+</p>
+<p>If you did not request this, you can safely ignore this email.</p>
+```
+
+`{{ .RedirectTo }}` is the allowlisted `reset-password.html` URL the app sent,
+so the link is origin-aware with no template edits per environment. The page
+scrubs the token from the address bar on load, asks for a real click, then
+calls `verifyOtp({ type: 'recovery', token_hash })`.
+
+The page equally supports an alternate scanner-safe template that hides the
+classic one-time link in the URL **fragment** (fragments are never sent to
+servers or link scanners):
+
+```
+{{ .RedirectTo }}#{{ .ConfirmationURL }}
+```
+
+The page validates that the hidden URL belongs to this Supabase project
+(`/auth/v1/verify`, `type=recovery`) and follows it only on the same real
+click. Use one template or the other — the `token_hash` form is preferred
+because its link contains nothing consumable at all. Links from the old
+default template keep working (the SDK consumes them and emits
+`PASSWORD_RECOVERY`), but only the two templates above are scanner-safe.
+
+### 10c. Behaviour in the app
+
+The reset page stays locked until either the click-verified `verifyOtp`
+session or a `PASSWORD_RECOVERY` event arrives, revalidates the session
+immediately before `updateUser`, signs the user out after the change and
+returns to `login.html`. Expired or already-used links show
+"This password reset link is invalid or has expired." with a
+**Request New Reset Link** action. The forgot page answers Supabase's
+`over_email_send_rate_limit` (HTTP 429) with a friendly wait message and a
+visible send-button cooldown, and never reveals whether an email is
+registered.
