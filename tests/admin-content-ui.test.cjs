@@ -192,7 +192,7 @@ async function openContent(page, user) {
     });
     expect(state.visible, 'admin guard passed');
     expect(state.navIsLink && state.navActive && !state.navSoon, 'Content is a live, active route without a Soon chip');
-    expect(state.soonCount === 3, 'SEO, Settings and Users stay honestly Soon, got ' + state.soonCount);
+    expect(state.soonCount === 2, 'Settings and Users stay honestly Soon, got ' + state.soonCount);
     expect(state.sections === 9, 'all nine registry sections listed, got ' + state.sections);
     expect(state.heroLive, 'a saved active section shows as Live');
     expect(state.builtIn === 8, 'unsaved sections say built-in copy, got ' + state.builtIn);

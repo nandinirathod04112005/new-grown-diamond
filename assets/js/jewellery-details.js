@@ -440,6 +440,19 @@
     }
     showOnly('product');
     render(piece);
+    /* Public facts go to the SEO engine — a saved admin override still
+       wins; without one the page's tags are generated from this piece. */
+    if (window.NGDSeo && window.NGDSeo.applyProduct) {
+      var seoVal = function (v) { return v && v !== dash ? v : ''; };
+      window.NGDSeo.applyProduct({
+        type: 'jewellery', publicId: piece.publicId,
+        name: seoVal(piece.name), category: seoVal(piece.category),
+        description: seoVal(piece.description), weightCt: piece.weightCt,
+        availability: seoVal(piece.availability),
+        image: piece.image_path && window.ngdStorageUrl
+          ? window.ngdStorageUrl('jewellery-images', piece.image_path) : ''
+      });
+    }
   }
 
   document.getElementById('jd-retry').addEventListener('click', boot);

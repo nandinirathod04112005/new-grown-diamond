@@ -357,6 +357,20 @@
     }
     showOnly('product');
     render(stone);
+    /* Public facts go to the SEO engine — a saved admin override still
+       wins; without one the page's tags are generated from this stone. */
+    if (window.NGDSeo && window.NGDSeo.applyProduct) {
+      var seoVal = function (v) { return v && v !== dash ? v : ''; };
+      window.NGDSeo.applyProduct({
+        type: 'diamond', publicId: stone.publicId,
+        shape: seoVal(stone.shape), carat: stone.carat,
+        colour: seoVal(stone.colour), clarity: seoVal(stone.clarity),
+        cut: seoVal(stone.cut), lab: seoVal(stone.lab), growth: seoVal(stone.growth),
+        availability: seoVal(stone.availability),
+        image: stone.image_path && window.ngdStorageUrl
+          ? window.ngdStorageUrl('diamond-images', stone.image_path) : ''
+      });
+    }
   }
 
   document.getElementById('dd-retry').addEventListener('click', boot);

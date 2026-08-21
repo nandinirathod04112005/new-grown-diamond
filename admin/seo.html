@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin — New Grown Diamond</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50 8 88 38 50 92 12 38' fill='%23b48c47'/%3E%3C/svg%3E">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="../assets/css/main.css" rel="stylesheet">
+</head>
+<!-- Hidden until the admin guard passes (fail closed).
+     RLS in the database remains the real security layer. -->
+<body class="ngd-backdrop" style="visibility:hidden">
+
+  <!-- ══════════ ADMIN TOP HEADER (shared dashboard shell) ══════════ -->
+  <header class="ngd-dash-topbar">
+    <button class="ngd-burger-btn d-lg-none" type="button" data-bs-toggle="offcanvas"
+            data-bs-target="#adminSidebar" aria-controls="adminSidebar" aria-label="Open admin menu">
+      <span class="ngd-burger"><span></span><span></span><span></span></span>
+    </button>
+    <a class="ngd-brand" href="../index.html">
+      <span class="ngd-brand-mark">◆</span>
+      <span class="d-none d-sm-inline">New Grown Diamond</span>
+    </a>
+    <span class="ngd-eyebrow d-none d-md-inline ms-2">Admin console</span>
+    <!-- Admin profile area -->
+    <div class="d-flex align-items-center gap-3 ms-auto" id="admin-profile-area">
+      <span class="d-none d-sm-flex flex-column text-end lh-sm">
+        <strong class="small" data-ngd-field="full_name">&mdash;</strong>
+        <span class="ngd-text-muted" style="font-size: 0.72rem;" data-ngd-field="email">&mdash;</span>
+      </span>
+      <span class="ngd-badge ngd-badge-dark d-none d-md-inline-flex" style="background: var(--ngd-black); color: var(--ngd-gold-soft);">Administrator</span>
+      <button type="button" class="ngd-btn ngd-btn-outline ngd-btn-sm" data-ngd-logout>
+        Sign out
+      </button>
+    </div>
+  </header>
+
+  <div class="ngd-dash-shell">
+
+    <!-- ══════════ ADMIN SIDEBAR (static ≥992px, offcanvas below) ══════════ -->
+    <aside class="offcanvas-lg offcanvas-start ngd-dash-sidebar" tabindex="-1" id="adminSidebar"
+           aria-labelledby="adminSidebarLabel">
+      <div class="offcanvas-header d-lg-none">
+        <a class="ngd-brand" href="../index.html" id="adminSidebarLabel">
+          <span class="ngd-brand-mark">◆</span>
+          <span>New Grown Diamond</span>
+        </a>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas"
+                data-bs-target="#adminSidebar" aria-label="Close menu"></button>
+      </div>
+      <div class="offcanvas-body d-block p-0">
+        <!-- Management routes carry data-admin-route hooks. The Soon
+             items become real pages in the admin management phases —
+             no navigation is faked meanwhile. -->
+        <nav class="ngd-dash-nav" aria-label="Admin navigation">
+          <a href="dashboard.html" data-admin-route="dashboard">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg>
+            Dashboard
+          </a>
+          <a href="diamonds.html" data-admin-route="diamonds">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4h10l4 5-9 11L3 9Z"/><path d="M3 9h18M12 20 8 9l4-5 4 5-4 11"/></svg>
+            Diamonds
+          </a>
+          <a href="jewellery.html" data-admin-route="jewellery">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="14" r="6.5"/><path d="m9.5 4 2.5 3.5L14.5 4M9.5 4h5"/></svg>
+            Jewellery
+          </a>
+          <a href="customers.html" data-admin-route="customers">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 19a6 6 0 0 1 12 0"/><circle cx="17" cy="9" r="2.4"/><path d="M15.5 14.5a5 5 0 0 1 5.5 4.5"/></svg>
+            Customers
+          </a>
+          <a href="quotes.html" data-admin-route="quotes">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h9l3.5 3.5v13.5H6Z"/><path d="M15 3.5V7h3.5M9 11h6M9 14.5h6M9 18h3.5"/></svg>
+            Quotes
+          </a>
+          <a href="holds.html" data-admin-route="holds">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>
+            Holds
+          </a>
+          <a href="inspections.html" data-admin-route="inspections">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 4.5 4.5"/></svg>
+            Inspections
+          </a>
+          <a href="enquiries.html" data-admin-route="enquiries">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+            Enquiries
+          </a>
+          <a href="media.html" data-admin-route="media">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="14" rx="2"/><circle cx="9" cy="10" r="1.8"/><path d="m5 17 4.5-4 3 2.6L17 11l3.5 4"/></svg>
+            Media
+          </a>
+          <a href="content.html" data-admin-route="content">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h14v16H5Z"/><path d="M8.5 8h7M8.5 11.5h7M8.5 15h4.5"/></svg>
+            Content
+          </a>
+          <a href="seo.html" class="is-active" data-admin-route="seo" aria-current="page">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 18V9M10 18V5M16 18v-7M21 18H3"/></svg>
+            SEO
+          </a>
+          <span class="ngd-dash-nav-item is-soon" data-admin-route="settings" aria-disabled="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 3v2.4M12 18.6V21M3 12h2.4M18.6 12H21M5.6 5.6l1.7 1.7M16.7 16.7l1.7 1.7M18.4 5.6l-1.7 1.7M7.3 16.7l-1.7 1.7"/></svg>
+            Settings <em class="ngd-soon-chip">Soon</em>
+          </span>
+          <span class="ngd-dash-nav-item is-soon" data-admin-route="users" aria-disabled="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="7.5" r="3"/><path d="M6 20a6 6 0 0 1 12 0"/><path d="M17.5 11.5 19 13l2.5-2.5"/></svg>
+            Users &amp; Roles <em class="ngd-soon-chip">Soon</em>
+          </span>
+          <hr class="ngd-hairline my-2">
+          <button type="button" class="ngd-dash-nav-logout" data-ngd-logout>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-2"/><path d="M9 12h11M17 9l3 3-3 3"/></svg>
+            Logout
+          </button>
+        </nav>
+        <div class="px-3 pb-4 pt-2">
+          <a class="ngd-link ngd-text-muted small" href="../index.html">← Open the storefront</a>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ══════════ MAIN ══════════ -->
+    <main class="ngd-dash-main">
+
+      <!-- Page title -->
+      <section class="d-flex flex-wrap align-items-end justify-content-between gap-3" data-admin-section="seo-head">
+        <div>
+          <span class="ngd-eyebrow">Admin console</span>
+          <h1 class="ngd-display-2 mt-2 mb-1">SEO Manager</h1>
+          <p class="ngd-text-muted small mb-0">
+            Manage titles, descriptions, canonical URLs, robots and social
+            tags for every public page. A page without a saved record simply
+            keeps the SEO built into its HTML — nothing can go missing.
+          </p>
+        </div>
+      </section>
+
+      <div id="seo-toast" class="mt-3" aria-live="polite"></div>
+
+      <!-- Pages overview -->
+      <section class="ngd-dash-panel mt-3" data-admin-section="seo-pages">
+        <h2 class="ngd-title fs-5 mb-3">Website pages</h2>
+        <div class="table-responsive">
+          <table class="table ngd-table ngd-admin-table mb-0">
+            <thead>
+              <tr>
+                <th scope="col">Page</th>
+                <th scope="col">SEO status</th>
+                <th scope="col">Indexing</th>
+                <th scope="col">Title</th>
+                <th scope="col">Description</th>
+                <th scope="col" class="text-end"><span class="visually-hidden">Edit</span></th>
+              </tr>
+            </thead>
+            <tbody id="seo-list" aria-live="polite">
+              <tr><td colspan="6" class="ngd-text-muted small" id="seo-list-loading">Loading saved SEO…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Editor + previews -->
+      <section class="ngd-dash-panel mt-4" data-admin-section="seo-editor">
+        <div id="seo-editor-empty">
+          <div class="ngd-dash-empty">
+            <span class="ngd-icon-tile ngd-depth-1 mb-3">⌕</span>
+            <h2 class="ngd-title fs-6">Choose a page to edit</h2>
+            <p class="ngd-text-muted small mb-0">Its saved SEO loads here; the tags built into the HTML stay as the fallback.</p>
+          </div>
+        </div>
+        <form id="seo-form" class="ngd-form" novalidate hidden>
+          <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-1">
+            <div>
+              <h2 class="ngd-title fs-5 mb-0" id="seo-form-title">—</h2>
+              <p class="ngd-text-muted small mb-0" id="seo-form-hint">—</p>
+            </div>
+            <span class="ngd-text-muted small" id="seo-form-updated"></span>
+          </div>
+
+          <div class="row g-4 mt-0">
+            <!-- fields -->
+            <div class="col-lg-7">
+              <div class="row g-3">
+                <div class="col-12 col-md-6">
+                  <label class="form-label" for="seo-f-page_name">Page name</label>
+                  <input type="text" class="form-control" id="seo-f-page_name" maxlength="120">
+                </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label" for="seo-f-canonical_url">Canonical URL</label>
+                  <input type="url" class="form-control" id="seo-f-canonical_url" maxlength="500"
+                         placeholder="https://your-domain.com/page.html">
+                </div>
+                <div class="col-12">
+                  <div class="d-flex justify-content-between align-items-baseline">
+                    <label class="form-label mb-1" for="seo-f-title">SEO title</label>
+                    <span class="ngd-char-count" id="seo-count-title">0 ch · aim for 50–60</span>
+                  </div>
+                  <input type="text" class="form-control" id="seo-f-title" maxlength="200">
+                </div>
+                <div class="col-12">
+                  <div class="d-flex justify-content-between align-items-baseline">
+                    <label class="form-label mb-1" for="seo-f-meta_description">Meta description</label>
+                    <span class="ngd-char-count" id="seo-count-meta_description">0 ch · aim for 140–160</span>
+                  </div>
+                  <textarea class="form-control" id="seo-f-meta_description" rows="3" maxlength="500"></textarea>
+                </div>
+                <div class="col-12">
+                  <label class="form-label" for="seo-f-meta_keywords">Meta keywords <span class="ngd-text-muted">(optional, comma-separated)</span></label>
+                  <input type="text" class="form-control" id="seo-f-meta_keywords" maxlength="500">
+                </div>
+                <div class="col-12 col-md-6">
+                  <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="seo-f-robots_index" checked>
+                    <label class="form-check-label" for="seo-f-robots_index">Allow indexing <span class="ngd-text-muted d-block small">Off writes a noindex robots tag</span></label>
+                  </div>
+                </div>
+                <div class="col-12 col-md-6">
+                  <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="seo-f-robots_follow" checked>
+                    <label class="form-check-label" for="seo-f-robots_follow">Follow links <span class="ngd-text-muted d-block small">Off writes a nofollow robots tag</span></label>
+                  </div>
+                </div>
+
+                <div class="col-12"><hr class="ngd-hairline my-1"></div>
+
+                <div class="col-12 col-md-6">
+                  <label class="form-label" for="seo-f-og_title">Open Graph title</label>
+                  <input type="text" class="form-control" id="seo-f-og_title" maxlength="200" placeholder="Falls back to the SEO title">
+                </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label" for="seo-f-twitter_title">Twitter title</label>
+                  <input type="text" class="form-control" id="seo-f-twitter_title" maxlength="200" placeholder="Falls back to the OG title">
+                </div>
+                <div class="col-12">
+                  <label class="form-label" for="seo-f-og_description">Open Graph description</label>
+                  <textarea class="form-control" id="seo-f-og_description" rows="2" maxlength="500" placeholder="Falls back to the meta description"></textarea>
+                </div>
+                <div class="col-12">
+                  <label class="form-label" for="seo-f-twitter_description">Twitter description</label>
+                  <textarea class="form-control" id="seo-f-twitter_description" rows="2" maxlength="500" placeholder="Falls back to the OG description"></textarea>
+                </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label" for="seo-f-og_image_url">Open Graph image</label>
+                  <div class="d-flex gap-2">
+                    <input type="text" class="form-control" id="seo-f-og_image_url" maxlength="500">
+                    <button type="button" class="ngd-btn ngd-btn-outline ngd-btn-sm text-nowrap" data-seo-pick="seo-f-og_image_url">Browse media…</button>
+                  </div>
+                  <img class="ngd-cms-preview mt-2" id="seo-f-og_image_url-preview" alt="" hidden>
+                </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label" for="seo-f-twitter_image_url">Twitter image</label>
+                  <div class="d-flex gap-2">
+                    <input type="text" class="form-control" id="seo-f-twitter_image_url" maxlength="500">
+                    <button type="button" class="ngd-btn ngd-btn-outline ngd-btn-sm text-nowrap" data-seo-pick="seo-f-twitter_image_url">Browse media…</button>
+                  </div>
+                  <img class="ngd-cms-preview mt-2" id="seo-f-twitter_image_url-preview" alt="" hidden>
+                </div>
+              </div>
+            </div>
+
+            <!-- live previews -->
+            <div class="col-lg-5">
+              <h3 class="ngd-eyebrow mb-2">Search preview</h3>
+              <div class="ngd-serp" id="seo-serp">
+                <span class="ngd-serp-url" id="seo-serp-url">—</span>
+                <span class="ngd-serp-title" id="seo-serp-title">—</span>
+                <span class="ngd-serp-desc" id="seo-serp-desc">—</span>
+              </div>
+              <h3 class="ngd-eyebrow mb-2 mt-4">Social share preview</h3>
+              <div class="ngd-ogcard" id="seo-ogcard">
+                <div class="ngd-ogcard-img" id="seo-og-imgbox"><img id="seo-og-img" alt="" hidden><span id="seo-og-noimg">No share image chosen</span></div>
+                <div class="ngd-ogcard-body">
+                  <span class="ngd-ogcard-domain" id="seo-og-domain">—</span>
+                  <strong class="ngd-ogcard-title" id="seo-og-title">—</strong>
+                  <span class="ngd-ogcard-desc" id="seo-og-desc">—</span>
+                </div>
+              </div>
+              <p class="ngd-text-muted small mt-3 mb-0" id="seo-form-schemas"></p>
+            </div>
+          </div>
+
+          <div class="form-check form-switch mt-4">
+            <input class="form-check-input" type="checkbox" id="seo-active" checked>
+            <label class="form-check-label" for="seo-active">
+              Record active — when off, the page keeps the SEO built into its HTML
+            </label>
+          </div>
+          <div class="d-flex flex-wrap gap-2 mt-4">
+            <button type="submit" class="ngd-btn ngd-btn-gold" id="seo-save">Save changes</button>
+            <button type="button" class="ngd-btn ngd-btn-outline" id="seo-cancel">Cancel changes</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Media picker (fed by the site-media library) -->
+      <section class="ngd-dash-panel mt-4" id="seo-media-picker" data-admin-section="seo-media" hidden>
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h2 class="ngd-title fs-6 mb-0">Choose from the Media Library</h2>
+          <button type="button" class="ngd-icon-btn" id="seo-media-close" aria-label="Close media picker">×</button>
+        </div>
+        <div class="row g-2" id="seo-media-grid"><p class="ngd-text-muted small mb-0">Loading media…</p></div>
+      </section>
+
+    </main>
+  </div>
+
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.js"></script>
+  <script defer src="../assets/js/supabase-config.js"></script>
+  <script defer src="../assets/js/supabase-client.js"></script>
+  <script defer src="../assets/js/auth.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+  <script defer src="../assets/js/ui.js"></script>
+  <script defer src="../assets/js/seo-registry.js"></script>
+  <script defer src="../assets/js/admin-seo.js"></script>
+</body>
+</html>
