@@ -143,7 +143,6 @@ async function open(page, id) {
       thumbs: document.querySelectorAll('#dd-thumbs .ngd-thumb').length,
       certNo: document.getElementById('dd-cert-no').textContent.trim(),
       demoLoaded: !!window.NGD_DEMO_DIAMONDS,
-      title2: document.title,
     }));
     expect(state.stock === 'NGD-1001', 'stock number shown, got ' + state.stock);
     expect(/Round · 1\.52 ct/.test(state.title), 'title from the live row, got ' + state.title);
@@ -159,7 +158,9 @@ async function open(page, id) {
     expect(state.thumbs === 3, 'top/profile/certificate views, got ' + state.thumbs);
     expect(state.certNo === 'LG77110001', 'certificate card filled');
     expect(!state.demoLoaded, 'the demo dataset script is gone from this page');
-    expect(/NGD-1001/.test(state.title2), 'document title names the stone');
+    /* the SEO engine titles the tab from the stone's public specification */
+    await page.waitForFunction(() =>
+      document.title === '1.52 ct Round Lab-Grown Diamond · D VVS1 — New Grown Diamond');
   });
 
   await scenario('price_visible=false: "Price on Request", the amount never reaches the HTML', {}, async (page) => {
