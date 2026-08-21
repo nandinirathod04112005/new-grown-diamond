@@ -42,7 +42,7 @@
   /* Storefront columns only — internal_notes / created_by are never
      requested by the public pages. */
   var COLUMNS = 'id,public_id,stock_number,shape,carat,color,clarity,cut,polish,symmetry,' +
-    'fluorescence,laboratory,report_number,certificate_number,measurements,' +
+    'fluorescence,laboratory,report_number,certificate_number,certificate_url,measurements,' +
     'depth_percentage,table_percentage,ratio,growth_method,availability,image_path,' +
     'total_price,price_per_carat,currency,price_visible';
 
@@ -71,7 +71,8 @@
       ratio: num(d.ratio),
       growth: d.growth_method || dash,
       availability: d.availability || 'On Request',
-      image_path: d.image_path || null
+      image_path: d.image_path || null,
+      certUrl: d.certificate_url || null
     };
     /* a hidden price never enters page state, let alone the HTML */
     if (d.price_visible && num(d.total_price) !== null) {
@@ -109,6 +110,82 @@
     } catch (err) {
       console.warn('[NGD Details] similar stones unavailable:', err);
       return [];
+    }
+  }
+
+  /* ---------- certificate viewer ---------- */
+
+  /** http(s) only, classified by extension. Anything else (including
+      javascript:/data:) is treated as if no certificate URL existed. */
+  function certKind(url) {
+    try {
+      var parsed = new URL(url); // must already be absolute
+      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return null;
+      var path = parsed.pathname.toLowerCase();
+      if (/\.(png|jpe?g|webp|gif)$/.test(path)) return 'image';
+      if (/\.pdf$/.test(path)) return 'pdf';
+      return 'link';
+    } catch (_error) { return null; }
+  }
+
+  function openCertModal(stone, kind) {
+    var body = document.getElementById('dd-cert-modal-body');
+    body.textContent = '';
+    if (kind === 'image') {
+      var img = document.createElement('img');
+      img.className = 'ngd-cert-embed-img';
+      img.alt = (stone.lab === dash ? '' : stone.lab + ' ') + 'diamond certificate';
+      img.setAttribute('src', stone.certUrl);
+      body.appendChild(img);
+    } else {
+      var frame = document.createElement('iframe');
+      frame.className = 'ngd-cert-embed-pdf';
+      frame.setAttribute('title', 'Certificate PDF preview');
+      frame.setAttribute('src', stone.certUrl);
+      body.appendChild(frame);
+    }
+    var open = document.getElementById('dd-cert-modal-open');
+    open.setAttribute('href', stone.certUrl);
+    open.textContent = kind === 'pdf' ? 'Open PDF' : 'Open in new tab';
+    if (window.bootstrap && window.bootstrap.Modal) {
+      window.bootstrap.Modal.getOrCreateInstance(document.getElementById('dd-cert-modal')).show();
+    }
+  }
+
+  function renderCertificate(stone) {
+    var lab = stone.lab === dash ? '' : stone.lab;
+    var report = stone.report === dash ? '' : stone.report;
+    var kind = stone.certUrl ? certKind(stone.certUrl) : null;
+
+    var info = document.getElementById('dd-cert-info');
+    var fallback = document.getElementById('dd-cert-fallback');
+    var hasDetails = !!(lab || report);
+    info.hidden = !hasDetails;
+    fallback.hidden = hasDetails || !!kind;
+    document.getElementById('dd-cert-lab').textContent = lab ? lab + ' Laboratory' : '';
+    document.getElementById('dd-cert-sep').textContent =
+      lab && report ? ' · Report ' : (report ? 'Report ' : '');
+    document.getElementById('dd-cert-no').textContent = report;
+
+    var actions = document.getElementById('dd-cert-actions');
+    var viewButton = document.getElementById('dd-cert-view');
+    var openLink = document.getElementById('dd-cert-open');
+    actions.hidden = !kind;
+    var embeddable = kind === 'image' || kind === 'pdf';
+    viewButton.hidden = !embeddable;
+    openLink.hidden = !kind || embeddable;
+    if (embeddable) {
+      viewButton.onclick = function () { openCertModal(stone, kind); };
+    } else if (kind === 'link') {
+      openLink.setAttribute('href', stone.certUrl);
+    }
+    /* stop an embedded PDF from living on after the modal closes */
+    var modal = document.getElementById('dd-cert-modal');
+    if (modal && !modal.hasAttribute('data-cert-cleanup')) {
+      modal.setAttribute('data-cert-cleanup', '');
+      modal.addEventListener('hidden.bs.modal', function () {
+        document.getElementById('dd-cert-modal-body').textContent = '';
+      });
     }
   }
 
@@ -216,7 +293,9 @@
 
     /* information column */
     document.title = stone.id + ' · ' + stone.shape + ' ' + stone.carat.toFixed(2) + ' ct — New Grown Diamond';
-    document.getElementById('dd-lab-badge').textContent = stone.lab + ' Certified';
+    var labBadge = document.getElementById('dd-lab-badge');
+    labBadge.hidden = stone.lab === dash;
+    labBadge.textContent = stone.lab === dash ? '' : stone.lab + ' Certified';
     document.getElementById('dd-stock').textContent = stone.id;
     document.getElementById('dd-title').innerHTML =
       esc(stone.shape) + ' · <span class="ngd-italic-accent">' + stone.carat.toFixed(2) + ' ct</span>';
@@ -288,8 +367,7 @@
     ).catch(function (error) { console.error('[NGD Favourites]', error); });
 
     /* certificate card */
-    document.getElementById('dd-cert-lab').textContent = stone.lab + ' Laboratory';
-    document.getElementById('dd-cert-no').textContent = stone.report;
+    renderCertificate(stone);
 
     /* full specification card */
     var GROUPS = [
