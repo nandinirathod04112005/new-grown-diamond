@@ -1,6 +1,12 @@
 'use strict';
+const fs = require('fs');
+const path = require('path');
 const { chromium } = require('playwright');
 const { startServer, chromiumOptions, installCdnRoutes } = require('./lib.cjs');
+/* The fragment-template scenario builds a ConfirmationURL on the project
+   origin from the committed config; the network itself is always stubbed. */
+const SB_ORIGIN = (fs.readFileSync(path.join(__dirname, '..', 'assets/js/supabase-config.js'), 'utf8')
+  .match(/SUPABASE_URL:\s*'([^']+)'/) || [])[1] || 'https://example.supabase.co';
 const results = [];
 let browser;
 let SITE;
@@ -119,6 +125,31 @@ async function scenario(name, fn) {
     expect(state.verifies === 0, 'no verification attempted');
     expect(state.scrubbed, 'error params scrubbed from the address bar');
     expect(state.link === 'forgot-password.html', 'Request New Reset Link action offered');
+  });
+  await scenario('alternate template: fragment-hidden link follows only on click; foreign origins refused', async (page) => {
+    await page.route(SB_ORIGIN + '/**', (route) => route.fulfill({
+      status: 200, contentType: 'text/html', body: '<title>supabase-verify</title>ok',
+    }));
+    const confirmation = SB_ORIGIN + '/auth/v1/verify?token=pkce_test123&type=recovery&redirect_to=' +
+      encodeURIComponent(SITE + '/reset-password.html');
+    await page.goto(SITE + '/reset-password.html#' + confirmation);
+    await page.waitForSelector('#reset-alert button', { timeout: 4000 });
+    let state = await page.evaluate(() => ({
+      button: document.querySelector('#reset-alert button').textContent.trim(),
+      formHidden: document.getElementById('ngd-reset-form').hidden,
+      invalidHidden: document.getElementById('reset-invalid').hidden,
+      verifies: window.__verifies.length,
+    }));
+    expect(state.button === 'Continue to Reset Password', 'user-click gate shown, got ' + state.button);
+    expect(state.formHidden && state.invalidHidden, 'nothing unlocked before the click');
+    expect(state.verifies === 0, 'nothing consumed by loading the page');
+    await page.click('#reset-alert button');
+    await page.waitForURL(SB_ORIGIN + '/auth/v1/verify**', { timeout: 4000 });
+    expect(/supabase-verify/.test(await page.title()), 'one-time link followed only after the click');
+    /* a link pointing anywhere else must be refused outright */
+    await page.goto(SITE + '/reset-password.html#https://evil.example/auth/v1/verify?token=x&type=recovery');
+    await page.waitForSelector('#reset-invalid:not([hidden])', { timeout: 5000 });
+    expect(page.url().startsWith(SITE), 'foreign-origin link never followed');
   });
   await browser.close(); started.server.close();
   const failed = results.filter((result) => !result.ok).length;

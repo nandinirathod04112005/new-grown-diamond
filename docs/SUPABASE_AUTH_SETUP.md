@@ -242,9 +242,22 @@ exchanged only when the person clicks the Continue button on
 `{{ .RedirectTo }}` is the allowlisted `reset-password.html` URL the app sent,
 so the link is origin-aware with no template edits per environment. The page
 scrubs the token from the address bar on load, asks for a real click, then
-calls `verifyOtp({ type: 'recovery', token_hash })`. Links from the old
+calls `verifyOtp({ type: 'recovery', token_hash })`.
+
+The page equally supports an alternate scanner-safe template that hides the
+classic one-time link in the URL **fragment** (fragments are never sent to
+servers or link scanners):
+
+```
+{{ .RedirectTo }}#{{ .ConfirmationURL }}
+```
+
+The page validates that the hidden URL belongs to this Supabase project
+(`/auth/v1/verify`, `type=recovery`) and follows it only on the same real
+click. Use one template or the other — the `token_hash` form is preferred
+because its link contains nothing consumable at all. Links from the old
 default template keep working (the SDK consumes them and emits
-`PASSWORD_RECOVERY`), but only the template above is scanner-safe.
+`PASSWORD_RECOVERY`), but only the two templates above are scanner-safe.
 
 ### 10c. Behaviour in the app
 
