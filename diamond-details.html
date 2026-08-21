@@ -143,6 +143,11 @@
                 <span class="ngd-fav-icon" aria-hidden="true">♡</span>
                 <span id="dd-fav-label">Add to Favourites</span>
               </button>
+              <!-- Wired by diamond-details.js once the stone loads; state
+                   lives in the shared compare module (localStorage ids only) -->
+              <button type="button" class="ngd-btn ngd-btn-outline ngd-cmp-toggle" id="dd-compare"
+                      data-off-label="Add to Compare" data-on-label="Remove from Compare"
+                      aria-pressed="false" hidden>Add to Compare</button>
             </div>
 
             <!-- Certificate -->
@@ -297,6 +302,7 @@
   <script defer src="assets/js/seo-registry.js"></script>
   <script defer src="assets/js/site-seo.js"></script>
   <script defer src="assets/js/site-settings.js"></script>
+  <script defer src="assets/js/diamond-compare.js"></script>
   <script defer src="assets/js/auth.js"></script>
   <script defer src="assets/js/favourites-service.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>

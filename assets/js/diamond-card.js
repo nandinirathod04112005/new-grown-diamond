@@ -40,6 +40,22 @@
     return 'diamond-details.html?id=' + encodeURIComponent(d.publicId || d.id);
   }
 
+  /* Compare toggle — only on pages that load the shared compare state
+     (assets/js/diamond-compare.js) and only for live rows with a public
+     id. Rendered with its CURRENT state so re-renders (filters,
+     pagination) stay honest; behaviour is delegated to the compare
+     module, so nothing here can break the card's own links. */
+  function compareToggleHtml(d) {
+    var compare = window.NGDDiamondCompare;
+    if (!compare || !d.publicId) return '';
+    var on = compare.has(d.publicId);
+    return '<button type="button" class="ngd-btn ngd-btn-outline ngd-btn-sm ngd-cmp-toggle' +
+      (on ? ' is-on' : '') + '" data-ngd-compare="' + esc(d.publicId) +
+      '" data-off-label="Compare" data-on-label="✓ Added" aria-pressed="' + (on ? 'true' : 'false') +
+      '" aria-label="Compare ' + esc(d.shape) + ' ' + d.carat.toFixed(2) + ' ct (' + esc(d.id) + ')">' +
+      (on ? '✓ Added' : 'Compare') + '</button>';
+  }
+
   function cardHtml(d) {
     return (
       '<div class="col-12 col-md-6 col-xl-4">' +
@@ -61,7 +77,10 @@
       '<div><dt>Cut</dt><dd>' + esc(d.cut) + '</dd></div>' +
       '<div><dt>Laboratory</dt><dd>' + esc(d.lab) + '</dd></div>' +
       '</dl>' +
-      '<a class="ngd-btn ngd-btn-gold ngd-btn-sm ngd-btn-block" href="' + detailsUrl(d) + '">View Details</a>' +
+      '<div class="d-flex gap-2 ngd-cmp-cardrow">' +
+      '<a class="ngd-btn ngd-btn-gold ngd-btn-sm flex-grow-1" href="' + detailsUrl(d) + '">View Details</a>' +
+      compareToggleHtml(d) +
+      '</div>' +
       '</div></article></div>'
     );
   }
