@@ -3566,6 +3566,23 @@ body.ngd-compare-open .ngd-totop { bottom: 6.5rem; }
   margin-left: 0.3rem;
 }
 
+/* Certificate viewer — embeds stay inside the modal, never overflow */
+.ngd-cert-embed-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+}
+.ngd-cert-embed-pdf {
+  display: block;
+  width: 100%;
+  height: min(72vh, 40rem);
+  border: 0;
+  border-radius: 0.5rem;
+  background: #f2ecdc;
+}
+#dd-cert-modal .modal-body { padding: 0.75rem; }
+
 /* WhatsApp enquiry CTA — the site's outline button with the brand's hover */
 .ngd-wa-btn svg {
   width: 1.1em;
