@@ -143,11 +143,16 @@
     var phoneSlot = document.querySelector('[data-contact-slot="phone"]');
     if (phoneSlot) {
       var phone = val('contact_phone');
-      var wa = digits(val('whatsapp_number'));
       var phoneParts = [];
       if (phone && digits(phone).length >= 7) phoneParts.push(link('tel:+' + digits(phone), phone));
-      if (wa.length >= 7) {
-        var waLink = link('https://wa.me/' + wa, 'WhatsApp', true);
+      /* the shared WhatsApp helper prefers the configured number and falls
+         back to the official business line; without it, configured-only */
+      var waConfigured = digits(val('whatsapp_number')).length >= 7;
+      var waUrl = window.NGDWhatsApp ? window.NGDWhatsApp.link()
+        : (waConfigured ? 'https://wa.me/' + digits(val('whatsapp_number')) : '');
+      /* the card fills only when contact details exist — never on a bare page */
+      if (waUrl && (waConfigured || phoneParts.length)) {
+        var waLink = link(waUrl, 'WhatsApp', true);
         waLink.setAttribute('data-ngd-whatsapp', '');
         phoneParts.push(waLink);
       }
@@ -172,10 +177,13 @@
     if (!isOn('feature_holds', true)) hide('#dd-hold, #dd-sticky-hold, #jd-hold, #jd-sticky-hold');
     if (!isOn('feature_inspections', true)) hide('#dd-inspect');
     if (!isOn('feature_jewellery_enquiry', true)) {
-      hide('#jd-enquire');
+      hide('#jd-enquire, #jd-whatsapp');
       dropSubjectOption('jewellery');
     }
-    if (!isOn('feature_diamond_enquiry', true)) dropSubjectOption('diamond');
+    if (!isOn('feature_diamond_enquiry', true)) {
+      hide('#dd-whatsapp');
+      dropSubjectOption('diamond');
+    }
   }
 
   /* ---- announcement bar above the header ---- */
@@ -236,6 +244,9 @@
       console.warn('[NGD Settings] live settings unavailable, keeping the built-in design', error);
       return;
     }
+    /* let other modules (e.g. the WhatsApp helper) read loaded settings */
+    window.NGDSiteSettings = { value: val };
+    if (window.NGDWhatsApp) window.NGDWhatsApp.refresh();
     applyBranding();
     applyFooter();
     applyContact();

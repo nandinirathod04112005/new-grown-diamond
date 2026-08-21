@@ -357,6 +357,21 @@
     }
     showOnly('product');
     render(stone);
+    /* WhatsApp enquiry: public facts + the current page URL only —
+       the shared helper owns the number, encoding and analytics. */
+    var whatsappCta = document.getElementById('dd-whatsapp');
+    if (whatsappCta && window.NGDWhatsApp) {
+      window.NGDWhatsApp.bind(whatsappCta, {
+        productType: 'diamond',
+        productId: stone.publicId,
+        message: window.NGDWhatsApp.buildDiamondMessage({
+          stockId: stone.id, shape: stone.shape, carat: stone.carat,
+          colour: stone.colour, clarity: stone.clarity,
+          lab: stone.lab, certificate: stone.report,
+          url: window.location.href
+        })
+      });
+    }
     /* Compare: the static button becomes live once we know the real
        public id — shared state + behaviour live in diamond-compare.js. */
     var compareButton = document.getElementById('dd-compare');
