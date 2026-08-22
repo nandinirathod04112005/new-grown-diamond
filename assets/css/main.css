@@ -3806,3 +3806,163 @@ body.ngd-compare-open .ngd-totop { bottom: 6.5rem; }
   object-fit: cover;
   border-radius: inherit;
 }
+
+/* ══════════ FROM CARBON TO BRILLIANCE — homepage cinematics ══════════ */
+
+/* Hero opening sequence — copy reveals in a staged cascade while the 3D
+   diamond fades up. Items stay in the layout (opacity/transform only),
+   so CTAs remain clickable from the very first frame. */
+.ngd-cine .ngd-cine-item {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.85s ease, transform 0.85s ease;
+  transition-delay: calc(var(--ngd-cine-i, 0) * 130ms + 250ms);
+}
+.ngd-cine.ngd-cine-ready .ngd-cine-item {
+  opacity: 1;
+  transform: none;
+}
+
+/* Journey scenes — the scroll-driven canvas sits over each stage frame;
+   the original SVG stays underneath as the permanent fallback and simply
+   fades out once a live scene is mounted. */
+.ngd-stage-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+.ngd-story-media.has-journey-canvas > svg {
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+/* Journey progress rail — vertical beside the story on desktop, a compact
+   numbered strip on small screens. Only visible while the journey is. */
+.ngd-journey-rail {
+  position: fixed;
+  right: 1.1rem;
+  top: 50%;
+  transform: translateY(-50%) translateX(8px);
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  z-index: 40;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+.ngd-journey-rail.is-shown {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(-50%);
+}
+.ngd-journey-dot {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  border: 1px solid rgba(217, 192, 138, 0.35);
+  background: rgba(12, 12, 14, 0.72);
+  color: rgba(244, 242, 238, 0.75);
+  border-radius: 999px;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transition: border-color 0.25s ease, color 0.25s ease, background-color 0.25s ease;
+}
+.ngd-journey-dot em {
+  font-style: normal;
+  color: var(--ngd-gold-soft, #d9c08a);
+}
+.ngd-journey-dot span { opacity: 0.85; }
+.ngd-journey-dot.is-active {
+  border-color: var(--ngd-gold, #b48c47);
+  background: rgba(23, 19, 10, 0.92);
+  color: #fdfbf5;
+}
+.ngd-journey-dot:focus-visible {
+  outline: 2px solid var(--ngd-gold, #b48c47);
+  outline-offset: 2px;
+}
+@media (max-width: 991.98px) {
+  .ngd-journey-rail {
+    top: auto;
+    bottom: 0.85rem;
+    right: 50%;
+    transform: translateX(50%) translateY(8px);
+    flex-direction: row;
+    gap: 0.3rem;
+  }
+  .ngd-journey-rail.is-shown { transform: translateX(50%); }
+  .ngd-journey-dot { padding: 0.3rem 0.5rem; }
+  .ngd-journey-dot span { display: none; }
+}
+
+/* Soft dark↔light section bridges on the homepage story flow */
+#featured-diamonds,
+#manufacturing-story { position: relative; }
+#featured-diamonds::before,
+#manufacturing-story::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 84px;
+  background: linear-gradient(180deg, rgba(247, 245, 240, 0.16) 0%, rgba(247, 245, 240, 0) 100%);
+  pointer-events: none;
+}
+
+/* Diamond shape cards — facet light sweep + lift on hover */
+.ngd-shape-card { overflow: hidden; }
+.ngd-shape-card::after {
+  content: '';
+  position: absolute;
+  top: -30%;
+  bottom: -30%;
+  left: -55%;
+  width: 42%;
+  background: linear-gradient(105deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.28) 50%, rgba(255, 255, 255, 0) 100%);
+  transform: skewX(-14deg);
+  pointer-events: none;
+  transition: left 0.7s ease;
+}
+.ngd-shape-card:hover::after { left: 120%; }
+.ngd-shape-card .ngd-shape-media svg {
+  transition: transform 0.5s ease, filter 0.5s ease;
+}
+.ngd-shape-card:hover .ngd-shape-media svg {
+  transform: rotate(6deg) scale(1.06);
+  filter: drop-shadow(0 0 10px rgba(217, 192, 138, 0.45));
+}
+.ngd-shape-card .ngd-shape-name { transition: transform 0.4s ease; }
+.ngd-shape-card:hover .ngd-shape-name { transform: translateY(-2px); }
+
+/* Live product cards — premium media zoom and deeper hover presence */
+.ngd-diamond-card .ngd-diamond-media,
+.ngd-jewel-media { overflow: hidden; }
+.ngd-diamond-card .ngd-media-photo,
+.ngd-jewel-media .ngd-media-photo {
+  transition: transform 0.7s ease;
+}
+.ngd-diamond-card:hover .ngd-media-photo,
+article:hover > .ngd-jewel-media .ngd-media-photo {
+  transform: scale(1.05);
+}
+
+/* Reduced motion: every cinematic layer stands still and fully visible */
+@media (prefers-reduced-motion: reduce) {
+  .ngd-cine .ngd-cine-item {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .ngd-journey-rail,
+  .ngd-journey-rail.is-shown { transition: none; }
+  .ngd-shape-card::after { display: none; }
+  .ngd-shape-card:hover .ngd-shape-media svg,
+  .ngd-diamond-card:hover .ngd-media-photo,
+  article:hover > .ngd-jewel-media .ngd-media-photo { transform: none; }
+}
