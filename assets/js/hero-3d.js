@@ -206,12 +206,31 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
     stage.classList.add('is-3d');
     window.__NGD_HERO_MODE = 'webgl';
 
+    /* ---------- cinematic hooks (home-cinematic.js drives these) ----------
+       setScroll(p): hero scroll progress 0→1 — the SAME diamond turns
+       further, drifts upward and dims as the story begins, instead of
+       simply vanishing behind the fold. */
+    let scrollP = 0;
+    window.NGDHero3D = {
+      setScroll(p) { scrollP = Math.min(1, Math.max(0, p)); }
+    };
+
     /* ---------- reduced motion: one still frame, no loop ---------- */
     if (reducedMotion) {
+      window.NGDHero3D.setScroll = function () {}; // static frame stays put
       spinGroup.rotation.y = 0.65; // pleasant facet angle
       renderer.render(scene, camera);
       return;
     }
+
+    /* ---------- opening sequence: from darkness to brilliance ----------
+       ~2s once per visit: the scene fades up from near-black while the
+       sparkle clouds converge and the stone grows to size. Purely
+       visual — the copy and CTAs are HTML and stay usable throughout. */
+    const INTRO_SECONDS = 2.0;
+    let introT = 0;
+    window.__NGD_HERO_INTRO = 'pending';
+    const easeOut = (t) => 1 - Math.pow(1 - Math.min(1, t), 3);
 
     /* ---------- pointer parallax (desktop, fine pointer only) ---------- */
     let targetTiltX = 0;
@@ -249,7 +268,23 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
       const dt = Math.min(clock.getDelta(), 0.05);
       const t = clock.elapsedTime;
 
-      spinGroup.rotation.y += dt * 0.22;                       // slow rotation
+      /* opening sequence: darkness → converging sparkle → full presence */
+      let intro = 1;
+      if (introT < INTRO_SECONDS) {
+        introT += dt;
+        intro = easeOut(introT / INTRO_SECONDS);
+        if (introT >= INTRO_SECONDS) window.__NGD_HERO_INTRO = 'done';
+      }
+      const converge = 1.65 - 0.65 * intro;   // clouds drift toward the stone
+      cloudA.scale.setScalar(converge);
+      cloudB.scale.setScalar(converge);
+      spinGroup.scale.setScalar((0.7 + 0.3 * intro) * (1 - scrollP * 0.16));
+
+      /* scroll handoff: extra turn, upward drift, dim toward the story */
+      renderer.toneMappingExposure = 1.12 * (0.16 + 0.84 * intro) * (1 - scrollP * 0.5);
+      tiltGroup.position.y = scrollP * 0.85;
+
+      spinGroup.rotation.y += dt * 0.22 * (1 + scrollP * 1.8);  // slow rotation
       diamond.position.y = 0.42 + Math.sin(t * 0.6) * 0.035;    // gentle float
       reflection.position.y = (0.42 - 2.16) - Math.sin(t * 0.6) * 0.035;
 
@@ -258,8 +293,8 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
       cloudA.rotation.y = t * 0.02;
       cloudB.rotation.y = -t * 0.028;
-      cloudA.material.opacity = 0.45 + Math.sin(t * 1.1) * 0.22;
-      cloudB.material.opacity = 0.40 + Math.sin(t * 1.6 + 2.1) * 0.2;
+      cloudA.material.opacity = (0.45 + Math.sin(t * 1.1) * 0.22) * (0.3 + 0.7 * intro);
+      cloudB.material.opacity = (0.40 + Math.sin(t * 1.6 + 2.1) * 0.2) * (0.3 + 0.7 * intro);
 
       renderer.render(scene, camera);
     });
