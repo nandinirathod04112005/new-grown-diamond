@@ -37,14 +37,16 @@ safe):
 | 18 | `supabase/site-content.sql` | `site_content` CMS table (public reads active rows, admin writes) |
 | 19 | `supabase/seo-pages.sql` | `seo_pages` SEO table (public reads active rows, admin writes; pages keep their built-in tags as fallback) |
 | 20 | `supabase/site-settings.sql` | `site_settings` key/value configuration (public reads storefront keys — the contact-form recipient stays admin-only; admin writes) |
+| 21 | `supabase/product-certificates.sql` | jewellery `certificate_lab`/`certificate_url` columns + the `product-certificates` bucket (public read, active-admin write) |
 
 ## 2. Storage buckets
 
-Created by the SQL above — verify both exist and stay **RLS-enabled**:
+Created by the SQL above — verify all exist and stay **RLS-enabled**:
 
 - `diamond-images` — public read, active-admin write, 5 MB, jpeg/png/webp
 - `jewellery-images` — public read, active-admin write, 5 MB, jpeg/png/webp
 - `site-media` — public read, active-admin write, 5 MB, jpeg/png/webp/svg (admin Media Library)
+- `product-certificates` — public read, active-admin write, 10 MB, pdf/jpeg/png/webp (uploaded grading certificates)
 
 ## 3. Edge Functions to deploy
 

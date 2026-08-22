@@ -37,7 +37,8 @@ app_policy_tables(name) as (values
 expected_buckets(id, source) as (values
   ('diamond-images',   'supabase/diamond-images-storage.sql'),
   ('jewellery-images', 'supabase/jewellery-images.sql'),
-  ('site-media',       'supabase/site-media.sql')),
+  ('site-media',       'supabase/site-media.sql'),
+  ('product-certificates', 'supabase/product-certificates.sql')),
 expected_functions(name, purpose, source) as (values
   ('is_active_admin',            'security-definer admin check used by every admin RLS policy', 'supabase/admin-customers.sql'),
   ('admin_set_customer_status',  'the only way account_status changes from the app',            'supabase/admin-customers.sql'),
@@ -69,7 +70,8 @@ expected_constraints(name, source) as (values
   ('enquiries_full_name_present',     'supabase/enquiries.sql'),
   ('enquiries_email_format',          'supabase/enquiries.sql'),
   ('enquiries_subject_present',       'supabase/enquiries.sql'),
-  ('enquiries_message_length',        'supabase/enquiries.sql')),
+  ('enquiries_message_length',        'supabase/enquiries.sql'),
+  ('jewellery_certificate_url_shape', 'supabase/product-certificates.sql')),
 status_tables(name) as (values
   ('quotes'), ('holds'), ('inspections'), ('enquiries')),
 pub_tables as (

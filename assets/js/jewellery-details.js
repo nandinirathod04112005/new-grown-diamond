@@ -47,7 +47,8 @@
      requested by the public pages. */
   var COLUMNS = 'id,public_id,sku,product_name,category,subcategory,short_description,' +
     'description,metal,metal_karat,metal_color,gross_weight,diamond_weight,diamond_pieces,' +
-    'diamond_quality,diamond_shape,certificate_number,size,price,currency,price_visible,availability';
+    'diamond_quality,diamond_shape,certificate_number,certificate_lab,certificate_url,' +
+    'size,price,currency,price_visible,availability';
 
   function num(value) {
     return value === null || value === undefined || value === '' ? null : Number(value);
@@ -72,6 +73,8 @@
       diamondQuality: p.diamond_quality || null,
       diamondShape: p.diamond_shape || null,
       certificateNo: p.certificate_number || null,
+      certLab: p.certificate_lab || null,
+      certUrl: p.certificate_url || null,
       grossWeight: num(p.gross_weight),
       size: p.size || null,
       availability: AVAIL_LABELS[p.availability] || p.availability || 'On Request',
@@ -364,14 +367,7 @@
     ).catch(function (error) { console.error('[NGD Favourites]', error); });
 
     /* ----- certificate / quality ----- */
-    var certText = document.getElementById('jd-cert-text');
-    if (piece.certificateNo) {
-      certText.innerHTML =
-        'Stones graded ' + esc(val(piece.diamondQuality)) + ' · Report <strong>' + esc(piece.certificateNo) + '</strong>';
-    } else {
-      certText.textContent = 'An all-metal piece — hallmarked ' + metalName + ', no diamond certificate applies.';
-      document.getElementById('jd-cert-btn').classList.add('d-none');
-    }
+    renderCertificate(piece, metalName);
 
     /* ----- full specification card ----- */
     var GROUPS = [
@@ -412,6 +408,92 @@
 
     renderStage();
 
+  }
+
+  /* ---------- certificate viewer ---------- */
+
+  /** http(s) only, classified by extension. Anything else (including
+      javascript:/data:) is treated as if no certificate URL existed. */
+  function certKind(url) {
+    try {
+      var parsed = new URL(url); // must already be absolute
+      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return null;
+      var path = parsed.pathname.toLowerCase();
+      if (/\.(png|jpe?g|webp|gif)$/.test(path)) return 'image';
+      if (/\.pdf$/.test(path)) return 'pdf';
+      return 'link';
+    } catch (_error) { return null; }
+  }
+
+  function openCertModal(piece, kind) {
+    var body = document.getElementById('jd-cert-modal-body');
+    body.textContent = '';
+    if (kind === 'image') {
+      var img = document.createElement('img');
+      img.className = 'ngd-cert-embed-img';
+      img.alt = (piece.certLab ? piece.certLab + ' ' : '') + 'jewellery certificate';
+      img.setAttribute('src', piece.certUrl);
+      body.appendChild(img);
+    } else {
+      var frame = document.createElement('iframe');
+      frame.className = 'ngd-cert-embed-pdf';
+      frame.setAttribute('title', 'Certificate PDF preview');
+      frame.setAttribute('src', piece.certUrl);
+      body.appendChild(frame);
+    }
+    var open = document.getElementById('jd-cert-modal-open');
+    open.setAttribute('href', piece.certUrl);
+    open.textContent = kind === 'pdf' ? 'Open PDF' : 'Open in new tab';
+    if (window.bootstrap && window.bootstrap.Modal) {
+      window.bootstrap.Modal.getOrCreateInstance(document.getElementById('jd-cert-modal')).show();
+    }
+  }
+
+  function renderCertificate(piece, metalName) {
+    var certText = document.getElementById('jd-cert-text');
+    var fallback = document.getElementById('jd-cert-fallback');
+    var actions = document.getElementById('jd-cert-actions');
+    var viewButton = document.getElementById('jd-cert-view');
+    var openLink = document.getElementById('jd-cert-open');
+    var kind = piece.certUrl ? certKind(piece.certUrl) : null;
+    var hasDetails = !!(piece.certificateNo || piece.certLab);
+
+    if (hasDetails) {
+      var html = 'Stones graded ' + esc(piece.diamondQuality || dash);
+      if (piece.certificateNo) {
+        html += ' · ' + (piece.certLab ? esc(piece.certLab) + ' ' : '') +
+          'Report <strong>' + esc(piece.certificateNo) + '</strong>';
+      } else {
+        html += ' · Certified by ' + esc(piece.certLab);
+      }
+      certText.innerHTML = html;
+    } else if (kind) {
+      certText.textContent = 'A grading certificate accompanies this piece.';
+    } else {
+      certText.textContent = 'An all-metal piece — hallmarked ' + metalName + ', no diamond certificate applies.';
+    }
+
+    /* certificate details but no viewable copy → honest "on request"
+       line instead of a dead button */
+    fallback.hidden = !(hasDetails && !kind);
+
+    actions.hidden = !kind;
+    var embeddable = kind === 'image' || kind === 'pdf';
+    viewButton.hidden = !embeddable;
+    openLink.hidden = !kind || embeddable;
+    if (embeddable) {
+      viewButton.onclick = function () { openCertModal(piece, kind); };
+    } else if (kind === 'link') {
+      openLink.setAttribute('href', piece.certUrl);
+    }
+    /* stop an embedded PDF from living on after the modal closes */
+    var modal = document.getElementById('jd-cert-modal');
+    if (modal && !modal.hasAttribute('data-cert-cleanup')) {
+      modal.setAttribute('data-cert-cleanup', '');
+      modal.addEventListener('hidden.bs.modal', function () {
+        document.getElementById('jd-cert-modal-body').textContent = '';
+      });
+    }
   }
 
   /* ---------- boot ---------- */
