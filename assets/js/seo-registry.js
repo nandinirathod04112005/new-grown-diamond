@@ -70,8 +70,8 @@
     { key: 'about', label: 'About', path: 'about.html',
       schemas: ['breadcrumb'],
       builtin: {
-        title: 'About — New Grown Diamond',
-        description: 'About New Grown Diamond — our story, mission and vision, the technology and craft behind every stone, and the responsible journey from seed to brilliance.'
+        title: 'Know About Us | New Grown Diamond',
+        description: 'Discover New Grown Diamond, a Surat-based lab-grown diamond manufacturer with four decades of diamond industry experience, specializing in CVD and HPHT diamonds for global B2B clients.'
       } },
     { key: 'contact', label: 'Contact', path: 'contact.html',
       schemas: ['breadcrumb'],

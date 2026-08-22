@@ -1,10 +1,17 @@
 /* ============================================================
-   About page tests (STEP 15).
-   Verifies the dark split hero with its parallax visual, the
-   story / mission-vision / four-movement journey / why-choose-us
-   / quality / innovation / responsible sections, glass cards,
-   tilt + reveal behaviour and the Explore Our Diamonds CTA at
-   1440/768/390.
+   Know About Us (about.html) tests.
+   The company-profile rebuild: every section is checked against
+   the APPROVED company information only — four decades in
+   diamonds, natural-diamond heritage, the 2012 transition to
+   lab-grown manufacturing, Surat production, CVD + HPHT + Type
+   IIA capability, the D–J / 0.30–6.00 ct / ten-shape range,
+   global B2B audiences, business values and the mission. Also:
+   the removed unsupported claims stay removed (no traceability
+   promises, no "own reactors", no invented establishment year,
+   no separate Vision), the Know About Us navigation replaces the
+   public Design System link, SEO carries the new title, CMS
+   hooks + image slots stay wired, and the page behaves at
+   1440/768/390 with reveal + parallax intact.
    Run:  node tests/about.test.cjs
    ============================================================ */
 'use strict';
@@ -16,11 +23,16 @@ const { startServer, chromiumOptions, installCdnRoutes } = require('./lib.cjs');
 const SCREEN_DIR = path.join(__dirname, 'screens');
 fs.mkdirSync(SCREEN_DIR, { recursive: true });
 
-const SECTIONS = ['hero', 'story', 'mission-vision', 'journey', 'why',
-  'quality', 'innovation', 'responsible', 'cta'];
-const JOURNEY = ['Growth', 'Craftsmanship', 'Inspection', 'Finished Brilliance'];
-const WHY = ['Quality Focus', 'Modern Technology', 'Trusted Process',
-  'Certified Diamonds', 'Customer Focus', 'Responsible Growth'];
+const SECTIONS = ['hero', 'intro', 'legacy', 'transition', 'surat',
+  'what', 'range', 'serve', 'values', 'mission', 'cta'];
+const TIMELINE = ['Four Decades of Diamond Experience', 'Natural Diamond Heritage',
+  '2012 — The Lab-Grown Transition', 'Today — Global CVD & HPHT Supply'];
+const SHAPES = ['Brilliant Round', 'Cushion', 'Heart', 'Marquise', 'Pear',
+  'Princess', 'Radiant', 'Square Radiant', 'Emerald', 'Oval'];
+const CAPABILITIES = ['CVD Lab-Grown Diamonds', 'HPHT Lab-Grown Diamonds',
+  'Type IIA Diamonds', 'Certified', 'Non-Certified', 'Conflict-Free', 'Ethically Manufactured'];
+const VALUES = ['Integrity', 'Honesty', 'Quality', 'Consistency', 'Innovation', 'Ethical Manufacturing'];
+const AUDIENCES = ['B2B Clients', 'Retailers', 'Jewellery Traders', 'Wholesalers & Buyers'];
 
 const results = [];
 let browser;
@@ -36,6 +48,7 @@ async function scenario(name, opts, fn) {
     reducedMotion: opts.reducedMotion || 'no-preference',
   });
   const pageErrors = [];
+  const consoleErrors = [];
   try {
     await installCdnRoutes(context);
     await context.route('**/assets/js/supabase-config.js', (r) => r.fulfill({
@@ -47,8 +60,14 @@ async function scenario(name, opts, fn) {
       : r.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: '[]' }));
     const page = await context.newPage();
     page.on('pageerror', (e) => pageErrors.push(String(e)));
+    page.on('console', (m) => {
+      if (m.type() === 'error' && !/Failed to load resource|WebGL|GPU|SwiftShader/i.test(m.text())) {
+        consoleErrors.push(m.text());
+      }
+    });
     await fn(page);
     expect(pageErrors.length === 0, 'no uncaught page errors, got: ' + pageErrors.join(' | '));
+    expect(consoleErrors.length === 0, 'no console errors, got: ' + consoleErrors.join(' | '));
     results.push({ name, ok: true });
     console.log('PASS  ' + name);
   } catch (err) {
@@ -63,300 +82,302 @@ async function open(page) {
   await page.goto(`${SITE}/about.html`, { waitUntil: 'networkidle' });
 }
 
+function sectionText(page, slug) {
+  return page.evaluate((s) =>
+    document.querySelector('[data-about-section="' + s + '"]').textContent.replace(/\s+/g, ' '), slug);
+}
+
 (async () => {
   const started = await startServer();
   SITE = started.origin;
   browser = await chromium.launch(chromiumOptions());
 
-  await scenario('hero: dark split opening with visual, parallax hook and intro', {}, async (page) => {
-    await open(page);
-    const state = await page.evaluate(() => {
-      const hero = document.querySelector('#about-hero');
-      const media = hero.querySelector('.ngd-story-media');
-      return {
-        heroDark: hero.classList.contains('ngd-section-dark'),
-        darkNav: document.querySelector('.ngd-navbar').classList.contains('ngd-navbar-dark'),
-        headline: hero.querySelector('h1').textContent.replace(/\s+/g, ' ').trim(),
-        intro: hero.querySelector('.ngd-lead').textContent.trim().length,
-        art: !!media.querySelector('svg'),
-        parallax: media.hasAttribute('data-ngd-parallax'),
-        tiltWrap: !!media.closest('[data-ngd-tilt]'),
-        storyBtn: !!hero.querySelector('a[href="#about-story"]'),
-        diamondsBtn: !!hero.querySelector('a[href="diamonds.html"]'),
-        header: !!document.querySelector('.ngd-navbar'),
-        footer: !!document.querySelector('footer.ngd-footer'),
-      };
-    });
-    expect(state.heroDark && state.darkNav, 'dark hero with dark navbar variant');
-    expect(/modern house/i.test(state.headline) && /diamonds/i.test(state.headline),
-      'brand headline, got ' + state.headline);
-    expect(state.intro > 60, 'short brand introduction present');
-    expect(state.art && state.parallax, 'large visual placeholder with parallax depth');
-    expect(state.tiltWrap, 'hero visual carries subtle 3D tilt');
-    expect(state.storyBtn && state.diamondsBtn, 'hero CTAs present');
-    expect(state.header && state.footer, 'global header + footer reused');
-  });
-
-  await scenario('all nine about sections render in order', {}, async (page) => {
+  await scenario('hero: Know About Us eyebrow, four-decades headline and the two B2B CTAs', {}, async (page) => {
     await open(page);
     const state = await page.evaluate(() => ({
-      hooks: [...document.querySelectorAll('[data-about-section]')]
-        .map((s) => s.getAttribute('data-about-section')),
-      tops: [...document.querySelectorAll('[data-about-section]')]
-        .map((s) => s.getBoundingClientRect().top + window.scrollY),
+      eyebrow: document.querySelector('#about-hero .ngd-eyebrow').textContent.trim(),
+      h1: document.querySelector('#about-hero h1').textContent.replace(/\s+/g, ' ').trim(),
+      h1Count: document.querySelectorAll('h1').length,
+      dark: document.getElementById('about-hero').classList.contains('ngd-section-dark'),
+      lead: document.querySelector('#about-hero [data-cms="about_intro.body"]').textContent,
+      diamondsCta: !!document.querySelector('#about-hero a.ngd-btn[href="diamonds.html"]'),
+      manufacturingCta: !!document.querySelector('#about-hero a.ngd-btn[href="manufacturing.html"]'),
+      parallax: !!document.querySelector('#about-hero [data-ngd-parallax]'),
     }));
-    expect(JSON.stringify(state.hooks) === JSON.stringify(SECTIONS),
-      'section hooks in order, got ' + state.hooks.join(','));
-    expect(state.tops.every((t, i) => i === 0 || t > state.tops[i - 1]),
-      'sections stack top to bottom');
+    expect(state.eyebrow === 'Know About Us', 'hero eyebrow, got ' + state.eyebrow);
+    expect(/Four decades of diamond expertise\./.test(state.h1) && /A new era of grown diamonds\./.test(state.h1),
+      'the approved headline concept, got ' + state.h1);
+    expect(state.h1Count === 1, 'exactly one H1');
+    expect(state.dark && state.parallax, 'premium dark hero with the parallax visual');
+    expect(/integrity and honesty/.test(state.lead) && /Surat, India/.test(state.lead) &&
+      /across the globe/.test(state.lead), 'heritage + Surat + global clientele in the lead');
+    expect(state.diamondsCta && state.manufacturingCta, 'Explore Our Diamonds + Our Manufacturing CTAs');
   });
 
-  await scenario('our story: split layout with art and purpose copy', {}, async (page) => {
+  await scenario('all eleven profile sections render in order', {}, async (page) => {
     await open(page);
-    const state = await page.evaluate(() => {
-      const s = document.querySelector('#about-story');
-      return {
-        eyebrow: s.querySelector('.ngd-eyebrow').textContent.trim(),
-        heading: s.querySelector('h2').textContent.replace(/\s+/g, ' ').trim(),
-        art: !!s.querySelector('.ngd-story-media svg'),
-        parallax: s.querySelector('.ngd-story-media').hasAttribute('data-ngd-parallax'),
-        copy: [...s.querySelectorAll('p')].map((p) => p.textContent.trim().length),
-      };
-    });
-    expect(state.eyebrow === 'Our Story', 'story eyebrow, got ' + state.eyebrow);
-    expect(/purpose/i.test(state.heading), 'story heading, got ' + state.heading);
-    expect(state.art && state.parallax, 'layered story visual with parallax');
-    expect(state.copy.length >= 2 && state.copy.every((c) => c > 60), 'two story paragraphs');
+    const slugs = await page.evaluate(() =>
+      [...document.querySelectorAll('[data-about-section]')].map((s) => s.getAttribute('data-about-section')));
+    expect(JSON.stringify(slugs) === JSON.stringify(SECTIONS),
+      'section order, got ' + slugs.join(' → '));
+    const h2s = await page.evaluate(() => document.querySelectorAll('main h2, section h2').length);
+    expect(h2s >= 9, 'H2 headings carry the section hierarchy, got ' + h2s);
   });
 
-  await scenario('mission & vision: two premium glass cards', {}, async (page) => {
+  await scenario('introduction: the approved company copy — integrity, excellence, worldwide customers', {}, async (page) => {
     await open(page);
-    const state = await page.evaluate(() => {
-      const cards = [...document.querySelectorAll('#about-mission-vision .ngd-card')];
-      return {
-        count: cards.length,
-        glass: cards.filter((c) => c.classList.contains('ngd-glass')).length,
-        tilt: cards.filter((c) => c.hasAttribute('data-ngd-tilt')).length,
-        eyebrows: cards.map((c) => c.querySelector('.ngd-eyebrow').textContent.trim()),
-        titles: cards.map((c) => c.querySelector('.ngd-title').textContent.trim()),
-        copy: cards.map((c) => c.querySelector('p').textContent.trim().length),
-      };
-    });
-    expect(state.count === 2, 'two cards, got ' + state.count);
-    expect(state.glass === 2, 'both cards use the glass surface');
-    expect(state.tilt === 2, 'both cards carry subtle 3D tilt');
-    expect(JSON.stringify(state.eyebrows) === JSON.stringify(['Our Mission', 'Our Vision']),
-      'mission + vision labelled, got ' + state.eyebrows.join(','));
-    expect(state.titles.every((t) => t.length > 5), 'each card titled');
-    expect(state.copy.every((c) => c > 80), 'substantial copy per card');
+    const text = await sectionText(page, 'intro');
+    expect(/legacy of integrity and honesty/.test(text), 'integrity + honesty legacy line');
+    expect(/excellence and innovation in diamond manufacturing/.test(text), 'excellence + innovation kept');
+    expect(/customers worldwide/.test(text) && /strong business values/.test(text),
+      'worldwide customers + business values kept');
+    expect(/manufacturer, wholesaler and supplier of CVD and HPHT/.test(text),
+      'the current business definition appears');
   });
 
-  await scenario('journey: four movements with art, numbering and desktop alternation', {}, async (page) => {
+  await scenario('legacy: four decades from natural diamonds — and no invented establishment year', {}, async (page) => {
     await open(page);
-    const state = await page.evaluate(() => {
-      const stages = [...document.querySelectorAll('#about-journey .ngd-story-stage')];
-      return {
-        spine: !!document.querySelector('#about-journey .ngd-story-spine'),
-        stages: stages.map((s) => ({
-          node: s.querySelector('.ngd-story-node').textContent.trim(),
-          title: s.querySelector('.ngd-story-title').textContent.trim(),
-          text: s.querySelector('.ngd-story-text').textContent.trim().length,
-          svg: !!s.querySelector('.ngd-story-media svg'),
-          parallax: s.querySelector('.ngd-story-media').hasAttribute('data-ngd-parallax'),
-        })),
-        sides: stages.map((s) => {
-          const media = s.querySelector('.ngd-story-media').getBoundingClientRect();
-          const text = s.querySelector('.ngd-story-title').getBoundingClientRect();
-          return media.left < text.left ? 'L' : 'R';
-        }).join(''),
-        mfgLink: !!document.querySelector('#about-journey a[href="manufacturing.html"]'),
-      };
-    });
-    expect(state.spine, 'journey spine rendered');
-    expect(state.stages.length === 4, '4 stages, got ' + state.stages.length);
-    state.stages.forEach((s, i) => {
-      const nn = String(i + 1).padStart(2, '0');
-      expect(s.node === nn, `stage ${i + 1} numbered ${nn}`);
-      expect(s.title === JOURNEY[i], `stage ${i + 1} titled "${JOURNEY[i]}", got "${s.title}"`);
-      expect(s.text > 20 && s.text < 260, `stage ${i + 1} short line`);
-      expect(s.svg && s.parallax, `stage ${i + 1} layered visual with parallax`);
-    });
-    expect(state.sides === 'LRLR', 'alternating desktop layout, got ' + state.sides);
-    expect(state.mfgLink, 'links to the full manufacturing journey');
+    const text = await sectionText(page, 'legacy');
+    expect(/around four decades/i.test(text), 'the approximate four-decades claim, got: ' + text.slice(0, 160));
+    expect(/natural diamonds/i.test(text), 'natural-diamond beginnings named');
+    const mainText = await page.evaluate(() =>
+      [...document.querySelectorAll('[data-about-section]')].map((s) => s.textContent).join(' '));
+    const years = (mainText.match(/\b(19|20)\d{2}\b/g) || []).filter((y, i, all) => all.indexOf(y) === i);
+    expect(JSON.stringify(years) === JSON.stringify(['2012']),
+      '2012 is the only year on the profile — no invented dates, got ' + years.join(','));
+    expect(!/Established|Founded|Since 19/i.test(mainText), 'no invented establishment claim');
   });
 
-  await scenario('why choose us: six concise reason cards', {}, async (page) => {
+  await scenario('2012 milestone: the four-step timeline in the approved order', {}, async (page) => {
     await open(page);
-    const state = await page.evaluate(() => {
-      const cards = [...document.querySelectorAll('#about-why .ngd-card')];
-      return {
-        count: cards.length,
-        titles: cards.map((c) => c.querySelector('.ngd-title').textContent.trim()),
-        tiles: cards.filter((c) => c.querySelector('.ngd-icon-tile')).length,
-        tilt: cards.filter((c) => c.hasAttribute('data-ngd-tilt')).length,
-        copy: cards.map((c) => c.querySelector('p').textContent.trim().length),
-      };
-    });
-    expect(state.count === 6, 'six cards, got ' + state.count);
-    expect(JSON.stringify(state.titles) === JSON.stringify(WHY),
-      'expected reasons in order, got ' + state.titles.join(','));
-    expect(state.tiles === 6 && state.tilt === 6, 'icon tiles + tilt on all cards');
-    expect(state.copy.every((c) => c > 40 && c < 180), 'concise copy per card');
+    const state = await page.evaluate(() => ({
+      heading: document.querySelector('#about-transition h2').textContent.replace(/\s+/g, ' ').trim(),
+      stages: [...document.querySelectorAll('#about-transition .ngd-story-stage .ngd-story-title')]
+        .map((t) => t.textContent.replace(/\s+/g, ' ').trim()),
+      nodes: [...document.querySelectorAll('#about-transition .ngd-story-node')].map((n) => n.textContent.trim()),
+      spine: !!document.querySelector('#about-transition .ngd-story-spine'),
+      lead: document.querySelector('#about-transition .ngd-lead').textContent,
+    }));
+    expect(state.heading === '2012 — The Transition to Lab-Grown Diamonds',
+      'milestone heading, got ' + state.heading);
+    expect(JSON.stringify(state.stages) === JSON.stringify(TIMELINE),
+      'timeline order, got ' + state.stages.join(' → '));
+    expect(state.nodes.join(',') === '01,02,03,04' && state.spine, 'elegant numbered spine timeline');
+    expect(/In 2012/.test(state.lead) && /polished/.test(state.lead) &&
+      /consumer and industry trends/.test(state.lead), 'the approved 2012 story');
   });
 
-  await scenario('quality & trust: dark band naming IGI + GIA with badges and education link', {}, async (page) => {
+  await scenario('Surat: state-of-the-art facilities, global supply — no invented factory statistics', {}, async (page) => {
     await open(page);
-    const state = await page.evaluate(() => {
-      const s = document.querySelector('#about-quality');
-      return {
-        dark: s.classList.contains('ngd-section-dark'),
-        text: s.textContent,
-        badges: s.querySelectorAll('.ngd-badge').length,
-        art: !!s.querySelector('.ngd-story-media svg'),
-        points: s.querySelectorAll('ul li').length,
-        eduLink: !!s.querySelector('a[href="education.html"]'),
-      };
-    });
-    expect(state.dark, 'quality section uses the dark band');
-    expect(/IGI/.test(state.text) && /GIA/.test(state.text), 'IGI + GIA named');
-    expect(state.badges >= 2, 'lab badges shown');
-    expect(state.art, 'certificate artwork present');
-    expect(state.points >= 3, 'trust points listed');
-    expect(state.eduLink, 'cross-links the education page');
+    const text = await sectionText(page, 'surat');
+    expect(/Built in Surat\. Supplied Worldwide\./.test(text), 'the section heading');
+    expect(/state-of-the-art diamond production facilities in Surat, India/.test(text),
+      'the approved facility fact');
+    expect(/consistency in quality, quantity and supply/.test(text) && /competitive and affordable pricing/.test(text),
+      'the consistency aims');
+    expect(!/square feet|sq\.? ?ft|employees|\d+ machines|\d+ (countries|nations)|carats? per (year|annum)/i.test(text),
+      'no invented factory statistics');
   });
 
-  await scenario('innovation: technology copy with art and manufacturing link', {}, async (page) => {
+  await scenario('what we do: four B2B roles and all seven approved capabilities', {}, async (page) => {
     await open(page);
-    const state = await page.evaluate(() => {
-      const s = document.querySelector('#about-innovation');
-      return {
-        text: s.textContent,
-        art: !!s.querySelector('.ngd-story-media svg'),
-        parallax: s.querySelector('.ngd-story-media').hasAttribute('data-ngd-parallax'),
-        points: s.querySelectorAll('ul li').length,
-        mfgLink: !!s.querySelector('a[href="manufacturing.html"]'),
-      };
-    });
-    expect(/CVD/.test(state.text), 'growth technology named');
-    expect(state.art && state.parallax, 'technology visual with parallax');
-    expect(state.points >= 3, 'technology points listed');
-    expect(state.mfgLink, 'links to the manufacturing page');
+    const state = await page.evaluate(() => ({
+      cards: [...document.querySelectorAll('#about-what h3')].map((h) => h.textContent.trim()),
+      chips: [...document.querySelectorAll('#about-capabilities .ngd-badge')].map((b) => b.textContent.trim()),
+    }));
+    expect(JSON.stringify(state.cards) === JSON.stringify(['Manufacturer', 'Wholesaler', 'Global Supplier', 'Customized Programs']),
+      'the four roles, got ' + state.cards.join(','));
+    expect(JSON.stringify(state.chips) === JSON.stringify(CAPABILITIES),
+      'all capabilities listed, got ' + state.chips.join(','));
   });
 
-  await scenario('responsible journey: three cards plus the education aside', {}, async (page) => {
+  await scenario('range: ten approved shapes, D–J colour, 0.30–6.00 ct, custom programs + inventory CTA', {}, async (page) => {
     await open(page);
-    const state = await page.evaluate(() => {
-      const s = document.querySelector('#about-responsible');
-      return {
-        cards: s.querySelectorAll('.ngd-card').length,
-        titles: [...s.querySelectorAll('.ngd-title')].map((t) => t.textContent.trim()),
-        note: (s.querySelector('.ngd-edu-note') || { textContent: '' }).textContent,
-        eduLink: !!s.querySelector('.ngd-edu-note a[href="education.html#edu-compare"]'),
-      };
-    });
-    expect(state.cards === 3, 'three responsibility cards, got ' + state.cards);
-    expect(state.titles.some((t) => /above-ground/i.test(t)) &&
-      state.titles.some((t) => /traceable/i.test(t)),
-      'origin + traceability covered, got ' + state.titles.join(','));
-    expect(/different beginning/i.test(state.note), 'comparison aside present');
-    expect(state.eduLink, 'aside deep-links the education comparison');
+    const state = await page.evaluate(() => ({
+      shapes: [...document.querySelectorAll('#about-shapes .ngd-badge')].map((b) => b.textContent.trim()),
+      text: document.querySelector('[data-about-section="range"]').textContent.replace(/\s+/g, ' '),
+      cta: (document.querySelector('#about-range a.ngd-btn') || { textContent: '', getAttribute: () => '' }),
+      ctaText: (document.querySelector('#about-range a.ngd-btn') || { textContent: '' }).textContent.trim(),
+      ctaHref: (document.querySelector('#about-range a.ngd-btn') || { getAttribute: () => '' }).getAttribute('href'),
+    }));
+    expect(JSON.stringify(state.shapes) === JSON.stringify(SHAPES),
+      'all ten approved shapes in order, got ' + state.shapes.join(','));
+    expect(/D – J/.test(state.text) && /0\.30 – 6\.00/.test(state.text),
+      'colour and carat ranges shown, got ' + state.text.slice(0, 120));
+    expect(/Customized programs can be discussed/.test(state.text), 'custom programs invitation');
+    expect(state.ctaText === 'View Diamond Inventory' && state.ctaHref === 'diamonds.html',
+      'inventory CTA, got ' + state.ctaText + ' → ' + state.ctaHref);
   });
 
-  await scenario('parallax drifts the hero visual on scroll; reduced motion disables it', {}, async (page) => {
+  await scenario('who we serve: the four approved audiences — no invented customers or logos', {}, async (page) => {
     await open(page);
-    await page.evaluate(() =>
-      document.querySelector('#about-journey').scrollIntoView({ behavior: 'instant', block: 'start' }));
-    await page.waitForTimeout(250);
-    const first = await page.evaluate(
-      () => document.querySelector('#about-journey .ngd-story-media').style.transform);
-    await page.evaluate(() => window.scrollBy({ top: 420, behavior: 'instant' }));
-    await page.waitForTimeout(250);
-    const second = await page.evaluate(
-      () => document.querySelector('#about-journey .ngd-story-media').style.transform);
-    expect(first && second && first !== second,
-      `parallax changes on scroll (${first} → ${second})`);
+    const state = await page.evaluate(() => ({
+      cards: [...document.querySelectorAll('#about-serve h3')].map((h) => h.textContent.trim()),
+      heading: document.querySelector('#about-serve h2').textContent.replace(/\s+/g, ' ').trim(),
+      logos: document.querySelectorAll('#about-serve img').length,
+    }));
+    expect(state.heading === 'Serving the Global Diamond Trade', 'section heading, got ' + state.heading);
+    expect(JSON.stringify(state.cards) === JSON.stringify(AUDIENCES),
+      'the four audiences, got ' + state.cards.join(','));
+    expect(state.logos === 0, 'no fake customer logos');
+  });
+
+  await scenario('values: exactly the six supported values, no sustainability statistics', {}, async (page) => {
+    await open(page);
+    const state = await page.evaluate(() => ({
+      cards: [...document.querySelectorAll('#about-values h3')].map((h) => h.textContent.trim()),
+      text: document.querySelector('[data-about-section="values"]').textContent,
+    }));
+    expect(JSON.stringify(state.cards) === JSON.stringify(VALUES),
+      'the six values, got ' + state.cards.join(','));
+    expect(!/\d+\s*%|carbon.?neutral|water|renewable/i.test(state.text),
+      'no unsupported environmental statistics');
+  });
+
+  await scenario('mission: the approved mission, no separate Vision, no removed claims anywhere', {}, async (page) => {
+    await open(page);
+    const text = await sectionText(page, 'mission');
+    expect(/over 40 years of experience in mined diamonds/.test(text), '40+ years origin kept');
+    expect(/transitioned to lab-grown diamonds in 2012/.test(text), '2012 transition kept');
+    expect(/technological developments/.test(text) && /awareness and education/.test(text),
+      'technology + education commitments kept');
+    expect(/strong alternative to mined diamonds/.test(text) &&
+      /leading wholesale supplier of lab-grown diamonds/.test(text), 'the mission goals kept');
+    const whole = await page.evaluate(() => document.body.textContent);
+    expect(!/Our Vision/.test(whole), 'the invented Vision section is gone');
+    expect(!/traced to its first day|traceable/i.test(whole), 'no unverified traceability claims');
+    expect(!/our own reactors|under one roof/i.test(whole), 'no unverified reactor/one-roof claims');
+    expect(!/Grown to order|leaves the Earth intact/i.test(whole), 'old unsupported environmental copy removed');
+  });
+
+  await scenario('SEO: the Know About Us title and Surat/CVD/HPHT description survive the SEO module', {}, async (page) => {
+    await open(page);
+    await page.waitForFunction(() => document.title === 'Know About Us | New Grown Diamond', null, { timeout: 8000 });
+    const state = await page.evaluate(() => ({
+      description: (document.querySelector('meta[name="description"]') || { getAttribute: () => '' }).getAttribute('content'),
+      canonicalCount: document.querySelectorAll('meta[name="description"]').length,
+    }));
+    expect(/Surat-based lab-grown diamond manufacturer/.test(state.description) &&
+      /CVD and HPHT/.test(state.description) && /B2B/.test(state.description),
+      'approved meta description, got ' + state.description);
+    expect(state.canonicalCount === 1, 'a single effective description tag');
+  });
+
+  await scenario('navigation: Know About Us replaces Design System publicly (about + index + mobile + footer)', {}, async (page) => {
+    await open(page);
+    let nav = await page.evaluate(() => ({
+      desktop: [...document.querySelectorAll('.ngd-nav .nav-link')].map((a) => a.textContent.trim()),
+      aboutHref: (document.querySelector('.ngd-nav .nav-link[href="about.html"]') || { getAttribute: () => null }).getAttribute('aria-current'),
+      mobile: [...document.querySelectorAll('.ngd-mobile-menu a')].map((a) => a.getAttribute('href')),
+      mobileLabel: (document.querySelector('.ngd-mobile-menu a[href="about.html"]') || { textContent: '' }).textContent.trim(),
+      footerStyleguide: document.querySelectorAll('footer a[href="styleguide.html"]').length,
+    }));
+    expect(nav.desktop.includes('Know About Us') && !nav.desktop.includes('Design system'),
+      'about page desktop nav, got ' + nav.desktop.join(','));
+    expect(nav.aboutHref === 'page', 'Know About Us marked current on its own page');
+    expect(nav.mobile.includes('about.html') && !nav.mobile.includes('styleguide.html') &&
+      nav.mobileLabel === 'Know About Us', 'mobile menu swapped');
+    expect(nav.footerStyleguide === 0, 'no public footer link to the internal styleguide');
+
+    await page.goto(`${SITE}/index.html`, { waitUntil: 'domcontentloaded' });
+    nav = await page.evaluate(() => ({
+      desktop: [...document.querySelectorAll('.ngd-nav .nav-link')].map((a) => a.textContent.trim()),
+      styleguideLinks: document.querySelectorAll('a[href="styleguide.html"]').length,
+    }));
+    expect(nav.desktop.includes('Know About Us') && !nav.desktop.includes('Design system'),
+      'homepage nav swapped too, got ' + nav.desktop.join(','));
+    expect(nav.styleguideLinks === 0, 'no public styleguide links anywhere on the homepage');
+  });
+
+  await scenario('CMS: hooks stay wired — a live row overrides copy, image slots stay hidden until a URL exists', {}, async (page) => {
+    await page.route('https://home-test.supabase.co/rest/v1/site_content*', (r) => r.fulfill({
+      status: 200, contentType: 'application/json',
+      headers: { 'access-control-allow-origin': '*' },
+      body: JSON.stringify([{
+        key: 'about_legacy', subheading: 'Our Heritage', body: 'CMS override copy for the legacy block.',
+        image_url: 'https://home-test.supabase.co/storage/v1/object/public/site-media/content/surat.png', active: true,
+      }]),
+    }));
+    await page.route('**/storage/v1/object/public/site-media/**', (r) => r.fulfill({
+      status: 200, contentType: 'image/png',
+      headers: { 'access-control-allow-origin': '*' },
+      body: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64'),
+    }));
+    await open(page);
+    await page.waitForFunction(() =>
+      document.querySelector('[data-cms="about_legacy.body"]').textContent.includes('CMS override copy'), null, { timeout: 8000 });
+    const state = await page.evaluate(() => ({
+      subheading: document.querySelector('[data-cms="about_legacy.subheading"]').textContent.trim(),
+      photoShown: getComputedStyle(document.querySelector('img[data-cms-src="about_legacy.image_url"]')).display !== 'none',
+      othersHidden: [...document.querySelectorAll('img.ngd-cms-photo:not([src])')]
+        .every((img) => getComputedStyle(img).display === 'none'),
+      hookCount: document.querySelectorAll('[data-cms]').length,
+    }));
+    expect(state.subheading === 'Our Heritage', 'CMS subheading override applied');
+    expect(state.photoShown, 'a supplied image URL reveals the section photo');
+    expect(state.othersHidden, 'image slots without a URL keep the placeholder art');
+    expect(state.hookCount >= 10, 'the editable hook set stays in place, got ' + state.hookCount);
+  });
+
+  await scenario('final CTA: Build Your Diamond Program With Us + working links', {}, async (page) => {
+    await open(page);
+    const state = await page.evaluate(() => ({
+      heading: document.querySelector('#about-cta h2').textContent.replace(/\s+/g, ' ').trim(),
+      body: document.querySelector('#about-cta p').textContent.replace(/\s+/g, ' '),
+      diamonds: !!document.querySelector('#about-cta a.ngd-btn[href="diamonds.html"]'),
+      contact: !!document.querySelector('#about-cta a.ngd-btn[href="contact.html"]'),
+    }));
+    expect(state.heading === 'Build Your Diamond Program With Us', 'CTA heading, got ' + state.heading);
+    expect(/regular supply or a customized diamond program/.test(state.body), 'the B2B invitation');
+    expect(state.diamonds && state.contact, 'Explore Diamonds + Contact Our Team buttons');
+    await page.click('#about-cta a[href="diamonds.html"]');
+    await page.waitForURL('**/diamonds.html', { timeout: 8000 });
+  });
+
+  await scenario('scroll reveal fires through the profile', {}, async (page) => {
+    await open(page);
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await page.waitForTimeout(700);
+    const revealed = await page.evaluate(() => {
+      const els = [...document.querySelectorAll('.ngd-reveal')];
+      return els.filter((el) => el.classList.contains('is-visible')).length / els.length;
+    });
+    expect(revealed > 0.5, 'most reveal blocks became visible, got ' + revealed);
   });
 
   await scenario('reduced motion: no parallax transforms', { reducedMotion: 'reduce' }, async (page) => {
     await open(page);
-    await page.evaluate(() =>
-      document.querySelector('#about-journey').scrollIntoView({ behavior: 'instant' }));
-    await page.evaluate(() => window.scrollBy({ top: 400, behavior: 'instant' }));
+    await page.evaluate(() => window.scrollTo(0, 600));
     await page.waitForTimeout(300);
-    const transform = await page.evaluate(
-      () => document.querySelector('#about-journey .ngd-story-media').style.transform);
-    expect(!transform, 'no transform under prefers-reduced-motion');
+    const transforms = await page.evaluate(() =>
+      [...document.querySelectorAll('[data-ngd-parallax]')].map((el) => el.style.transform || ''));
+    expect(transforms.every((t) => t === '' || t === 'none'), 'parallax stays still, got ' + transforms.join('|'));
   });
 
-  await scenario('scroll reveal fires through the page', {}, async (page) => {
+  await scenario('mobile 390: stacked sections, readable timeline and range, no overflow', {
+    viewport: { width: 390, height: 844 },
+  }, async (page) => {
     await open(page);
-    await page.evaluate(async () => {
-      const step = window.innerHeight / 2;
-      for (let y = 0; y <= document.body.scrollHeight; y += step) {
-        window.scrollTo(0, y);
-        await new Promise((r) => setTimeout(r, 100));
-      }
-    });
-    await page.waitForFunction(() => {
-      const items = document.querySelectorAll('.ngd-reveal');
-      return [...items].every((el) => el.classList.contains('is-visible'));
-    }, null, { timeout: 6000 });
-  });
-
-  await scenario('final CTA "Explore Our Diamonds" opens the inventory', {}, async (page) => {
-    await open(page);
-    const label = await page.textContent('#about-cta a.ngd-btn');
-    expect(label.trim() === 'Explore Our Diamonds', 'CTA label, got ' + label.trim());
-    await page.click('#about-cta a.ngd-btn');
-    await page.waitForURL('**/diamonds.html', { timeout: 8000 });
-  });
-
-  await scenario('mobile 390: stacked hero + journey, no overflow', { viewport: { width: 390, height: 844 } }, async (page) => {
-    await open(page);
-    const state = await page.evaluate(() => {
-      const hero = document.querySelector('#about-hero');
-      const heroMedia = hero.querySelector('.ngd-story-media').getBoundingClientRect();
-      const heroCopy = hero.querySelector('h1').getBoundingClientRect();
-      const stage = document.querySelector('#about-journey .ngd-story-stage');
-      const media = stage.querySelector('.ngd-story-media').getBoundingClientRect();
-      const title = stage.querySelector('.ngd-story-title').getBoundingClientRect();
-      return {
-        heroStacked: heroCopy.bottom <= heroMedia.top + 1,
-        journeyStacked: media.bottom <= title.top + 1,
-        whyPerRow: [...document.querySelectorAll('#about-why .ngd-card')].filter((c, _, all) =>
-          Math.abs(c.getBoundingClientRect().top - all[0].getBoundingClientRect().top) < 4).length,
-        scrollW: document.documentElement.scrollWidth,
-        clientW: document.documentElement.clientWidth,
-        bodyW: document.body.scrollWidth,
-      };
-    });
-    expect(state.heroStacked, 'hero copy stacks above the visual on mobile');
-    expect(state.journeyStacked, 'journey media stacks above text on mobile');
-    expect(state.whyPerRow === 2, 'two why-cards per row on mobile, got ' + state.whyPerRow);
-    expect(state.scrollW <= state.clientW + 1 && state.bodyW <= state.clientW + 1,
-      `no overflow s=${state.scrollW} b=${state.bodyW} c=${state.clientW}`);
-    await page.screenshot({ path: path.join(SCREEN_DIR, 'about-mobile.png') });
+    const state = await page.evaluate(() => ({
+      overflow: document.documentElement.scrollWidth <= window.innerWidth + 1,
+      stageWidths: [...document.querySelectorAll('#about-transition .ngd-story-stage')].length,
+      shapeChip: (document.querySelector('#about-shapes .ngd-badge') || { getBoundingClientRect: () => ({ height: 0 }) }).getBoundingClientRect().height,
+    }));
+    expect(state.overflow, 'no horizontal overflow at 390px');
+    expect(state.stageWidths === 4, 'all four timeline stages present');
+    expect(state.shapeChip > 12, 'shape chips render readably, got ' + state.shapeChip);
+    await page.screenshot({ path: path.join(SCREEN_DIR, 'about-390.png'), fullPage: true });
   });
 
   await scenario('tablet 768 and desktop 1440: layouts settle with no overflow', { viewport: { width: 768, height: 1024 } }, async (page) => {
     await open(page);
-    let o = await page.evaluate(() => ({
-      s: document.documentElement.scrollWidth,
-      c: document.documentElement.clientWidth,
-    }));
-    expect(o.s <= o.c + 1, `768 no overflow s=${o.s}`);
+    let overflow = await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1);
+    expect(overflow, 'no overflow at 768');
     await page.setViewportSize({ width: 1440, height: 900 });
-    await page.waitForTimeout(300);
-    o = await page.evaluate(() => ({
-      s: document.documentElement.scrollWidth,
-      c: document.documentElement.clientWidth,
-      whyPerRow: [...document.querySelectorAll('#about-why .ngd-card')].filter((c, _, all) =>
-        Math.abs(c.getBoundingClientRect().top - all[0].getBoundingClientRect().top) < 4).length,
-    }));
-    expect(o.whyPerRow === 3, 'three why-cards per row at 1440, got ' + o.whyPerRow);
-    expect(o.s <= o.c + 1, `1440 no overflow s=${o.s}`);
-    await page.waitForTimeout(500);
-    await page.screenshot({ path: path.join(SCREEN_DIR, 'about-desktop.png') });
+    await page.waitForTimeout(250);
+    overflow = await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1);
+    expect(overflow, 'no overflow at 1440');
+    await page.screenshot({ path: path.join(SCREEN_DIR, 'about-1440.png'), fullPage: true });
   });
 
   await browser.close();

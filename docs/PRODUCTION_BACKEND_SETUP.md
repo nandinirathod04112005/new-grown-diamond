@@ -38,6 +38,7 @@ safe):
 | 19 | `supabase/seo-pages.sql` | `seo_pages` SEO table (public reads active rows, admin writes; pages keep their built-in tags as fallback) |
 | 20 | `supabase/site-settings.sql` | `site_settings` key/value configuration (public reads storefront keys — the contact-form recipient stays admin-only; admin writes) |
 | 21 | `supabase/product-certificates.sql` | jewellery `certificate_lab`/`certificate_url` columns + the `product-certificates` bucket (public read, active-admin write) |
+| 22 | `supabase/diamond-archive-management.sql` | archived-diamond management: admin-only DELETE policy on `diamonds`, admin read on `favourites`, and history FKs hardened to `on delete restrict` |
 
 ## 2. Storage buckets
 

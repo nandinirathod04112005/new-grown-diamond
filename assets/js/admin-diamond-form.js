@@ -65,6 +65,26 @@
     $('dia-alert').innerHTML = '';
   }
 
+  /** The stock number clashes with an ARCHIVED diamond: say so precisely
+      and hand the admin the restore path — never a vague duplicate error. */
+  function showArchivedClash(label) {
+    var box = $('dia-alert');
+    box.innerHTML = '';
+    var div = document.createElement('div');
+    div.className = 'ngd-alert ngd-alert-danger';
+    div.setAttribute('role', 'alert');
+    var text = document.createElement('span');
+    text.textContent = 'Stock number ' + label + ' exists in Archived Diamonds. ' +
+      'Restore that record instead of creating a duplicate. ';
+    var link = document.createElement('a');
+    link.href = 'diamonds.html?status=archived&q=' + encodeURIComponent(label);
+    link.textContent = 'View Archived Diamond';
+    div.appendChild(text);
+    div.appendChild(link);
+    box.appendChild(div);
+    div.scrollIntoView({ block: 'nearest' });
+  }
+
   function markDirty() {
     state.dirty = true;
   }
@@ -205,13 +225,15 @@
 
   async function updateDiamond(payload, form) {
     var sb = window.ngdSupabase;
-    var duplicate = await sb.from('diamonds').select('id, public_id')
+    var duplicate = await sb.from('diamonds').select('id, public_id, archived_at')
       .eq('stock_number', payload.stock_number).limit(2);
     if (duplicate.error) throw duplicate.error;
-    if ((duplicate.data || []).some(function (row) { return row.id !== state.record.id; })) {
+    var clash = (duplicate.data || []).filter(function (row) { return row.id !== state.record.id; })[0];
+    if (clash) {
       setInvalid(field('stock_number'), true);
       field('stock_number').focus();
-      showAlert('danger', 'That stock number already exists in the inventory — stock numbers must be unique.');
+      if (clash.archived_at) showArchivedClash(payload.stock_number);
+      else showAlert('danger', 'Stock number ' + payload.stock_number + ' already exists in the active inventory.');
       return false;
     }
 
@@ -335,14 +357,18 @@
     var label = payload.stock_number;
 
     /* friendly duplicate check first (the DB unique constraint is the
-       real enforcement — a race still surfaces as 23505 below) */
+       real enforcement — a race still surfaces as 23505 below). An
+       archived clash gets its own honest message + restore path. */
     var existing = await sb.from('diamonds')
-      .select('id')
+      .select('id, archived_at')
       .eq('stock_number', label)
       .limit(1);
     if (!existing.error && existing.data && existing.data.length > 0) {
-      showAlert('danger',
-        label + ' already exists in the inventory — stock numbers must be unique.');
+      if (existing.data[0].archived_at) {
+        showArchivedClash(label);
+      } else {
+        showAlert('danger', 'Stock number ' + label + ' already exists in the active inventory.');
+      }
       var stockEl = field('stock_number');
       setInvalid(stockEl, true);
       stockEl.focus();

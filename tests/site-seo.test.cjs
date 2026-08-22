@@ -223,11 +223,11 @@ const headState = () => ({
     await page.goto(SITE + '/about.html', { waitUntil: 'domcontentloaded' });
     await page.waitForFunction(() => !!document.querySelector('link[rel="canonical"]'));
     const s = await page.evaluate(headState);
-    expect(s.title === 'About — New Grown Diamond', 'built-in title kept, got ' + s.title);
-    expect(/our story, mission and vision/.test(s.description), 'built-in description kept');
+    expect(s.title === 'Know About Us | New Grown Diamond', 'built-in title kept, got ' + s.title);
+    expect(/Surat-based lab-grown diamond manufacturer/.test(s.description), 'built-in description kept');
     expect(s.canonical === SITE + '/about.html', 'self-canonical derived, got ' + s.canonical);
     expect(s.robots === null, 'no robots tag invented without a saved record');
-    expect(s.ogTitle === 'About — New Grown Diamond' && s.twCard === 'summary',
+    expect(s.ogTitle === 'Know About Us | New Grown Diamond' && s.twCard === 'summary',
       'social baseline derived from the built-in head');
     const ld = await page.evaluate(() => JSON.parse(document.getElementById('ngd-jsonld').textContent));
     const types = ld['@graph'].map((n) => n['@type']);
@@ -242,7 +242,7 @@ const headState = () => ({
     await page.goto(SITE + '/about.html', { waitUntil: 'domcontentloaded' });
     await page.waitForFunction(() => !!document.querySelector('link[rel="canonical"]'));
     const s = await page.evaluate(headState);
-    expect(s.title === 'About — New Grown Diamond', 'inactive row never applied');
+    expect(s.title === 'Know About Us | New Grown Diamond', 'inactive row never applied');
     expect(s.robots === null, 'inactive robots never applied');
   });
 
@@ -252,7 +252,7 @@ const headState = () => ({
     await page.goto(SITE + '/about.html', { waitUntil: 'domcontentloaded' });
     await page.waitForFunction(() => !!document.querySelector('link[rel="canonical"]'));
     const s = await page.evaluate(headState);
-    expect(s.title === 'About — New Grown Diamond' && /our story/.test(s.description),
+    expect(s.title === 'Know About Us | New Grown Diamond' && /Surat-based/.test(s.description),
       'built-in tags untouched on outage');
     expect(s.canonical === SITE + '/about.html', 'baseline canonical still present');
     const alive = await page.evaluate(() => !!document.querySelector('footer'));

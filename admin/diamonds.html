@@ -215,11 +215,13 @@
                 <select class="form-select" id="adm-f-availability"><option value="all" selected>All</option></select>
               </div>
               <div class="col-6 col-md-3 col-xl-2">
-                <label class="form-label" for="adm-f-status">Active state</label>
+                <label class="form-label" for="adm-f-status">Status</label>
                 <select class="form-select" id="adm-f-status">
-                  <option value="all" selected>All</option>
+                  <option value="all" selected>All current</option>
                   <option value="active">Active</option>
                   <option value="inactive">Inactive</option>
+                  <option value="archived">Archived</option>
+                  <option value="everything">Everything (incl. archived)</option>
                 </select>
               </div>
               <div class="col-6 col-md-3 col-xl-2">
@@ -326,6 +328,7 @@
   <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script defer src="../assets/js/ui.js"></script>
   <script defer src="../assets/js/gem-art.js"></script>
+  <script defer src="../assets/js/certificate-upload.js"></script>
   <script defer src="../assets/js/admin-diamonds.js"></script>
 </body>
 </html>

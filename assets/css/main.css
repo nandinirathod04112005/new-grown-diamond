@@ -3790,3 +3790,19 @@ body.ngd-compare-open .ngd-totop { bottom: 6.5rem; }
   .ngd-find-step { flex: 1 1 auto; text-align: center; }
   .ngd-find-actions .ngd-btn { flex: 1 1 auto; }
 }
+
+/* ══════════ ABOUT — CMS section photos ══════════
+   Sections keep their line-art placeholder until the Content console
+   supplies a real image URL; site-content.js then sets src and the
+   photo covers the media frame. */
+.ngd-story-media { position: relative; }
+.ngd-cms-photo { display: none; }
+.ngd-cms-photo[src] {
+  display: block;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+}

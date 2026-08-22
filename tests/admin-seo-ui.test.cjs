@@ -227,11 +227,11 @@ const IN_RANGE_DESC = 'From plasma reactor to polishing wheel — meet the certi
       indexOn: document.getElementById('seo-f-robots_index').checked,
       followOn: document.getElementById('seo-f-robots_follow').checked,
     }));
-    expect(state.pageName === 'About' && state.title === 'About — New Grown Diamond',
+    expect(state.pageName === 'About' && state.title === 'Know About Us | New Grown Diamond',
       'built-in title prefilled, got ' + state.title);
-    expect(/our story, mission and vision/.test(state.description), 'built-in description prefilled');
+    expect(/Surat-based lab-grown diamond manufacturer/.test(state.description), 'built-in description prefilled');
     expect(/Not saved yet/.test(state.updated), 'honest unsaved stamp');
-    expect(state.serpTitle === 'About — New Grown Diamond', 'SERP preview starts from the built-in title');
+    expect(state.serpTitle === 'Know About Us | New Grown Diamond', 'SERP preview starts from the built-in title');
     expect(/your-domain\.com › about\.html/.test(state.serpUrl), 'SERP URL placeholder until a canonical is set');
     expect(/Breadcrumb/.test(state.schemas) && /no raw code/.test(state.schemas),
       'structured data is declared and honest about being generated');

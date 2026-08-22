@@ -55,17 +55,19 @@
       featured: !!d.featured,
       active: d.active !== false,
       imagePath: d.image_path || null,
+      certificateUrl: d.certificate_url || null,
       archivedAt: d.archived_at || null,
       updated: String(d.updated_at || d.created_at || '').slice(0, 10) || '—'
     };
   }
 
-  /** Select the whole inventory from Supabase (newest first). */
+  /** Select the whole inventory from Supabase (newest first) — archived
+      rows included, so the Archived view can manage them. The DEFAULT
+      view still never mixes them in (see matches()). */
   async function loadAdminDiamonds() {
     var res = await window.ngdSupabase
       .from('diamonds')
       .select('*')
-      .is('archived_at', null)
       .order('created_at', { ascending: false });
     if (res.error) throw res.error;
     return (res.data || []).map(mapRow);
@@ -119,8 +121,79 @@
   }
 
   function archiveRow(row) {
-    if (!window.confirm('Archive ' + row.id + '? It will be deactivated and removed from this list.')) return;
+    if (!window.confirm('Archive ' + row.id + '? It will be deactivated and moved to Archived Diamonds — nothing is deleted.')) return;
     return mutateRow(row, { archived_at: new Date().toISOString(), active: false }, 'was archived');
+  }
+
+  function restoreRow(row) {
+    return mutateRow(row, { archived_at: null, active: true }, 'was restored to the active inventory');
+  }
+
+  /* ---------------- permanent delete (archived rows only) ---------------- */
+
+  var REFERENCE_TABLES = ['quotes', 'holds', 'inspections', 'favourites', 'enquiries'];
+  var REFERENCED_MESSAGE = 'This diamond has customer/history records and cannot be ' +
+    'permanently deleted. Restore it or keep it archived.';
+
+  /** True when any history table still points at this diamond. A failed
+      check counts as referenced — deletion only proceeds on proof. */
+  async function isReferenced(uuid) {
+    for (var i = 0; i < REFERENCE_TABLES.length; i++) {
+      var res = await window.ngdSupabase.from(REFERENCE_TABLES[i])
+        .select('id', { count: 'exact', head: true })
+        .eq('diamond_id', uuid);
+      if (res.error) throw res.error;
+      if ((res.count || 0) > 0) return true;
+    }
+    return false;
+  }
+
+  /** Best effort — leftover files must never block or fake the outcome. */
+  async function removeStoredFilesQuietly(row) {
+    try {
+      if (row.imagePath) {
+        await window.ngdSupabase.storage.from('diamond-images').remove([row.imagePath]);
+      }
+      if (row.certificateUrl && window.NGDCertUpload) {
+        await window.NGDCertUpload.removeOwned(row.certificateUrl);
+      }
+    } catch (err) {
+      console.warn('[NGD Admin] stored file cleanup failed:', err);
+    }
+  }
+
+  function isFkViolation(err) {
+    return !!(err && (err.code === '23503' ||
+      /foreign key|violates.*constraint|still referenced/i.test(err.message || '')));
+  }
+
+  async function deleteRowForever(row) {
+    if (state.mutating || !row.archivedAt) return;
+    if (!window.confirm('Permanently delete ' + row.id + '? This removes the record forever and cannot be undone.')) return;
+    state.mutating = true;
+    try {
+      if (await isReferenced(row.uuid)) {
+        toast(REFERENCED_MESSAGE, false, 'danger');
+        return;
+      }
+      var res = await window.ngdSupabase.from('diamonds').delete()
+        .eq('public_id', row.publicId).eq('id', row.uuid).select('id');
+      if (res.error) throw res.error;
+      if (!res.data || res.data.length !== 1) throw new Error('delete verification failed');
+      await removeStoredFilesQuietly(row);
+      await reload();
+      toast(row.id + ' was permanently deleted.', false, 'success');
+    } catch (err) {
+      /* the database FKs are the backstop — surface the same honest copy */
+      if (isFkViolation(err)) {
+        console.warn('[NGD Admin] permanent delete blocked by references:', err.code);
+        toast(REFERENCED_MESSAGE, false, 'danger');
+      } else {
+        toast(safeMutationError(err), false, 'danger');
+      }
+    } finally {
+      state.mutating = false;
+    }
   }
 
   /* ---------------- filtering + sorting ---------------- */
@@ -138,6 +211,10 @@
     if (f.lab !== 'all' && row.lab !== f.lab) return false;
     if (f.growth !== 'all' && row.growth !== f.growth) return false;
     if (f.availability !== 'all' && row.availability !== f.availability) return false;
+    /* archived rows never mix into the current views — they appear only
+       under the Archived (or Everything) selection */
+    if (f.status === 'archived') { if (!row.archivedAt) return false; }
+    else if (f.status !== 'everything' && row.archivedAt) return false;
     if (f.status === 'active' && !row.active) return false;
     if (f.status === 'inactive' && row.active) return false;
     if (f.featured === 'featured' && !row.featured) return false;
@@ -193,9 +270,11 @@
       featured: row.featured
         ? '<span class="ngd-status-chip is-gold">Featured</span>'
         : '<span class="ngd-status-chip is-dim">—</span>',
-      active: row.active
-        ? '<span class="ngd-status-chip is-good">Active</span>'
-        : '<span class="ngd-status-chip is-dim">Inactive</span>'
+      active: row.archivedAt
+        ? '<span class="ngd-status-chip is-bad">Archived</span>'
+        : row.active
+          ? '<span class="ngd-status-chip is-good">Active</span>'
+          : '<span class="ngd-status-chip is-dim">Inactive</span>'
     };
   }
 
@@ -204,10 +283,26 @@
     edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19.5 8.5a2.1 2.1 0 0 0-3-3L5 17Z"/><path d="m13.5 6.5 3 3"/></svg>',
     star: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3.5 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9Z"/></svg>',
     power: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v8"/><path d="M6.3 6.5a8 8 0 1 0 11.4 0"/></svg>',
-    archive: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="5" rx="1"/><path d="M5 9v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9M10 13h4"/></svg>'
+    archive: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="5" rx="1"/><path d="M5 9v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9M10 13h4"/></svg>',
+    restore: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 8a9 9 0 1 1-1 6"/><path d="M3 3.5V8h4.5"/></svg>',
+    trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6.5h16M9.5 6.5V4.5h5v2M6.5 6.5 7.5 20h9l1-13.5"/><path d="M10 10.5v6M14 10.5v6"/></svg>'
   };
 
   function actionsHtml(row) {
+    /* archived rows manage the archive itself: Restore or (checked)
+       Permanently Delete — the routine toggles stay on current rows */
+    if (row.archivedAt) {
+      return (
+        '<div class="ngd-adm-actions">' +
+        '<a class="ngd-icon-btn" href="edit-diamond.html?id=' + encodeURIComponent(row.publicId) + '"' +
+        ' title="Edit" aria-label="Edit ' + row.id + '" data-adm-act="edit">' + ICONS.edit + '</a>' +
+        '<button type="button" class="ngd-icon-btn" title="Restore to the active inventory"' +
+        ' aria-label="Restore ' + row.id + '" data-adm-act="restore">' + ICONS.restore + '</button>' +
+        '<button type="button" class="ngd-icon-btn is-danger" title="Permanently Delete"' +
+        ' aria-label="Permanently delete ' + row.id + '" data-adm-act="delete-forever">' + ICONS.trash + '</button>' +
+        '</div>'
+      );
+    }
     return (
       '<div class="ngd-adm-actions">' +
       '<a class="ngd-icon-btn" href="../diamond-details.html?id=' + encodeURIComponent(row.id) + '"' +
@@ -309,6 +404,8 @@
         if (act === 'feature') toggleFeatured(row);
         else if (act === 'active') toggleActive(row);
         else if (act === 'archive') archiveRow(row);
+        else if (act === 'restore') restoreRow(row);
+        else if (act === 'delete-forever') deleteRowForever(row);
       });
     });
   }
@@ -316,7 +413,9 @@
   function apply() {
     if (state.ui !== 'rows') return;
     var all = visibleRows();
-    var total = state.rows.length;
+    /* the headline inventory count means CURRENT stones — archived rows
+       are managed separately and never inflate it */
+    var total = state.rows.filter(function (r) { return !r.archivedAt; }).length;
     var start = (state.page - 1) * PAGE_SIZE;
     if (start >= all.length) { state.page = 1; start = 0; }
     var pageRows = all.slice(start, start + PAGE_SIZE);
@@ -458,6 +557,21 @@
     if (!res) return; // a redirect is already happening
 
     bindToolbar();
+
+    /* Deep links (e.g. the Add Diamond archived-duplicate notice):
+       ?status=archived&q=HJH-777 lands directly on the archived view */
+    var params = new URLSearchParams(window.location.search);
+    var statusParam = params.get('status');
+    if (['active', 'inactive', 'archived', 'everything'].indexOf(statusParam) !== -1) {
+      state.filters.status = statusParam;
+      $('adm-f-status').value = statusParam;
+    }
+    var queryParam = params.get('q');
+    if (queryParam) {
+      state.query = queryParam;
+      $('adm-search').value = queryParam;
+    }
+
     await reload();
 
     /* Arriving from a successful Add Diamond save */

@@ -394,8 +394,8 @@ async function fillMinimumValid(page, stock) {
       stockInvalid: document.querySelector('[name="stock_number"]').classList.contains('is-invalid'),
       url: location.pathname,
     }));
-    expect(/NGD-1001 already exists/i.test(state.alert) && /unique/i.test(state.alert),
-      'friendly duplicate message, got: ' + state.alert);
+    expect(/Stock number NGD-1001 already exists in the active inventory/i.test(state.alert),
+      'the active-inventory duplicate message, got: ' + state.alert);
     expect(state.stockInvalid, 'stock field flagged');
     expect(/add-diamond\.html$/.test(state.url), 'stays on the form');
     expect(backend.inserts.length === 0, 'insert never sent — caught by the pre-check');
