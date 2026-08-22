@@ -55,7 +55,7 @@ Bootstrap 5 + vanilla JavaScript** frontend backed by **Supabase**
 | Certificate Upload + Viewer (admin uploads for diamonds & jewellery, public jewellery viewer) | ✅ live — run `supabase/product-certificates.sql` once |
 | Smart Diamond Finder (guided shape/carat/colour/clarity/cut/budget matching) | ✅ live — no SQL needed |
 | Archived Diamonds management (restore, guarded permanent delete, honest duplicate messages) | ✅ live — run `supabase/diamond-archive-management.sql` once |
-| Cinematic homepage (hero opening sequence, scroll-driven From Carbon to Brilliance journey) | ✅ live — no SQL needed (GSAP vendored under `assets/vendor/gsap`) |
+| Cinematic homepage + manufacturing page (hero opening sequence, scroll-driven From Carbon to Brilliance journey) | ✅ live — no SQL needed (GSAP vendored under `assets/vendor/gsap`) |
 | Favourites, quote/hold/inspection requests, enquiries, secure admin registration (Edge Function) | ✅ live — see `docs/PRODUCTION_BACKEND_SETUP.md` |
 
 ## Quick start

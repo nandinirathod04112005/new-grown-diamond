@@ -87,9 +87,11 @@
       state.gsap = true;
     }
 
-    var hero = document.querySelector('.ngd-hero [data-ngd-hero3d]');
-    var story = document.getElementById('manufacturing-story');
-    if (!hero && !story) return; /* homepage only */
+    /* the cinematic pages: the homepage journey section or the full
+       nine-stage manufacturing process page */
+    var hero = document.querySelector('.ngd-hero');
+    var story = document.querySelector('#manufacturing-story, #mfg-process');
+    if (!story) return;
 
     initHeroSequence();
     initHeroHandoff();
@@ -149,8 +151,10 @@
     rail.id = 'home-journey-progress';
     rail.className = 'ngd-journey-rail';
     rail.setAttribute('aria-label', 'Manufacturing journey progress');
-    var labels = { growth: 'Growth', rough: 'Rough', cutting: 'Cutting',
-      polishing: 'Polishing', inspection: 'Inspection', finished: 'Jewellery' };
+    var labels = { growth: 'Growth', rough: 'Rough', planning: 'Planning',
+      cutting: 'Cutting', laser: 'Laser', polishing: 'Polishing',
+      inspection: 'Inspection', certification: 'Certified',
+      finished: 'Finished', jewellery: 'Jewellery' };
     stages.forEach(function (stage) {
       var num = stage.getAttribute('data-stage');
       var slug = stage.getAttribute('data-slug');
