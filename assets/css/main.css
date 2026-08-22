@@ -3566,6 +3566,25 @@ body.ngd-compare-open .ngd-totop { bottom: 6.5rem; }
   margin-left: 0.3rem;
 }
 
+/* Similar Diamonds — neutral match label over the card media */
+#dd-similar .ngd-diamond-media { position: relative; }
+.ngd-sim-label {
+  position: absolute;
+  top: 0.6rem;
+  left: 0.6rem;
+  z-index: 2;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ngd-gold-soft, #d9c08a);
+  background: rgba(23, 19, 10, 0.78);
+  border: 1px solid rgba(217, 192, 138, 0.4);
+  border-radius: 999px;
+  padding: 0.22rem 0.6rem;
+  pointer-events: none;
+}
+
 /* Certificate viewer — embeds stay inside the modal, never overflow */
 .ngd-cert-embed-img {
   display: block;
