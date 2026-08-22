@@ -89,30 +89,6 @@
     return res.data && res.data.length === 1 ? mapStone(res.data[0]) : null;
   }
 
-  /** Best-effort: an empty Similar row must never break the page. */
-  async function loadSimilar(stone) {
-    try {
-      var res = await window.ngdSupabase.from('diamonds')
-        .select('public_id,stock_number,shape,carat,color,clarity,cut,laboratory,availability,image_path')
-        .eq('active', true).is('archived_at', null)
-        .neq('public_id', stone.publicId)
-        .order('created_at', { ascending: false })
-        .limit(24);
-      if (res.error) throw res.error;
-      var pool = (res.data || []).map(mapStone);
-      var sameShape = pool.filter(function (d) { return d.shape === stone.shape; });
-      var others = pool
-        .filter(function (d) { return d.shape !== stone.shape; })
-        .sort(function (a, b) {
-          return Math.abs(a.carat - stone.carat) - Math.abs(b.carat - stone.carat);
-        });
-      return sameShape.concat(others).slice(0, 3);
-    } catch (err) {
-      console.warn('[NGD Details] similar stones unavailable:', err);
-      return [];
-    }
-  }
-
   /* ---------- certificate viewer ---------- */
 
   /** http(s) only, classified by extension. Anything else (including
@@ -399,11 +375,9 @@
       );
     }).join('');
 
-    /* similar stones — live, best effort */
-    loadSimilar(stone).then(function (similar) {
-      document.getElementById('dd-similar').innerHTML = similar.map(shared.cardHtml).join('');
-      if (window.NGDTilt) window.NGDTilt(document.getElementById('dd-similar'));
-    });
+    /* similar stones — the shared deterministic engine, best effort:
+       a failed lookup hides the row and never touches this page */
+    if (window.NGDSimilarDiamonds) window.NGDSimilarDiamonds.render(stone);
 
     renderStage();
 

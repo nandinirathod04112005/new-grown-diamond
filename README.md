@@ -51,6 +51,7 @@ Bootstrap 5 + vanilla JavaScript** frontend backed by **Supabase**
 | WhatsApp Product Enquiry (details-page CTAs + contact card, official no. fallback) | ✅ live — no SQL needed |
 | Diamond Certificate Viewer (lab/report card + image/PDF modal, safe external links) | ✅ live — no SQL needed (reuses `diamonds.certificate_url`) |
 | Recently Viewed (device-local ids, live rows on home/inventory/listing/dashboard) | ✅ live — no SQL needed |
+| Similar Diamonds (deterministic shape/carat/grade ranking with tier relaxation) | ✅ live — no SQL needed |
 | Favourites, quote/hold/inspection requests, enquiries, secure admin registration (Edge Function) | ✅ live — see `docs/PRODUCTION_BACKEND_SETUP.md` |
 
 ## Quick start
