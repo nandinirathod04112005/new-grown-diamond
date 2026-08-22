@@ -422,6 +422,24 @@
        Static demo content. Stage blocks are uniform (node, media,
        numeral, title, text) so future copy or imagery can be
        swapped in without touching layout. -->
+  <!-- ══════════ RECENTLY VIEWED ══════════
+       Device-local history (public ids only, max 12) rendered from LIVE
+       public.diamonds / public.jewellery rows via recently-viewed.js.
+       Hidden entirely until this browser has valid history. -->
+  <section id="recently-viewed" class="ngd-section-tight" data-ngd-recent
+           data-recent-type="all" data-recent-limit="6" hidden>
+    <div class="container">
+      <div class="d-flex flex-wrap align-items-end justify-content-between gap-3">
+        <div>
+          <span class="ngd-eyebrow">Recently Viewed</span>
+          <h2 class="ngd-display-2 fs-2 mt-2 mb-0">Pick up where <span class="ngd-italic-accent">you left off</span></h2>
+        </div>
+        <button type="button" class="ngd-btn ngd-btn-outline ngd-btn-sm" data-recent-clear>Clear Recently Viewed</button>
+      </div>
+      <div class="row g-4 mt-1" data-recent-grid aria-live="polite"></div>
+    </div>
+  </section>
+
   <section id="manufacturing-story" class="ngd-section ngd-section-dark">
     <div class="container">
       <div class="row justify-content-center text-center ngd-reveal">
@@ -625,6 +643,7 @@
   <script defer src="assets/js/diamond-card.js"></script>
   <script defer src="assets/js/jewellery-card.js"></script>
   <script defer src="assets/js/home-featured.js"></script>
+  <script defer src="assets/js/recently-viewed.js"></script>
   <script defer src="assets/js/site-content.js"></script>
   <script defer src="assets/js/seo-registry.js"></script>
   <script defer src="assets/js/site-seo.js"></script>

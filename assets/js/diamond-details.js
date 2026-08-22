@@ -435,6 +435,9 @@
     }
     showOnly('product');
     render(stone);
+    /* Recently viewed: device-local ids only, recorded solely for
+       stones that really loaded — never for invalid/inactive ids. */
+    if (window.NGDRecentlyViewed) window.NGDRecentlyViewed.add('diamond', stone.publicId);
     /* WhatsApp enquiry: public facts + the current page URL only —
        the shared helper owns the number, encoding and analytics. */
     var whatsappCta = document.getElementById('dd-whatsapp');

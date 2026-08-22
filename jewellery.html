@@ -157,6 +157,18 @@
           <ul class="ngd-pagination" id="jw-pagination"></ul>
         </nav>
       </div>
+
+    <!-- Recently Viewed — device-local ids, live rows (recently-viewed.js) -->
+    <section class="pt-5" id="recent-jewellery" data-ngd-recent data-recent-type="jewellery" data-recent-limit="6" hidden>
+      <div class="d-flex flex-wrap align-items-end justify-content-between gap-3">
+        <div>
+          <span class="ngd-eyebrow">Recently Viewed</span>
+          <h2 class="ngd-display-2 fs-2 mt-2 mb-0">Recently viewed <span class="ngd-italic-accent">jewellery</span></h2>
+        </div>
+        <button type="button" class="ngd-btn ngd-btn-outline ngd-btn-sm" data-recent-clear>Clear Recently Viewed</button>
+      </div>
+      <div class="row g-4 mt-1" data-recent-grid aria-live="polite"></div>
+    </section>
     </div>
   </main>
 
@@ -261,6 +273,7 @@
   <script defer src="assets/js/ui.js"></script>
   <script defer src="assets/js/jewellery-art.js"></script>
   <script defer src="assets/js/jewellery-card.js"></script>
+  <script defer src="assets/js/recently-viewed.js"></script>
   <script defer src="assets/js/jewellery.js"></script>
 </body>
 </html>
