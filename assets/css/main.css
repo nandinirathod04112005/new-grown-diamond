@@ -3694,3 +3694,99 @@ body.ngd-compare-open .ngd-totop { bottom: 6.5rem; }
   .ngd-btn-block-sm { width: 100%; }
   .ngd-card { padding: 1.25rem; }
 }
+
+/* ══════════ SMART DIAMOND FINDER ══════════ */
+.ngd-find-steps { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.ngd-find-step {
+  border: 1px solid var(--ngd-line);
+  background: transparent;
+  border-radius: 999px;
+  padding: 0.38rem 0.85rem;
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ngd-ink);
+  transition: border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+}
+.ngd-find-step em {
+  font-style: normal;
+  color: var(--ngd-gold-deep);
+  margin-right: 0.15rem;
+}
+.ngd-find-step.is-done { border-color: rgba(180, 140, 71, 0.55); }
+.ngd-find-step.is-active {
+  background: var(--ngd-black);
+  border-color: var(--ngd-black);
+  color: var(--ngd-gold-soft);
+}
+.ngd-find-step.is-active em { color: var(--ngd-gold-soft); }
+.ngd-find-step:hover { border-color: var(--ngd-gold); }
+.ngd-find-step:focus-visible,
+.ngd-find-opt:focus-visible {
+  outline: 2px solid var(--ngd-gold);
+  outline-offset: 2px;
+}
+
+.ngd-find-title {
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: 1.35rem;
+  margin-bottom: 0.35rem;
+}
+
+.ngd-find-opts { display: flex; flex-wrap: wrap; gap: 0.55rem; }
+.ngd-find-opt {
+  min-height: 2.75rem;
+  border: 1px solid var(--ngd-line);
+  background: transparent;
+  border-radius: 999px;
+  padding: 0.5rem 1.15rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--ngd-ink);
+  transition: border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+}
+.ngd-find-opt:hover { border-color: var(--ngd-gold); }
+.ngd-find-opt.is-on,
+.ngd-find-opt[aria-pressed="true"] {
+  background: var(--ngd-black);
+  border-color: var(--ngd-black);
+  color: var(--ngd-gold-soft);
+}
+
+.ngd-find-actions { border-top: 1px solid var(--ngd-line); padding-top: 1.1rem; }
+
+.ngd-find-label {
+  position: absolute;
+  top: 0.6rem;
+  left: 0.6rem;
+  z-index: 2;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ngd-gold-soft, #d9c08a);
+  background: rgba(23, 19, 10, 0.78);
+  border: 1px solid rgba(217, 192, 138, 0.4);
+  border-radius: 999px;
+  padding: 0.22rem 0.6rem;
+  pointer-events: none;
+}
+.ngd-find-label.is-best {
+  color: #17130a;
+  background: var(--ngd-gold-soft);
+  border-color: var(--ngd-gold-soft);
+}
+
+.ngd-find-reasons {
+  margin: 0.65rem 0 0;
+  font-size: 0.72rem;
+  color: rgba(244, 242, 238, 0.62);
+}
+
+/* homepage mini finder */
+.ngd-mini-finder .form-label { margin-bottom: 0.3rem; }
+@media (max-width: 575.98px) {
+  .ngd-find-step { flex: 1 1 auto; text-align: center; }
+  .ngd-find-actions .ngd-btn { flex: 1 1 auto; }
+}
