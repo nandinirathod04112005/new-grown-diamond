@@ -18,7 +18,7 @@ fs.mkdirSync(SCREEN_DIR, { recursive: true });
 
 const PAGES = ['index.html', 'diamonds.html', 'diamond-details.html', 'jewellery.html',
   'jewellery-details.html', 'manufacturing.html', 'education.html', 'about.html', 'contact.html', 'privacy.html',
-  'terms.html', 'styleguide.html', 'compare-diamonds.html'];
+  'terms.html', 'styleguide.html', 'compare-diamonds.html', 'diamond-finder.html'];
 
 const QUICK = ['Home', 'Diamonds', 'Jewellery', 'Manufacturing', 'Education', 'About', 'Contact'];
 const DIAMOND = ['Diamond Inventory', 'Featured Diamonds', 'Diamond Education'];

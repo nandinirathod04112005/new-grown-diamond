@@ -53,6 +53,7 @@ Bootstrap 5 + vanilla JavaScript** frontend backed by **Supabase**
 | Recently Viewed (device-local ids, live rows on home/inventory/listing/dashboard) | ✅ live — no SQL needed |
 | Similar Diamonds (deterministic shape/carat/grade ranking with tier relaxation) | ✅ live — no SQL needed |
 | Certificate Upload + Viewer (admin uploads for diamonds & jewellery, public jewellery viewer) | ✅ live — run `supabase/product-certificates.sql` once |
+| Smart Diamond Finder (guided shape/carat/colour/clarity/cut/budget matching) | ✅ live — no SQL needed |
 | Favourites, quote/hold/inspection requests, enquiries, secure admin registration (Edge Function) | ✅ live — see `docs/PRODUCTION_BACKEND_SETUP.md` |
 
 ## Quick start

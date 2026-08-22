@@ -252,8 +252,61 @@
           </a>
         </div>
       </div>
-      <div class="text-center mt-5 ngd-reveal">
-        <a class="ngd-btn ngd-btn-outline" href="diamonds.html">View all diamonds</a>
+      <!-- Mini finder — a native GET form, so the full guided finder on
+           diamond-finder.html receives these choices as plain URL params.
+           No finder logic is duplicated here. -->
+      <div class="mt-5 ngd-reveal">
+        <form class="ngd-card ngd-mini-finder" id="home-mini-finder" action="diamond-finder.html" method="get">
+          <div class="row g-3 align-items-end">
+            <div class="col-12 col-lg-3">
+              <span class="ngd-eyebrow">Guided Selection</span>
+              <h3 class="ngd-title mt-1 mb-0">Find <span class="ngd-italic-accent">your</span> diamond</h3>
+            </div>
+            <div class="col-6 col-md-3 col-lg-2">
+              <label class="form-label" for="mf-shape">Shape</label>
+              <select class="form-select" id="mf-shape" name="shape">
+                <option value="" selected>Any</option>
+                <option value="Round">Round</option>
+                <option value="Oval">Oval</option>
+                <option value="Emerald">Emerald</option>
+                <option value="Pear">Pear</option>
+                <option value="Princess">Princess</option>
+                <option value="Cushion">Cushion</option>
+                <option value="Radiant">Radiant</option>
+                <option value="Marquise">Marquise</option>
+              </select>
+            </div>
+            <div class="col-6 col-md-3 col-lg-2">
+              <label class="form-label" for="mf-min-carat">Carat from</label>
+              <input type="number" class="form-control" id="mf-min-carat" name="minCarat"
+                     min="0" step="0.01" inputmode="decimal" placeholder="1.00">
+            </div>
+            <div class="col-6 col-md-3 col-lg-2">
+              <label class="form-label" for="mf-max-carat">Carat to</label>
+              <input type="number" class="form-control" id="mf-max-carat" name="maxCarat"
+                     min="0" step="0.01" inputmode="decimal" placeholder="2.50">
+            </div>
+            <div class="col-6 col-md-3 col-lg-2">
+              <label class="form-label" for="mf-clarity">Clarity</label>
+              <select class="form-select" id="mf-clarity" name="clarity">
+                <option value="" selected>Any</option>
+                <option value="FL">FL</option>
+                <option value="IF">IF</option>
+                <option value="VVS1">VVS1</option>
+                <option value="VVS2">VVS2</option>
+                <option value="VS1">VS1</option>
+                <option value="VS2">VS2</option>
+                <option value="SI1">SI1</option>
+                <option value="SI2">SI2</option>
+              </select>
+            </div>
+            <div class="col-12 col-lg-1 d-grid">
+              <button type="submit" class="ngd-btn ngd-btn-gold">Find</button>
+            </div>
+          </div>
+          <p class="small ngd-text-muted mt-3 mb-0">Prefer to browse?
+            <a class="ngd-link" href="diamonds.html">View all diamonds</a></p>
+        </form>
       </div>
     </div>
   </section>
