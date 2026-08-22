@@ -152,18 +152,25 @@
               </button>
             </div>
 
-            <!-- Certificate / quality -->
+            <!-- Certificate / quality — populated by jewellery-details.js from
+                 the piece's public certificate fields only -->
             <div class="ngd-card ngd-glass ngd-cert-card" id="jd-cert">
-              <div class="d-flex align-items-center gap-3">
+              <div class="d-flex align-items-center gap-3 flex-wrap">
                 <span class="ngd-cert-seal" aria-hidden="true">◆</span>
                 <div class="flex-grow-1">
                   <p class="ngd-eyebrow mb-1">Certified Quality</p>
                   <p class="small mb-0" id="jd-cert-text"></p>
+                  <p class="small ngd-text-muted mb-0" id="jd-cert-fallback" hidden>
+                    Certificate copy available on request.
+                  </p>
                 </div>
-                <button type="button" class="ngd-btn ngd-btn-outline ngd-btn-sm" id="jd-cert-btn" disabled
-                        title="Certificate PDFs arrive with the live catalogue">
-                  View Certificate
-                </button>
+                <div class="d-flex flex-wrap gap-2" id="jd-cert-actions" hidden>
+                  <button type="button" class="ngd-btn ngd-btn-outline ngd-btn-sm" id="jd-cert-view" hidden>
+                    View Certificate
+                  </button>
+                  <a class="ngd-btn ngd-btn-outline ngd-btn-sm" id="jd-cert-open" href="#"
+                     target="_blank" rel="noopener noreferrer" hidden>View Certificate</a>
+                </div>
               </div>
             </div>
           </div>
@@ -299,6 +306,26 @@
   <button type="button" class="ngd-totop" aria-label="Back to top">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
   </button>
+
+  <!-- Certificate viewer modal — the body is filled per piece with a
+       validated http(s) image or PDF embed; the footer always offers
+       the external open as the fallback -->
+  <div class="modal fade" id="jd-cert-modal" tabindex="-1" aria-labelledby="jd-cert-modal-title" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-fullscreen-sm-down">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 class="ngd-title fs-6 mb-0" id="jd-cert-modal-title">Jewellery Certificate</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="jd-cert-modal-body"></div>
+        <div class="modal-footer flex-wrap">
+          <p class="ngd-text-muted small me-auto mb-0">If the preview doesn&rsquo;t load here, open it in a new tab.</p>
+          <a class="ngd-btn ngd-btn-gold ngd-btn-sm" id="jd-cert-modal-open" href="#"
+             target="_blank" rel="noopener noreferrer">Open in new tab</a>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.js"></script>
   <script defer src="assets/js/supabase-config.js"></script>

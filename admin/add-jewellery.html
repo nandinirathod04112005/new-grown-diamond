@@ -296,6 +296,38 @@
                        placeholder="NGDJ-582337">
                 <div class="invalid-feedback">Please enter a valid certificate number.</div>
               </div>
+              <div class="col-md-6 col-xl-4">
+                <label class="form-label" for="jw-certificate_lab">Certificate / Grading Lab</label>
+                <select class="form-select" id="jw-certificate_lab" name="certificate_lab">
+                  <option value="" selected>Choose&hellip;</option>
+                  <option value="IGI">IGI</option>
+                  <option value="GIA">GIA</option>
+                  <option value="HRD">HRD</option>
+                  <option value="Other">Other</option>
+                </select>
+                <div class="invalid-feedback">Please choose a grading lab.</div>
+              </div>
+              <div class="col-md-6 col-xl-4">
+                <label class="form-label" for="jw-certificate_url">Certificate URL</label>
+                <input type="url" class="form-control" id="jw-certificate_url" name="certificate_url"
+                       placeholder="https://…">
+                <div class="invalid-feedback">Please enter a valid certificate url.</div>
+              </div>
+              <div class="col-12">
+                <label class="form-label" for="jw-certificate_file">Upload Certificate
+                  <span class="ngd-text-muted fw-normal">(PDF, JPG, PNG or WEBP &middot; max 10 MB)</span></label>
+                <input type="file" class="form-control" id="jw-certificate_file"
+                       accept="application/pdf,image/jpeg,image/png,image/webp"
+                       aria-describedby="jw-certificate-file-info">
+                <p class="ngd-text-muted small mt-2 mb-0" id="jw-certificate-file-info">Saving uploads the file to
+                  certificate storage and fills the Certificate URL for you &mdash; or paste a lab link above instead.</p>
+                <div class="d-flex flex-wrap align-items-center gap-2 mt-2" id="jw-certificate-current" hidden>
+                  <a class="ngd-btn ngd-btn-outline ngd-btn-sm" id="jw-certificate-view" href="#"
+                     target="_blank" rel="noopener noreferrer">View current certificate</a>
+                  <button type="button" class="ngd-btn ngd-btn-outline ngd-btn-sm"
+                          id="jw-certificate-remove">Remove certificate</button>
+                </div>
+              </div>
             </div>
           </section>
           <section class="ngd-dash-panel mt-3" data-form-section="6">
@@ -402,6 +434,7 @@
   <script defer src="../assets/js/auth.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script defer src="../assets/js/ui.js"></script>
+  <script defer src="../assets/js/certificate-upload.js"></script>
   <script defer src="../assets/js/admin-jewellery-form.js"></script>
 </body>
 </html>

@@ -35,6 +35,7 @@
     userId: null,     /* the signed-in admin (created_by) */
     record: null,     /* edit: the verified Supabase row */
     imageFile: null,  /* File selected for preview (never uploaded) */
+    certFile: null,   /* certificate picked for upload on save */
     dirty: false,
     saving: false
   };
@@ -228,24 +229,46 @@
       }
     }
 
+    /* same ordering for a picked certificate: new file first, the row
+       keeps its old certificate_url until the update succeeds */
+    var oldCertUrl = state.record.certificate_url || null;
+    if (state.certFile && window.NGDCertUpload) {
+      try {
+        payload.certificate_url = (await window.NGDCertUpload.upload(
+          'diamonds', state.record.public_id, state.certFile)).url;
+      } catch (err) {
+        if (state.imageFile && payload.image_path) removeImageQuietly(payload.image_path);
+        showAlert('danger', window.NGDCertUpload.mapError(err));
+        return false;
+      }
+    }
+
     form.setAttribute('data-ngd-payload', JSON.stringify(payload));
     var res = await sb.from('diamonds').update(payload)
       .eq('public_id', state.record.public_id).eq('id', state.record.id).select('id');
     if (res.error) {
-      /* the row kept its old image — drop the just-uploaded file */
+      /* the row kept its old files — drop only the just-uploaded ones */
       if (state.imageFile && payload.image_path) removeImageQuietly(payload.image_path);
+      if (state.certFile && payload.certificate_url) window.NGDCertUpload.removeOwned(payload.certificate_url);
       if (isDuplicateError(res.error)) setInvalid(field('stock_number'), true);
       showAlert('danger', mapDbError(res.error));
       return false;
     }
     if (!res.data || res.data.length !== 1) {
       if (state.imageFile && payload.image_path) removeImageQuietly(payload.image_path);
+      if (state.certFile && payload.certificate_url) window.NGDCertUpload.removeOwned(payload.certificate_url);
       showAlert('danger', 'This diamond no longer exists or could not be verified. Nothing was changed.');
       return false;
     }
     if (state.imageFile && oldImagePath && oldImagePath !== payload.image_path) {
       removeImageQuietly(oldImagePath);
     }
+    /* replaced or removed: retire the old file only when WE host it —
+       an external lab link is never deleted */
+    if (window.NGDCertUpload && oldCertUrl && oldCertUrl !== payload.certificate_url) {
+      window.NGDCertUpload.removeOwned(oldCertUrl);
+    }
+    state.certFile = null;
     state.record = Object.assign({}, state.record, payload);
     clearDirty();
     showAlert('success', payload.stock_number + ' was updated successfully. Returning to the inventory…');
@@ -326,8 +349,8 @@
       return false;
     }
 
-    /* image first: upload to Storage, then insert the row carrying its
-       path — an upload failure aborts the save with nothing written */
+    /* files first: upload to Storage, then insert the row carrying the
+       path/URL — an upload failure aborts the save with nothing written */
     if (state.imageFile) {
       try {
         payload.image_path = await uploadImage(
@@ -337,11 +360,23 @@
         return false;
       }
     }
+    if (state.certFile && window.NGDCertUpload) {
+      try {
+        payload.certificate_url = (await window.NGDCertUpload.upload(
+          'diamonds', payload.public_id, state.certFile)).url;
+      } catch (err) {
+        if (payload.image_path) removeImageQuietly(payload.image_path);
+        showAlert('danger', window.NGDCertUpload.mapError(err));
+        return false;
+      }
+    }
+    form.setAttribute('data-ngd-payload', JSON.stringify(payload));
 
     var res = await sb.from('diamonds').insert(payload);
     if (res.error) {
       /* never leave an orphan file when the row was rejected */
       if (payload.image_path) removeImageQuietly(payload.image_path);
+      if (state.certFile && payload.certificate_url) window.NGDCertUpload.removeOwned(payload.certificate_url);
       if (isDuplicateError(res.error)) setInvalid(field('stock_number'), true);
       showAlert('danger', mapDbError(res.error));
       return false;
@@ -354,6 +389,7 @@
         'The form has been cleared for the next stone.');
       form.reset();
       resetImage();
+      resetCert();
       window.scrollTo({ top: 0 });
     } else {
       showAlert('success', label + ' was added to the inventory. Returning to the list…');
@@ -434,6 +470,92 @@
       var file = event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0];
       acceptFile(file);
     });
+  }
+
+  /* ---------------- certificate picker (upload on save) ---------------- */
+
+  var certInfoDefault = '';
+
+  function syncCertControls() {
+    var info = $('dia-certificate-file-info');
+    var current = $('dia-certificate-current');
+    if (!info || !current || !window.NGDCertUpload) return;
+    var view = $('dia-certificate-view');
+    var removeBtn = $('dia-certificate-remove');
+    var urlInput = field('certificate_url');
+    var url = urlInput ? urlInput.value.trim() : '';
+    var hasUrl = /^https?:\/\/\S+$/i.test(url);
+    if (state.certFile) {
+      var meta = window.NGDCertUpload.describe(state.certFile);
+      info.textContent = meta.kindText + ' selected — ' + meta.name + ' (' + meta.sizeText + '). ' +
+        (hasUrl ? 'It replaces the current certificate when you save.' : 'It uploads when you save.');
+      current.hidden = false;
+      view.hidden = true;
+      removeBtn.textContent = 'Clear selected file';
+    } else {
+      info.textContent = certInfoDefault;
+      view.hidden = false;
+      if (hasUrl) view.href = url;
+      else view.removeAttribute('href');
+      current.hidden = !hasUrl;
+      removeBtn.textContent = 'Remove certificate';
+    }
+  }
+
+  function resetCert() {
+    state.certFile = null;
+    var input = $('dia-certificate_file');
+    if (input) input.value = '';
+    syncCertControls();
+  }
+
+  function initCertPicker() {
+    var input = $('dia-certificate_file');
+    if (!input || !window.NGDCertUpload) return;
+    certInfoDefault = $('dia-certificate-file-info').textContent;
+
+    input.addEventListener('change', function () {
+      var file = input.files && input.files[0];
+      if (!file) {
+        state.certFile = null;
+        syncCertControls();
+        return;
+      }
+      var verdict = window.NGDCertUpload.validate(file);
+      if (!verdict.ok) {
+        input.value = '';
+        state.certFile = null;
+        syncCertControls();
+        showAlert('danger', verdict.reason);
+        return;
+      }
+      clearAlert();
+      state.certFile = file;
+      markDirty();
+      syncCertControls();
+    });
+
+    var urlInput = field('certificate_url');
+    if (urlInput) {
+      ['input', 'change'].forEach(function (evt) {
+        urlInput.addEventListener(evt, syncCertControls);
+      });
+    }
+
+    $('dia-certificate-remove').addEventListener('click', function () {
+      if (state.certFile) {
+        resetCert();
+      } else if (urlInput) {
+        /* the URL input is the single source of the saved value — clearing
+           it removes the certificate on the next save (the old OWNED file
+           is deleted only after that save succeeds) */
+        urlInput.value = '';
+        syncCertControls();
+      }
+      markDirty();
+    });
+
+    syncCertControls();
   }
 
   /* ---------------- edit-mode live load + prefill ---------------- */
@@ -598,6 +720,7 @@
     }
 
     initImagePicker();
+    initCertPicker();
     bindLiveClear(form);
     initButtons(form);
     initUnsavedWarning(form);
