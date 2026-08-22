@@ -422,7 +422,182 @@
       }
     },
 
-    /* 06 · finished — the stone becomes a ring, then its variations */
+    /* planning — the rough is scanned in 3D and its cut is charted
+       (the manufacturing page splits homepage "cutting" into
+       planning + laser stages) */
+    planning: function (ctx, p) {
+      poly(ctx, ROUGH7);
+      ctx.fillStyle = gold(0.12);
+      ctx.fill();
+      ctx.strokeStyle = white(0.6);
+      ctx.lineWidth = 1.6;
+      ctx.stroke();
+      /* 3D scan sweep */
+      var scan = band(p, 0.05, 0.55);
+      if (scan > 0 && scan < 1) {
+        var sy = lerp(10, 96, scan);
+        ctx.strokeStyle = gold(0.7);
+        ctx.lineWidth = 0.8;
+        ctx.beginPath(); ctx.moveTo(30, sy); ctx.lineTo(130, sy); ctx.stroke();
+        ctx.strokeStyle = gold(0.2);
+        for (var gx = 40; gx <= 120; gx += 10) {
+          ctx.beginPath(); ctx.moveTo(gx, sy - 5); ctx.lineTo(gx, sy + 5); ctx.stroke();
+        }
+        label(ctx, 'SCANNING', 32, 22, 1 - scan * 0.4);
+      }
+      /* mapped vertices light up as the model completes */
+      var map = band(p, 0.3, 0.7);
+      if (map > 0) {
+        var dots = Math.ceil(map * ROUGH7.length);
+        ctx.fillStyle = gold(0.9);
+        for (var d = 0; d < dots; d++) {
+          ctx.beginPath(); ctx.arc(ROUGH7[d][0], ROUGH7[d][1], 1.6, 0, Math.PI * 2); ctx.fill();
+        }
+      }
+      /* the planned cut draws over the rough */
+      var plan = band(p, 0.5, 1);
+      if (plan > 0) {
+        ctx.save();
+        ctx.setLineDash([4, 3]);
+        ctx.strokeStyle = gold(0.8 * Math.min(1, plan * 1.3));
+        ctx.lineWidth = 1.1;
+        var planned = [[[57, 38], [103, 38]], [[42, 52], [118, 52]], [[57, 38], [42, 52]],
+          [[103, 38], [118, 52]], [[42, 52], [80, 92]], [[118, 52], [80, 92]]];
+        var lines = Math.ceil(plan * planned.length);
+        for (var i = 0; i < lines; i++) {
+          ctx.beginPath();
+          ctx.moveTo(planned[i][0][0], planned[i][0][1]);
+          ctx.lineTo(planned[i][1][0], planned[i][1][1]);
+          ctx.stroke();
+        }
+        ctx.restore();
+        label(ctx, 'PLANNING', 128, 22, Math.min(1, plan * 2), true);
+      }
+    },
+
+    /* laser — the cold laser follows the plan and the silhouette
+       transforms toward the planned stone */
+    laser: function (ctx, p, rand) {
+      var morph = band(p, 0.15, 0.85);
+      var shape = mix(ROUGH7, PLAN7, morph);
+      poly(ctx, shape);
+      ctx.fillStyle = gold(0.12 + 0.1 * morph);
+      ctx.fill();
+      ctx.strokeStyle = white(0.65);
+      ctx.lineWidth = 1.6;
+      ctx.stroke();
+      var travel = band(p, 0.1, 0.9);
+      if (travel > 0 && travel < 1) {
+        var lx = lerp(42, 118, travel);
+        ctx.strokeStyle = white(0.95);
+        ctx.lineWidth = 1.6;
+        ctx.beginPath(); ctx.moveTo(lx, 14); ctx.lineTo(lx, 52); ctx.stroke();
+        var burst = ctx.createRadialGradient(lx, 52, 0, lx, 52, 10);
+        burst.addColorStop(0, white(0.95));
+        burst.addColorStop(1, white(0));
+        ctx.fillStyle = burst;
+        ctx.beginPath(); ctx.arc(lx, 52, 10, 0, Math.PI * 2); ctx.fill();
+        /* deterministic sparks off the cut line */
+        for (var i = 0; i < 6; i++) {
+          var a = rand[i * 2] * Math.PI * 2;
+          var r = 4 + rand[i * 2 + 1] * 9;
+          ctx.fillStyle = gold(0.7 * (1 - r / 13));
+          ctx.beginPath();
+          ctx.arc(lx + Math.cos(a) * r, 52 + Math.sin(a) * r * 0.6, 0.9, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        label(ctx, 'PRECISION CUTTING', 32, 100, travel);
+      }
+      if (p > 0.9) sparkle(ctx, 100, 42, 4.4, (p - 0.9) * 10);
+    },
+
+    /* certification — the neutral laboratory report takes shape beside
+       the stone (demonstration text only, never a real number) */
+    certification: function (ctx, p) {
+      drawBrilliant(ctx, 40, 56, 0.62, { facetAlpha: 0.7, fillAlpha: 0.24 });
+      var slide = band(p, 0.05, 0.45);
+      if (slide <= 0) return;
+      var cardX = lerp(170, 72, slide);
+      ctx.save();
+      ctx.globalAlpha = Math.min(1, slide * 1.4);
+      ctx.fillStyle = 'rgba(24, 21, 14, 0.85)';
+      ctx.strokeStyle = gold(0.85);
+      ctx.lineWidth = 1.2;
+      ctx.fillRect(cardX, 18, 64, 74);
+      ctx.strokeRect(cardX, 18, 64, 74);
+      ctx.font = '600 6px Inter, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = gold(1);
+      ctx.fillText('INDEPENDENT', cardX + 32, 27);
+      ctx.fillText('LABORATORY', cardX + 32, 34);
+      /* report lines appear one by one */
+      var linesIn = Math.ceil(band(p, 0.3, 0.7) * 5);
+      ctx.strokeStyle = white(0.4);
+      ctx.lineWidth = 0.8;
+      for (var i = 0; i < linesIn; i++) {
+        var y = 42 + i * 7;
+        ctx.beginPath(); ctx.moveTo(cardX + 7, y); ctx.lineTo(cardX + 57, y); ctx.stroke();
+      }
+      /* the seal draws itself closed */
+      var seal = band(p, 0.5, 0.92);
+      if (seal > 0) {
+        ctx.strokeStyle = gold(0.95);
+        ctx.lineWidth = 1.3;
+        ctx.beginPath();
+        ctx.arc(cardX + 32, 82, 6.5, -Math.PI / 2, -Math.PI / 2 + seal * Math.PI * 2);
+        ctx.stroke();
+        if (seal >= 1) sparkle(ctx, cardX + 32, 82, 4, 0.9);
+      }
+      ctx.restore();
+      if (p > 0.92) sparkle(ctx, 54, 40, 4.4, (p - 0.92) * 10);
+    },
+
+    /* showcase — the finished stone alone: turned, lit, photographed
+       for the catalogue (the manufacturing page's Finished Diamond) */
+    showcase: function (ctx, p) {
+      drawBrilliant(ctx, 80, 52, 1.05, {
+        facetAlpha: 0.8,
+        fillAlpha: 0.28,
+        rotate: lerp(-0.14, 0.14, p)
+      });
+      var sweep = band(p, 0.2, 0.8);
+      if (sweep > 0 && sweep < 1) {
+        var sx = lerp(44, 116, sweep);
+        ctx.save();
+        poly(ctx, [[57, 30], [103, 30], [118, 44], [80, 84], [42, 44]]);
+        ctx.clip();
+        var grad = ctx.createLinearGradient(sx - 10, 0, sx + 10, 0);
+        grad.addColorStop(0, white(0));
+        grad.addColorStop(0.5, white(0.3));
+        grad.addColorStop(1, white(0));
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 160, 110);
+        ctx.restore();
+      }
+      /* catalogue framing corners close around the stone */
+      var frame = band(p, 0.5, 0.9);
+      if (frame > 0) {
+        ctx.strokeStyle = gold(0.8 * frame);
+        ctx.lineWidth = 1.4;
+        var inset = lerp(10, 22, frame);
+        [[inset, inset, 1, 1], [160 - inset, inset, -1, 1],
+         [inset, 110 - inset, 1, -1], [160 - inset, 110 - inset, -1, -1]].forEach(function (c) {
+          ctx.beginPath();
+          ctx.moveTo(c[0] + 9 * c[2], c[1]);
+          ctx.lineTo(c[0], c[1]);
+          ctx.lineTo(c[0], c[1] + 9 * c[3]);
+          ctx.stroke();
+        });
+      }
+      if (p > 0.85) {
+        sparkle(ctx, 102, 34, 4.6, (p - 0.85) * 6);
+        sparkle(ctx, 58, 64, 3.2, (p - 0.9) * 9);
+      }
+    },
+
+    /* finished — the stone becomes a ring, then its variations
+       (the homepage's combined Finished Diamond & Jewellery, and the
+       manufacturing page's Jewellery Creation) */
     finished: function (ctx, p) {
       var cx = 80;
       /* the diamond floats, then lowers into the setting */
@@ -492,9 +667,19 @@
 
   /* ---------------- mounting ---------------- */
 
-  function mountScene(stage) {
+  /** Slug → scene, resolved per page: the manufacturing page's
+      "finished" stage is the stone alone (showcase) and its
+      "jewellery" stage is the ring assembly; the homepage's single
+      combined "finished" stage keeps the ring assembly. */
+  function drawerFor(slug, containerId) {
+    if (slug === 'finished' && containerId === 'mfg-process') return DRAWERS.showcase;
+    if (slug === 'jewellery') return DRAWERS.finished;
+    return DRAWERS[slug];
+  }
+
+  function mountScene(stage, containerId) {
     var slug = stage.getAttribute('data-slug');
-    var drawer = DRAWERS[slug];
+    var drawer = drawerFor(slug, containerId);
     var media = stage.querySelector('.ngd-story-media');
     if (!drawer || !media) return;
 
@@ -570,12 +755,16 @@
   }
 
   function init() {
-    var story = document.getElementById('manufacturing-story');
+    var story = document.querySelector('#manufacturing-story, #mfg-process');
     if (!story) return;
-    addJewelleryCta(story);
+    /* the homepage's condensed final stage gets the real jewellery path;
+       the manufacturing page already links onward itself */
+    if (story.id === 'manufacturing-story') addJewelleryCta(story);
     if (reduced) return; /* the SVG artwork IS the reduced-motion scene */
     if (!window.NGDCinematic) return;
-    story.querySelectorAll('.ngd-story-stage[data-slug]').forEach(mountScene);
+    story.querySelectorAll('.ngd-story-stage[data-slug]').forEach(function (stage) {
+      mountScene(stage, story.id);
+    });
     if (state.mounted) story.classList.add('is-cinematic');
   }
 
