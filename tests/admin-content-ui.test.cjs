@@ -171,7 +171,7 @@ async function openContent(page, user) {
   SITE = started.origin;
   browser = await chromium.launch(chromiumOptions());
 
-  await scenario('shell + registry: Content live in the sidebar, nine sections with honest state', {
+  await scenario('shell + registry: Content live in the sidebar, thirteen sections with honest state', {
     rows: [{ key: 'homepage_hero', subheading: 'Saved eyebrow', active: true, updated_at: '2026-08-20T09:00:00Z' }],
   }, async (page, user) => {
     await openContent(page, user);
@@ -193,9 +193,9 @@ async function openContent(page, user) {
     expect(state.visible, 'admin guard passed');
     expect(state.navIsLink && state.navActive && !state.navSoon, 'Content is a live, active route without a Soon chip');
     expect(state.soonCount === 1, 'Users & Roles stays honestly Soon, got ' + state.soonCount);
-    expect(state.sections === 9, 'all nine registry sections listed, got ' + state.sections);
+    expect(state.sections === 13, 'all thirteen registry sections listed, got ' + state.sections);
     expect(state.heroLive, 'a saved active section shows as Live');
-    expect(state.builtIn === 8, 'unsaved sections say built-in copy, got ' + state.builtIn);
+    expect(state.builtIn === 12, 'unsaved sections say built-in copy, got ' + state.builtIn);
   });
 
   await scenario('edit + save upserts by key; a full reload still shows the saved copy', {}, async (page, user) => {
