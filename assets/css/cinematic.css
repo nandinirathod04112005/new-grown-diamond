@@ -1,0 +1,551 @@
+/* ============================================================
+   NEW GROWN DIAMOND — CINEMATIC LAYER
+   ------------------------------------------------------------
+   Site-wide animation styling that layers ON TOP of main.css:
+
+     1.  Ambient atmosphere canvases (fixed + in-hero scenes)
+     2.  Hero light streak
+     3.  Page-load intro (per-page variants)
+     4.  Page-to-page transition overlay
+     5.  Navigation polish (underline, offcanvas stagger)
+     6.  Button micro-interactions
+     7.  Scroll reveal variants ([data-anim])
+     8.  Dynamic grid stagger (.ngd-stagger-card)
+     9.  Footer entrance
+     10. About heritage progress rail
+     11. Detail-page media sweep + modal easing
+     12. Cursor glow (desktop only)
+     13. Reduced-motion + mobile guards
+
+   Everything here is decorative: content stays in the DOM,
+   nothing blocks input, and with JavaScript disabled the page
+   renders exactly as before (classes below are only armed
+   at runtime by the cinematic scripts).
+   ============================================================ */
+
+/* ---------- 1. Atmosphere canvases ---------- */
+
+/* When the ambient background mounts, the page base moves to the
+   root element so the fixed canvas (z-index:-1) can sit between
+   the backdrop and the content. */
+html.ngd-cine-root {
+  background-color: var(--ngd-ivory, #f7f4ee);
+  background-image:
+      radial-gradient(60rem 34rem at 85% -10%, rgba(180, 140, 71, 0.10), transparent 60%),
+      radial-gradient(46rem 30rem at -10% 110%, rgba(12, 12, 14, 0.05), transparent 55%);
+}
+html.ngd-cine-root body.ngd-backdrop {
+  background-color: transparent;
+  background-image: none;
+}
+
+.ngd-cinebg-fixed {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+.ngd-cinebg-fixed canvas,
+.ngd-cinebg-scene canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* In-hero scene layer (dark heros). The hero's own container is
+   raised above it so copy and the 3D stage stay on top. */
+.ngd-cinebg-scene {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.ngd-hero > .container { position: relative; z-index: 1; }
+
+/* ---------- 2. Hero light streak ---------- */
+.ngd-hero-streak {
+  position: absolute;
+  inset: -12% -30%;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(112deg,
+      transparent 43%,
+      rgba(207, 224, 255, 0.09) 50%,
+      rgba(217, 192, 138, 0.07) 55%,
+      transparent 63%);
+  transform: translateX(-55%);
+  animation: ngd-streak-drift 26s linear infinite;
+  will-change: transform;
+}
+@keyframes ngd-streak-drift {
+  0%   { transform: translateX(-55%); }
+  100% { transform: translateX(55%); }
+}
+
+/* ---------- 3. Page-load intro ---------- */
+/* A short veil that lifts as the page arrives, with a per-page
+   accent. Added by page-transitions.js, removed <1s later.     */
+body.ngd-pt-enter::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 3990;
+  pointer-events: none;
+  background: radial-gradient(120% 90% at 50% 46%,
+      rgba(13, 18, 34, 0.92), rgba(5, 7, 14, 0.97));
+  animation: ngd-veil-lift 0.72s cubic-bezier(0.33, 0, 0.2, 1) both;
+}
+@keyframes ngd-veil-lift {
+  0%   { opacity: 1; }
+  100% { opacity: 0; visibility: hidden; }
+}
+
+/* Accent line sweeping while the veil lifts */
+body.ngd-pt-enter::after {
+  content: "";
+  position: fixed;
+  z-index: 3991;
+  pointer-events: none;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: linear-gradient(90deg,
+      transparent, rgba(217, 192, 138, 0.9), rgba(207, 224, 255, 0.85), transparent);
+  transform-origin: center;
+  animation: ngd-intro-line 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes ngd-intro-line {
+  0%   { transform: scaleX(0);   opacity: 0.9; }
+  60%  { transform: scaleX(1);   opacity: 0.9; }
+  100% { transform: scaleX(1);   opacity: 0; }
+}
+
+/* Per-page accents */
+body.ngd-pt-enter[data-ngd-page="manufacturing"]::after {
+  top: 0;
+  height: 2px;
+  animation: ngd-intro-scan 0.8s cubic-bezier(0.33, 0, 0.2, 1) both; /* scan line */
+}
+@keyframes ngd-intro-scan {
+  0%   { transform: translateY(0);     opacity: 0.85; }
+  85%  { transform: translateY(48vh);  opacity: 0.65; }
+  100% { transform: translateY(60vh);  opacity: 0; }
+}
+body.ngd-pt-enter[data-ngd-page="about"]::after {
+  height: 3px;
+  animation-duration: 0.85s;                            /* editorial rule */
+}
+body.ngd-pt-enter[data-ngd-page="jewellery"]::after,
+body.ngd-pt-enter[data-ngd-page="jewellery-details"]::after {
+  background: linear-gradient(90deg,
+      transparent, rgba(217, 192, 138, 0.95), transparent); /* warm spotlight line */
+}
+
+/* Content settles in under the lifting veil */
+body.ngd-pt-enter main,
+body.ngd-pt-enter .ngd-hero {
+  animation: ngd-page-in 0.6s ease 0.05s both;
+}
+@keyframes ngd-page-in {
+  0%   { opacity: 0.35; transform: translateY(6px); }
+  100% { opacity: 1;    transform: none; }
+}
+
+/* ---------- 4. Page-to-page transition overlay ---------- */
+.ngd-pt-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 4000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  background: radial-gradient(120% 90% at 50% 50%,
+      rgba(13, 18, 34, 0.97), rgba(5, 7, 14, 0.99));
+  transition: opacity 0.3s ease, visibility 0s linear 0.3s;
+}
+.ngd-pt-overlay.is-active {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition: opacity 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.ngd-pt-line {
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  top: 50%;
+  height: 1px;
+  background: linear-gradient(90deg,
+      transparent, rgba(217, 192, 138, 0.9), rgba(207, 224, 255, 0.8), transparent);
+  transform: scaleX(0);
+}
+.ngd-pt-overlay.is-active .ngd-pt-line {
+  animation: ngd-pt-line-run 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes ngd-pt-line-run {
+  0%   { transform: scaleX(0); }
+  100% { transform: scaleX(1); }
+}
+.ngd-pt-mark {
+  width: 14px;
+  height: 14px;
+  border: 1px solid rgba(217, 192, 138, 0.95);
+  transform: rotate(45deg) scale(0.6);
+  background: rgba(207, 224, 255, 0.08);
+  opacity: 0;
+}
+.ngd-pt-overlay.is-active .ngd-pt-mark {
+  animation: ngd-pt-mark-in 0.5s ease 0.08s both;
+}
+@keyframes ngd-pt-mark-in {
+  0%   { opacity: 0; transform: rotate(45deg) scale(0.5); }
+  100% { opacity: 1; transform: rotate(45deg) scale(1); }
+}
+body.ngd-pt-leaving main,
+body.ngd-pt-leaving .ngd-hero {
+  transition: opacity 0.4s ease, transform 0.45s ease;
+  opacity: 0.55;
+  transform: scale(0.992);
+}
+
+/* ---------- 5. Navigation polish ---------- */
+.ngd-nav .nav-link { position: relative; }
+.ngd-nav .nav-link::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 0.3rem;
+  width: calc(100% - 1.5rem);
+  max-width: 3.4rem;
+  height: 1px;
+  background: linear-gradient(90deg,
+      transparent, var(--ngd-gold-soft, #d9c08a), transparent);
+  transform: translateX(-50%) scaleX(0);
+  transform-origin: center;
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.ngd-nav .nav-link:hover::after,
+.ngd-nav .nav-link:focus-visible::after,
+.ngd-nav .nav-link.active::after {
+  transform: translateX(-50%) scaleX(1);
+}
+
+/* Dropdown reveal */
+.ngd-nav .dropdown-menu {
+  transition: opacity 0.24s ease, transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Offcanvas menu — links cascade in while the panel slides */
+.ngd-mobile-menu.showing .offcanvas-body a,
+.ngd-mobile-menu.showing .offcanvas-body .ngd-btn {
+  animation: ngd-menu-link-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.ngd-mobile-menu.showing .offcanvas-body a:nth-child(1)  { animation-delay: 0.05s; }
+.ngd-mobile-menu.showing .offcanvas-body a:nth-child(2)  { animation-delay: 0.10s; }
+.ngd-mobile-menu.showing .offcanvas-body a:nth-child(3)  { animation-delay: 0.15s; }
+.ngd-mobile-menu.showing .offcanvas-body a:nth-child(4)  { animation-delay: 0.20s; }
+.ngd-mobile-menu.showing .offcanvas-body a:nth-child(5)  { animation-delay: 0.25s; }
+.ngd-mobile-menu.showing .offcanvas-body a:nth-child(6)  { animation-delay: 0.30s; }
+.ngd-mobile-menu.showing .offcanvas-body a:nth-child(7)  { animation-delay: 0.35s; }
+.ngd-mobile-menu.showing .offcanvas-body a:nth-child(8)  { animation-delay: 0.40s; }
+@keyframes ngd-menu-link-in {
+  0%   { opacity: 0; transform: translateX(18px); }
+  100% { opacity: 1; transform: none; }
+}
+
+/* ---------- 6. Button micro-interactions ---------- */
+.ngd-btn { position: relative; overflow: hidden; }
+.ngd-btn::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -70%;
+  width: 46%;
+  transform: skewX(-18deg);
+  background: linear-gradient(90deg,
+      transparent, rgba(255, 255, 255, 0.26), transparent);
+  opacity: 0;
+  pointer-events: none;
+}
+.ngd-btn:hover::after,
+.ngd-btn:focus-visible::after {
+  animation: ngd-btn-sweep 0.7s ease;
+}
+@keyframes ngd-btn-sweep {
+  0%   { opacity: 0; left: -70%; }
+  20%  { opacity: 1; }
+  100% { opacity: 0; left: 120%; }
+}
+.ngd-btn { transition: transform 0.25s ease, box-shadow 0.25s ease,
+                       background-color 0.25s ease, border-color 0.25s ease,
+                       color 0.25s ease; }
+.ngd-btn:hover { transform: translateY(-1px); }
+
+/* ---------- 7. Scroll reveal variants ---------- */
+/* Hidden states apply only once JS arms the page
+   (html.ngd-fx-ready), so no-JS visitors see everything. */
+html.ngd-fx-ready [data-anim] {
+  transition: opacity 0.65s ease, transform 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+              clip-path 0.85s cubic-bezier(0.22, 1, 0.36, 1), filter 0.6s ease;
+}
+html.ngd-fx-ready [data-anim="rise"]:not(.is-inview) {
+  opacity: 0;
+  transform: translateY(22px);
+}
+html.ngd-fx-ready [data-anim="mask"]:not(.is-inview) {
+  clip-path: inset(0 0 96% 0);
+  opacity: 0.001;
+  transform: translateY(10px);
+}
+html.ngd-fx-ready [data-anim="mask"].is-inview { clip-path: inset(0 0 -10% 0); }
+html.ngd-fx-ready [data-anim="clip"]:not(.is-inview) {
+  clip-path: inset(10% 6% 10% 6% round 8px);
+  transform: scale(1.03);
+  opacity: 0.35;
+}
+html.ngd-fx-ready [data-anim="clip"].is-inview { clip-path: inset(0 0 0 0 round 0); }
+html.ngd-fx-ready [data-anim="blur"]:not(.is-inview) {
+  opacity: 0;
+  filter: blur(10px);
+}
+
+/* Static stagger container: children cascade once in view */
+html.ngd-fx-ready [data-anim="stagger"] > * {
+  transition: opacity 0.55s ease, transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+html.ngd-fx-ready [data-anim="stagger"]:not(.is-inview) > * {
+  opacity: 0;
+  transform: translateY(14px);
+}
+html.ngd-fx-ready [data-anim="stagger"].is-inview > :nth-child(1)  { transition-delay: 0.00s; }
+html.ngd-fx-ready [data-anim="stagger"].is-inview > :nth-child(2)  { transition-delay: 0.06s; }
+html.ngd-fx-ready [data-anim="stagger"].is-inview > :nth-child(3)  { transition-delay: 0.12s; }
+html.ngd-fx-ready [data-anim="stagger"].is-inview > :nth-child(4)  { transition-delay: 0.18s; }
+html.ngd-fx-ready [data-anim="stagger"].is-inview > :nth-child(5)  { transition-delay: 0.24s; }
+html.ngd-fx-ready [data-anim="stagger"].is-inview > :nth-child(6)  { transition-delay: 0.30s; }
+html.ngd-fx-ready [data-anim="stagger"].is-inview > :nth-child(7)  { transition-delay: 0.36s; }
+html.ngd-fx-ready [data-anim="stagger"].is-inview > :nth-child(8)  { transition-delay: 0.42s; }
+html.ngd-fx-ready [data-anim="stagger"].is-inview > :nth-child(n+9) { transition-delay: 0.48s; }
+
+/* ---------- 8. Dynamic grid stagger ---------- */
+/* scroll-animations.js tags freshly rendered cards, then flips
+   them visible one rAF later with an incremental delay.        */
+.ngd-stagger-card {
+  opacity: 0;
+  transform: translateY(16px);
+}
+.ngd-stagger-card.ngd-anim-in {
+  opacity: 1;
+  transform: none;
+  transition: opacity 0.5s ease var(--ngd-d, 0ms),
+              transform 0.55s cubic-bezier(0.22, 1, 0.36, 1) var(--ngd-d, 0ms);
+}
+
+/* ---------- 9. Footer entrance ---------- */
+.ngd-footer { position: relative; }
+.ngd-footer::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 8%;
+  right: 8%;
+  height: 1px;
+  background: linear-gradient(90deg,
+      transparent, rgba(217, 192, 138, 0.65), transparent);
+  transform: scaleX(0);
+  transform-origin: center;
+}
+.ngd-footer.is-inview::before {
+  transition: transform 1.1s cubic-bezier(0.22, 1, 0.36, 1) 0.1s;
+  transform: scaleX(1);
+}
+html.ngd-fx-ready .ngd-footer.ngd-fx-armed [class*="col-"] {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.6s ease, transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+}
+html.ngd-fx-ready .ngd-footer.ngd-fx-armed.is-inview [class*="col-"] {
+  opacity: 1;
+  transform: none;
+}
+.ngd-footer.ngd-fx-armed.is-inview [class*="col-"]:nth-child(2) { transition-delay: 0.08s; }
+.ngd-footer.ngd-fx-armed.is-inview [class*="col-"]:nth-child(3) { transition-delay: 0.16s; }
+.ngd-footer.ngd-fx-armed.is-inview [class*="col-"]:nth-child(4) { transition-delay: 0.24s; }
+
+/* ---------- 10. About heritage progress rail ---------- */
+.ngd-abt-rail {
+  position: fixed;
+  right: clamp(0.8rem, 2.5vw, 2.2rem);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 900;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding: 0.55rem 0.4rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.45s ease;
+}
+.ngd-abt-rail.is-shown { opacity: 1; pointer-events: auto; }
+.ngd-abt-rail::before {
+  content: "";
+  position: absolute;
+  top: 0.9rem;
+  bottom: 0.9rem;
+  left: 50%;
+  width: 1px;
+  background: rgba(120, 110, 90, 0.28);
+}
+.ngd-abt-rail::after {
+  content: "";
+  position: absolute;
+  top: 0.9rem;
+  left: 50%;
+  width: 1px;
+  height: calc((100% - 1.8rem) * var(--ngd-abt-p, 0));
+  background: linear-gradient(180deg,
+      var(--ngd-gold-soft, #d9c08a), rgba(207, 224, 255, 0.8));
+}
+.ngd-abt-dot {
+  position: relative;
+  z-index: 1;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 1px solid rgba(120, 110, 90, 0.55);
+  background: var(--ngd-ivory, #f7f4ee);
+  padding: 0;
+  cursor: pointer;
+  transition: transform 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+}
+.ngd-abt-dot.is-active {
+  background: var(--ngd-gold-soft, #d9c08a);
+  border-color: var(--ngd-gold-soft, #d9c08a);
+  transform: scale(1.35);
+}
+.ngd-abt-dot:focus-visible {
+  outline: 2px solid var(--ngd-gold-soft, #d9c08a);
+  outline-offset: 3px;
+}
+@media (max-width: 991.98px) {
+  .ngd-abt-rail { display: none; }
+}
+
+/* ---------- 11. Detail media sweep + modal easing ---------- */
+.ngd-detail-stage, .ngd-jd-stage { position: relative; overflow: hidden; }
+.ngd-detail-stage::after, .ngd-jd-stage::after {
+  content: "";
+  position: absolute;
+  top: -20%;
+  bottom: -20%;
+  left: -60%;
+  width: 45%;
+  transform: skewX(-16deg);
+  background: linear-gradient(90deg,
+      transparent, rgba(255, 255, 255, 0.22), transparent);
+  opacity: 0;
+  pointer-events: none;
+}
+.ngd-sweep-run.ngd-detail-stage::after,
+.ngd-sweep-run.ngd-jd-stage::after {
+  animation: ngd-media-sweep 1.1s cubic-bezier(0.33, 0, 0.2, 1) 0.25s;
+}
+@keyframes ngd-media-sweep {
+  0%   { opacity: 0; left: -60%; }
+  25%  { opacity: 1; }
+  100% { opacity: 0; left: 130%; }
+}
+
+/* Gentler, premium modal entrance (Quote / Hold / Certificate…) */
+.modal.fade .modal-dialog {
+  transform: translateY(14px) scale(0.985);
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.modal.show .modal-dialog { transform: none; }
+
+/* ---------- 12. Cursor glow (desktop, fine pointer) ---------- */
+.ngd-cursor-glow {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 340px;
+  height: 340px;
+  margin: -170px 0 0 -170px;
+  border-radius: 50%;
+  z-index: 3;
+  pointer-events: none;
+  background: radial-gradient(circle,
+      rgba(207, 224, 255, 0.10), rgba(217, 192, 138, 0.05) 45%, transparent 70%);
+  mix-blend-mode: screen;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.ngd-cursor-glow.is-on { opacity: 1; }
+
+/* ---------- Manufacturing focus dim ---------- */
+/* Stages softly dim until active so the journey reads as one
+   continuous scene (rail JS already toggles .is-shown).        */
+@media (min-width: 992px) {
+  html.ngd-fx-ready #mfg-process .ngd-story-stage {
+    transition: opacity 0.6s ease;
+    opacity: 0.62;
+  }
+  html.ngd-fx-ready #mfg-process .ngd-story-stage.is-shown { opacity: 1; }
+}
+
+/* ---------- 13a. Mobile reductions ---------- */
+@media (max-width: 991.98px) {
+  .ngd-hero-streak { animation-duration: 34s; opacity: 0.65; }
+  .ngd-cursor-glow { display: none; }
+  body.ngd-pt-leaving main,
+  body.ngd-pt-leaving .ngd-hero { transform: none; }
+}
+
+/* ---------- 13b. Reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .ngd-hero-streak { display: none; }
+
+  body.ngd-pt-enter::before,
+  body.ngd-pt-enter::after,
+  body.ngd-pt-enter main,
+  body.ngd-pt-enter .ngd-hero,
+  .ngd-pt-overlay.is-active .ngd-pt-line,
+  .ngd-pt-overlay.is-active .ngd-pt-mark,
+  .ngd-btn:hover::after,
+  .ngd-btn:focus-visible::after,
+  .ngd-mobile-menu.showing .offcanvas-body a,
+  .ngd-mobile-menu.showing .offcanvas-body .ngd-btn,
+  .ngd-sweep-run.ngd-detail-stage::after,
+  .ngd-sweep-run.ngd-jd-stage::after { animation: none !important; }
+
+  .ngd-btn:hover { transform: none; }
+  body.ngd-pt-leaving main,
+  body.ngd-pt-leaving .ngd-hero { opacity: 1; transform: none; transition: none; }
+
+  html.ngd-fx-ready [data-anim],
+  html.ngd-fx-ready [data-anim="stagger"] > *,
+  .ngd-stagger-card {
+    opacity: 1 !important;
+    transform: none !important;
+    clip-path: none !important;
+    filter: none !important;
+    transition: none !important;
+  }
+  html.ngd-fx-ready .ngd-footer.ngd-fx-armed [class*="col-"] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .ngd-footer::before { transform: scaleX(1); transition: none; }
+  .ngd-nav .nav-link::after { transition: none; }
+  .ngd-abt-rail { transition: none; }
+  .ngd-abt-dot { transition: none; }
+  .modal.fade .modal-dialog { transform: none; transition: none; }
+  html.ngd-fx-ready #mfg-process .ngd-story-stage { opacity: 1; transition: none; }
+}

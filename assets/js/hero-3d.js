@@ -82,6 +82,13 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
     warm.position.set(2.6, 2.4, 2.4);
     scene.add(warm);
 
+    /* Blue-white key from the opposite side — the cool cinematic
+       counterpart to the champagne rim, so facets read icy-bright
+       on one flank and warm on the other as the stone turns. */
+    const key = new THREE.DirectionalLight(0xcfe0ff, 1.15);
+    key.position.set(-2.4, 3.2, 2.6);
+    scene.add(key);
+
     /* ---------- the diamond (lathe-cut brilliant) ---------- */
     const profile = [
       new THREE.Vector2(0.012, -1.02), // culet

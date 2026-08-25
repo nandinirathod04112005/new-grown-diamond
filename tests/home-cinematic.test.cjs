@@ -155,10 +155,15 @@ function canvasInk(page, slug, p) {
 
   await scenario('scroll handoff: the SAME hero diamond receives scroll progress into the story', {}, async (page) => {
     await open(page);
-    await page.waitForFunction(() => window.__NGD_HERO_MODE === 'webgl', null, { timeout: 15000 });
+    await page.waitForFunction(() => window.__NGD_HERO_MODE === 'webgl', null, { timeout: 25000 });
     const before = await page.evaluate(() => window.NGDCinematic.state.heroScroll);
+    /* the hero handoff is anchored 'top top': at the top of the page the
+       diamond must be untouched no matter when ScrollTrigger updates */
+    expect(before < 0.05, 'diamond untouched at the top of the page, got ' + before);
     await page.evaluate(() => window.scrollTo({ top: window.innerHeight * 1.2, behavior: 'instant' }));
-    await page.waitForFunction(() => window.NGDCinematic.state.heroScroll > 0.4, null, { timeout: 5000 });
+    /* three canvases share the frame budget under software rendering,
+       so give the scrub a CI-realistic window to catch up */
+    await page.waitForFunction(() => window.NGDCinematic.state.heroScroll > 0.4, null, { timeout: 12000 });
     const after = await page.evaluate(() => ({
       p: window.NGDCinematic.state.heroScroll,
       api: typeof window.NGDHero3D.setScroll === 'function',

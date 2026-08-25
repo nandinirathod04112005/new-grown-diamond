@@ -48,12 +48,17 @@
 
   /** Progress 0→1 while `el` crosses the viewport (top hits 85%vh → bottom
       hits 15%vh). ScrollTrigger scrubs it when present; otherwise a passive
-      scroll listener does the same maths. Nothing runs while offscreen. */
-  function onProgress(el, callback) {
+      scroll listener does the same maths. Nothing runs while offscreen.
+      opts.fromTop measures a section that STARTS the page (the full-height
+      hero): progress must be exactly 0 while the visitor sits at the top
+      and only grow as the section scrolls away — the shared 85%/15% window
+      would report ~0.5 for it before any scrolling. */
+  function onProgress(el, callback, opts) {
+    var fromTop = !!(opts && opts.fromTop);
     if (window.gsap && window.ScrollTrigger) {
       window.ScrollTrigger.create({
         trigger: el,
-        start: 'top 85%',
+        start: fromTop ? 'top top' : 'top 85%',
         end: 'bottom 15%',
         scrub: true,
         onUpdate: function (self) { callback(self.progress); }
@@ -65,9 +70,9 @@
       ticking = false;
       var rect = el.getBoundingClientRect();
       var vh = window.innerHeight || 1;
-      var span = rect.height + vh * 0.7;
-      var passed = vh * 0.85 - rect.top;
-      callback(clamp01(passed / span));
+      var span = fromTop ? rect.height - vh * 0.15 : rect.height + vh * 0.7;
+      var passed = fromTop ? -rect.top : vh * 0.85 - rect.top;
+      callback(clamp01(span > 0 ? passed / span : 1));
     }
     function onScroll() {
       if (ticking) return;
@@ -137,7 +142,7 @@
       if (window.NGDHero3D && typeof window.NGDHero3D.setScroll === 'function') {
         window.NGDHero3D.setScroll(p);
       }
-    });
+    }, { fromTop: true });
   }
 
   /* ---------------- manufacturing journey progress rail ---------------- */
