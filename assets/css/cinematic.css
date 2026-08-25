@@ -561,7 +561,9 @@ body[data-ngd-page="home"] .ngd-hero > .container {
   letter-spacing: 0.3em;
   text-transform: uppercase;
   opacity: calc(1 - var(--ngd-heroexit, 0) * 4);
-  animation: ngd-hint-in 0.9s ease 2.3s both;
+  /* 'backwards' only: once the entrance ends, the scroll-driven
+     opacity above must take over (fill:both would pin it at 1) */
+  animation: ngd-hint-in 0.9s ease 2.3s backwards;
 }
 .ngd-scroll-hint:hover,
 .ngd-scroll-hint:focus-visible { color: var(--ngd-gold-soft, #d9c08a); }

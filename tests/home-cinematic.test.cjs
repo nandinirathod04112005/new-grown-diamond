@@ -141,7 +141,7 @@ function canvasInk(page, slug, p) {
     await page.waitForFunction(() => window.__NGD_HERO_MODE === 'webgl', null, { timeout: 15000 });
     /* the opening sequence is now a ~8s cinematic (spec: 10s feel), and CI
        software rendering can pace it slower — wait generously */
-    await page.waitForFunction(() => window.__NGD_HERO_INTRO === 'done', null, { timeout: 20000 });
+    await page.waitForFunction(() => window.__NGD_HERO_INTRO === 'done', null, { timeout: 30000 });
     const visible = await page.evaluate(() => {
       const h1 = document.querySelector('.ngd-hero h1');
       return parseFloat(getComputedStyle(h1).opacity);
