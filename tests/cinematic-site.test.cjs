@@ -242,10 +242,14 @@ function instantScroll(page, expr) {
     expect(armed.masks === 10, 'ten editorial headings carry masked reveals, got ' + armed.masks);
     await instantScroll(page, 'document.body.scrollHeight');
     await page.waitForFunction(() =>
-      document.querySelector('.ngd-footer').classList.contains('is-inview'), null, { timeout: 4000 });
+      document.documentElement.classList.contains('ngd-footer-inview'), null, { timeout: 4000 });
     await page.waitForFunction(() =>
       getComputedStyle(document.querySelector('.ngd-footer [class*="col-"]')).opacity === '1',
       null, { timeout: 4000 });
+    /* runtime flags stay off the footer element so its markup is identical on every page */
+    const footerClean = await page.evaluate(() =>
+      !document.querySelector('.ngd-footer').className.includes('inview'));
+    expect(footerClean, 'footer element carries no runtime state classes');
   });
 
   await scenario('about heritage rail: five labelled beats, progress fills with scroll', {}, async (page) => {
