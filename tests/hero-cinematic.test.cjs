@@ -1,14 +1,13 @@
 /* ============================================================
-   Cinematic hero sequence tests.
-   The ~10 second obsidian / midnight-sapphire opening: exposure
-   rising out of darkness, the hero diamond's real 3D journey
-   (far background → close pass → centre-right seat), camera
-   movement that settles, the travelling key light, the timed
-   ensemble of supporting stones, the restrained flare on the
-   close pass, scroll fast-forward (never fight the visitor),
-   the ambient loop after settle, the mobile profile, reduced
-   motion showing the final composition immediately, and the
-   scroll hint. Deterministic via window.NGDHero3D.seek().
+   Hero tests — DIAMOND ECLIPSE → SUPERNOVA.
+   One dominant colourless stone revealed by PHYSICAL LIGHTING
+   (environment intensity + a travelling studio key — never a
+   fade), camera orbit/dolly choreography, the eclipse halo and
+   floor caustics signatures, the supernova beat, the gravity
+   shift to the right-side seat, the ambient loop, the scroll
+   exit (halo expands, stone deepens, scene dims), mobile and
+   reduced-motion profiles, and the scroll hint. Deterministic
+   via window.NGDHero3D.seek().
    Run:  node tests/hero-cinematic.test.cjs
    ============================================================ */
 'use strict';
@@ -78,104 +77,87 @@ function seek(page, t) {
   SITE = started.origin;
   browser = await chromium.launch(chromiumOptions());
 
-  await scenario('the timeline API and full desktop ensemble are exposed', {}, async (page) => {
+  await scenario('one dominant stone with the two signature effects — no swarm', {}, async (page) => {
     await open(page);
     const st = await page.evaluate(() => ({
       objects: window.NGDHero3D.state.objects,
       seek: typeof window.NGDHero3D.seek,
-      debug: typeof window.NGDHero3D.debug,
       profile: window.NGDHero3D.state.profile,
     }));
-    expect(st.seek === 'function' && st.debug === 'function', 'seek + debug available');
+    expect(st.seek === 'function', 'seek available');
     expect(st.profile === 'desktop', 'desktop profile');
-    expect(st.objects.hero === 1, 'one hero diamond');
-    expect(st.objects.secondaries === 4, 'four supporting stones, got ' + st.objects.secondaries);
-    expect(st.objects.fragments === 2, 'two foreground fragments');
-    expect(st.objects.beams === 3, 'two light beams + the volumetric shaft, got ' + st.objects.beams);
+    expect(st.objects.hero === 1, 'exactly one diamond');
+    expect(st.objects.secondaries === undefined, 'the supporting swarm is gone');
+    expect(st.objects.halo === 1, 'the eclipse halo signature');
+    expect(st.objects.caustics === 2, 'the floor caustic signature, got ' + st.objects.caustics);
+    expect(st.objects.beams === 3, 'atmospheric beams + shaft, got ' + st.objects.beams);
   });
 
-  await scenario('the scene opens near-black and rises to full brilliance', {}, async (page) => {
+  await scenario('S1 eclipse: near-black, halo forming, the stone still unlit', {}, async (page) => {
     await open(page);
-    const dark = await seek(page, 0.4);
-    const mid = await seek(page, 1.5);
-    const done = await seek(page, 9);
-    expect(dark.exposure < 0.3, 'near-darkness at the start, got ' + dark.exposure);
-    expect(mid.exposure > dark.exposure && mid.exposure < 1.05, 'light rising mid-entry, got ' + mid.exposure);
-    expect(Math.abs(done.exposure - 1.12) < 0.06, 'full brilliance once settled, got ' + done.exposure);
+    const dark = await seek(page, 0.7);
+    expect(dark.exposure < 0.25, 'eclipse darkness, exposure=' + dark.exposure);
+    expect(dark.envIntensity < 0.2, 'the stone is not yet lit, env=' + dark.envIntensity);
+    expect(dark.halo.opacity > 0.1, 'the eclipse halo is forming, got ' + dark.halo.opacity);
+    expect(dark.keyIntensity < 0.05, 'the studio key has not entered yet');
   });
 
-  await scenario('the hero diamond truly travels: far background → close pass → centre-right seat', {}, async (page) => {
+  await scenario('S2 first light: the stone is revealed by LIGHTING, never faded in', {}, async (page) => {
     await open(page);
-    const far = await seek(page, 1);
-    const pass = await seek(page, 4.9);
-    const seat = await seek(page, 9);
-    expect(far.hero[2] < -8, 'enters from deep background, z=' + far.hero[2]);
-    expect(pass.hero[2] > 0, 'sweeps in front of the stage line on the pass, z=' + pass.hero[2]);
-    expect(Math.abs(pass.hero[0]) < 0.5, 'the pass crosses near centre, x=' + pass.hero[0]);
-    expect(Math.abs(seat.hero[0] - 1.9) < 0.05 && Math.abs(seat.hero[2] + 1.4) < 0.05,
-      'settles centre-right, got ' + seat.hero.join(','));
+    const before = await seek(page, 1.2);
+    const first = await seek(page, 2.4);
+    const lit = await seek(page, 4.6);
+    expect(first.keyIntensity > 0.3 && first.keyIntensity > before.keyIntensity,
+      'the narrow studio key enters, ' + before.keyIntensity.toFixed(2) + ' → ' + first.keyIntensity.toFixed(2));
+    expect(first.envIntensity > before.envIntensity + 0.15,
+      'facets progressively catch the environment, ' + before.envIntensity.toFixed(2) + ' → ' + first.envIntensity.toFixed(2));
+    expect(lit.envIntensity > 1.2, 'fully lit after facet birth, env=' + lit.envIntensity);
   });
 
-  await scenario('the camera itself moves, then settles for the resting composition', {}, async (page) => {
+  await scenario('S3 facet birth: the camera truly orbits and dollies', {}, async (page) => {
     await open(page);
-    const start = await seek(page, 0.05);
-    const orbit = await seek(page, 4.9);
+    const left = await seek(page, 3.0);
+    const right = await seek(page, 5.0);
+    const close = await seek(page, 5.9);
     const rest = await seek(page, 9);
-    expect(start.camera[2] > 6.2, 'starts pulled back, z=' + start.camera[2]);
-    expect(orbit.camera[0] < -0.4, 'counter-orbits left on the pass, x=' + orbit.camera[0]);
-    expect(Math.abs(rest.camera[0]) < 0.02 && Math.abs(rest.camera[2] - 4.9) < 0.02,
-      'settles to the resting position, got ' + rest.camera.join(','));
+    expect(left.camera[0] < -0.8, 'orbit swings left of the stone, x=' + left.camera[0]);
+    expect(right.camera[0] > 0.7, 'then arcs to the right, x=' + right.camera[0]);
+    expect(close.camera[2] < 3.6, 'the dolly closes in for the nova, z=' + close.camera[2]);
+    expect(Math.abs(rest.camera[0]) < 0.03 && Math.abs(rest.camera[2] - 4.9) < 0.03,
+      'the camera settles to neutral framing, got ' + rest.camera.join(','));
   });
 
-  await scenario('lighting animates — the key light travels through the reveal', {}, async (page) => {
+  await scenario('S4 supernova: brilliance from light — flare, halo surge, caustic burst', {}, async (page) => {
     await open(page);
-    const early = await seek(page, 1);
-    const late = await seek(page, 5.4);
-    expect(Math.abs(late.key[0] - early.key[0]) > 1.5,
-      'key light orbits across the scene, ' + early.key[0].toFixed(2) + ' → ' + late.key[0].toFixed(2));
+    const nova = await seek(page, 5.75);
+    const after = await seek(page, 7.2);
+    expect(nova.exposure > 1.25, 'exposure flares at the nova, got ' + nova.exposure);
+    expect(nova.halo.opacity > 0.5, 'the halo brightens, got ' + nova.halo.opacity);
+    expect(nova.caustic > 0.4, 'the caustics expand, got ' + nova.caustic);
+    expect(after.exposure < nova.exposure, 'the flare recedes after the moment');
   });
 
-  await scenario('the close pass is the wow beat: restrained flare, stone large in frame', {}, async (page) => {
+  await scenario('the stone holds centre-stage through the film — animation is light + camera', {}, async (page) => {
     await open(page);
-    const pass = await seek(page, 4.9);
-    expect(pass.exposure > 1.2, 'flare lifts the exposure on the pass, got ' + pass.exposure);
-    const calm = await seek(page, 6.8);
-    expect(calm.exposure < pass.exposure, 'flare recedes after the pass');
+    for (const t of [1, 3, 5, 6.2]) {
+      const dbg = await seek(page, t);
+      expect(Math.abs(dbg.hero[0] - 0.35) < 0.4 && Math.abs(dbg.hero[2]) < 0.4,
+        't=' + t + ': the diamond is not flown around, got ' + dbg.hero.join(','));
+    }
   });
 
-  await scenario('supporting stones enter on cue, each with its own motion', {}, async (page) => {
+  await scenario('S5 gravity shift: the stone takes its seat, the halo follows its own path', {}, async (page) => {
     await open(page);
-    await seek(page, 3);
-    const during = await page.evaluate(() => window.NGDHero3D.state.secondaries());
-    expect(during[0].opacity > 0.3, 'the background crosser is already travelling, got ' + during[0].opacity);
-    expect(during[0].x < -1, 'crosser still crossing from the left, x=' + during[0].x);
-    expect(during[1].opacity < 0.05, 'the ensemble waits for its cue');
-    await seek(page, 9);
-    const settled = await page.evaluate(() => window.NGDHero3D.state.secondaries());
-    expect(settled.every((s) => s.opacity > 0.5), 'all supporting stones present once settled');
-    const rots = new Set(settled.map((s) => s.rotY.toFixed(3)));
-    expect(rots.size === settled.length, 'no two stones rotate identically');
-    expect(settled[0].x > 5, 'the crosser exits frame-right instead of parking, x=' + settled[0].x);
-  });
-
-  await scenario('an early scroll never fights the visitor — the intro glides to its end', {}, async (page) => {
-    await open(page);
-    await page.evaluate(() => window.NGDHero3D.setScroll(0.35));
-    /* ~0.7s on real hardware; software GL may instead reach it via the
-       parked-still fallback — either way it must arrive well inside this */
-    await page.waitForFunction(() =>
-      window.NGDHero3D.state.settled() && window.__NGD_HERO_INTRO === 'done',
-      null, { timeout: 15000 });
-    /* race-proof: set the handoff value and render via seek() inside ONE
-       synchronous evaluate — no other writer can interleave, so the exact
-       dim math (1.12 × (1 − 0.35·0.5) ≈ 0.924) is deterministic */
-    const exposure = await page.evaluate(() => {
-      window.NGDHero3D.setScroll(0.35);
-      window.NGDHero3D.seek(9);
-      return window.NGDHero3D.debug().exposure;
-    });
-    expect(Math.abs(exposure - 1.12 * 0.825) < 0.05,
-      'scroll handoff dims the settled scene, got ' + exposure);
+    const before = await seek(page, 6.4);
+    const midway = await seek(page, 7.4);
+    const seated = await seek(page, 9);
+    expect(Math.abs(before.hero[0] - 0.35) < 0.1, 'still centre-stage before the shift');
+    expect(midway.hero[0] > 0.7, 'gliding right mid-shift, x=' + midway.hero[0]);
+    expect(midway.halo.x < midway.hero[0] - 0.25, 'the halo lags on its own path: ' +
+      midway.halo.x.toFixed(2) + ' vs ' + midway.hero[0].toFixed(2));
+    expect(Math.abs(seated.hero[0] - 1.9) < 0.05 && Math.abs(seated.hero[2] + 1.4) < 0.05,
+      'final right-side seat, got ' + seated.hero.join(','));
+    expect(Math.abs(seated.halo.x - 1.15) < 0.12, 'the offset eclipse rests behind the seat, got ' + seated.halo.x);
   });
 
   await scenario('ambient loop: the settled scene keeps living without jumping', {}, async (page) => {
@@ -187,14 +169,32 @@ function seek(page, t) {
       dbg: window.NGDHero3D.debug(),
       still: window.NGDHero3D.state.stillMode(),
     }));
-    /* on catastrophic renderers (CI software GL) the film deliberately
-       parks as the settled still — that is the designed behaviour there */
-    expect(b.still || b.dbg.spin > a.spin + 0.05,
-      'the hero keeps its slow rotation (or is parked still), ' + a.spin.toFixed(2) + ' → ' + b.dbg.spin.toFixed(2));
+    expect(b.still || b.dbg.spin > a.spin + 0.02,
+      'micro-rotation continues (or the still is parked), ' + a.spin.toFixed(3) + ' → ' + b.dbg.spin.toFixed(3));
     expect(Math.abs(b.dbg.hero[0] - a.hero[0]) < 0.05, 'no positional jump in the loop');
   });
 
-  await scenario('mobile profile: lighter ensemble, crown-top composition, no overflow', { viewport: { width: 390, height: 844 } }, async (page) => {
+  await scenario('scroll exit: the halo expands, the stone deepens, the scene dims', {}, async (page) => {
+    await open(page);
+    const exit = await page.evaluate(() => {
+      window.NGDHero3D.setScroll(0.5);
+      window.NGDHero3D.seek(9);
+      return window.NGDHero3D.debug();
+    });
+    expect(exit.halo.scale > 1.3, 'eclipse halo expands with the scroll, got ' + exit.halo.scale);
+    expect(exit.hero[2] < -1.75, 'the diamond eases deeper, z=' + exit.hero[2]);
+    expect(Math.abs(exit.exposure - 1.12 * 0.75) < 0.06, 'the scene dims for the handoff, got ' + exit.exposure);
+  });
+
+  await scenario('an early scroll never fights the visitor — the intro glides to its end', {}, async (page) => {
+    await open(page);
+    await page.evaluate(() => window.NGDHero3D.setScroll(0.35));
+    await page.waitForFunction(() =>
+      window.NGDHero3D.state.settled() && window.__NGD_HERO_INTRO === 'done',
+      null, { timeout: 15000 });
+  });
+
+  await scenario('mobile: the full concept, smaller choreography, crown-top seat', { viewport: { width: 390, height: 844 } }, async (page) => {
     await open(page);
     const st = await page.evaluate(() => ({
       objects: window.NGDHero3D.state.objects,
@@ -203,32 +203,33 @@ function seek(page, t) {
       clientW: document.documentElement.clientWidth,
     }));
     expect(st.profile === 'mobile', 'mobile profile');
-    expect(st.objects.secondaries === 2 && st.objects.fragments === 0 && st.objects.beams === 1,
-      'reduced ensemble, got ' + JSON.stringify(st.objects));
+    expect(st.objects.halo === 1 && st.objects.caustics === 2 && st.objects.beams === 1,
+      'halo + caustics kept, lighter beams: ' + JSON.stringify(st.objects));
     const seat = await seek(page, 9);
     expect(Math.abs(seat.hero[0]) < 0.05 && seat.hero[1] > 1.3,
-      'diamond crowns the composition above the copy, got ' + seat.hero.join(','));
+      'crown-top composition, got ' + seat.hero.join(','));
+    expect(Math.abs(seat.halo.x) < 0.15, 'halo centred behind the crown, got ' + seat.halo.x);
     expect(st.scrollW <= st.clientW + 1, 'no horizontal overflow');
   });
 
-  await scenario('reduced motion: the final premium composition, immediately and still', { reducedMotion: 'reduce' }, async (page) => {
+  await scenario('reduced motion: the final eclipse composition, immediately and still', { reducedMotion: 'reduce' }, async (page) => {
     await open(page);
     const st = await page.evaluate(() => ({
       intro: window.__NGD_HERO_INTRO,
       animated: window.__NGD_HERO_ANIMATED,
-      t: window.NGDHero3D.state.t(),
       dbg: window.NGDHero3D.debug(),
+      t: window.NGDHero3D.state.t(),
     }));
-    expect(st.intro === 'done', 'no 10-second wait under reduced motion');
-    expect(st.animated === false, 'no animation loop');
-    expect(st.t > 7.8, 'timeline parked at the settled composition');
-    expect(Math.abs(st.dbg.hero[0] - 1.9) < 0.05, 'hero diamond in its final seat');
-    expect(Math.abs(st.dbg.exposure - 1.12) < 0.06, 'full brightness still frame');
+    expect(st.intro === 'done' && st.animated === false, 'no film, no loop');
+    expect(st.t > 8, 'parked at the settled composition');
+    expect(Math.abs(st.dbg.hero[0] - 1.9) < 0.05, 'stone in its seat');
+    expect(Math.abs(st.dbg.exposure - 1.12) < 0.06, 'full brightness still');
+    expect(st.dbg.halo.opacity > 0.3, 'the eclipse halo is part of the still');
     const after = await page.evaluate(() => {
-      window.NGDHero3D.seek(1);          // must be inert
+      window.NGDHero3D.seek(1);
       return window.NGDHero3D.state.t();
     });
-    expect(after > 7.8, 'seek is disabled — the still never re-enters the intro');
+    expect(after > 8, 'seek is inert — the still never re-enters the intro');
   });
 
   await scenario('scroll hint: present, labelled, and retiring as the story takes over', {}, async (page) => {
