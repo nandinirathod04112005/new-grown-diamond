@@ -157,6 +157,9 @@ function canvasInk(page, slug, p) {
     await open(page);
     await page.waitForFunction(() => window.__NGD_HERO_MODE === 'webgl', null, { timeout: 25000 });
     const before = await page.evaluate(() => window.NGDCinematic.state.heroScroll);
+    /* the hero handoff is anchored 'top top': at the top of the page the
+       diamond must be untouched no matter when ScrollTrigger updates */
+    expect(before < 0.05, 'diamond untouched at the top of the page, got ' + before);
     await page.evaluate(() => window.scrollTo({ top: window.innerHeight * 1.2, behavior: 'instant' }));
     /* three canvases share the frame budget under software rendering,
        so give the scrub a CI-realistic window to catch up */
