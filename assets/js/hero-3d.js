@@ -581,8 +581,10 @@ function startHeroFilm() {
       const keySweep = span(t, 1.5, 5.9);
       const keyAngle = -1.7 + keySweep * 2.5 + Math.sin(ambientT * 0.2) * 0.18;
       key.position.set(Math.sin(keyAngle) * 3.6, 1.1 + keySweep * 1.9, Math.cos(keyAngle) * 3.2);
-      /* occasional natural facet flash in the ambient loop */
-      const flash = Math.pow(Math.max(0, Math.sin(ambientT * 0.9)), 24) * 0.5;
+      /* occasional natural facet flash — settled ambient loop only,
+         never during the eclipse/first-light scenes */
+      const flash = Math.pow(Math.max(0, Math.sin(ambientT * 0.9)), 24) * 0.5 *
+        span(t, SETTLE_T - 1, SETTLE_T);
       key.intensity = (firstLight * 1.15 + nova * 1.4 + flash) * (1 - scrollP * 0.3);
       warm.intensity = 5.5 * span(t, 2.4, 4.5) + Math.sin(ambientT * 0.27 + 1.3) * 0.7;
       fill.intensity = 3 * span(t, 2.0, 4.0);
