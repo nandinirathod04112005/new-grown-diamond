@@ -34,6 +34,9 @@ async function scenario(name, opts, fn) {
   const pageErrors = [];
   try {
     await installCdnRoutes(context);
+    await context.addInitScript(() => {
+      try { sessionStorage.setItem('ngd-auto-explore', 'off'); } catch (e) { /* ok */ }
+    });
     await context.route('**/assets/js/supabase-config.js', (r) => r.fulfill({
       contentType: 'application/javascript',
       body: "window.NGD_SUPABASE_CONFIG={SUPABASE_URL:'https://home-test.supabase.co',SUPABASE_PUBLISHABLE_KEY:'sb_publishable_test_key_1234567890'};",
