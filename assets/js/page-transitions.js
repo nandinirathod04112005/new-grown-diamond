@@ -122,6 +122,21 @@
     return url;
   }
 
+  /* One engine for every departure — user clicks and programmatic
+     journeys (Auto Explore) run the exact same cinematic leave. */
+  function depart(url) {
+    if (leaving) return;
+    leaving = true;
+    state.intercepted += 1;
+
+    document.body.classList.add('ngd-pt-leaving');
+    if (overlay) overlay.classList.add('is-active');
+
+    setTimeout(function () { location.href = url.href; }, DURATION);
+    /* If something blocks the navigation, recover the page. */
+    setTimeout(function () { if (leaving) reset(); }, DURATION + 2200);
+  }
+
   function onClick(event) {
     try {
       var anchor = event.target && event.target.closest
@@ -133,20 +148,26 @@
       if (!url) return;
 
       event.preventDefault();
-      if (leaving) return;
-      leaving = true;
-      state.intercepted += 1;
-
-      document.body.classList.add('ngd-pt-leaving');
-      if (overlay) overlay.classList.add('is-active');
-
-      setTimeout(function () { location.href = url.href; }, DURATION);
-      /* If something blocks the navigation, recover the page. */
-      setTimeout(function () { if (leaving) reset(); }, DURATION + 2200);
+      depart(url);
     } catch (err) {
       /* Never break navigation — fall back to the browser default. */
     }
   }
+
+  /** Programmatic navigation through the same cinematic leave.
+      Only public whitelisted pages are accepted; anything else is
+      refused (returns false) rather than silently redirected. */
+  window.NGDPageTransitions.navigate = function (href) {
+    try {
+      var url = new URL(href, location.href);
+      if (url.origin !== location.origin) return false;
+      if (PUBLIC_PAGES.indexOf(basename(url.pathname)) === -1) return false;
+      depart(url);
+      return true;
+    } catch (err) {
+      return false;
+    }
+  };
 
   function init() {
     try {

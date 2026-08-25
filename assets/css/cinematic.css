@@ -585,6 +585,100 @@ body[data-ngd-page="home"] .ngd-hero > .container {
   100% { transform: scaleY(1); opacity: 0; }
 }
 
+/* ---------- Auto Explore (hybrid navigation) ---------- */
+.ngd-auto-toggle {
+  position: fixed;
+  left: 1.2rem;
+  bottom: 1.35rem;
+  z-index: 950;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.55rem 1rem;
+  border: 1px solid rgba(120, 110, 90, 0.35);
+  border-radius: var(--ngd-radius-pill, 999px);
+  background: rgba(12, 16, 28, 0.55);
+  backdrop-filter: blur(8px);
+  color: rgba(235, 238, 246, 0.85);
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 0.25s ease, border-color 0.25s ease, background-color 0.25s ease;
+}
+.ngd-auto-toggle:hover,
+.ngd-auto-toggle:focus-visible {
+  color: #fff;
+  border-color: var(--ngd-gold-soft, #d9c08a);
+}
+.ngd-auto-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(160, 165, 178, 0.6);
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+.ngd-auto-toggle.is-on .ngd-auto-dot {
+  background: var(--ngd-gold-soft, #d9c08a);
+  box-shadow: 0 0 10px rgba(217, 192, 138, 0.65);
+  animation: ngd-auto-pulse 2.6s ease-in-out infinite;
+}
+@keyframes ngd-auto-pulse {
+  0%, 100% { box-shadow: 0 0 6px rgba(217, 192, 138, 0.4); }
+  50%      { box-shadow: 0 0 14px rgba(217, 192, 138, 0.85); }
+}
+
+/* "NEXT · <chapter>" — the elegant continuation line */
+.ngd-auto-next {
+  position: fixed;
+  left: 50%;
+  bottom: 4.4rem;
+  transform: translate(-50%, 12px);
+  z-index: 960;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.4rem;
+  border: 1px solid rgba(217, 192, 138, 0.4);
+  border-radius: var(--ngd-radius-pill, 999px);
+  background: rgba(10, 14, 26, 0.78);
+  backdrop-filter: blur(10px);
+  color: rgba(240, 243, 250, 0.92);
+  font-size: 0.64rem;
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease, transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.ngd-auto-next.is-shown {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, 0);
+}
+.ngd-auto-next-track {
+  width: 9rem;
+  height: 1px;
+  background: rgba(207, 224, 255, 0.22);
+  overflow: hidden;
+}
+.ngd-auto-next-fill {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, var(--ngd-gold-soft, #d9c08a), rgba(207, 224, 255, 0.9));
+  transform: scaleX(0);
+  transform-origin: left;
+}
+@media (max-width: 991.98px) {
+  .ngd-auto-toggle { left: 0.9rem; bottom: 1rem; padding: 0.5rem 0.85rem; }
+  .ngd-auto-next { bottom: 4rem; width: max-content; max-width: 86vw; }
+}
+
 /* ---------- Manufacturing focus dim ---------- */
 /* Stages softly dim until active so the journey reads as one
    continuous scene (rail JS already toggles .is-shown).        */

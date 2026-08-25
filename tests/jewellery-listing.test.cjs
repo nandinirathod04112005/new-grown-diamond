@@ -113,6 +113,9 @@ async function scenario(name, opts, fn) {
   const pageErrors = [];
   try {
     await installCdnRoutes(context);
+    await context.addInitScript(() => {
+      try { sessionStorage.setItem('ngd-auto-explore', 'off'); } catch (e) { /* ok */ }
+    });
     await context.route('**/assets/js/supabase-config.js', (r) =>
       r.fulfill({ status: 200, contentType: 'application/javascript', body: TEST_CONFIG }));
     const backend = makeMock(opts);

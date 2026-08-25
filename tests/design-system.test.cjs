@@ -30,6 +30,9 @@ function record(name, ok, detail) {
   for (const vp of viewports) {
     const context = await browser.newContext({ viewport: { width: vp.width, height: vp.height } });
     await installCdnRoutes(context);
+    await context.addInitScript(() => {
+      try { sessionStorage.setItem('ngd-auto-explore', 'off'); } catch (e) { /* ok */ }
+    });
     const page = await context.newPage();
     const pageErrors = [];
     page.on('pageerror', (e) => pageErrors.push(String(e)));
