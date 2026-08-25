@@ -218,7 +218,10 @@
     var wrap = document.createElement('div');
     wrap.className = 'ngd-cinebg-fixed';
     wrap.setAttribute('aria-hidden', 'true');
-    document.body.insertBefore(wrap, document.body.firstChild);
+    /* appended last — fixed position + z-index:-1 keeps it behind the
+       page while body.firstElementChild stays whatever the site put
+       there (e.g. the announcement bar) */
+    document.body.appendChild(wrap);
     document.documentElement.classList.add('ngd-cine-root');
 
     var dark = variant === 'dark';
