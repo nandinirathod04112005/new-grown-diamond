@@ -185,7 +185,10 @@
     return layer;
   }
 
-  /* ---------- shared animation loop (≈30fps is plenty) ---------- */
+  /* ---------- shared animation loop ----------
+     The atmosphere is slow drift, so ~20fps reads identically to
+     60fps while leaving the frame budget to the WebGL hero and
+     the scroll-driven journey scenes. */
   var started = false;
   function startLoop() {
     if (started) return;
@@ -195,8 +198,8 @@
       requestAnimationFrame(tick);
       if (document.hidden) { prev = now; return; }
       var elapsed = now - prev;
-      if (elapsed < 32) return;
-      var dt = Math.min(elapsed, 100) / 1000;
+      if (elapsed < 48) return;
+      var dt = Math.min(elapsed, 140) / 1000;
       prev = now;
       var t = now / 1000;
       for (var i = 0; i < layers.length; i++) {
