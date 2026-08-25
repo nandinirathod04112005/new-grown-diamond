@@ -79,7 +79,11 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
   let renderer;
   try {
-    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: true,
+      powerPreference: 'high-performance'
+    });
   } catch (err) {
     console.warn('[NGD Hero] WebGL init failed — keeping static fallback.', err);
     return;
@@ -672,10 +676,30 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
     const clock = new THREE.Clock();
     window.__NGD_HERO_ANIMATED = true;
 
+    /* graceful degradation on weak hardware: if frames stay slow,
+       step the pixel ratio down once — permanently for the visit */
+    let slowTime = 0;
+    let degraded = false;
+    let frameParity = 0;
+
     renderer.setAnimationLoop(function () {
       if (document.hidden || !inView) { clock.getDelta(); return; }
       const dt = Math.min(clock.getDelta(), 0.1);
       ambientT += dt;
+
+      if (!degraded) {
+        slowTime = dt > 0.045 ? slowTime + dt : 0;
+        if (slowTime > 1.5) {
+          degraded = true;
+          renderer.setPixelRatio(Math.min(renderer.getPixelRatio(), 1) * 0.8);
+          resize();
+        }
+      }
+
+      /* while the visitor is scrolling the hero away, render at half
+         rate — the exit stays smooth and the scroll keeps the budget */
+      frameParity ^= 1;
+      if (scrollP > 0.05 && scrollP < 0.98 && frameParity) return;
 
       if (seqT < SETTLE_T) {
         seqT += dt * (fastForward ? 6 : 1);
