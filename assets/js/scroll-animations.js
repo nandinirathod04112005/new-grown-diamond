@@ -107,16 +107,18 @@
     });
   }
 
-  /* ---------- footer entrance ---------- */
+  /* ---------- footer entrance ----------
+     The visibility flag goes on <html>, not the footer, so the
+     footer element's markup stays identical across pages. */
   function initFooter() {
     var footer = document.querySelector('.ngd-footer');
     if (!footer) return;
-    footer.classList.add('ngd-fx-armed');
-    if (!hasIO) { footer.classList.add('is-inview'); return; }
+    var root = document.documentElement;
+    if (!hasIO) { root.classList.add('ngd-footer-inview'); return; }
     var io = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
         if (entry.isIntersecting) {
-          footer.classList.add('is-inview');
+          root.classList.add('ngd-footer-inview');
           io.disconnect();
         }
       });
