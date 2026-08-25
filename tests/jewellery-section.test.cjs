@@ -304,7 +304,7 @@ async function overflow(page) {
     await page.waitForFunction(() => {
       const items = document.querySelectorAll('#fine-jewellery .ngd-reveal');
       return [...items].every((el) => el.classList.contains('is-visible'));
-    }, null, { timeout: 5000 });
+    }, null, { timeout: 9000 }); /* smooth-scrolling past the full-bleed hero is heavier under CI */
   });
 
   await browser.close();

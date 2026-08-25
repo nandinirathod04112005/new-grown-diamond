@@ -488,6 +488,103 @@ html.ngd-footer-inview .ngd-footer [class*="col-"]:nth-child(4) { transition-del
 }
 .ngd-cursor-glow.is-on { opacity: 1; }
 
+/* ---------- Cinematic hero stage (homepage) ---------- */
+/* The 3D scene fills the whole hero band; the copy container
+   (z-index 1) and scroll hint sit above it. */
+.ngd-hero3d-stage.ngd-hero-stage-full {
+  position: absolute;
+  inset: 0;
+  max-width: none;
+  aspect-ratio: auto;
+  margin: 0;
+  z-index: 0;
+}
+/* champagne aura follows the diamond's final resting place */
+.ngd-hero-stage-full::before {
+  inset: auto;
+  top: 16%;
+  right: 3%;
+  width: min(46vw, 40rem);
+  aspect-ratio: 1 / 1;
+}
+.ngd-hero-stage-full .ngd-hero-fallback {
+  position: absolute;
+  top: 50%;
+  right: 7%;
+  transform: translateY(-50%);
+  width: min(38vw, 28rem);
+  height: auto;
+}
+@media (max-width: 991.98px) {
+  .ngd-hero-stage-full::before {
+    top: 4%;
+    right: 50%;
+    transform: translateX(50%);
+    width: min(78vw, 21rem);
+  }
+  .ngd-hero-stage-full .ngd-hero-fallback {
+    top: 6%;
+    right: 50%;
+    transform: translateX(50%);
+    width: min(58vw, 15rem);
+  }
+  /* keep the copy readable over the scene on small screens */
+  body[data-ngd-page="home"] .ngd-hero h1,
+  body[data-ngd-page="home"] .ngd-hero .ngd-lead,
+  body[data-ngd-page="home"] .ngd-hero .ngd-eyebrow {
+    text-shadow: 0 2px 26px rgba(4, 7, 14, 0.85);
+  }
+}
+
+/* scroll exit: as the story takes over, the copy dims and lifts
+   (driven per-frame by --ngd-heroexit from the scroll handoff) */
+body[data-ngd-page="home"] .ngd-hero > .container {
+  opacity: calc(1 - var(--ngd-heroexit, 0) * 0.92);
+  transform: translateY(calc(var(--ngd-heroexit, 0) * -20px));
+}
+
+/* ---------- Scroll hint ---------- */
+.ngd-scroll-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 1.5rem;
+  transform: translateX(-50%);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+  text-decoration: none;
+  color: rgba(224, 232, 246, 0.7);
+  font-size: 0.64rem;
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  opacity: calc(1 - var(--ngd-heroexit, 0) * 4);
+  /* 'backwards' only: once the entrance ends, the scroll-driven
+     opacity above must take over (fill:both would pin it at 1) */
+  animation: ngd-hint-in 0.9s ease 2.3s backwards;
+}
+.ngd-scroll-hint:hover,
+.ngd-scroll-hint:focus-visible { color: var(--ngd-gold-soft, #d9c08a); }
+.ngd-scroll-hint-line {
+  width: 1px;
+  height: 2.3rem;
+  background: linear-gradient(180deg, rgba(207, 224, 255, 0.9), transparent);
+  transform-origin: top;
+  animation: ngd-hint-fall 2.8s cubic-bezier(0.33, 0, 0.2, 1) infinite;
+}
+@keyframes ngd-hint-in {
+  0%   { opacity: 0; transform: translate(-50%, 8px); }
+  100% { opacity: 1; transform: translate(-50%, 0); }
+}
+@keyframes ngd-hint-fall {
+  0%   { transform: scaleY(0); opacity: 0; }
+  30%  { opacity: 1; }
+  72%  { transform: scaleY(1); opacity: 0.85; }
+  100% { transform: scaleY(1); opacity: 0; }
+}
+
 /* ---------- Manufacturing focus dim ---------- */
 /* Stages softly dim until active so the journey reads as one
    continuous scene (rail JS already toggles .is-shown).        */
@@ -543,6 +640,9 @@ html.ngd-footer-inview .ngd-footer [class*="col-"]:nth-child(4) { transition-del
   }
   .ngd-footer::before { transform: scaleX(1); transition: none; }
   .ngd-nav .nav-link::after { transition: none; }
+  .ngd-scroll-hint { animation: none; opacity: 0.85; }
+  .ngd-scroll-hint-line { animation: none; transform: scaleY(1); opacity: 0.6; }
+  body[data-ngd-page="home"] .ngd-hero > .container { transform: none; }
   .ngd-abt-rail { transition: none; }
   .ngd-abt-dot { transition: none; }
   .modal.fade .modal-dialog { transform: none; transition: none; }
