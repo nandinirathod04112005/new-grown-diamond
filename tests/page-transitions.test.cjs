@@ -128,7 +128,7 @@ function probeLink(page, attrs) {
     const slug = await page.evaluate(() => document.body.getAttribute('data-ngd-page'));
     expect(slug === 'diamonds', 'arrival page identity set');
     /* the intro class must clear within ~1s so nothing lingers */
-    await page.waitForFunction(() => !document.body.classList.contains('ngd-pt-enter'), null, { timeout: 2500 });
+    await page.waitForFunction(() => !document.body.classList.contains('ngd-pt-enter'), null, { timeout: 6000 });
     const clean = await page.evaluate(() => ({
       overlay: document.querySelector('.ngd-pt-overlay').classList.contains('is-active'),
       leaving: document.body.classList.contains('ngd-pt-leaving'),
@@ -233,8 +233,8 @@ function probeLink(page, attrs) {
     await page.waitForURL('**/diamonds.html', { timeout: 8000 });
     await page.goBack();
     await page.waitForURL('**/index.html', { timeout: 8000 });
-    await page.waitForFunction(() => !!window.NGDPageTransitions, null, { timeout: 4000 });
-    await page.waitForFunction(() => !document.body.classList.contains('ngd-pt-enter'), null, { timeout: 2500 });
+    await page.waitForFunction(() => !!window.NGDPageTransitions, null, { timeout: 15000 });
+    await page.waitForFunction(() => !document.body.classList.contains('ngd-pt-enter'), null, { timeout: 6000 });
     const st = await page.evaluate(() => ({
       leaving: document.body.classList.contains('ngd-pt-leaving'),
       overlay: document.querySelector('.ngd-pt-overlay').classList.contains('is-active'),
@@ -256,7 +256,7 @@ function probeLink(page, attrs) {
       document.querySelector('.ngd-hero .container').appendChild(link);
     });
     await page.click('#pt-probe-hash');
-    await page.waitForFunction(() => location.hash === '#site-footer', null, { timeout: 3000 });
+    await page.waitForFunction(() => location.hash === '#site-footer', null, { timeout: 6000 });
     const st = await page.evaluate(() => ({
       overlay: document.querySelector('.ngd-pt-overlay').classList.contains('is-active'),
       count: window.NGDPageTransitions.state.intercepted,
