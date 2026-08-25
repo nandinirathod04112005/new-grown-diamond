@@ -40,13 +40,20 @@
       return;
     }
 
+    var pending = [];
+    items.forEach(function (el) { pending.push(el); });
+
+    function reveal(el) {
+      el.classList.add('is-visible');
+      observer.unobserve(el);
+      var i = pending.indexOf(el);
+      if (i !== -1) pending.splice(i, 1);
+    }
+
     var observer = new IntersectionObserver(
       function (entries) {
         entries.forEach(function (entry) {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('is-visible');
-            observer.unobserve(entry.target);
-          }
+          if (entry.isIntersecting) reveal(entry.target);
         });
       },
       /* threshold 0 so very tall cards (small screens) still trigger */
@@ -54,6 +61,23 @@
     );
 
     items.forEach(function (el) { observer.observe(el); });
+
+    /* Catch-up pass: a long jump (anchor link, End key, fast fling on a
+       busy frame) can carry content THROUGH the viewport between two
+       sampled frames — the observer never sees it intersect and it
+       would stay hidden above the visitor forever. After scrolling
+       settles, anything at or above the current view reveals. */
+    var settleTimer = null;
+    window.addEventListener('scroll', function () {
+      if (!pending.length) return;
+      clearTimeout(settleTimer);
+      settleTimer = setTimeout(function () {
+        var limit = (window.innerHeight || 0) * 0.94;
+        pending.slice().forEach(function (el) {
+          if (el.getBoundingClientRect().top < limit) reveal(el);
+        });
+      }, 160);
+    }, { passive: true });
   }
 
   /* ---------- 3. Pointer tilt (max ~3deg, mouse only) ----------
