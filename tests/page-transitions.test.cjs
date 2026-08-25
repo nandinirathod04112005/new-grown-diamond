@@ -192,12 +192,21 @@ function probeLink(page, attrs) {
 
   await scenario('double-clicking a link schedules exactly one navigation', {}, async (page) => {
     await open(page, 'index.html');
+    /* the page navigates 520ms after the first click — record the final
+       interception count at pagehide so slow frames can't outrun the read */
+    await page.evaluate(() => {
+      window.addEventListener('pagehide', () => {
+        try {
+          sessionStorage.setItem('ngd-pt-count', String(window.NGDPageTransitions.state.intercepted));
+        } catch (e) { /* ignore */ }
+      });
+    });
     const link = page.locator('.ngd-hero a.ngd-btn-gold[href="diamonds.html"]');
     await link.click();
     await link.click({ force: true }).catch(() => {});
-    const count = await page.evaluate(() => window.NGDPageTransitions.state.intercepted);
-    expect(count === 1, 'second click swallowed while leaving, count=' + count);
     await page.waitForURL('**/diamonds.html', { timeout: 8000 });
+    const count = await page.evaluate(() => sessionStorage.getItem('ngd-pt-count'));
+    expect(count === '1', 'second click swallowed while leaving, count=' + count);
   });
 
   await scenario('reduced motion: no overlay, no delay, functionality identical', { reducedMotion: 'reduce' }, async (page) => {
