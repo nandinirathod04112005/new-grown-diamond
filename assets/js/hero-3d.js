@@ -729,19 +729,20 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
         if (heavyTime > 3.5) { enterStillMode(); return; }
       }
 
-      /* while the visitor is scrolling the hero away, render at half
-         rate — the exit stays smooth and the scroll keeps the budget */
-      frameParity ^= 1;
-      if (scrollP > 0.05 && scrollP < 0.98 && frameParity) return;
-
       if (seqT < SETTLE_T) {
-        seqT += dt * (fastForward ? 6 : 1);
+        seqT += dt * (fastForward ? 10 : 1);
         if (seqT >= SETTLE_T) {
           seqT = SETTLE_T;
           ambientT = Math.max(ambientT, seqT); // fast-forwards land in live ambience
           window.__NGD_HERO_INTRO = 'done';
         }
       }
+
+      /* while the visitor is scrolling the hero away, paint at half
+         rate — bookkeeping above still runs every frame, only the
+         expensive draw is skipped, so the scroll keeps the budget */
+      frameParity ^= 1;
+      if (scrollP > 0.05 && scrollP < 0.98 && frameParity) return;
 
       applyTimeline(seqT, ambientT);
 

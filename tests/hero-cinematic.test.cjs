@@ -158,9 +158,11 @@ function seek(page, t) {
   await scenario('an early scroll never fights the visitor — the intro glides to its end', {}, async (page) => {
     await open(page);
     await page.evaluate(() => window.NGDHero3D.setScroll(0.35));
+    /* ~0.7s on real hardware; software GL may instead reach it via the
+       parked-still fallback — either way it must arrive well inside this */
     await page.waitForFunction(() =>
       window.NGDHero3D.state.settled() && window.__NGD_HERO_INTRO === 'done',
-      null, { timeout: 6000 });
+      null, { timeout: 15000 });
     const dbg = await page.evaluate(async () => {
       window.NGDHero3D.setScroll(0.35); // hold the handoff value for the read
       await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
