@@ -52,7 +52,7 @@
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
-(function () {
+function startHeroFilm() {
   'use strict';
 
   const stage = document.querySelector('[data-ngd-hero3d]');
@@ -581,8 +581,10 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
       const keySweep = span(t, 1.5, 5.9);
       const keyAngle = -1.7 + keySweep * 2.5 + Math.sin(ambientT * 0.2) * 0.18;
       key.position.set(Math.sin(keyAngle) * 3.6, 1.1 + keySweep * 1.9, Math.cos(keyAngle) * 3.2);
-      /* occasional natural facet flash in the ambient loop */
-      const flash = Math.pow(Math.max(0, Math.sin(ambientT * 0.9)), 24) * 0.5;
+      /* occasional natural facet flash — settled ambient loop only,
+         never during the eclipse/first-light scenes */
+      const flash = Math.pow(Math.max(0, Math.sin(ambientT * 0.9)), 24) * 0.5 *
+        span(t, SETTLE_T - 1, SETTLE_T);
       key.intensity = (firstLight * 1.15 + nova * 1.4 + flash) * (1 - scrollP * 0.3);
       warm.intensity = 5.5 * span(t, 2.4, 4.5) + Math.sin(ambientT * 0.27 + 1.3) * 0.7;
       fill.intensity = 3 * span(t, 2.0, 4.0);
@@ -839,4 +841,16 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
     window.__NGD_HERO_MODE = 'static';
     window.__NGD_HERO_ANIMATED = false;
   }
-})();
+}
+
+/* Real-photo mode (hero-real.js) owns the hero when the drop-in
+   asset at assets/images/hero/hero-diamond.webp exists — the WebGL
+   film only starts when that probe comes back empty. */
+const realGate = window.NGDHeroReal;
+if (realGate && realGate.eligible && realGate.ready) {
+  realGate.ready.then(function (active) {
+    if (!active) startHeroFilm();
+  });
+} else {
+  startHeroFilm();
+}

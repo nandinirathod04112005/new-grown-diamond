@@ -34,6 +34,9 @@ async function scenario(name, opts, fn) {
   const pageErrors = [];
   try {
     await installCdnRoutes(context);
+    /* this suite tests the WebGL film — the hero's no-photo fallback —
+       so the shipped hero photograph is withheld deterministically */
+    await context.route('**/assets/images/hero/**', (r) => r.fulfill({ status: 404, body: '' }));
     await context.addInitScript(() => {
       try { sessionStorage.setItem('ngd-auto-explore', 'off'); } catch (e) { /* ok */ }
     });

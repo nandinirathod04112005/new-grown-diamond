@@ -806,3 +806,352 @@ html.ngd-fx-ready .ngd-reveal.is-visible .ngd-divider {
   .modal.fade .modal-dialog { transform: none; transition: none; }
   html.ngd-fx-ready #mfg-process .ngd-story-stage { opacity: 1; transition: none; }
 }
+
+/* ══════════ REAL DIAMOND HERO — photographic hybrid mode ══════════
+   Mounted by assets/js/hero-real.js only when a real diamond cutout
+   exists at assets/images/hero/hero-diamond.webp (see the README in
+   that folder). The WebGL film stands down; the light effects are
+   masked by the photograph itself so sparkle stays inside the stone. */
+
+.ngd-hero.ngd-real-on .ngd-hero3d-stage { display: none; }
+
+.ngd-hero-real {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* Hold the copy cascade for the few hundred ms the mode decision
+   takes (removed again immediately when the WebGL film keeps the
+   hero, so the normal cascade simply plays a beat later). */
+.ngd-hero.ngd-real-maybe.ngd-cine .ngd-cine-item {
+  opacity: 0 !important;
+  transform: translateY(16px) !important;
+}
+/* Real film: the headline owns the ~7 s beat; the CTAs reveal early
+   (and every item stays in the layout, so clicks work throughout). */
+.ngd-hero.ngd-real-on.ngd-cine .ngd-cine-item {
+  transition-delay: calc(var(--ngd-cine-i, 0) * 160ms + 6.9s);
+}
+.ngd-hero.ngd-real-on.ngd-cine .ngd-cine-item.ngd-btn {
+  transition-delay: calc((var(--ngd-cine-i, 0) - 4) * 150ms + 2.7s);
+}
+
+/* ---- atmosphere: sapphire washes + two travelling light beams ---- */
+.ngd-real-atmo {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(120% 90% at 78% 40%, rgba(28, 52, 110, 0.34), transparent 60%),
+    radial-gradient(100% 80% at 15% 85%, rgba(12, 26, 64, 0.5), transparent 65%);
+}
+.ngd-real-atmo::before,
+.ngd-real-atmo::after {
+  content: "";
+  position: absolute;
+  left: -22%;
+  width: 150%;
+  height: 26%;
+  filter: blur(34px);
+  animation: ngd-real-beam 26s ease-in-out infinite alternate;
+}
+.ngd-real-atmo::before {
+  top: 6%;
+  left: 4%;
+  transform: rotate(-16deg);
+  filter: blur(44px);
+  background: linear-gradient(100deg,
+    transparent 18%,
+    rgba(84, 132, 228, 0.08) 46%,
+    rgba(160, 196, 255, 0.04) 62%,
+    transparent 86%);
+}
+.ngd-real-atmo::after {
+  bottom: 6%;
+  transform: rotate(10deg);
+  animation-duration: 34s;
+  animation-delay: -9s;
+  background: linear-gradient(80deg,
+    transparent 15%,
+    rgba(64, 110, 205, 0.09) 45%,
+    transparent 85%);
+}
+@keyframes ngd-real-beam {
+  from { translate: -4% 0; opacity: 0.75; }
+  to   { translate: 5% 0;  opacity: 1; }
+}
+
+/* ---- floor caustics (ice-white webs, stretched by the scroll exit) ---- */
+.ngd-real-caustic {
+  position: absolute;
+  inset: 55% -8% -4% -8%;
+  background:
+    radial-gradient(38% 30% at 70% 62%, rgba(150, 195, 255, 0.11), transparent 70%),
+    radial-gradient(46% 34% at 26% 78%, rgba(110, 160, 250, 0.08), transparent 72%),
+    radial-gradient(20% 16% at 55% 40%, rgba(200, 224, 255, 0.06), transparent 75%);
+  filter: blur(8px);
+  transform: scaleY(calc(1 + var(--ngd-heroexit, 0) * 0.6));
+  transform-origin: 50% 100%;
+  opacity: calc(1 - var(--ngd-heroexit, 0) * 0.4);
+  animation: ngd-real-caustic 44s ease-in-out infinite alternate;
+}
+@keyframes ngd-real-caustic {
+  from { translate: -1.5% 0; }
+  to   { translate: 1.5% 1%; }
+}
+
+/* ---- the eclipse halo, offset behind the seated stone ---- */
+.ngd-real-halo {
+  position: absolute;
+  top: 42%;
+  right: 1%;
+  width: min(48vw, 40rem);
+  aspect-ratio: 1 / 1;
+  transform:
+    translateY(-50%)
+    translateX(calc(var(--halo-x, 0) * 1vw + var(--halo-px, 0) * 1px))
+    scale(calc(var(--halo-s, 0.8) * (1 + var(--ngd-heroexit, 0) * 0.7)));
+  opacity: calc(var(--halo-o, 0) * (1 - var(--ngd-heroexit, 0) * 0.85));
+}
+.ngd-real-halo::before {
+  content: "";
+  position: absolute;
+  inset: 8%;
+  border-radius: 50%;
+  background: radial-gradient(circle,
+    transparent 47%,
+    rgba(104, 156, 255, 0.2) 60%,
+    rgba(150, 190, 255, 0.09) 69%,
+    transparent 78%);
+  filter: blur(16px);
+}
+.ngd-real-settled .ngd-real-halo::before {
+  animation: ngd-real-breathe 6.5s ease-in-out infinite;
+}
+@keyframes ngd-real-breathe {
+  0%, 100% { transform: scale(1); opacity: 0.85; }
+  50% { transform: scale(1.05); opacity: 1; }
+}
+
+/* ---- supporting stones on their own depth layers ---- */
+.ngd-real-field { position: absolute; inset: 0; }
+.ngd-real-support { position: absolute; margin: 0; }
+.ngd-real-support img { display: block; width: 100%; height: auto; }
+
+/* drift paths — every stone travels its own way, its own speed */
+.ngd-real-anim-cross   { animation: ngd-real-cross 34s ease-in-out infinite alternate; }
+.ngd-real-anim-driftup { animation: ngd-real-driftup 46s ease-in-out infinite alternate; }
+.ngd-real-anim-diag    { animation: ngd-real-diag 40s ease-in-out infinite alternate; }
+.ngd-real-anim-deep    { animation: ngd-real-deep 52s ease-in-out infinite alternate; }
+@keyframes ngd-real-cross   { from { translate: -5vw 0; rotate: 0deg; } to { translate: 6vw 1vh; rotate: 10deg; } }
+@keyframes ngd-real-driftup { from { translate: 0 3.5vh; } to { translate: 1.2vw -3.5vh; } }
+@keyframes ngd-real-diag    { from { translate: -3.5vw 2.5vh; rotate: -6deg; } to { translate: 3.5vw -2.5vh; rotate: 5deg; } }
+@keyframes ngd-real-deep    { from { translate: 0 0; scale: 1; } to { translate: 2vw -2vh; scale: 1.09; } }
+/* the foreground stone also swims near/far via its blur depth */
+.ngd-real-s4 img {
+  animation-name: ngd-real-deep, ngd-real-nearfar;
+}
+@keyframes ngd-real-nearfar {
+  0%, 100% { filter: blur(6px); }
+  50% { filter: blur(3px); }
+}
+
+/* ---- the hero photograph: camera-like motion, never a flat spin ---- */
+.ngd-real-main {
+  position: absolute;
+  top: 44%;
+  right: 6%;
+  width: min(42vw, 33rem);
+  transform: translateY(-50%);
+  perspective: 1200px;
+}
+.ngd-real-card {
+  position: relative;
+  transform:
+    translate3d(calc(var(--m-x, 0) * 1vw), calc(var(--m-y, 6) * 1vh + var(--ngd-heroexit, 0) * 15vh), 0)
+    rotateX(calc(var(--m-rx, 0) * 1deg))
+    rotateY(calc(var(--m-ry, 0) * 1deg))
+    scale(calc(var(--m-s, 0.42) * (1 - var(--ngd-heroexit, 0) * 0.14)));
+  transform-origin: 50% 56%;
+  opacity: calc(var(--m-o, 0) * (1 - var(--ngd-heroexit, 0) * 0.68));
+  filter: blur(calc(var(--m-b, 7) * 1px + var(--ngd-heroexit, 0) * 6px));
+  will-change: transform, opacity, filter;
+}
+.ngd-real-float { position: relative; }
+.ngd-real-settled .ngd-real-float {
+  animation: ngd-real-float 9s ease-in-out infinite;
+}
+@keyframes ngd-real-float {
+  0%, 100% { translate: 0 0; rotate: -0.4deg; }
+  50% { translate: 0 -9px; rotate: 0.5deg; }
+}
+.ngd-real-img { display: block; width: 100%; height: auto; }
+.ngd-real-glow {
+  position: absolute;
+  inset: -16%;
+  z-index: -1;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 44%,
+    rgba(214, 228, 255, 0.2),
+    rgba(217, 192, 138, 0.07) 55%,
+    transparent 72%);
+  filter: blur(26px);
+  opacity: calc(0.5 + var(--flash, 0) * 0.9);
+}
+
+/* light effects — masked by the photograph (set from hero-real.js),
+   so the sweep, flash and spectral edge only exist on the stone */
+.ngd-real-sweep,
+.ngd-real-spectral,
+.ngd-real-flash {
+  position: absolute;
+  inset: 0;
+  mix-blend-mode: screen;
+}
+.ngd-real-sweep {
+  background: linear-gradient(105deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.34) 47%,
+    rgba(255, 255, 255, 0.78) 50%,
+    rgba(255, 255, 255, 0.34) 53%,
+    transparent 60%);
+  transform: translateX(calc(var(--sweep, -130) * 1%));
+}
+.ngd-real-settled .ngd-real-sweep {
+  animation: ngd-real-sweep-loop 7.5s ease-in-out infinite;
+}
+@keyframes ngd-real-sweep-loop {
+  0% { transform: translateX(-130%); }
+  9% { transform: translateX(130%); }
+  100% { transform: translateX(130%); }
+}
+.ngd-real-spectral {
+  background: linear-gradient(118deg,
+    rgba(255, 130, 130, 0.16),
+    rgba(140, 190, 255, 0.19) 46%,
+    rgba(255, 224, 160, 0.14) 78%);
+  opacity: var(--spectral, 0);
+}
+.ngd-real-settled .ngd-real-spectral {
+  animation: ngd-real-spectral-loop 11s ease-in-out infinite;
+}
+@keyframes ngd-real-spectral-loop {
+  0%, 100% { opacity: 0.05; }
+  50% { opacity: 0.12; }
+}
+.ngd-real-flash {
+  background: radial-gradient(circle at 46% 36%,
+    rgba(255, 255, 255, 0.95),
+    rgba(205, 224, 255, 0.28) 42%,
+    transparent 68%);
+  opacity: var(--flash, 0);
+}
+.ngd-real-settled .ngd-real-flash {
+  animation: ngd-real-flash-loop 13s linear infinite;
+}
+@keyframes ngd-real-flash-loop {
+  0%, 55%, 63%, 100% { opacity: 0; }
+  58% { opacity: 0.24; }
+}
+
+/* ---- dark-glass reflection + contact shadow under the stone ---- */
+.ngd-real-under {
+  position: absolute;
+  top: 99%;
+  left: 0;
+  right: 0;
+}
+.ngd-real-reflection {
+  display: block;
+  width: 100%;
+  height: auto;
+  transform: scaleY(-1);
+  opacity: 0.15;
+  filter: blur(7px) saturate(0.75);
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.5), transparent 55%);
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.5), transparent 55%);
+}
+.ngd-real-shadow {
+  position: absolute;
+  top: 2%;
+  left: 12%;
+  right: 12%;
+  height: 18%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(2, 6, 14, 0.6), transparent 68%);
+  filter: blur(13px);
+}
+
+/* ---- mobile: full concept, fewer stones, crown-top seat ---- */
+.ngd-real-mobile .ngd-real-main {
+  top: 6%;
+  right: auto;
+  left: 50%;
+  width: min(64vw, 19rem);
+  transform: translateX(-50%);
+}
+.ngd-real-mobile .ngd-real-halo {
+  top: 4%;
+  right: auto;
+  left: 50%;
+  width: min(80vw, 24rem);
+  transform:
+    translateX(calc(-50% + var(--halo-x, 0) * 1vw))
+    scale(calc(var(--halo-s, 0.8) * (1 + var(--ngd-heroexit, 0) * 0.7)));
+}
+.ngd-real-mobile .ngd-real-s2,
+.ngd-real-mobile .ngd-real-s3 { display: none; }
+.ngd-real-mobile .ngd-real-atmo::after { display: none; }
+.ngd-real-mobile .ngd-real-caustic {
+  inset: 62% -8% -4% -8%;
+  filter: blur(10px);
+}
+
+/* every layer rests while the hero is out of view */
+.ngd-real-off .ngd-hero-real *,
+.ngd-real-off .ngd-hero-real *::before,
+.ngd-real-off .ngd-hero-real *::after {
+  animation-play-state: paused !important;
+}
+
+/* ---- section wisps: the real-diamond system beyond the hero ---- */
+.ngd-has-wisps { position: relative; }
+.ngd-has-wisps > .container { position: relative; z-index: 1; }
+.ngd-real-wisps {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.ngd-real-wisps img {
+  position: absolute;
+  height: auto;
+  animation-play-state: paused;
+}
+.ngd-real-wisps.is-live img { animation-play-state: running; }
+
+/* reduced motion: the settled composition, perfectly still */
+@media (prefers-reduced-motion: reduce) {
+  .ngd-hero-real *,
+  .ngd-hero-real *::before,
+  .ngd-hero-real *::after,
+  .ngd-real-wisps img { animation: none !important; }
+  .ngd-hero.ngd-real-maybe.ngd-cine .ngd-cine-item {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* Mobile photographic film: the stone owns the top of the first
+   viewport, the copy anchors below it — no overlap with the crown */
+@media (max-width: 991.98px) {
+  body[data-ngd-page="home"] .ngd-hero.ngd-real-on {
+    min-height: 100vh;
+    min-height: 100svh;
+    align-items: flex-end;
+    padding-bottom: clamp(6rem, 12vh, 8rem);
+  }
+}

@@ -51,6 +51,9 @@ async function scenario(name, opts, fn) {
   const pageErrors = [];
   try {
     await installCdnRoutes(context);
+    /* the film-mode copy cascade is under test — withhold the shipped
+       hero photograph so the WebGL film owns the hero deterministically */
+    await context.route('**/assets/images/hero/**', (r) => r.fulfill({ status: 404, body: '' }));
     await context.addInitScript(() => {
       try { sessionStorage.setItem('ngd-auto-explore', 'off'); } catch (e) { /* ok */ }
     });
