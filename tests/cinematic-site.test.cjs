@@ -387,27 +387,35 @@ function instantScroll(page, expr) {
 
   await scenario('small viewports skip the cursor glow but keep the (lighter) atmosphere', { viewport: { width: 390, height: 780 } }, async (page) => {
     await open(page, 'index.html');
+    await page.waitForFunction(() => !!window.NGDHomeEnv);
     const st = await page.evaluate(() => ({
       glow: !!document.querySelector('.ngd-cursor-glow'),
       ambient: window.NGDCineBG.state.ambient,
       scenes: window.NGDCineBG.state.scenes,
       particles: window.NGDCineBG.layers[0].particles.length,
+      envProfile: window.NGDHomeEnv.state.profile,
+      envSilhouettes: window.NGDHomeEnv.state.layers.silhouettes,
     }));
     expect(!st.glow, 'no cursor glow on the mobile profile');
-    expect(st.ambient && st.scenes === 1, 'atmosphere still present on mobile');
+    expect(!st.ambient, 'the homepage environment owns the backdrop (no generic ambient)');
+    expect(st.scenes === 1, 'hero scene layer still present on mobile');
     expect(st.particles <= 14, 'reduced particle budget on mobile, got ' + st.particles);
+    expect(st.envProfile === 'mobile' && st.envSilhouettes === 2,
+      'simplified mobile environment, got ' + st.envSilhouettes + ' silhouettes');
   });
 
   await scenario('with WebGL unavailable the 2D atmosphere still runs alongside the hero fallback', { disableWebgl: true }, async (page) => {
     await open(page, 'index.html');
+    await page.waitForFunction(() => !!window.NGDHomeEnv);
     await page.waitForTimeout(400);
     const st = await page.evaluate(() => ({
       fallbackVisible: getComputedStyle(document.querySelector('.ngd-hero-fallback')).display !== 'none',
-      ambient: window.NGDCineBG.state.ambient,
       running: window.NGDCineBG.state.running(),
+      env: window.NGDHomeEnv.state.mounted === true,
     }));
     expect(st.fallbackVisible, 'static hero fallback shown');
-    expect(st.ambient && st.running, '2D atmosphere unaffected by the missing WebGL');
+    expect(st.running, 'hero scene layer unaffected by the missing WebGL');
+    expect(st.env, 'the shared 2D environment unaffected by the missing WebGL');
   });
 
   await browser.close();

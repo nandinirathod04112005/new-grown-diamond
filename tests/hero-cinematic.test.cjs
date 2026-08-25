@@ -166,15 +166,16 @@ function seek(page, t) {
     await page.waitForFunction(() =>
       window.NGDHero3D.state.settled() && window.__NGD_HERO_INTRO === 'done',
       null, { timeout: 15000 });
-    const dbg = await page.evaluate(async () => {
-      window.NGDHero3D.setScroll(0.35); // hold the handoff value for the read
-      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
-      return window.NGDHero3D.debug();
+    /* race-proof: set the handoff value and render via seek() inside ONE
+       synchronous evaluate — no other writer can interleave, so the exact
+       dim math (1.12 × (1 − 0.35·0.5) ≈ 0.924) is deterministic */
+    const exposure = await page.evaluate(() => {
+      window.NGDHero3D.setScroll(0.35);
+      window.NGDHero3D.seek(9);
+      return window.NGDHero3D.debug().exposure;
     });
-    /* a late ScrollTrigger refresh can interleave its own (smaller)
-       handoff value between frames — assert the dimming itself, not
-       one exact operand */
-    expect(dbg.exposure < 1.1, 'scroll handoff dims the scene below the 1.12 settle, got ' + dbg.exposure);
+    expect(Math.abs(exposure - 1.12 * 0.825) < 0.05,
+      'scroll handoff dims the settled scene, got ' + exposure);
   });
 
   await scenario('ambient loop: the settled scene keeps living without jumping', {}, async (page) => {
