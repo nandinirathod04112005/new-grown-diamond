@@ -725,8 +725,8 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
          degraded scene blocks the page. Park the film on its settled
          final frame — the premium still — and free the main thread. */
       if (!stillMode) {
-        heavyTime = dt > 0.25 ? heavyTime + dt : 0;
-        if (heavyTime > 3.5) { enterStillMode(); return; }
+        heavyTime = dt > 0.22 ? heavyTime + dt : 0;
+        if (heavyTime > 2.2) { enterStillMode(); return; }
       }
 
       if (seqT < SETTLE_T) {
@@ -739,10 +739,12 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
       }
 
       /* while the visitor is scrolling the hero away, paint at half
-         rate — bookkeeping above still runs every frame, only the
-         expensive draw is skipped, so the scroll keeps the budget */
-      frameParity ^= 1;
-      if (scrollP > 0.05 && scrollP < 0.98 && frameParity) return;
+         rate (quarter rate once degraded) — bookkeeping above still
+         runs every frame, only the expensive draw is skipped, so the
+         scroll keeps the frame budget */
+      frameParity = (frameParity + 1) & 3;
+      if (scrollP > 0.05 && scrollP < 0.98 &&
+          (degraded ? frameParity !== 0 : (frameParity & 1) !== 0)) return;
 
       applyTimeline(seqT, ambientT);
 
