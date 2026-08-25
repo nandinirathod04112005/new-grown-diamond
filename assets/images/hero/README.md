@@ -4,9 +4,12 @@ The homepage hero runs in **photographic mode** the moment a real
 diamond cutout exists in this folder. No code changes are needed:
 `assets/js/hero-real.js` probes for the files below on every load.
 
-While this folder holds no main cutout, the hero automatically keeps
-the WebGL diamond film instead — the site never shows a broken image
-and no placeholder pretends to be a photograph.
+The folder currently ships `hero-diamond.webp` — a 754×541 cutout
+extracted from the reference frame supplied for this site. Replace it
+with a higher-resolution licensed original whenever one is available
+(≥ 1400 px recommended); nothing else needs to change. If the file is
+ever removed, the hero automatically falls back to the WebGL diamond
+film — the site never shows a broken image.
 
 ## The one file that switches the hero over
 

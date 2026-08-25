@@ -61,6 +61,11 @@ async function scenario(name, opts, fn) {
         }
         return r.fulfill({ status: 404, contentType: 'text/plain', body: 'not found' });
       });
+    } else if (!opts.repoAssets) {
+      /* the repo ships a real hero photograph — withhold it so the
+         "no asset" scenarios stay meaningful; repoAssets: true lets
+         the committed file through untouched */
+      await context.route('**/assets/images/hero/**', (r) => r.fulfill({ status: 404, contentType: 'text/plain', body: 'not found' }));
     }
     const page = await context.newPage();
     page.on('pageerror', (e) => pageErrors.push(String(e)));
@@ -144,6 +149,22 @@ function seekR(page, t) {
     expect(st.mainLoaded, 'the main photograph decoded');
     expect(st.layers.atmo && st.layers.caustic && st.layers.halo && st.layers.glow && st.layers.shadow,
       'atmosphere, caustics, halo, glow and shadow layers all mount');
+  });
+
+  await scenario('the committed repo photograph activates photographic mode end to end', { repoAssets: true }, async (page) => {
+    await openReal(page);
+    const st = await page.evaluate(() => {
+      const img = document.querySelector('.ngd-real-img');
+      return {
+        src: img.getAttribute('src'),
+        w: img.naturalWidth,
+        h: img.naturalHeight,
+        supports: window.NGDHeroReal.state.assets().supports,
+      };
+    });
+    expect(/hero-diamond\.webp$/.test(st.src), 'the shipped file is the one probed');
+    expect(st.w > 600 && st.h > 400, 'the real photograph decoded at full size, got ' + st.w + 'x' + st.h);
+    expect(st.supports === 4, 'the supporting field reuses the photograph');
   });
 
   await scenario('dedicated supporting files are used, missing ones fall back to the main cutout', { assets: ['hero-diamond.webp', 'diamond-2.webp'] }, async (page) => {
