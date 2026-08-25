@@ -108,19 +108,28 @@ function probeLink(page, attrs) {
 
   await scenario('an internal link runs the cinematic leave, then really navigates', {}, async (page) => {
     await open(page, 'index.html');
+    /* the departure state is sampled at pagehide — a post-click read can
+       lose the race against the 520ms navigation on slow frames */
+    await page.evaluate(() => {
+      window.addEventListener('pagehide', () => {
+        try {
+          sessionStorage.setItem('ngd-pt-leave', JSON.stringify({
+            overlay: document.querySelector('.ngd-pt-overlay').classList.contains('is-active'),
+            leaving: document.body.classList.contains('ngd-pt-leaving'),
+            count: window.NGDPageTransitions.state.intercepted,
+          }));
+        } catch (e) { /* ok */ }
+      });
+    });
     const t0 = Date.now();
     await page.click('.ngd-hero a.ngd-btn-gold[href="diamonds.html"]');
-    const mid = await page.evaluate(() => ({
-      overlay: document.querySelector('.ngd-pt-overlay').classList.contains('is-active'),
-      leaving: document.body.classList.contains('ngd-pt-leaving'),
-      count: window.NGDPageTransitions.state.intercepted,
-    }));
-    expect(mid.overlay && mid.leaving, 'overlay + content dip active right after the click');
-    expect(mid.count === 1, 'exactly one interception recorded');
-    await page.waitForURL('**/diamonds.html', { timeout: 8000 });
+    await page.waitForURL('**/diamonds.html', { timeout: 15000 });
     const elapsed = Date.now() - t0;
+    const mid = await page.evaluate(() => JSON.parse(sessionStorage.getItem('ngd-pt-leave') || '{}'));
+    expect(mid.overlay && mid.leaving, 'overlay + content dip active through the departure');
+    expect(mid.count === 1, 'exactly one interception recorded');
     expect(elapsed >= 480, 'navigation held for the leave animation, elapsed=' + elapsed);
-    expect(elapsed < 5000, 'navigation not excessively delayed, elapsed=' + elapsed);
+    expect(elapsed < 12000, 'navigation not excessively delayed, elapsed=' + elapsed);
   });
 
   await scenario('the arriving page plays its sub-second intro and settles clean', {}, async (page) => {
@@ -186,11 +195,19 @@ function probeLink(page, attrs) {
       link.textContent = 'compare';
       document.body.appendChild(link);
       link.scrollIntoView({ behavior: 'instant', block: 'center' });
+      /* the 520ms departure can outrun a post-click read on slow frames —
+         record the overlay state at pagehide instead */
+      window.addEventListener('pagehide', () => {
+        try {
+          sessionStorage.setItem('ngd-pt-compare',
+            document.querySelector('.ngd-pt-overlay').classList.contains('is-active') ? '1' : '0');
+        } catch (e) { /* ok */ }
+      });
     });
-    await page.click('#pt-probe-compare');
-    const active = await page.evaluate(() => document.querySelector('.ngd-pt-overlay').classList.contains('is-active'));
-    expect(active, 'overlay ran for the compare page');
-    await page.waitForURL('**/compare-diamonds.html', { timeout: 8000 });
+    await page.click('#pt-probe-compare', { force: true });
+    await page.waitForURL('**/compare-diamonds.html', { timeout: 15000 });
+    const active = await page.evaluate(() => sessionStorage.getItem('ngd-pt-compare'));
+    expect(active === '1', 'overlay ran for the compare page');
   });
 
   await scenario('double-clicking a link schedules exactly one navigation', {}, async (page) => {

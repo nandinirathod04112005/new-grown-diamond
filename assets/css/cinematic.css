@@ -585,6 +585,23 @@ body[data-ngd-page="home"] .ngd-hero > .container {
   100% { transform: scaleY(1); opacity: 0; }
 }
 
+/* ---------- Divider grow-in (design-system motion) ---------- */
+/* The gold rules under headings draw themselves as their block
+   reveals — a quiet signature across every page. */
+html.ngd-fx-ready .ngd-reveal .ngd-divider {
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.2s;
+}
+html.ngd-fx-ready .ngd-reveal .ngd-divider.ngd-divider-center,
+html.ngd-fx-ready .ngd-reveal .mx-auto.ngd-divider,
+html.ngd-fx-ready .ngd-reveal .ngd-divider.mx-auto {
+  transform-origin: center;
+}
+html.ngd-fx-ready .ngd-reveal.is-visible .ngd-divider {
+  transform: scaleX(1);
+}
+
 /* ---------- Auto Explore (hybrid navigation) ---------- */
 .ngd-auto-toggle {
   position: fixed;

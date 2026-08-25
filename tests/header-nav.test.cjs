@@ -88,7 +88,11 @@ async function openMenu(page) {
     await page.goto(`${SITE}/index.html`, { waitUntil: 'networkidle' });
     const before = await page.$eval('.ngd-navbar', (n) => n.classList.contains('is-scrolled'));
     await page.evaluate(() => window.scrollTo(0, 300));
-    await page.waitForTimeout(250);
+    /* the hero renders heavy frames under software GL — wait for the
+       scroll listener to run rather than sampling a fixed beat later */
+    await page.waitForFunction(() =>
+      document.querySelector('.ngd-navbar').classList.contains('is-scrolled'),
+      null, { timeout: 6000 });
     const after = await page.$eval('.ngd-navbar', (n) => n.classList.contains('is-scrolled'));
     expect(!before && after, `glass toggles: before=${before} after=${after}`);
   });
