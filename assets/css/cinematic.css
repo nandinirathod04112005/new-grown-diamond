@@ -585,6 +585,53 @@ body[data-ngd-page="home"] .ngd-hero > .container {
   100% { transform: scaleY(1); opacity: 0; }
 }
 
+/* ---------- Continuous homepage environment ---------- */
+/* Once the shared background mounts (html.ngd-env-on), the dark
+   homepage sections hand their backdrop to the canvas so the whole
+   page reads as one travelling environment. Without JS / under
+   reduced motion the original section gradients simply remain. */
+html.ngd-env-on body[data-ngd-page="home"] .ngd-hero,
+html.ngd-env-on body[data-ngd-page="home"] #featured-diamonds,
+html.ngd-env-on body[data-ngd-page="home"] #manufacturing-story,
+html.ngd-env-on body[data-ngd-page="home"] .ngd-footer {
+  background: transparent;
+}
+html.ngd-env-on body[data-ngd-page="home"] #featured-diamonds::before,
+html.ngd-env-on body[data-ngd-page="home"] #manufacturing-story::before {
+  display: none; /* the environment blends the chapters itself */
+}
+/* light chapters float as translucent panels over the bright
+   crystal state of the environment */
+html.ngd-env-on body[data-ngd-page="home"] #diamond-shapes,
+html.ngd-env-on body[data-ngd-page="home"] #recently-viewed {
+  background: rgba(244, 242, 238, 0.9);
+}
+
+/* Fine Jewellery becomes the black / champagne studio on the
+   homepage — dark vitrine cards with a lit pearl display niche.
+   (Styled unconditionally so the look holds without the canvas.) */
+body[data-ngd-page="home"] #fine-jewellery {
+  background-color: #0d0a07;
+  background-image:
+      radial-gradient(46rem 24rem at 18% 8%, rgba(217, 192, 138, 0.14), transparent 60%),
+      radial-gradient(40rem 22rem at 88% 96%, rgba(255, 244, 224, 0.05), transparent 55%);
+  color: #f4f2ee;
+}
+html.ngd-env-on body[data-ngd-page="home"] #fine-jewellery {
+  background-color: transparent;
+  background-image: none;
+}
+body[data-ngd-page="home"] #fine-jewellery .ngd-lead { color: rgba(244, 242, 238, 0.72); }
+body[data-ngd-page="home"] #fine-jewellery .ngd-eyebrow { color: var(--ngd-gold-soft, #d9c08a); }
+body[data-ngd-page="home"] #fine-jewellery .ngd-jewel-card {
+  background: rgba(18, 14, 9, 0.72);
+  border: 1px solid rgba(217, 192, 138, 0.2);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+}
+body[data-ngd-page="home"] #fine-jewellery .ngd-jewel-name { color: #f4f2ee; }
+body[data-ngd-page="home"] #fine-jewellery .ngd-jewel-desc { color: rgba(244, 242, 238, 0.62); }
+
 /* ---------- Divider grow-in (design-system motion) ---------- */
 /* The gold rules under headings draw themselves as their block
    reveals — a quiet signature across every page. */

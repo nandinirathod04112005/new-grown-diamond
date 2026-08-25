@@ -213,7 +213,7 @@
 
   function mountAmbient() {
     var variant = document.body.getAttribute('data-ngd-cinebg');
-    if (!variant) return;
+    if (!variant || variant === 'none') return; // a page-level environment owns the backdrop
 
     var wrap = document.createElement('div');
     wrap.className = 'ngd-cinebg-fixed';
