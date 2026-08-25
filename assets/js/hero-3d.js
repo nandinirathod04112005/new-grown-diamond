@@ -137,8 +137,40 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
     const camera = new THREE.PerspectiveCamera(36, 1, 0.1, 60);
     camera.position.set(0, 0.3, 6.4);
 
+    /* Jewellery-studio environment: the bright neutral RoomEnvironment
+       keeps the stone luminous and icy-white, and tall light strips
+       added into it give the directional flashes a gemstone needs —
+       facets fire as the environment slowly rotates, instead of
+       averaging to an even grey. */
+    function makeStudioEnv() {
+      const room = new RoomEnvironment();
+      function strip(w, h, x, y, z, ry, color) {
+        const mesh = new THREE.Mesh(
+          new THREE.PlaneGeometry(w, h),
+          new THREE.MeshBasicMaterial({ color: color })
+        );
+        mesh.position.set(x, y, z);
+        mesh.rotation.y = ry;
+        room.add(mesh);
+        return mesh;
+      }
+      strip(3.0, 10, -6, 2, 0, Math.PI / 2, 0xffffff);   // tall ice key, left
+      strip(2.0, 10, 6, 1, -1, -Math.PI / 2, 0xdfe8ff);  // cool rim, right
+      strip(0.8, 8, 2.5, 2, 6, Math.PI, 0xf0debc);       // narrow champagne accent
+      return room;
+    }
+
     const pmrem = new THREE.PMREMGenerator(renderer);
-    scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+    try {
+      const studio = makeStudioEnv();
+      scene.environment = pmrem.fromScene(studio, 0.04).texture;
+      studio.traverse(function (obj) {
+        if (obj.geometry) obj.geometry.dispose();
+        if (obj.material) obj.material.dispose();
+      });
+    } catch (envErr) {
+      scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+    }
     pmrem.dispose();
     const envRotation = new THREE.Euler();
     const supportsEnvRotation = 'environmentRotation' in scene;
@@ -179,16 +211,18 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
       transmission: 0.88,
       ior: 2.42,
       thickness: 2.2,
-      attenuationColor: new THREE.Color(0xf0debc),
-      attenuationDistance: 1.8,
+      attenuationColor: new THREE.Color(0xdfeaff), // icy crystal core
+      attenuationDistance: 2.2,
       clearcoat: 1.0,
       clearcoatRoughness: 0.03,
       iridescence: 0.28,
       iridescenceIOR: 1.9,
       specularIntensity: 1.2,
-      envMapIntensity: 2.2,
+      envMapIntensity: 1.9,
       flatShading: true
     }));
+    /* spectral fire where the renderer supports it (three r166+) */
+    if ('dispersion' in material) material.dispersion = 3.5;
 
     /* ================= hero diamond (travels the scene) ================= */
     const heroGroup = new THREE.Group();  // timeline position
@@ -363,14 +397,34 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
       beams.push({ mesh: mesh, mat: mat, drift: i === 0 ? 0.22 : -0.16, base: i === 0 ? 0.16 : 0.1 });
     }
 
+    /* a wide, whisper-soft shaft from the upper right — the volumetric
+       "showroom spotlight" behind the composition (desktop only) */
+    if (!isMobile) {
+      const shaftMat = track(new THREE.MeshBasicMaterial({
+        map: beamTexture(),
+        transparent: true,
+        opacity: 0,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        fog: false
+      }));
+      const shaft = new THREE.Mesh(track(new THREE.PlaneGeometry(16, 3.4)), shaftMat);
+      shaft.position.set(2.8, 1.6, -8.5);
+      shaft.rotation.z = -0.9;
+      scene.add(shaft);
+      beams.push({ mesh: shaft, mat: shaftMat, drift: 0.06, base: 0.055 });
+    }
+
     /* ================= living backdrop ================= */
     function backdropTexture() {
       const c = document.createElement('canvas');
       c.width = c.height = 256;
       const ctx = c.getContext('2d');
-      const g = ctx.createRadialGradient(150, 96, 10, 128, 128, 190);
-      g.addColorStop(0, '#16233f');
-      g.addColorStop(0.45, '#0c1428');
+      /* deep sapphire glow behind the stone's seat — the pavilion
+         refracts it, giving the reference's blue-through-crystal read */
+      const g = ctx.createRadialGradient(164, 104, 10, 128, 128, 190);
+      g.addColorStop(0, '#1d3765');
+      g.addColorStop(0.45, '#0e1c3c');
       g.addColorStop(1, '#05070f');
       ctx.fillStyle = g;
       ctx.fillRect(0, 0, 256, 256);
@@ -384,6 +438,37 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
     );
     backdrop.position.set(0, 0, -14);
     scene.add(backdrop);
+
+    /* the luminous sapphire floor beneath the stone's seat — the
+       reference's glowing reflective surface */
+    function floorTexture() {
+      const c = document.createElement('canvas');
+      c.width = 256; c.height = 128;
+      const ctx = c.getContext('2d');
+      const g = ctx.createRadialGradient(128, 64, 6, 128, 64, 120);
+      g.addColorStop(0, 'rgba(70,110,190,0.9)');
+      g.addColorStop(0.5, 'rgba(30,54,110,0.45)');
+      g.addColorStop(1, 'rgba(10,18,40,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, 256, 128);
+      const tex = new THREE.CanvasTexture(c);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      return track(tex);
+    }
+    const floorGlow = new THREE.Mesh(
+      track(new THREE.PlaneGeometry(30, 14)),
+      track(new THREE.MeshBasicMaterial({
+        map: floorTexture(),
+        transparent: true,
+        opacity: 0,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        fog: false
+      }))
+    );
+    floorGlow.rotation.x = -Math.PI / 2;
+    floorGlow.position.set(isMobile ? 0 : 1.6, -2.05, -2.5);
+    scene.add(floorGlow);
 
     /* ================= crystal dust ================= */
     function makeSprite() {
@@ -430,6 +515,31 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
     const cloudA = makeCloud(isMobile ? 24 : 64, 0.075);
     const cloudB = makeCloud(isMobile ? 16 : 44, 0.045);
+
+    /* low bokeh lights along the floor line — big, soft, sparse */
+    function makeBokeh(count) {
+      const positions = new Float32Array(count * 3);
+      for (let i = 0; i < count; i++) {
+        positions[i * 3] = -4 + Math.random() * 11;
+        positions[i * 3 + 1] = -2.0 + Math.random() * 0.9;
+        positions[i * 3 + 2] = -2 + Math.random() * 5.2;
+      }
+      const geo = track(new THREE.BufferGeometry());
+      geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      const mat = track(new THREE.PointsMaterial({
+        size: 0.5,
+        map: sprite,
+        transparent: true,
+        opacity: 0,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+        sizeAttenuation: true
+      }));
+      const points = new THREE.Points(geo, mat);
+      scene.add(points);
+      return points;
+    }
+    const bokeh = makeBokeh(isMobile ? 6 : 12);
 
     /* ================= camera path ================= */
     const camKeys = isMobile
@@ -578,11 +688,17 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
       cloudA.scale.setScalar(converge);
       cloudB.scale.setScalar(converge);
 
+      /* the floor lights come up as the stone takes its seat */
+      const seatGlow = span(t, 5.5, SETTLE_T) * (1 - scrollP);
+      floorGlow.material.opacity = 0.34 * seatGlow * (0.85 + 0.15 * Math.sin(ambientT * 0.24));
+      bokeh.material.opacity = 0.16 * seatGlow * (0.75 + 0.25 * Math.sin(ambientT * 0.5 + 1));
+      bokeh.rotation.y = ambientT * 0.01;
+
       /* --- scroll exit: dim, drift up, hand the diamond to the story --- */
       heroGroup.scale.setScalar(1 - scrollP * 0.16);
       tiltGroup.position.y = scrollP * 0.85;
-      /* the mirror only reads once the stone reaches its resting place */
-      reflection.material.opacity = 0.08 * span(t, 6.2, SETTLE_T) * (1 - scrollP * 0.5);
+      /* the glass-floor mirror only reads once the stone settles */
+      reflection.material.opacity = 0.13 * span(t, 6.2, SETTLE_T) * (1 - scrollP * 0.5);
     }
 
     /* ================= public API ================= */
