@@ -91,6 +91,38 @@
 
   <!-- ══════════ 3D HERO ══════════ -->
   <header class="ngd-hero ngd-section-dark" data-ngd-cinebg-scene="streak">
+    <div class="ngd-hero3d-stage ngd-hero-stage-full" data-ngd-hero3d>
+        <!-- Static fallback — hidden automatically once WebGL renders -->
+        <svg class="ngd-hero-fallback" viewBox="0 0 200 200" role="img"
+         aria-label="Faceted lab-grown diamond">
+          <defs>
+        <linearGradient id="ngdDiaCrown" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#fdfbf5"/>
+          <stop offset="1" stop-color="#cfae6e"/>
+        </linearGradient>
+        <linearGradient id="ngdDiaPavilion" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#ffffff"/>
+          <stop offset="0.55" stop-color="#e9dcc0"/>
+          <stop offset="1" stop-color="#b48c47"/>
+        </linearGradient>
+        <radialGradient id="ngdDiaGlow" cx="0.5" cy="0.45" r="0.5">
+          <stop offset="0" stop-color="rgba(217,192,138,0.35)"/>
+          <stop offset="1" stop-color="rgba(217,192,138,0)"/>
+        </radialGradient>
+          </defs>
+          <circle cx="100" cy="96" r="92" fill="url(#ngdDiaGlow)"/>
+          <polygon points="62,58 138,58 170,92 30,92" fill="url(#ngdDiaCrown)"/>
+          <polygon points="30,92 170,92 100,172" fill="url(#ngdDiaPavilion)"/>
+          <path d="M62 58 L78 74 L122 74 L138 58 M78 74 L30 92 M122 74 L170 92 M78 74 L122 74"
+            stroke="rgba(255,255,255,0.55)" stroke-width="1" fill="none"/>
+          <path d="M65 92 L100 172 M100 92 L100 172 M135 92 L100 172"
+            stroke="rgba(255,255,255,0.4)" stroke-width="1" fill="none"/>
+          <path d="M158 34 l2.4 6.2 6.2 2.4 -6.2 2.4 -2.4 6.2 -2.4 -6.2 -6.2 -2.4 6.2 -2.4 Z"
+            fill="#e9dcc0" opacity="0.9"/>
+          <path d="M38 44 l1.7 4.3 4.3 1.7 -4.3 1.7 -1.7 4.3 -1.7 -4.3 -4.3 -1.7 4.3 -1.7 Z"
+            fill="#d9c08a" opacity="0.7"/>
+        </svg>
+      </div>
     <div class="container">
       <div class="row align-items-center g-4 g-lg-5">
 
@@ -110,43 +142,15 @@
           </div>
         </div>
 
-        <div class="col-lg-6 order-1 order-lg-2">
-          <div class="ngd-hero3d-stage" data-ngd-hero3d>
-            <!-- Static fallback — hidden automatically once WebGL renders -->
-            <svg class="ngd-hero-fallback" viewBox="0 0 200 200" role="img"
-                 aria-label="Faceted lab-grown diamond">
-              <defs>
-                <linearGradient id="ngdDiaCrown" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0" stop-color="#fdfbf5"/>
-                  <stop offset="1" stop-color="#cfae6e"/>
-                </linearGradient>
-                <linearGradient id="ngdDiaPavilion" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0" stop-color="#ffffff"/>
-                  <stop offset="0.55" stop-color="#e9dcc0"/>
-                  <stop offset="1" stop-color="#b48c47"/>
-                </linearGradient>
-                <radialGradient id="ngdDiaGlow" cx="0.5" cy="0.45" r="0.5">
-                  <stop offset="0" stop-color="rgba(217,192,138,0.35)"/>
-                  <stop offset="1" stop-color="rgba(217,192,138,0)"/>
-                </radialGradient>
-              </defs>
-              <circle cx="100" cy="96" r="92" fill="url(#ngdDiaGlow)"/>
-              <polygon points="62,58 138,58 170,92 30,92" fill="url(#ngdDiaCrown)"/>
-              <polygon points="30,92 170,92 100,172" fill="url(#ngdDiaPavilion)"/>
-              <path d="M62 58 L78 74 L122 74 L138 58 M78 74 L30 92 M122 74 L170 92 M78 74 L122 74"
-                    stroke="rgba(255,255,255,0.55)" stroke-width="1" fill="none"/>
-              <path d="M65 92 L100 172 M100 92 L100 172 M135 92 L100 172"
-                    stroke="rgba(255,255,255,0.4)" stroke-width="1" fill="none"/>
-              <path d="M158 34 l2.4 6.2 6.2 2.4 -6.2 2.4 -2.4 6.2 -2.4 -6.2 -6.2 -2.4 6.2 -2.4 Z"
-                    fill="#e9dcc0" opacity="0.9"/>
-              <path d="M38 44 l1.7 4.3 4.3 1.7 -4.3 1.7 -1.7 4.3 -1.7 -4.3 -4.3 -1.7 4.3 -1.7 Z"
-                    fill="#d9c08a" opacity="0.7"/>
-            </svg>
-          </div>
+        </div>
         </div>
 
       </div>
     </div>
+    <a class="ngd-scroll-hint" href="#diamond-shapes">
+      <span class="ngd-scroll-hint-label">Scroll to discover</span>
+      <span class="ngd-scroll-hint-line" aria-hidden="true"></span>
+    </a>
   </header>
 
   <!-- ══════════ DIAMOND SHAPES ══════════ -->

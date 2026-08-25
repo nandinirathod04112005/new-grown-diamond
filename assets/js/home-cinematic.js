@@ -139,6 +139,8 @@
     if (!heroSection || reduced) return;
     onProgress(heroSection, function (p) {
       state.heroScroll = p;
+      /* copy + scroll hint fade/lift as the visitor leaves the hero */
+      heroSection.style.setProperty('--ngd-heroexit', p.toFixed(3));
       if (window.NGDHero3D && typeof window.NGDHero3D.setScroll === 'function') {
         window.NGDHero3D.setScroll(p);
       }
