@@ -490,6 +490,8 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
     let seqT = 0;
     let scrollP = 0;
     let fastForward = false;
+    let stillMode = false;      // catastrophic-renderer fallback: parked film
+    let stillRenderQueued = false;
     window.__NGD_HERO_INTRO = 'pending';
 
     const scratch = new THREE.Vector3();
@@ -589,6 +591,15 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
         scrollP = Math.min(1, Math.max(0, p));
         /* never fight an early scroll: glide the intro to its end */
         if (scrollP > 0.03 && seqT < SETTLE_T) fastForward = true;
+        /* in parked-still mode there is no loop — repaint per scroll,
+           throttled to one frame */
+        if (stillMode && !stillRenderQueued) {
+          stillRenderQueued = true;
+          requestAnimationFrame(function () {
+            stillRenderQueued = false;
+            renderFrame();
+          });
+        }
       },
       /** jump the cinematic timeline to `sec` (deterministic — tests, debug) */
       seek(sec) {
@@ -601,6 +612,7 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
         profile: window.__NGD_HERO_PROFILE,
         t: () => seqT,
         settled: () => seqT >= SETTLE_T,
+        stillMode: () => stillMode,
         objects: {
           hero: 1,
           secondaries: secondaries.length,
@@ -681,10 +693,23 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
     let slowTime = 0;
     let degraded = false;
     let frameParity = 0;
+    let heavyTime = 0;
+
+    function enterStillMode() {
+      stillMode = true;
+      renderer.setAnimationLoop(null);
+      seqT = Math.max(seqT, SETTLE_T);
+      ambientT = Math.max(ambientT, seqT);
+      window.__NGD_HERO_INTRO = 'done';
+      renderFrame();
+    }
 
     renderer.setAnimationLoop(function () {
       if (document.hidden || !inView) { clock.getDelta(); return; }
-      const dt = Math.min(clock.getDelta(), 0.1);
+      /* the choreography follows WALL time — slow renderers drop
+         frames rather than stretching the film (0.5s cap absorbs
+         tab-hide resumes and giant hiccups) */
+      const dt = Math.min(clock.getDelta(), 0.5);
       ambientT += dt;
 
       if (!degraded) {
@@ -694,6 +719,14 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
           renderer.setPixelRatio(Math.min(renderer.getPixelRatio(), 1) * 0.8);
           resize();
         }
+      }
+
+      /* catastrophic renderers (software GL, ancient GPUs): even the
+         degraded scene blocks the page. Park the film on its settled
+         final frame — the premium still — and free the main thread. */
+      if (!stillMode) {
+        heavyTime = dt > 0.25 ? heavyTime + dt : 0;
+        if (heavyTime > 3.5) { enterStillMode(); return; }
       }
 
       /* while the visitor is scrolling the hero away, render at half
