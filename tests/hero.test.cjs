@@ -177,7 +177,10 @@ async function waitHeroMode(page, mode) {
         getComputedStyle(document.querySelector('.ngd-hero-fallback')).display !== 'none',
       headline: !!document.querySelector('.ngd-hero h1'),
     }));
-    expect(state.mode === undefined, 'hero module never ran');
+    /* hero-real.js (a classic script) still sets the 'static' baseline
+       even when the three.js module import is blocked */
+    expect(state.mode === undefined || state.mode === 'static',
+      'no WebGL film without three.js, got ' + state.mode);
     expect(!state.canvas && state.fallbackVisible, 'SVG fallback shown');
     expect(state.headline, 'hero content unaffected');
   });

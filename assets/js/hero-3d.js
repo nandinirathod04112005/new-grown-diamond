@@ -52,7 +52,7 @@
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
-(function () {
+function startHeroFilm() {
   'use strict';
 
   const stage = document.querySelector('[data-ngd-hero3d]');
@@ -839,4 +839,16 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
     window.__NGD_HERO_MODE = 'static';
     window.__NGD_HERO_ANIMATED = false;
   }
-})();
+}
+
+/* Real-photo mode (hero-real.js) owns the hero when the drop-in
+   asset at assets/images/hero/hero-diamond.webp exists — the WebGL
+   film only starts when that probe comes back empty. */
+const realGate = window.NGDHeroReal;
+if (realGate && realGate.eligible && realGate.ready) {
+  realGate.ready.then(function (active) {
+    if (!active) startHeroFilm();
+  });
+} else {
+  startHeroFilm();
+}

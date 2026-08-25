@@ -170,6 +170,9 @@
   }
 
   function heroReady() {
+    if (window.NGDHeroReal && window.NGDHeroReal.active) {
+      return window.NGDHeroReal.state.settled(); // photographic hero film
+    }
     if (window.NGDHero3D && window.NGDHero3D.state && typeof window.NGDHero3D.state.settled === 'function') {
       return window.NGDHero3D.state.settled();
     }
