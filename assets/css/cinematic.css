@@ -913,8 +913,8 @@ html.ngd-fx-ready .ngd-reveal.is-visible .ngd-divider {
 .ngd-real-halo {
   position: absolute;
   top: 42%;
-  right: 1%;
-  width: min(48vw, 40rem);
+  right: 0;
+  width: min(52vw, 44rem);
   aspect-ratio: 1 / 1;
   transform:
     translateY(-50%)
@@ -946,8 +946,8 @@ html.ngd-fx-ready .ngd-reveal.is-visible .ngd-divider {
 .ngd-real-arcs {
   position: absolute;
   top: 46%;
-  right: -1%;
-  width: min(52vw, 44rem);
+  right: -2%;
+  width: min(56vw, 47rem);
   aspect-ratio: 1 / 1;
   transform:
     translateY(-50%)
@@ -961,46 +961,63 @@ html.ngd-fx-ready .ngd-reveal.is-visible .ngd-divider {
   border-radius: 50%;
   background: conic-gradient(from 40deg,
     transparent 0 52%,
-    rgba(233, 206, 152, 0.08) 62%,
-    rgba(233, 206, 152, 0.28) 73%,
-    rgba(255, 244, 219, 0.09) 82%,
+    rgba(236, 210, 156, 0.14) 62%,
+    rgba(240, 214, 158, 0.5) 73%,
+    rgba(255, 246, 224, 0.16) 82%,
     transparent 92%);
   -webkit-mask-image: radial-gradient(closest-side,
     transparent 58%, rgba(0, 0, 0, 0.5) 66%, #000 71%, rgba(0, 0, 0, 0.5) 77%, transparent 84%);
   mask-image: radial-gradient(closest-side,
     transparent 58%, rgba(0, 0, 0, 0.5) 66%, #000 71%, rgba(0, 0, 0, 0.5) 77%, transparent 84%);
-  filter: blur(7px);
+  filter: blur(5px);
   transform: rotateX(58deg) rotate(0deg);
-  animation: ngd-real-arcspin 48s linear infinite;
+  animation: ngd-real-arcspin 32s linear infinite;
 }
 .ngd-real-arc-b {
   inset: -20%;
-  opacity: 0.55;
+  opacity: 0.6;
   background: conic-gradient(from 210deg,
     transparent 0 56%,
-    rgba(226, 196, 140, 0.06) 66%,
-    rgba(226, 196, 140, 0.2) 76%,
-    rgba(214, 222, 250, 0.07) 84%,
+    rgba(228, 199, 144, 0.1) 66%,
+    rgba(228, 199, 144, 0.34) 76%,
+    rgba(214, 222, 250, 0.12) 84%,
     transparent 93%);
-  animation-duration: 70s;
+  animation-duration: 48s;
   animation-direction: reverse;
 }
-/* a thin crisp light trail riding the same orbit */
+/* thin crisp light trails riding the orbit — the reference's bright
+   golden ribbons */
 .ngd-real-arc-c {
   inset: 2%;
-  opacity: 0.85;
+  opacity: 0.95;
   background: conic-gradient(from 130deg,
-    transparent 0 78%,
-    rgba(240, 216, 166, 0.4) 84%,
-    rgba(255, 248, 230, 0.6) 87%,
-    rgba(240, 216, 166, 0.32) 90%,
-    transparent 96%);
+    transparent 0 74%,
+    rgba(242, 219, 170, 0.55) 82%,
+    rgba(255, 250, 235, 0.85) 87%,
+    rgba(242, 219, 170, 0.45) 91%,
+    transparent 97%);
   -webkit-mask-image: radial-gradient(closest-side,
-    transparent 68.5%, #000 70%, #000 72%, transparent 73.5%);
+    transparent 68%, #000 70%, #000 72.5%, transparent 74.5%);
   mask-image: radial-gradient(closest-side,
-    transparent 68.5%, #000 70%, #000 72%, transparent 73.5%);
-  filter: blur(1.5px);
-  animation-duration: 34s;
+    transparent 68%, #000 70%, #000 72.5%, transparent 74.5%);
+  filter: blur(1.2px);
+  animation-duration: 26s;
+}
+.ngd-real-arc-d {
+  inset: -13%;
+  opacity: 0.8;
+  background: conic-gradient(from 310deg,
+    transparent 0 80%,
+    rgba(236, 212, 162, 0.4) 87%,
+    rgba(255, 248, 230, 0.6) 91%,
+    transparent 97%);
+  -webkit-mask-image: radial-gradient(closest-side,
+    transparent 69%, #000 70.5%, #000 72%, transparent 73.5%);
+  mask-image: radial-gradient(closest-side,
+    transparent 69%, #000 70.5%, #000 72%, transparent 73.5%);
+  filter: blur(1.4px);
+  animation-duration: 38s;
+  animation-direction: reverse;
 }
 @keyframes ngd-real-arcspin {
   from { transform: rotateX(58deg) rotate(0turn); }
@@ -1124,8 +1141,8 @@ html.ngd-fx-ready .ngd-reveal.is-visible .ngd-divider {
 .ngd-real-main {
   position: absolute;
   top: 44%;
-  right: 6%;
-  width: min(42vw, 33rem);
+  right: 4.5%;
+  width: min(47vw, 36rem);
   transform: translateY(-50%);
   perspective: 1200px;
 }
@@ -1149,7 +1166,12 @@ html.ngd-fx-ready .ngd-reveal.is-visible .ngd-divider {
   0%, 100% { translate: 0 0; rotate: -0.4deg; }
   50% { translate: 0 -9px; rotate: 0.5deg; }
 }
-.ngd-real-img { display: block; width: 100%; height: auto; }
+.ngd-real-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: brightness(1.05) saturate(1.02);
+}
 .ngd-real-glow {
   position: absolute;
   inset: -16%;
@@ -1182,7 +1204,7 @@ html.ngd-fx-ready .ngd-reveal.is-visible .ngd-divider {
   transform: translateX(calc(var(--sweep, -130) * 1%));
 }
 .ngd-real-settled .ngd-real-sweep {
-  animation: ngd-real-sweep-loop 6.2s ease-in-out infinite;
+  animation: ngd-real-sweep-loop 5s ease-in-out infinite;
 }
 @keyframes ngd-real-sweep-loop {
   0% { transform: translateX(-130%); }
@@ -1219,6 +1241,63 @@ html.ngd-fx-ready .ngd-reveal.is-visible .ngd-divider {
   58% { opacity: 0.26; }
 }
 
+/* ---- luminous floor pool beneath the seated stone ---- */
+.ngd-real-pool {
+  position: absolute;
+  top: 64%;
+  right: -2%;
+  width: min(56vw, 48rem);
+  height: 22%;
+  background:
+    radial-gradient(50% 90% at 50% 12%, rgba(255, 244, 220, 0.15), rgba(210, 190, 150, 0.05) 45%, transparent 72%),
+    radial-gradient(70% 100% at 50% 0%, rgba(140, 165, 225, 0.06), transparent 70%);
+  filter: blur(14px);
+  opacity: calc(var(--halo-o, 0) * 2 * (1 - var(--ngd-heroexit, 0)));
+  animation: ngd-real-poolpulse 9s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes ngd-real-poolpulse {
+  0%, 100% { transform: scaleX(1); }
+  50% { transform: scaleX(1.06); }
+}
+
+/* ---- dark crystal shards framing the corners ---- */
+.ngd-real-shard {
+  position: absolute;
+  width: min(30vw, 26rem);
+  filter: brightness(0.32) saturate(0.8) blur(1.5px);
+  opacity: 0.85;
+  pointer-events: none;
+  animation: ngd-real-sharddrift 26s ease-in-out infinite alternate;
+}
+.ngd-real-shard img { display: block; width: 100%; height: auto; }
+.ngd-real-shard-a {
+  left: -9%;
+  bottom: -14%;
+  transform: rotate(38deg);
+}
+.ngd-real-shard-b {
+  right: -8%;
+  bottom: -18%;
+  width: min(24vw, 21rem);
+  transform: rotate(-24deg) scaleX(-1);
+  animation-duration: 34s;
+  animation-delay: -9s;
+}
+@keyframes ngd-real-sharddrift {
+  from { translate: 0 0.4%; }
+  to { translate: 0.8% -0.6%; }
+}
+
+/* the whole stage breathes like a slow camera push once settled */
+.ngd-real-settled .ngd-hero-real {
+  animation: ngd-real-breatheall 22s ease-in-out infinite alternate;
+}
+@keyframes ngd-real-breatheall {
+  from { transform: scale(1); }
+  to { transform: scale(1.012); }
+}
+
 /* ---- dark-glass reflection + contact shadow under the stone ---- */
 .ngd-real-under {
   position: absolute;
@@ -1231,8 +1310,8 @@ html.ngd-fx-ready .ngd-reveal.is-visible .ngd-divider {
   width: 100%;
   height: auto;
   transform: scaleY(-1);
-  opacity: 0.15;
-  filter: blur(7px) saturate(0.75);
+  opacity: 0.22;
+  filter: blur(5px) saturate(0.8);
   -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.5), transparent 55%);
   mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.5), transparent 55%);
 }
@@ -1280,7 +1359,22 @@ html.ngd-fx-ready .ngd-reveal.is-visible .ngd-divider {
 }
 .ngd-real-mobile .ngd-real-arc-b,
 .ngd-real-mobile .ngd-real-arc-c,
+.ngd-real-mobile .ngd-real-arc-d,
+.ngd-real-mobile .ngd-real-shard-b,
 .ngd-real-mobile .ngd-real-rays { display: none; }
+.ngd-real-mobile .ngd-real-pool {
+  top: 26%;
+  right: auto;
+  left: 50%;
+  translate: -50% 0;
+  width: min(88vw, 27rem);
+  height: 12%;
+}
+.ngd-real-mobile .ngd-real-shard-a {
+  width: min(52vw, 17rem);
+  left: -14%;
+  bottom: -6%;
+}
 
 /* every layer rests while the hero is out of view */
 .ngd-real-off .ngd-hero-real *,
@@ -1330,6 +1424,13 @@ html.ngd-fx-ready .ngd-reveal.is-visible .ngd-divider {
 }
 
 /* ══════════ CUT COLLECTION — dark showroom cards ══════════ */
+/* the strip flows straight out of the hero floor (reference layout) */
+body[data-ngd-page="home"] #diamond-shapes.ngd-shapes-dark {
+  padding-block: clamp(0.75rem, 1.8vw, 1.5rem) clamp(1.25rem, 2.5vw, 2rem);
+}
+body[data-ngd-page="home"] .ngd-guided {
+  padding-top: clamp(0.75rem, 1.8vw, 1.5rem);
+}
 /* unconditional dark ground, so the look holds without the canvas */
 body[data-ngd-page="home"] #diamond-shapes.ngd-shapes-dark {
   background-color: #0a0d15;

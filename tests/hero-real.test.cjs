@@ -190,16 +190,24 @@ function seekR(page, t) {
         badges: document.querySelectorAll('.ngd-hero .ngd-hero-badge').length,
       };
     });
-    expect(st.arcs === 3, 'three golden orbit arcs on desktop, got ' + st.arcs);
+    expect(st.arcs === 4, 'four golden orbit ribbons on desktop, got ' + st.arcs);
     expect(st.arcSpin !== 'none', 'the arcs revolve');
     expect(st.arcDurA !== st.arcDurB, 'each arc revolves at its own pace');
     expect(st.haze && st.hazeDrift !== 'none', 'the haze layer drifts');
     expect(st.rays && st.raysAnim !== 'none', 'god-rays fan from the upper right');
-    expect(st.dust === 16, 'sixteen dust motes around the stone, got ' + st.dust);
-    expect(st.bokeh === 2, 'two soft bokeh discs');
-    expect(st.glints === 2 && st.glintAnim !== 'none', 'two occasional facet glints');
-    expect(st.star && st.star !== 'none', 'a four-point star glint on a facet edge');
+    expect(st.dust === 34, 'a dense bokeh field around the stone, got ' + st.dust);
+    expect(st.bokeh === 6, 'six soft bokeh discs, got ' + st.bokeh);
+    expect(st.glints === 3 && st.glintAnim !== 'none', 'three occasional facet glints');
+    expect(st.star && st.star !== 'none', 'four-point star glints on facet edges');
     expect(st.badges === 3, 'the trust badges stand under the CTAs');
+    const floor = await page.evaluate(() => ({
+      pool: !!document.querySelector('.ngd-real-pool'),
+      poolPulse: getComputedStyle(document.querySelector('.ngd-real-pool')).animationName,
+      shards: document.querySelectorAll('.ngd-real-shard').length,
+      shardLoaded: document.querySelector('.ngd-real-shard img').naturalWidth > 0,
+    }));
+    expect(floor.pool && floor.poolPulse !== 'none', 'the luminous floor pool breathes');
+    expect(floor.shards === 2 && floor.shardLoaded, 'dark crystal shards frame the corners');
     /* the badges join the entrance cascade after the headline beat */
     await page.waitForFunction(() =>
       document.querySelector('.ngd-hero').classList.contains('ngd-cine'), null, { timeout: 8000 });
@@ -394,7 +402,13 @@ function seekR(page, t) {
     }));
     expect(dressing.arcB === 'none' && dressing.arcC === 'none', 'the extra arcs rest on mobile');
     expect(dressing.rays === 'none', 'god-rays rest on mobile');
-    expect(dressing.dust === 7 && dressing.glints === 1, 'a lighter dust field on mobile, got ' + dressing.dust);
+    expect(dressing.dust === 10 && dressing.glints === 1, 'a lighter dust field on mobile, got ' + dressing.dust);
+    const mobFloor = await page.evaluate(() => ({
+      shardB: getComputedStyle(document.querySelector('.ngd-real-shard-b')).display,
+      pool: getComputedStyle(document.querySelector('.ngd-real-pool')).display !== 'none',
+    }));
+    expect(mobFloor.shardB === 'none', 'one framing shard is enough on mobile');
+    expect(mobFloor.pool, 'the floor pool glows under the crown-top stone');
   });
 
   await scenario('reduced motion: the finished composition, perfectly still', { assets: MAIN, reducedMotion: 'reduce' }, async (page) => {
