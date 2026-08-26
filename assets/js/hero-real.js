@@ -160,8 +160,14 @@
     root.setAttribute('aria-hidden', 'true');
     root.innerHTML =
       '<div class="ngd-real-atmo"></div>' +
+      '<div class="ngd-real-haze"></div>' +
       '<div class="ngd-real-caustic"></div>' +
       '<div class="ngd-real-halo"></div>' +
+      '<div class="ngd-real-arcs">' +
+        '<div class="ngd-real-arc ngd-real-arc-a"></div>' +
+        '<div class="ngd-real-arc ngd-real-arc-b"></div>' +
+      '</div>' +
+      '<div class="ngd-real-dust"></div>' +
       '<div class="ngd-real-field"></div>' +
       '<div class="ngd-real-main"><div class="ngd-real-card">' +
         '<div class="ngd-real-float">' +
@@ -213,6 +219,33 @@
       img.src = s.url;
       fig.appendChild(img);
       field.appendChild(fig);
+    });
+
+    /* champagne dust motes + occasional facet glints, clustered around
+       the stone — fixed positions so the scene is deterministic */
+    var DUST = [
+      { t: '18%', l: '58%', s: 3, dur: 9, de: 0 },
+      { t: '34%', l: '70%', s: 2, dur: 12, de: 2 },
+      { t: '26%', l: '86%', s: 3, dur: 10, de: 4 },
+      { t: '55%', l: '62%', s: 2, dur: 13, de: 1 },
+      { t: '64%', l: '82%', s: 4, dur: 11, de: 5 },
+      { t: '44%', l: '92%', s: 2, dur: 14, de: 3 },
+      { t: '72%', l: '55%', s: 3, dur: 12, de: 6 },
+      { t: '15%', l: '75%', s: 2, dur: 15, de: 2.5 },
+      { t: '30%', l: '66%', s: 9, dur: 11, de: 3.5, glint: true },
+      { t: '52%', l: '78%', s: 8, dur: 14, de: 7, glint: true }
+    ];
+    var dustWrap = root.querySelector('.ngd-real-dust');
+    DUST.slice(0, isMobile ? 5 : DUST.length).forEach(function (d) {
+      var mote = document.createElement('i');
+      if (d.glint) mote.className = 'is-glint';
+      mote.style.top = d.t;
+      mote.style.left = d.l;
+      mote.style.width = d.s + 'px';
+      mote.style.height = d.s + 'px';
+      mote.style.setProperty('--dur', d.dur + 's');
+      mote.style.setProperty('--de', d.de + 's');
+      dustWrap.appendChild(mote);
     });
 
     if (isMobile) root.classList.add('ngd-real-mobile');

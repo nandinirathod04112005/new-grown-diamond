@@ -844,8 +844,10 @@ html.ngd-fx-ready .ngd-reveal.is-visible .ngd-divider {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(120% 90% at 78% 40%, rgba(28, 52, 110, 0.34), transparent 60%),
-    radial-gradient(100% 80% at 15% 85%, rgba(12, 26, 64, 0.5), transparent 65%);
+    radial-gradient(120% 90% at 78% 40%, rgba(20, 28, 54, 0.42), transparent 60%),
+    radial-gradient(100% 80% at 15% 85%, rgba(5, 7, 12, 0.62), transparent 68%),
+    radial-gradient(55% 40% at 82% 90%, rgba(217, 192, 138, 0.06), transparent 70%),
+    radial-gradient(45% 35% at 8% 15%, rgba(46, 70, 140, 0.1), transparent 72%);
 }
 .ngd-real-atmo::before,
 .ngd-real-atmo::after {
@@ -864,8 +866,8 @@ html.ngd-fx-ready .ngd-reveal.is-visible .ngd-divider {
   filter: blur(44px);
   background: linear-gradient(100deg,
     transparent 18%,
-    rgba(84, 132, 228, 0.08) 46%,
-    rgba(160, 196, 255, 0.04) 62%,
+    rgba(228, 198, 140, 0.07) 46%,
+    rgba(255, 238, 205, 0.035) 62%,
     transparent 86%);
 }
 .ngd-real-atmo::after {
@@ -875,7 +877,7 @@ html.ngd-fx-ready .ngd-reveal.is-visible .ngd-divider {
   animation-delay: -9s;
   background: linear-gradient(80deg,
     transparent 15%,
-    rgba(64, 110, 205, 0.09) 45%,
+    rgba(96, 126, 205, 0.06) 45%,
     transparent 85%);
 }
 @keyframes ngd-real-beam {
@@ -888,9 +890,9 @@ html.ngd-fx-ready .ngd-reveal.is-visible .ngd-divider {
   position: absolute;
   inset: 55% -8% -4% -8%;
   background:
-    radial-gradient(38% 30% at 70% 62%, rgba(150, 195, 255, 0.11), transparent 70%),
-    radial-gradient(46% 34% at 26% 78%, rgba(110, 160, 250, 0.08), transparent 72%),
-    radial-gradient(20% 16% at 55% 40%, rgba(200, 224, 255, 0.06), transparent 75%);
+    radial-gradient(38% 30% at 70% 62%, rgba(235, 218, 180, 0.1), transparent 70%),
+    radial-gradient(46% 34% at 26% 78%, rgba(140, 168, 240, 0.06), transparent 72%),
+    radial-gradient(20% 16% at 55% 40%, rgba(255, 250, 238, 0.05), transparent 75%);
   filter: blur(8px);
   transform: scaleY(calc(1 + var(--ngd-heroexit, 0) * 0.6));
   transform-origin: 50% 100%;
@@ -922,8 +924,8 @@ html.ngd-fx-ready .ngd-reveal.is-visible .ngd-divider {
   border-radius: 50%;
   background: radial-gradient(circle,
     transparent 47%,
-    rgba(104, 156, 255, 0.2) 60%,
-    rgba(150, 190, 255, 0.09) 69%,
+    rgba(228, 200, 142, 0.18) 60%,
+    rgba(178, 190, 235, 0.08) 69%,
     transparent 78%);
   filter: blur(16px);
 }
@@ -933,6 +935,96 @@ html.ngd-fx-ready .ngd-reveal.is-visible .ngd-divider {
 @keyframes ngd-real-breathe {
   0%, 100% { transform: scale(1); opacity: 0.85; }
   50% { transform: scale(1.05); opacity: 1; }
+}
+
+/* ---- golden light arcs orbiting the stone (showroom swirls) ---- */
+.ngd-real-arcs {
+  position: absolute;
+  top: 46%;
+  right: -1%;
+  width: min(52vw, 44rem);
+  aspect-ratio: 1 / 1;
+  transform:
+    translateY(-50%)
+    translateX(calc(var(--halo-px, 0) * 0.6px));
+  opacity: calc(var(--halo-o, 0) * 1.6 * (1 - var(--ngd-heroexit, 0) * 0.9));
+  pointer-events: none;
+}
+.ngd-real-arc {
+  position: absolute;
+  inset: -6%;
+  border-radius: 50%;
+  background: conic-gradient(from 40deg,
+    transparent 0 52%,
+    rgba(233, 206, 152, 0.08) 62%,
+    rgba(233, 206, 152, 0.28) 73%,
+    rgba(255, 244, 219, 0.09) 82%,
+    transparent 92%);
+  -webkit-mask-image: radial-gradient(closest-side,
+    transparent 58%, rgba(0, 0, 0, 0.5) 66%, #000 71%, rgba(0, 0, 0, 0.5) 77%, transparent 84%);
+  mask-image: radial-gradient(closest-side,
+    transparent 58%, rgba(0, 0, 0, 0.5) 66%, #000 71%, rgba(0, 0, 0, 0.5) 77%, transparent 84%);
+  filter: blur(7px);
+  transform: rotateX(58deg) rotate(0deg);
+  animation: ngd-real-arcspin 48s linear infinite;
+}
+.ngd-real-arc-b {
+  inset: -20%;
+  opacity: 0.55;
+  background: conic-gradient(from 210deg,
+    transparent 0 56%,
+    rgba(226, 196, 140, 0.06) 66%,
+    rgba(226, 196, 140, 0.2) 76%,
+    rgba(214, 222, 250, 0.07) 84%,
+    transparent 93%);
+  animation-duration: 70s;
+  animation-direction: reverse;
+}
+@keyframes ngd-real-arcspin {
+  from { transform: rotateX(58deg) rotate(0turn); }
+  to { transform: rotateX(58deg) rotate(1turn); }
+}
+
+/* ---- drifting haze ---- */
+.ngd-real-haze {
+  position: absolute;
+  inset: -12%;
+  background:
+    radial-gradient(42% 34% at 66% 34%, rgba(168, 182, 218, 0.05), transparent 70%),
+    radial-gradient(50% 40% at 24% 72%, rgba(217, 192, 138, 0.04), transparent 72%);
+  filter: blur(28px);
+  animation: ngd-real-hazedrift 58s ease-in-out infinite alternate;
+}
+@keyframes ngd-real-hazedrift {
+  from { translate: -1.5% 0.5%; }
+  to { translate: 1.8% -1%; }
+}
+
+/* ---- gold dust + occasional facet glints ---- */
+.ngd-real-dust { position: absolute; inset: 0; }
+.ngd-real-dust i {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 243, 216, 0.95), rgba(255, 243, 216, 0) 70%);
+  opacity: 0;
+  animation: ngd-real-twinkle var(--dur, 11s) ease-in-out var(--de, 0s) infinite;
+}
+.ngd-real-dust i.is-glint {
+  background: radial-gradient(circle, rgba(255, 252, 244, 1), rgba(230, 212, 170, 0.35) 40%, transparent 70%);
+  animation-name: ngd-real-glint;
+}
+@keyframes ngd-real-twinkle {
+  0%, 100% { opacity: 0; translate: 0 7px; }
+  14% { opacity: 0.8; }
+  32% { opacity: 0.22; }
+  52% { opacity: 0.65; translate: 0 -7px; }
+  74% { opacity: 0.08; }
+  86% { opacity: 0.42; }
+}
+@keyframes ngd-real-glint {
+  0%, 86%, 96%, 100% { opacity: 0; transform: scale(0.6); }
+  90% { opacity: 0.95; transform: scale(1.15); }
+  93% { opacity: 0.35; transform: scale(0.9); }
 }
 
 /* ---- supporting stones on their own depth layers ---- */
@@ -1108,6 +1200,14 @@ html.ngd-fx-ready .ngd-reveal.is-visible .ngd-divider {
   inset: 62% -8% -4% -8%;
   filter: blur(10px);
 }
+.ngd-real-mobile .ngd-real-arcs {
+  top: 6%;
+  right: auto;
+  left: 50%;
+  width: min(86vw, 26rem);
+  transform: translateX(-50%);
+}
+.ngd-real-mobile .ngd-real-arc-b { display: none; }
 
 /* every layer rests while the hero is out of view */
 .ngd-real-off .ngd-hero-real *,

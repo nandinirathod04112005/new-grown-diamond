@@ -672,6 +672,11 @@ function startHeroFilm() {
 
     /* ================= public API ================= */
     window.NGDHero3D = {
+      /* stop rendering entirely — used by the page-transition
+         departure so navigation is never starved by WebGL frames */
+      pause() {
+        renderer.setAnimationLoop(null);
+      },
       setScroll(p) {
         scrollP = Math.min(1, Math.max(0, p));
         if (scrollP > 0.03 && seqT < SETTLE_T) fastForward = true;

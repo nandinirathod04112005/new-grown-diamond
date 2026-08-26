@@ -167,6 +167,39 @@ function seekR(page, t) {
     expect(st.supports === 4, 'the supporting field reuses the photograph');
   });
 
+  await scenario('showroom dressing: golden arcs orbit, haze drifts, dust twinkles, glints flash', { assets: MAIN }, async (page) => {
+    await openReal(page);
+    const st = await page.evaluate(() => {
+      const arcA = document.querySelector('.ngd-real-arc-a');
+      const glints = document.querySelectorAll('.ngd-real-dust i.is-glint');
+      return {
+        arcs: document.querySelectorAll('.ngd-real-arc').length,
+        arcSpin: getComputedStyle(arcA).animationName,
+        arcDurA: getComputedStyle(arcA).animationDuration,
+        arcDurB: getComputedStyle(document.querySelector('.ngd-real-arc-b')).animationDuration,
+        haze: !!document.querySelector('.ngd-real-haze'),
+        hazeDrift: getComputedStyle(document.querySelector('.ngd-real-haze')).animationName,
+        dust: document.querySelectorAll('.ngd-real-dust i').length,
+        glints: glints.length,
+        glintAnim: glints.length ? getComputedStyle(glints[0]).animationName : '',
+        badges: document.querySelectorAll('.ngd-hero .ngd-hero-badge').length,
+      };
+    });
+    expect(st.arcs === 2, 'two golden orbit arcs on desktop, got ' + st.arcs);
+    expect(st.arcSpin !== 'none', 'the arcs revolve');
+    expect(st.arcDurA !== st.arcDurB, 'each arc revolves at its own pace');
+    expect(st.haze && st.hazeDrift !== 'none', 'the haze layer drifts');
+    expect(st.dust === 10, 'ten dust motes around the stone, got ' + st.dust);
+    expect(st.glints === 2 && st.glintAnim !== 'none', 'two occasional facet glints');
+    expect(st.badges === 3, 'the trust badges stand under the CTAs');
+    /* the badges join the entrance cascade after the headline beat */
+    await page.waitForFunction(() =>
+      document.querySelector('.ngd-hero').classList.contains('ngd-cine'), null, { timeout: 8000 });
+    const badgeDelay = await page.evaluate(() =>
+      parseFloat(getComputedStyle(document.querySelector('.ngd-hero-badge')).transitionDelay));
+    expect(badgeDelay > 7.5, 'badges reveal after the headline, got ' + badgeDelay);
+  });
+
   await scenario('dedicated supporting files are used, missing ones fall back to the main cutout', { assets: ['hero-diamond.webp', 'diamond-2.webp'] }, async (page) => {
     await openReal(page);
     const st = await page.evaluate(() => {
@@ -344,6 +377,12 @@ function seekR(page, t) {
     expect(st.assets.wisps === 0, 'no section wisps on mobile');
     expect(st.mainTop < 300 && st.mainCentred, 'crown-top centred seat');
     expect(st.copyBelowStone, 'the copy anchors below the stone — no crown overlap');
+    const dressing = await page.evaluate(() => ({
+      arcB: getComputedStyle(document.querySelector('.ngd-real-arc-b')).display,
+      dust: document.querySelectorAll('.ngd-real-dust i').length,
+    }));
+    expect(dressing.arcB === 'none', 'the second arc rests on mobile');
+    expect(dressing.dust === 5, 'a lighter dust field on mobile, got ' + dressing.dust);
   });
 
   await scenario('reduced motion: the finished composition, perfectly still', { assets: MAIN, reducedMotion: 'reduce' }, async (page) => {

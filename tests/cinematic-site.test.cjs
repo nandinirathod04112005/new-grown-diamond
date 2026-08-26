@@ -229,7 +229,7 @@ function instantScroll(page, expr) {
     expect(st.reduced, 'both modules report reduced motion');
     expect(st.canvases === 0, 'no decorative canvases or cursor glow mounted');
     expect(!st.armed, 'reveal engine never arms');
-    expect(st.h1.includes('Diamonds grown by science'), 'hero content intact');
+    expect(st.h1.includes('Crafted Brilliance'), 'hero content intact');
     expect(st.footerOpacity === '1', 'footer fully visible without scroll effects');
   });
 
