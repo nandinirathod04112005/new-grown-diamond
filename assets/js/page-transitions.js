@@ -132,6 +132,12 @@
     document.body.classList.add('ngd-pt-leaving');
     if (overlay) overlay.classList.add('is-active');
 
+    /* stand the hero film down so heavy WebGL frames cannot starve
+       the departure timer on slow renderers */
+    if (window.NGDHero3D && typeof window.NGDHero3D.pause === 'function') {
+      try { window.NGDHero3D.pause(); } catch (e) { /* never block leaving */ }
+    }
+
     setTimeout(function () { location.href = url.href; }, DURATION);
     /* If something blocks the navigation, recover the page. */
     setTimeout(function () { if (leaving) reset(); }, DURATION + 2200);
