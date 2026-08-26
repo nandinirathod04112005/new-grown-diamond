@@ -56,9 +56,9 @@
   var CHAPTERS = [
     { sel: '.ngd-hero', id: 'hero', p: {
       top: [5, 7, 15], bot: [10, 18, 38],
-      glowA: { x: 0.78, y: 0.35, r: 0.5, rgb: [90, 130, 220], a: 0.10 },
-      glowB: { x: 0.15, y: 0.85, r: 0.45, rgb: [217, 192, 138], a: 0.05 },
-      fog: 0.45, dust: 0.55, warm: 0.2, streak: 0.22, laser: 0, caustic: 0,
+      glowA: { x: 0.78, y: 0.35, r: 0.5, rgb: [90, 130, 220], a: 0.08 },
+      glowB: { x: 0.15, y: 0.85, r: 0.45, rgb: [217, 192, 138], a: 0.07 },
+      fog: 0.45, dust: 0.55, warm: 0.55, streak: 0.15, laser: 0, caustic: 0,
       bright: 0.9,
       silh: [silh(0.12, 0.2, 0.5, 0.3, 0.5), silh(0.9, 0.7, 0.7, 1.2, 0.4),
              silh(0.5, 1.1, 0.4, 2.2, 0.35), silh(0.82, 0.15, 0.3, 3.1, 0.3),
@@ -353,8 +353,13 @@
       ctx.fillRect(-width, -H * 1.4, width * 2, H * 2.8);
       ctx.restore();
     }
+    /* the wide band takes on the chapter's warmth — ice in the cool
+       chapters, champagne where the scene is golden */
+    var bandRgb = Math.round(190 + (232 - 190) * p.warm) + ',' +
+      Math.round(214 + (208 - 214) * p.warm) + ',' +
+      Math.round(255 + (164 - 255) * p.warm);
     band(W * (0.3 + 0.4 * (0.5 + Math.sin(time * 0.045) * 0.5)), -0.5,
-      W * 0.09, p.streak * 0.32 * bright, '190,214,255');
+      W * 0.11, p.streak * 0.26 * bright, bandRgb);
     band(W * (0.62 + Math.sin(time * 0.11) * 0.08), -0.9,
       W * 0.012, p.laser * 0.5 * bright, '150,210,255');
 
