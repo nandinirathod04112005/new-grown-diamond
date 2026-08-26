@@ -170,7 +170,9 @@
         '<div class="ngd-real-arc ngd-real-arc-b"></div>' +
         '<div class="ngd-real-arc ngd-real-arc-c"></div>' +
         '<div class="ngd-real-arc ngd-real-arc-d"></div>' +
+        '<div class="ngd-real-arc ngd-real-arc-e"></div>' +
       '</div>' +
+      '<div class="ngd-real-rise"></div>' +
       '<div class="ngd-real-shard ngd-real-shard-a"><img alt="" decoding="async" loading="lazy"></div>' +
       '<div class="ngd-real-shard ngd-real-shard-b"><img alt="" decoding="async" loading="lazy"></div>' +
       '<div class="ngd-real-dust"></div>' +
@@ -180,6 +182,7 @@
           '<div class="ngd-real-glow"></div>' +
           '<img class="ngd-real-img" alt="" decoding="async">' +
           '<div class="ngd-real-sweep"></div>' +
+          '<div class="ngd-real-sweep2"></div>' +
           '<div class="ngd-real-spectral"></div>' +
           '<div class="ngd-real-flash"></div>' +
         '</div>' +
@@ -197,7 +200,7 @@
 
     /* The photograph is the mask: light effects only exist inside the
        stone's silhouette, so sparkle reads as facets catching light. */
-    ['.ngd-real-sweep', '.ngd-real-spectral', '.ngd-real-flash'].forEach(function (sel) {
+    ['.ngd-real-sweep', '.ngd-real-sweep2', '.ngd-real-spectral', '.ngd-real-flash'].forEach(function (sel) {
       var el = root.querySelector(sel);
       var v = 'url("' + mainUrl + '")';
       el.style.webkitMaskImage = v;
@@ -279,6 +282,23 @@
       mote.style.setProperty('--dur', d.dur + 's');
       mote.style.setProperty('--de', d.de + 's');
       dustWrap.appendChild(mote);
+    });
+
+    /* diamond dust rising off the floor pool near the stone */
+    var RISE = [
+      { l: '58%', dur: 7, de: 0 },
+      { l: '66%', dur: 9, de: 2.4 },
+      { l: '74%', dur: 6.5, de: 4.1 },
+      { l: '83%', dur: 10, de: 1.2 },
+      { l: '90%', dur: 8, de: 5.6 }
+    ];
+    var riseWrap = root.querySelector('.ngd-real-rise');
+    RISE.slice(0, isMobile ? 3 : RISE.length).forEach(function (r) {
+      var mote = document.createElement('i');
+      mote.style.left = r.l;
+      mote.style.setProperty('--dur', r.dur + 's');
+      mote.style.setProperty('--de', r.de + 's');
+      riseWrap.appendChild(mote);
     });
 
     if (isMobile) root.classList.add('ngd-real-mobile');
