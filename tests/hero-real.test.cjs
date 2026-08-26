@@ -190,7 +190,7 @@ function seekR(page, t) {
         badges: document.querySelectorAll('.ngd-hero .ngd-hero-badge').length,
       };
     });
-    expect(st.arcs === 4, 'four golden orbit ribbons on desktop, got ' + st.arcs);
+    expect(st.arcs === 5, 'four ribbons + the comet head on desktop, got ' + st.arcs);
     expect(st.arcSpin !== 'none', 'the arcs revolve');
     expect(st.arcDurA !== st.arcDurB, 'each arc revolves at its own pace');
     expect(st.haze && st.hazeDrift !== 'none', 'the haze layer drifts');
@@ -208,6 +208,26 @@ function seekR(page, t) {
     }));
     expect(floor.pool && floor.poolPulse !== 'none', 'the luminous floor pool breathes');
     expect(floor.shards === 2 && floor.shardLoaded, 'dark crystal shards frame the corners');
+    await seekR(page, 9);
+    const motion = await page.evaluate(() => {
+      const sweep2 = document.querySelector('.ngd-real-sweep2');
+      const cs2 = getComputedStyle(sweep2);
+      return {
+        sweep2Anim: cs2.animationName,
+        sweep2Masked: (cs2.webkitMaskImage || cs2.maskImage || '').includes('hero-diamond.webp'),
+        comet: !!document.querySelector('.ngd-real-arc-e'),
+        cometAnim: getComputedStyle(document.querySelector('.ngd-real-arc-e')).animationName,
+        rise: document.querySelectorAll('.ngd-real-rise i').length,
+        riseAnim: getComputedStyle(document.querySelector('.ngd-real-rise i')).animationName,
+        shimmer: getComputedStyle(document.querySelector('.ngd-hero h1 .ngd-italic-accent')).animationName,
+        ctaPulse: getComputedStyle(document.querySelector('.ngd-hero .ngd-btn-gold')).animationName,
+      };
+    });
+    expect(motion.sweep2Anim !== 'none' && motion.sweep2Masked, 'the second ice sweep runs inside the stone');
+    expect(motion.comet && motion.cometAnim !== 'none', 'the comet head rides the ribbon');
+    expect(motion.rise === 5 && motion.riseAnim !== 'none', 'diamond dust rises off the pool, got ' + motion.rise);
+    expect(motion.shimmer !== 'none', 'the gold word shimmers');
+    expect(motion.ctaPulse !== 'none', 'the gold CTA breathes');
     /* the badges join the entrance cascade after the headline beat */
     await page.waitForFunction(() =>
       document.querySelector('.ngd-hero').classList.contains('ngd-cine'), null, { timeout: 8000 });
@@ -409,6 +429,12 @@ function seekR(page, t) {
     }));
     expect(mobFloor.shardB === 'none', 'one framing shard is enough on mobile');
     expect(mobFloor.pool, 'the floor pool glows under the crown-top stone');
+    const mobMotion = await page.evaluate(() => ({
+      cometHidden: getComputedStyle(document.querySelector('.ngd-real-arc-e')).display === 'none',
+      rise: document.querySelectorAll('.ngd-real-rise i').length,
+    }));
+    expect(mobMotion.cometHidden, 'the comet rests on mobile');
+    expect(mobMotion.rise === 3, 'three rising motes on mobile, got ' + mobMotion.rise);
   });
 
   await scenario('reduced motion: the finished composition, perfectly still', { assets: MAIN, reducedMotion: 'reduce' }, async (page) => {
