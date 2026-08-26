@@ -1458,3 +1458,95 @@ body[data-ngd-page="home"] #diamond-shapes.ngd-shapes-dark {
   .ngd-shapes-dark .ngd-shape-media,
   .ngd-shape-photo { animation: none !important; }
 }
+
+/* ══════════ floating showroom navbar (homepage) ══════════ */
+body[data-ngd-page="home"] .ngd-navbar {
+  background: transparent;
+  padding-top: 0.8rem;
+  box-shadow: none;
+}
+body[data-ngd-page="home"] .ngd-navbar > .container {
+  background: rgba(10, 12, 18, 0.74);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(207, 174, 110, 0.14);
+  border-radius: 1rem;
+  padding: 0.5rem 1.15rem;
+  box-shadow: 0 14px 40px rgba(2, 4, 9, 0.45);
+}
+body[data-ngd-page="home"] .ngd-navbar.is-scrolled {
+  background: transparent;
+  box-shadow: none;
+}
+body[data-ngd-page="home"] .ngd-navbar.is-scrolled > .container {
+  background: rgba(8, 10, 15, 0.92);
+}
+
+/* ══════════ Cut Collection as a single showcase strip ══════════ */
+.ngd-shape-strip {
+  --bs-gutter-x: 0;
+  --bs-gutter-y: 0;
+  flex-wrap: nowrap;
+  gap: 1rem;
+  margin: 0;
+  padding: 0.4rem 0.2rem 1.1rem;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+}
+.ngd-shape-strip::-webkit-scrollbar { display: none; }
+.ngd-shape-strip > [class*="col-"] {
+  flex: 0 0 auto;
+  width: clamp(10.5rem, 12.5vw, 12rem);
+  max-width: none;
+  padding: 0;
+  scroll-snap-align: start;
+}
+/* cards parked off-screen to the right never intersect the viewport,
+   so per-card reveals would leave them sunken until swiped — the
+   strip arrives as one piece instead */
+.ngd-shape-strip > .ngd-reveal {
+  opacity: 1 !important;
+  transform: none !important;
+  transition: none !important;
+}
+.ngd-shape-strip .ngd-shape-card { padding: 1.5rem 0.9rem 1.2rem; }
+.ngd-shape-strip .ngd-shape-cta { display: none; }
+.ngd-shape-strip .ngd-shape-media {
+  width: 4.9rem;
+  height: 4.9rem;
+  margin-bottom: 0.85rem;
+}
+.ngd-shapes-dark .ngd-shape-name {
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.82rem;
+}
+.ngd-shapes-dark .ngd-shape-note { font-size: 0.78rem; }
+.ngd-strip-shell { position: relative; }
+.ngd-strip-arrow {
+  position: absolute;
+  right: -0.4rem;
+  top: 42%;
+  width: 2.9rem;
+  height: 2.9rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(16, 19, 29, 0.92);
+  border: 1px solid rgba(207, 174, 110, 0.35);
+  color: var(--ngd-gold, #cfae6e);
+  box-shadow: 0 10px 26px rgba(2, 4, 9, 0.55);
+  cursor: pointer;
+  z-index: 2;
+  transition: transform 0.25s ease, border-color 0.25s ease;
+}
+.ngd-strip-arrow:hover {
+  transform: scale(1.07);
+  border-color: rgba(207, 174, 110, 0.7);
+}
+.ngd-strip-arrow svg { width: 1.1rem; height: 1.1rem; }
+@media (max-width: 991.98px) {
+  .ngd-strip-arrow { display: none; }
+}
