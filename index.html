@@ -168,7 +168,7 @@
   </header>
 
   <!-- ══════════ DIAMOND SHAPES ══════════ -->
-  <section id="diamond-shapes" class="ngd-section">
+  <section id="diamond-shapes" class="ngd-section ngd-section-dark ngd-shapes-dark">
     <div class="container">
       <div class="row justify-content-center text-center ngd-reveal">
         <div class="col-lg-8">
@@ -327,6 +327,74 @@
             <a class="ngd-link" href="diamonds.html">View all diamonds</a></p>
         </form>
       </div>
+    </div>
+  </section>
+
+  <!-- ══════════ GUIDED SELECTION ══════════ -->
+  <section id="guided-selection" class="ngd-section ngd-section-dark ngd-guided" aria-labelledby="guided-title">
+    <div class="container">
+      <form class="ngd-guided-panel ngd-reveal" data-ngd-guided novalidate>
+        <div class="row g-4 align-items-center">
+          <div class="col-lg-4">
+            <span class="ngd-eyebrow">Guided Selection</span>
+            <h2 id="guided-title" class="ngd-display-3 mt-2 mb-2">Find <span class="ngd-italic-accent">your</span> diamond</h2>
+            <p class="ngd-guided-browse mb-0">Prefer to browse? <a href="diamonds.html">View all diamonds</a></p>
+          </div>
+          <div class="col-lg-8">
+            <div class="row g-3">
+              <div class="col-6 col-md-3">
+                <label class="ngd-guided-label" for="gs-shape">Shape</label>
+                <select id="gs-shape" class="form-select ngd-guided-select">
+                  <option value="">Any Shape</option>
+                  <option>Round</option>
+                  <option>Oval</option>
+                  <option>Emerald</option>
+                  <option>Pear</option>
+                  <option>Princess</option>
+                  <option>Cushion</option>
+                  <option>Radiant</option>
+                  <option>Marquise</option>
+                </select>
+              </div>
+              <div class="col-6 col-md-3">
+                <label class="ngd-guided-label" for="gs-carat-from">Carat from</label>
+                <select id="gs-carat-from" class="form-select ngd-guided-select">
+                  <option>0.50</option>
+                  <option>0.75</option>
+                  <option selected>1.00</option>
+                  <option>1.50</option>
+                  <option>2.00</option>
+                  <option>3.00</option>
+                </select>
+              </div>
+              <div class="col-6 col-md-3">
+                <label class="ngd-guided-label" for="gs-carat-to">Carat to</label>
+                <select id="gs-carat-to" class="form-select ngd-guided-select">
+                  <option>1.00</option>
+                  <option>1.50</option>
+                  <option>2.00</option>
+                  <option selected>2.50</option>
+                  <option>3.00</option>
+                  <option>5.00</option>
+                </select>
+              </div>
+              <div class="col-6 col-md-3">
+                <label class="ngd-guided-label" for="gs-clarity">Clarity</label>
+                <select id="gs-clarity" class="form-select ngd-guided-select">
+                  <option value="">Any Clarity</option>
+                  <option value="FL,IF">FL – IF</option>
+                  <option value="VVS1,VVS2">VVS</option>
+                  <option value="VS1,VS2">VS</option>
+                  <option value="SI1,SI2">SI</option>
+                </select>
+              </div>
+              <div class="col-12 d-flex flex-wrap justify-content-end mt-3">
+                <button type="submit" class="ngd-btn ngd-btn-gold">Find Diamonds</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
     </div>
   </section>
 
@@ -727,6 +795,8 @@
   <script type="module" src="assets/js/hero-3d.js"></script>
   <script defer src="assets/js/cinematic-background.js"></script>
   <script defer src="assets/js/home-environment.js"></script>
+  <script defer src="assets/js/shape-photos.js"></script>
+  <script defer src="assets/js/guided-selection.js"></script>
   <script defer src="assets/js/scroll-animations.js"></script>
   <script defer src="assets/js/page-transitions.js"></script>
   <script defer src="assets/js/auto-journey.js"></script>

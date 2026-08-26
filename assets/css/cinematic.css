@@ -980,9 +980,51 @@ html.ngd-fx-ready .ngd-reveal.is-visible .ngd-divider {
   animation-duration: 70s;
   animation-direction: reverse;
 }
+/* a thin crisp light trail riding the same orbit */
+.ngd-real-arc-c {
+  inset: 2%;
+  opacity: 0.85;
+  background: conic-gradient(from 130deg,
+    transparent 0 78%,
+    rgba(240, 216, 166, 0.4) 84%,
+    rgba(255, 248, 230, 0.6) 87%,
+    rgba(240, 216, 166, 0.32) 90%,
+    transparent 96%);
+  -webkit-mask-image: radial-gradient(closest-side,
+    transparent 68.5%, #000 70%, #000 72%, transparent 73.5%);
+  mask-image: radial-gradient(closest-side,
+    transparent 68.5%, #000 70%, #000 72%, transparent 73.5%);
+  filter: blur(1.5px);
+  animation-duration: 34s;
+}
 @keyframes ngd-real-arcspin {
   from { transform: rotateX(58deg) rotate(0turn); }
   to { transform: rotateX(58deg) rotate(1turn); }
+}
+
+/* soft god-rays fanning from the upper right */
+.ngd-real-rays {
+  position: absolute;
+  top: -30%;
+  right: -8%;
+  width: 70%;
+  aspect-ratio: 1 / 1;
+  background: conic-gradient(from 208deg at 78% 12%,
+    transparent 0deg,
+    rgba(228, 205, 158, 0.07) 7deg,
+    transparent 15deg,
+    rgba(196, 208, 240, 0.05) 22deg,
+    transparent 30deg,
+    rgba(228, 205, 158, 0.05) 38deg,
+    transparent 47deg);
+  filter: blur(22px);
+  transform-origin: 78% 12%;
+  animation: ngd-real-rays 44s ease-in-out infinite alternate;
+  opacity: calc(0.9 * (1 - var(--ngd-heroexit, 0)));
+}
+@keyframes ngd-real-rays {
+  from { transform: rotate(-3deg); }
+  to { transform: rotate(3.5deg); }
 }
 
 /* ---- drifting haze ---- */
@@ -1012,6 +1054,29 @@ html.ngd-fx-ready .ngd-reveal.is-visible .ngd-divider {
 .ngd-real-dust i.is-glint {
   background: radial-gradient(circle, rgba(255, 252, 244, 1), rgba(230, 212, 170, 0.35) 40%, transparent 70%);
   animation-name: ngd-real-glint;
+}
+.ngd-real-dust i.is-bokeh {
+  filter: blur(2.5px);
+  background: radial-gradient(circle, rgba(236, 226, 205, 0.5), rgba(236, 226, 205, 0) 70%);
+}
+/* a tiny four-point star glint — light catching a facet edge */
+.ngd-real-dust i.is-star {
+  background: none;
+  animation-name: ngd-real-glint;
+}
+.ngd-real-dust i.is-star::before,
+.ngd-real-dust i.is-star::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 100%;
+  height: 1.5px;
+  transform: translate(-50%, -50%);
+  background: linear-gradient(90deg, transparent, rgba(255, 250, 238, 0.95) 50%, transparent);
+}
+.ngd-real-dust i.is-star::after {
+  transform: translate(-50%, -50%) rotate(90deg);
 }
 @keyframes ngd-real-twinkle {
   0%, 100% { opacity: 0; translate: 0 7px; }
@@ -1112,7 +1177,7 @@ html.ngd-fx-ready .ngd-reveal.is-visible .ngd-divider {
   transform: translateX(calc(var(--sweep, -130) * 1%));
 }
 .ngd-real-settled .ngd-real-sweep {
-  animation: ngd-real-sweep-loop 7.5s ease-in-out infinite;
+  animation: ngd-real-sweep-loop 6.2s ease-in-out infinite;
 }
 @keyframes ngd-real-sweep-loop {
   0% { transform: translateX(-130%); }
@@ -1144,8 +1209,9 @@ html.ngd-fx-ready .ngd-reveal.is-visible .ngd-divider {
   animation: ngd-real-flash-loop 13s linear infinite;
 }
 @keyframes ngd-real-flash-loop {
-  0%, 55%, 63%, 100% { opacity: 0; }
-  58% { opacity: 0.24; }
+  0%, 22%, 30%, 55%, 63%, 100% { opacity: 0; }
+  26% { opacity: 0.15; }
+  58% { opacity: 0.26; }
 }
 
 /* ---- dark-glass reflection + contact shadow under the stone ---- */
@@ -1207,7 +1273,9 @@ html.ngd-fx-ready .ngd-reveal.is-visible .ngd-divider {
   width: min(86vw, 26rem);
   transform: translateX(-50%);
 }
-.ngd-real-mobile .ngd-real-arc-b { display: none; }
+.ngd-real-mobile .ngd-real-arc-b,
+.ngd-real-mobile .ngd-real-arc-c,
+.ngd-real-mobile .ngd-real-rays { display: none; }
 
 /* every layer rests while the hero is out of view */
 .ngd-real-off .ngd-hero-real *,
@@ -1254,4 +1322,126 @@ html.ngd-fx-ready .ngd-reveal.is-visible .ngd-divider {
     align-items: flex-end;
     padding-bottom: clamp(6rem, 12vh, 8rem);
   }
+}
+
+/* ══════════ CUT COLLECTION — dark showroom cards ══════════ */
+.ngd-shapes-dark .ngd-shape-card {
+  position: relative;
+  background: linear-gradient(168deg, rgba(24, 28, 41, 0.94), rgba(9, 11, 18, 0.97));
+  border: 1px solid rgba(207, 174, 110, 0.16);
+  box-shadow: 0 18px 44px rgba(2, 4, 9, 0.5);
+}
+.ngd-shapes-dark .ngd-shape-card:hover {
+  border-color: rgba(207, 174, 110, 0.38);
+  box-shadow: 0 24px 54px rgba(2, 4, 9, 0.65), 0 0 34px rgba(207, 174, 110, 0.08);
+}
+/* the gold pin */
+.ngd-shapes-dark .ngd-shape-card::before {
+  content: "";
+  position: absolute;
+  top: 0.9rem;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  translate: -50% 0;
+  rotate: 45deg;
+  background: linear-gradient(135deg, #e8cc90, #b08a45);
+  box-shadow: 0 0 10px rgba(217, 192, 138, 0.5);
+}
+/* dark glass coin behind the stone */
+.ngd-shapes-dark .ngd-shape-media {
+  border-color: rgba(207, 174, 110, 0.3);
+  background:
+    radial-gradient(circle at 36% 28%, rgba(64, 76, 106, 0.65) 0%, rgba(18, 22, 34, 0.92) 62%, rgba(8, 10, 16, 0.96) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -8px 16px rgba(2, 4, 9, 0.55),
+    0 0 24px rgba(120, 160, 240, 0.07);
+  color: #d9e2f2;
+  animation: ngd-shape-coin 8s ease-in-out infinite;
+}
+.ngd-shapes-dark .ngd-shape-card:hover .ngd-shape-media { color: #f0e5cd; }
+@keyframes ngd-shape-coin {
+  0%, 100% { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), inset 0 -8px 16px rgba(2, 4, 9, 0.55), 0 0 18px rgba(120, 160, 240, 0.05); }
+  50% { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), inset 0 -8px 16px rgba(2, 4, 9, 0.55), 0 0 30px rgba(190, 170, 120, 0.12); }
+}
+.ngd-shapes-dark [class*="col-"]:nth-child(4n+2) .ngd-shape-media { animation-delay: 2s; }
+.ngd-shapes-dark [class*="col-"]:nth-child(4n+3) .ngd-shape-media { animation-delay: 4s; }
+.ngd-shapes-dark [class*="col-"]:nth-child(4n) .ngd-shape-media { animation-delay: 6s; }
+.ngd-shapes-dark .ngd-shape-name { color: #f4efe6; }
+.ngd-shapes-dark .ngd-shape-note { color: rgba(233, 228, 218, 0.6); }
+.ngd-shapes-dark .ngd-shape-cta { color: var(--ngd-gold, #cfae6e); }
+.ngd-shapes-dark .ngd-lead { color: rgba(233, 228, 218, 0.72); }
+
+/* real photograph slots (shape-photos.js) */
+.ngd-shape-media { position: relative; overflow: hidden; }
+.ngd-shape-photo {
+  display: block;
+  width: 82%;
+  height: auto;
+  filter: drop-shadow(0 10px 16px rgba(3, 6, 12, 0.65));
+  transition: transform 0.6s ease;
+  animation: ngd-shape-breathe 7s ease-in-out infinite;
+}
+.ngd-shape-media.has-photo svg { display: none; }
+.ngd-shape-card:hover .ngd-shape-photo { transform: scale(1.08) rotate(-2deg); }
+@keyframes ngd-shape-breathe {
+  0%, 100% { translate: 0 1px; }
+  50% { translate: 0 -3px; }
+}
+
+/* ══════════ GUIDED SELECTION panel ══════════ */
+.ngd-guided { padding-block: clamp(2.5rem, 5vw, 4rem); }
+.ngd-guided-panel {
+  position: relative;
+  padding: clamp(1.5rem, 3.5vw, 2.75rem);
+  border-radius: 1.1rem;
+  background: linear-gradient(160deg, rgba(24, 28, 41, 0.92), rgba(10, 12, 19, 0.97));
+  border: 1px solid rgba(207, 174, 110, 0.18);
+  box-shadow: 0 24px 60px rgba(2, 4, 9, 0.55);
+  overflow: hidden;
+}
+.ngd-guided-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(60% 120% at 88% 10%, rgba(217, 192, 138, 0.08), transparent 60%);
+  pointer-events: none;
+}
+.ngd-guided-browse { color: rgba(233, 228, 218, 0.62); font-size: 0.92rem; }
+.ngd-guided-browse a {
+  color: var(--ngd-gold, #cfae6e);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(207, 174, 110, 0.4);
+}
+.ngd-guided-browse a:hover { color: #e8cc90; }
+.ngd-guided-label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(217, 192, 138, 0.85);
+}
+.ngd-guided-select.form-select {
+  background-color: rgba(10, 13, 21, 0.85);
+  border: 1px solid rgba(207, 174, 110, 0.22);
+  color: #f0ece2;
+  border-radius: 0.55rem;
+  padding-block: 0.62rem;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%23cfae6e' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round' d='m3 6 5 5 5-5'/%3E%3C/svg%3E");
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+.ngd-guided-select.form-select:focus {
+  border-color: rgba(207, 174, 110, 0.6);
+  box-shadow: 0 0 0 0.2rem rgba(207, 174, 110, 0.12);
+  background-color: rgba(12, 16, 26, 0.95);
+  color: #f5f1e8;
+}
+.ngd-guided-select.form-select option { background-color: #10141f; color: #f0ece2; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ngd-shapes-dark .ngd-shape-media,
+  .ngd-shape-photo { animation: none !important; }
 }

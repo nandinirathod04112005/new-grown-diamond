@@ -145,13 +145,13 @@
        opacity, orientation, travel path and speed. */
     var SUPPORTS = [
       { key: 's1', url: d2 || mainUrl, w: 'min(11vw, 9rem)', pos: { top: '15%', right: '33%' },
-        blur: 0.5, opa: 0.5, dur: 34, anim: 'cross', rot: -18, flip: false, depth: 0.55 },
+        blur: 0.5, opa: 0.56, dur: 34, anim: 'cross', rot: -18, flip: false, depth: 0.55 },
       { key: 's2', url: d3 || mainUrl, w: 'min(7vw, 6rem)', pos: { top: '30%', left: '5%' },
-        blur: 2.5, opa: 0.34, dur: 46, anim: 'driftup', rot: 14, flip: true, depth: 0.85 },
+        blur: 2.5, opa: 0.4, dur: 46, anim: 'driftup', rot: 14, flip: true, depth: 0.85 },
       { key: 's3', url: d4 || mainUrl, w: 'min(15vw, 12rem)', pos: { top: '54%', left: '20%' },
-        blur: 1.2, opa: 0.4, dur: 40, anim: 'diag', rot: -32, flip: false, depth: 0.7 },
+        blur: 1.2, opa: 0.46, dur: 40, anim: 'diag', rot: -32, flip: false, depth: 0.7 },
       { key: 's4', url: d2 || mainUrl, w: 'min(27vw, 22rem)', pos: { bottom: '-9%', left: '-5%' },
-        blur: 6, opa: 0.28, dur: 52, anim: 'deep', rot: 24, flip: true, depth: 1.2 }
+        blur: 6, opa: 0.32, dur: 52, anim: 'deep', rot: 24, flip: true, depth: 1.2 }
     ];
 
     var root = document.createElement('div');
@@ -160,12 +160,14 @@
     root.setAttribute('aria-hidden', 'true');
     root.innerHTML =
       '<div class="ngd-real-atmo"></div>' +
+      '<div class="ngd-real-rays"></div>' +
       '<div class="ngd-real-haze"></div>' +
       '<div class="ngd-real-caustic"></div>' +
       '<div class="ngd-real-halo"></div>' +
       '<div class="ngd-real-arcs">' +
         '<div class="ngd-real-arc ngd-real-arc-a"></div>' +
         '<div class="ngd-real-arc ngd-real-arc-b"></div>' +
+        '<div class="ngd-real-arc ngd-real-arc-c"></div>' +
       '</div>' +
       '<div class="ngd-real-dust"></div>' +
       '<div class="ngd-real-field"></div>' +
@@ -226,19 +228,25 @@
     var DUST = [
       { t: '18%', l: '58%', s: 3, dur: 9, de: 0 },
       { t: '34%', l: '70%', s: 2, dur: 12, de: 2 },
+      { t: '30%', l: '66%', s: 9, dur: 11, de: 3.5, cls: 'is-glint' },
       { t: '26%', l: '86%', s: 3, dur: 10, de: 4 },
       { t: '55%', l: '62%', s: 2, dur: 13, de: 1 },
       { t: '64%', l: '82%', s: 4, dur: 11, de: 5 },
       { t: '44%', l: '92%', s: 2, dur: 14, de: 3 },
       { t: '72%', l: '55%', s: 3, dur: 12, de: 6 },
       { t: '15%', l: '75%', s: 2, dur: 15, de: 2.5 },
-      { t: '30%', l: '66%', s: 9, dur: 11, de: 3.5, glint: true },
-      { t: '52%', l: '78%', s: 8, dur: 14, de: 7, glint: true }
+      { t: '52%', l: '78%', s: 8, dur: 14, de: 7, cls: 'is-glint' },
+      { t: '22%', l: '48%', s: 13, dur: 16, de: 1.5, cls: 'is-bokeh' },
+      { t: '68%', l: '88%', s: 16, dur: 18, de: 6.5, cls: 'is-bokeh' },
+      { t: '40%', l: '55%', s: 2, dur: 12, de: 8 },
+      { t: '60%', l: '70%', s: 3, dur: 10, de: 9 },
+      { t: '12%', l: '64%', s: 2, dur: 13, de: 5.5 },
+      { t: '47%', l: '84%', s: 11, dur: 12, de: 2.8, cls: 'is-star' }
     ];
     var dustWrap = root.querySelector('.ngd-real-dust');
-    DUST.slice(0, isMobile ? 5 : DUST.length).forEach(function (d) {
+    DUST.slice(0, isMobile ? 7 : DUST.length).forEach(function (d) {
       var mote = document.createElement('i');
-      if (d.glint) mote.className = 'is-glint';
+      if (d.cls) mote.className = d.cls;
       mote.style.top = d.t;
       mote.style.left = d.l;
       mote.style.width = d.s + 'px';

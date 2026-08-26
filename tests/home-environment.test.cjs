@@ -142,10 +142,12 @@ function force(page, y) {
     const b = await force(page, yFeatured);
     const mid = await force(page, (yShapes + yFeatured) / 2);
     const between = (v, lo, hi) => v > Math.min(lo, hi) + 5 && v < Math.max(lo, hi) - 5;
-    expect(between(mid.top[0], a.top[0], b.top[0]),
-      'midpoint base color sits between the chapters: ' + [a.top[0], mid.top[0], b.top[0]].map(Math.round).join(' → '));
-    expect(between(mid.bright * 100, a.bright * 100, b.bright * 100) || Math.abs(a.bright - b.bright) < 0.02,
-      'brightness blends through the transition');
+    expect(between(mid.top[0], a.top[0], b.top[0]) || Math.abs(a.top[0] - b.top[0]) < 12,
+      'midpoint base color sits between the chapters (or they already match): ' +
+      [a.top[0], mid.top[0], b.top[0]].map(Math.round).join(' → '));
+    expect(between(mid.bright * 100, a.bright * 100, b.bright * 100) || Math.abs(a.bright - b.bright) < 0.08,
+      'brightness blends through the transition (or the chapters already match): ' +
+      [a.bright, mid.bright, b.bright].map((v) => v.toFixed(2)).join(' → '));
   });
 
   await scenario('distant silhouettes relocate as the chapters change', {}, async (page) => {

@@ -167,6 +167,62 @@ async function scenario(name, opts, fn) {
     await page.screenshot({ path: path.join(SCREEN_DIR, 'shapes-desktop.png') });
   });
 
+  await scenario('dark showroom styling: charcoal cards, gold pin, dark glass coin', {}, async (page) => {
+    await page.goto(SITE + '/index.html', { waitUntil: 'domcontentloaded' });
+    const st = await page.evaluate(() => {
+      const section = document.querySelector('#diamond-shapes');
+      const card = section.querySelector('.ngd-shape-card');
+      const cs = getComputedStyle(card);
+      const pin = getComputedStyle(card, '::before');
+      const media = getComputedStyle(card.querySelector('.ngd-shape-media'));
+      return {
+        darkClass: section.classList.contains('ngd-section-dark') &&
+          section.classList.contains('ngd-shapes-dark'),
+        border: cs.borderColor,
+        pin: pin.content !== 'none' && parseFloat(pin.width) > 4,
+        nameColor: getComputedStyle(card.querySelector('.ngd-shape-name')).color,
+        coinAnim: media.animationName,
+      };
+    });
+    expect(st.darkClass, 'the section wears the dark showroom classes');
+    expect(/rgba?\(207, 174, 110/.test(st.border), 'gold-tinted card border, got ' + st.border);
+    expect(st.pin, 'the gold pin crowns each card');
+    expect(st.nameColor === 'rgb(244, 239, 230)',
+      'light shape names on the dark card, got ' + st.nameColor);
+    expect(st.coinAnim !== 'none', 'the dark glass coin breathes');
+  });
+
+  await scenario('the Round card carries the real photographed stone; the rest keep their line-art', {}, async (page) => {
+    await page.goto(SITE + '/index.html', { waitUntil: 'domcontentloaded' });
+    await page.waitForFunction(() =>
+      document.querySelector('#diamond-shapes .ngd-shape-media.has-photo'), null, { timeout: 15000 });
+    const st = await page.evaluate(() => {
+      const round = document.querySelector('.ngd-shape-card[href*="shape=round"]');
+      const img = round.querySelector('.ngd-shape-photo');
+      const svgHidden = getComputedStyle(round.querySelector('.ngd-shape-media svg')).display;
+      const others = Array.from(document.querySelectorAll('#diamond-shapes .ngd-shape-media'))
+        .filter((m) => !m.classList.contains('has-photo'));
+      const othersWithArt = others.filter((m) => {
+        const svg = m.querySelector('svg');
+        return svg && getComputedStyle(svg).display !== 'none';
+      });
+      return {
+        src: img ? img.getAttribute('src') : null,
+        loaded: img ? img.naturalWidth > 0 : false,
+        breathe: img ? getComputedStyle(img).animationName : 'none',
+        svgHidden,
+        others: others.length,
+        othersWithArt: othersWithArt.length,
+      };
+    });
+    expect(/hero-diamond\.webp$/.test(st.src || ''), 'Round falls back to the shipped photograph');
+    expect(st.loaded, 'the photograph decoded');
+    expect(st.breathe !== 'none', 'the stone breathes gently');
+    expect(st.svgHidden === 'none', 'the line-art yields to the photograph');
+    expect(st.others === 7 && st.othersWithArt === 7,
+      'the seven cards without dedicated files keep their engraved line-art');
+  });
+
   await browser.close();
   started.server.close();
   const failed = results.filter((r) => !r.ok).length;
