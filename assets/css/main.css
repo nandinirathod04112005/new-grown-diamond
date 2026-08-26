@@ -1073,6 +1073,29 @@ code {
 
 .ngd-hero3d-stage.is-3d .ngd-hero-fallback { display: none; }
 
+/* Trust badges under the hero CTAs */
+.ngd-hero-badges {
+  margin-top: 2rem;
+  gap: 0.9rem 1.6rem;
+}
+.ngd-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--ngd-font-sans, "Jost", sans-serif);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(243, 238, 228, 0.72);
+}
+.ngd-hero-badge svg {
+  width: 1.05rem;
+  height: 1.05rem;
+  color: var(--ngd-gold, #cfae6e);
+  flex: none;
+}
+
 @media (max-width: 991.98px) {
   .ngd-hero { min-height: 0; }
   .ngd-hero3d-stage { max-width: min(74vw, 23rem); }

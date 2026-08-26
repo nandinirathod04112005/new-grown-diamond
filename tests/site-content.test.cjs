@@ -114,9 +114,9 @@ const heroState = () => ({
   await scenario('no saved rows: the designed built-in copy stays exactly as authored', { rows: [] }, async (page) => {
     await page.goto(SITE + '/index.html', { waitUntil: 'networkidle' });
     const state = await page.evaluate(heroState);
-    expect(state.eyebrow === 'Lab-grown · Certified · Bespoke', 'built-in eyebrow kept');
-    expect(/Certified lab-grown stones and fine jewellery/.test(state.lead), 'built-in lead kept');
-    expect(state.ctaText === 'Explore Diamonds' && state.ctaHref === 'diamonds.html', 'built-in CTA kept');
+    expect(state.eyebrow === 'Beautiful by nature. Ethical by choice.', 'built-in eyebrow kept');
+    expect(/Lab-grown diamonds with extraordinary beauty/.test(state.lead), 'built-in lead kept');
+    expect(state.ctaText === 'Shop Diamonds' && state.ctaHref === 'diamonds.html', 'built-in CTA kept');
   });
 
   await scenario('inactive sections fall back to the built-in copy', {
@@ -124,13 +124,13 @@ const heroState = () => ({
   }, async (page) => {
     await page.goto(SITE + '/index.html', { waitUntil: 'networkidle' });
     const state = await page.evaluate(heroState);
-    expect(state.eyebrow === 'Lab-grown · Certified · Bespoke', 'inactive row never applied');
+    expect(state.eyebrow === 'Beautiful by nature. Ethical by choice.', 'inactive row never applied');
   });
 
   await scenario('supabase failure leaves the page whole and calm', { fail: true }, async (page) => {
     await page.goto(SITE + '/index.html', { waitUntil: 'networkidle' });
     const state = await page.evaluate(heroState);
-    expect(state.eyebrow === 'Lab-grown · Certified · Bespoke', 'fallback copy on outage');
+    expect(state.eyebrow === 'Beautiful by nature. Ethical by choice.', 'fallback copy on outage');
     const alive = await page.evaluate(() => !!document.querySelector('#fine-jewellery') && !!document.querySelector('footer'));
     expect(alive, 'rest of the homepage unaffected');
   });

@@ -109,7 +109,7 @@
   function initHeroSequence() {
     var heroSection = document.querySelector('.ngd-hero');
     if (!heroSection) return;
-    var copy = heroSection.querySelectorAll('.ngd-eyebrow, h1, .ngd-divider, .ngd-lead, .ngd-btn');
+    var copy = heroSection.querySelectorAll('.ngd-eyebrow, h1, .ngd-divider, .ngd-lead, .ngd-btn, .ngd-hero-badge');
 
     if (reduced) {
       /* no sequence — everything simply present */

@@ -97,10 +97,14 @@ async function waitHeroMode(page, mode) {
       jewelleryHref: document.querySelector('.ngd-hero a[href="jewellery.html"]').getAttribute('href'),
       buttons: [...document.querySelectorAll('.ngd-hero a.ngd-btn')].map((a) => a.textContent.trim()),
     }));
-    expect(/Diamonds grown by science/.test(content.headline), 'strong headline present');
+    expect(/Crafted Brilliance/.test(content.headline), 'strong headline present');
     expect(content.lead.length > 20 && content.lead.length < 160, 'short supporting text');
-    expect(content.buttons.includes('Explore Diamonds'), 'Explore Diamonds button');
+    expect(content.buttons.includes('Shop Diamonds'), 'Shop Diamonds button');
     expect(content.buttons.includes('Explore Jewellery'), 'Explore Jewellery button');
+    const badges = await page.evaluate(() =>
+      [...document.querySelectorAll('.ngd-hero .ngd-hero-badge')].map((b) => b.textContent.trim()));
+    expect(badges.length === 3 && /Ethical/.test(badges[0]) && /Certified/.test(badges[1]) && /Lifetime/.test(badges[2]),
+      'three trust badges, got ' + badges.join(' | '));
   });
 
   await scenario('WebGL mode: canvas renders, fallback hidden, desktop profile', {}, async (page) => {
@@ -188,7 +192,7 @@ async function waitHeroMode(page, mode) {
     expect(state.headline, 'hero content unaffected');
   });
 
-  await scenario('Explore Diamonds navigates to diamonds.html', {}, async (page) => {
+  await scenario('Shop Diamonds navigates to diamonds.html', {}, async (page) => {
     await page.goto(SITE + '/index.html', { waitUntil: 'networkidle' });
     await page.click('.ngd-hero a[href="diamonds.html"]');
     await page.waitForURL('**/diamonds.html', { timeout: 8000 });
