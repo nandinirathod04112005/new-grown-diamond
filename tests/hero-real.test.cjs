@@ -195,10 +195,22 @@ function seekR(page, t) {
     expect(st.arcDurA !== st.arcDurB, 'each arc revolves at its own pace');
     expect(st.haze && st.hazeDrift !== 'none', 'the haze layer drifts');
     expect(st.rays && st.raysAnim !== 'none', 'god-rays fan from the upper right');
-    expect(st.dust === 34, 'a dense bokeh field around the stone, got ' + st.dust);
-    expect(st.bokeh === 6, 'six soft bokeh discs, got ' + st.bokeh);
-    expect(st.glints === 3 && st.glintAnim !== 'none', 'three occasional facet glints');
+    expect(st.dust === 38, 'a dense bokeh field around the stone, got ' + st.dust);
+    expect(st.bokeh === 8, 'eight soft bokeh discs, got ' + st.bokeh);
+    expect(st.glints === 4 && st.glintAnim !== 'none', 'four occasional facet glints');
     expect(st.star && st.star !== 'none', 'four-point star glints on facet edges');
+    const layers = await page.evaluate(() => ({
+      fore: document.querySelectorAll('.ngd-real-dust i.is-fore').length,
+      foreAnim: getComputedStyle(document.querySelector('.ngd-real-dust i.is-fore')).animationName,
+      stars: document.querySelectorAll('.ngd-real-dust i.is-star').length,
+      searchlight: getComputedStyle(document.querySelector('.ngd-real-searchlight')).animationName,
+      wanderMasked: (getComputedStyle(document.querySelector('.ngd-real-wander')).webkitMaskImage || '')
+        .includes('hero-diamond.webp'),
+    }));
+    expect(layers.fore === 2 && layers.foreAnim !== 'none', 'two foreground bokeh discs on their own layer');
+    expect(layers.stars === 3, 'three star glints, got ' + layers.stars);
+    expect(layers.searchlight !== 'none', 'the searchlight passes the stage');
+    expect(layers.wanderMasked, 'the wandering specular lives only on the stone');
     expect(st.badges === 3, 'the trust badges stand under the CTAs');
     const floor = await page.evaluate(() => ({
       pool: !!document.querySelector('.ngd-real-pool'),
@@ -224,6 +236,12 @@ function seekR(page, t) {
       };
     });
     expect(motion.sweep2Anim !== 'none' && motion.sweep2Masked, 'the second ice sweep runs inside the stone');
+    const alive = await page.evaluate(() => ({
+      floatAnim: getComputedStyle(document.querySelector('.ngd-real-float')).animationName,
+      wanderAnim: getComputedStyle(document.querySelector('.ngd-real-wander')).animationName,
+    }));
+    expect(alive.floatAnim !== 'none', 'the stone bobs and sways once settled');
+    expect(alive.wanderAnim !== 'none', 'the specular spot wanders the facets');
     expect(motion.comet && motion.cometAnim !== 'none', 'the comet head rides the ribbon');
     expect(motion.rise === 5 && motion.riseAnim !== 'none', 'diamond dust rises off the pool, got ' + motion.rise);
     expect(motion.shimmer !== 'none', 'the gold word shimmers');
@@ -435,6 +453,9 @@ function seekR(page, t) {
     }));
     expect(mobMotion.cometHidden, 'the comet rests on mobile');
     expect(mobMotion.rise === 3, 'three rising motes on mobile, got ' + mobMotion.rise);
+    const mobLight = await page.evaluate(() =>
+      getComputedStyle(document.querySelector('.ngd-real-searchlight')).display);
+    expect(mobLight === 'none', 'the searchlight rests on mobile');
   });
 
   await scenario('reduced motion: the finished composition, perfectly still', { assets: MAIN, reducedMotion: 'reduce' }, async (page) => {

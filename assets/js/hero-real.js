@@ -173,6 +173,7 @@
         '<div class="ngd-real-arc ngd-real-arc-e"></div>' +
       '</div>' +
       '<div class="ngd-real-rise"></div>' +
+      '<div class="ngd-real-searchlight"></div>' +
       '<div class="ngd-real-shard ngd-real-shard-a"><img alt="" decoding="async" loading="lazy"></div>' +
       '<div class="ngd-real-shard ngd-real-shard-b"><img alt="" decoding="async" loading="lazy"></div>' +
       '<div class="ngd-real-dust"></div>' +
@@ -183,6 +184,7 @@
           '<img class="ngd-real-img" alt="" decoding="async">' +
           '<div class="ngd-real-sweep"></div>' +
           '<div class="ngd-real-sweep2"></div>' +
+          '<div class="ngd-real-wander"></div>' +
           '<div class="ngd-real-spectral"></div>' +
           '<div class="ngd-real-flash"></div>' +
         '</div>' +
@@ -200,7 +202,7 @@
 
     /* The photograph is the mask: light effects only exist inside the
        stone's silhouette, so sparkle reads as facets catching light. */
-    ['.ngd-real-sweep', '.ngd-real-sweep2', '.ngd-real-spectral', '.ngd-real-flash'].forEach(function (sel) {
+    ['.ngd-real-sweep', '.ngd-real-sweep2', '.ngd-real-wander', '.ngd-real-spectral', '.ngd-real-flash'].forEach(function (sel) {
       var el = root.querySelector(sel);
       var v = 'url("' + mainUrl + '")';
       el.style.webkitMaskImage = v;
@@ -269,7 +271,11 @@
       { t: '24%', l: '12%', s: 2, dur: 14, de: 3.6 },
       { t: '48%', l: '8%', s: 3, dur: 16, de: 6.4 },
       { t: '70%', l: '16%', s: 12, dur: 18, de: 2.6, cls: 'is-bokeh' },
-      { t: '85%', l: '30%', s: 2, dur: 13, de: 8.2 }
+      { t: '85%', l: '30%', s: 2, dur: 13, de: 8.2 },
+      { t: '42%', l: '73%', s: 8, dur: 12, de: 10.2, cls: 'is-glint' },
+      { t: '20%', l: '60%', s: 10, dur: 15, de: 6.9, cls: 'is-star' },
+      { t: '58%', l: '52%', s: 24, dur: 17, de: 4.8, cls: 'is-bokeh is-fore' },
+      { t: '30%', l: '96%', s: 20, dur: 14, de: 9.1, cls: 'is-bokeh is-fore' }
     ];
     var dustWrap = root.querySelector('.ngd-real-dust');
     DUST.slice(0, isMobile ? 10 : DUST.length).forEach(function (d) {

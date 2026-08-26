@@ -1041,6 +1041,7 @@ html.ngd-fx-ready .ngd-reveal.is-visible .ngd-divider {
     transparent 47deg);
   filter: blur(22px);
   transform-origin: 78% 12%;
+  translate: calc(var(--ngd-par, 0) * 0.3px) 0;
   animation: ngd-real-rays 44s ease-in-out infinite alternate;
   opacity: calc(0.9 * (1 - var(--ngd-heroexit, 0)));
 }
@@ -1080,6 +1081,19 @@ html.ngd-fx-ready .ngd-reveal.is-visible .ngd-divider {
 .ngd-real-dust i.is-bokeh {
   filter: blur(2.5px);
   background: radial-gradient(circle, rgba(236, 226, 205, 0.5), rgba(236, 226, 205, 0) 70%);
+}
+/* foreground bokeh: nearer, softer, and answering the pointer harder */
+.ngd-real-dust i.is-fore {
+  filter: blur(4.5px);
+  translate: calc(var(--ngd-par, 0) * 1.8px) 0;
+  animation-name: ngd-real-twinkle-still;
+}
+@keyframes ngd-real-twinkle-still {
+  0%, 100% { opacity: 0; }
+  16% { opacity: 0.7; }
+  36% { opacity: 0.2; }
+  56% { opacity: 0.55; }
+  78% { opacity: 0.1; }
 }
 /* a tiny four-point star glint — light catching a facet edge */
 .ngd-real-dust i.is-star {
@@ -1158,13 +1172,16 @@ html.ngd-fx-ready .ngd-reveal.is-visible .ngd-divider {
   filter: blur(calc(var(--m-b, 7) * 1px + var(--ngd-heroexit, 0) * 6px));
   will-change: transform, opacity, filter;
 }
-.ngd-real-float { position: relative; }
+.ngd-real-float { position: relative; transform-style: preserve-3d; }
+/* the stone lives: bob, a slow 3D sway, and a whisper of roll */
 .ngd-real-settled .ngd-real-float {
-  animation: ngd-real-float 9s ease-in-out infinite;
+  animation: ngd-real-float 8s ease-in-out infinite;
 }
 @keyframes ngd-real-float {
-  0%, 100% { translate: 0 0; rotate: -0.4deg; }
-  50% { translate: 0 -9px; rotate: 0.5deg; }
+  0%, 100% { translate: 0 0; rotate: -0.8deg; transform: rotateY(-4deg); }
+  25% { translate: 0 -7px; }
+  50% { translate: 0 -12px; rotate: 0.9deg; transform: rotateY(4deg); }
+  75% { translate: 0 -5px; }
 }
 .ngd-real-img {
   display: block;
@@ -1274,13 +1291,13 @@ html.ngd-fx-ready .ngd-reveal.is-visible .ngd-divider {
 .ngd-real-shard-a {
   left: -9%;
   bottom: -14%;
-  transform: rotate(38deg);
+  transform: rotate(38deg) translateX(calc(var(--ngd-par, 0) * -1.4px));
 }
 .ngd-real-shard-b {
   right: -8%;
   bottom: -18%;
   width: min(24vw, 21rem);
-  transform: rotate(-24deg) scaleX(-1);
+  transform: rotate(-24deg) scaleX(-1) translateX(calc(var(--ngd-par, 0) * 1.4px));
   animation-duration: 34s;
   animation-delay: -9s;
 }
@@ -1654,6 +1671,49 @@ body[data-ngd-page="home"] .ngd-navbar.is-scrolled > .container {
 
 /* ══════════ hero motion pass: dual sweeps, comet, rising dust ══════════ */
 
+/* a soft specular spot wanders across the facets continuously —
+   the photo is its mask, so it lives only on the stone */
+.ngd-real-wander {
+  position: absolute;
+  inset: 0;
+  mix-blend-mode: screen;
+  background: radial-gradient(32% 26% at 50% 50%,
+    rgba(255, 250, 238, 0.42), rgba(230, 214, 178, 0.1) 55%, transparent 75%);
+  background-repeat: no-repeat;
+  opacity: 0;
+}
+.ngd-real-settled .ngd-real-wander {
+  opacity: 1;
+  animation: ngd-real-wander 14s ease-in-out infinite;
+}
+@keyframes ngd-real-wander {
+  0%, 100% { translate: -14% -10%; }
+  28% { translate: 16% -4%; }
+  55% { translate: 10% 14%; }
+  78% { translate: -12% 8%; }
+}
+
+/* a wide cinematic searchlight pass across the whole stage */
+.ngd-real-searchlight {
+  position: absolute;
+  inset: -12% -30%;
+  background: linear-gradient(112deg,
+    transparent 44%,
+    rgba(236, 218, 178, 0.05) 49%,
+    rgba(255, 248, 232, 0.09) 52%,
+    rgba(236, 218, 178, 0.05) 55%,
+    transparent 60%);
+  filter: blur(26px);
+  transform: translateX(-130%);
+  animation: ngd-real-searchlight 13s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes ngd-real-searchlight {
+  0% { transform: translateX(-130%); }
+  40% { transform: translateX(130%); }
+  100% { transform: translateX(130%); }
+}
+
 /* a second, ice-white sweep travels vertically through the stone so
    facets trade light in two directions (the photo is its mask too) */
 .ngd-real-sweep2 {
@@ -1716,7 +1776,8 @@ body[data-ngd-page="home"] .ngd-navbar.is-scrolled > .container {
   100% { opacity: 0; translate: 6px -76px; }
 }
 .ngd-real-mobile .ngd-real-rise i { bottom: auto; top: 30%; }
-.ngd-real-mobile .ngd-real-arc-e { display: none; }
+.ngd-real-mobile .ngd-real-arc-e,
+.ngd-real-mobile .ngd-real-searchlight { display: none; }
 
 /* the gold word shimmers; the gold CTA breathes and its arrow nudges */
 body[data-ngd-page="home"] .ngd-hero h1 .ngd-italic-accent {
@@ -1745,6 +1806,50 @@ body[data-ngd-page="home"] .ngd-hero .ngd-btn-gold .ngd-btn-arrow {
   0%, 82%, 100% { transform: translateX(0); }
   88% { transform: translateX(3px); }
   94% { transform: translateX(0); }
+}
+
+/* ══════════ refined strip hovers + homepage blur-out reveals ══════════ */
+.ngd-shapes-dark .ngd-shape-card {
+  transition: border-color 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.ngd-shapes-dark .ngd-shape-card::before {
+  transition: box-shadow 0.45s ease, transform 0.45s ease;
+}
+.ngd-shapes-dark .ngd-shape-card:hover::before {
+  box-shadow: 0 0 16px rgba(232, 204, 144, 0.85);
+  transform: scale(1.25);
+}
+.ngd-shapes-dark .ngd-shape-name {
+  transition: letter-spacing 0.45s ease, color 0.45s ease;
+}
+.ngd-shapes-dark .ngd-shape-card:hover .ngd-shape-name {
+  letter-spacing: 0.2em;
+  color: #fdf8ec;
+}
+.ngd-shape-card:hover .ngd-shape-photo {
+  transform: scale(1.12) rotate(-3deg);
+}
+
+/* homepage reveals arrive out of a soft blur, on a luxe curve */
+body[data-ngd-page="home"] .ngd-reveal {
+  transform: translateY(26px);
+  filter: blur(6px);
+  transition:
+    opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+}
+body[data-ngd-page="home"] .ngd-reveal.is-visible {
+  transform: none;
+  filter: blur(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  body[data-ngd-page="home"] .ngd-reveal {
+    transform: none;
+    filter: none;
+    transition: none;
+  }
 }
 
 /* rest with the stage: off-view and reduced motion */
