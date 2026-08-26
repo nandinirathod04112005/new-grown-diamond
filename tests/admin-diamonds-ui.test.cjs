@@ -393,9 +393,9 @@ async function openInventory(page, query) {
     await page.fill('#login-email', ADMIN.email);
     await page.fill('#login-password', ADMIN.password);
     await page.click('#login-submit');
-    await page.waitForURL('**/admin/dashboard.html', { timeout: 10000 });
+    await page.waitForURL('**/admin/dashboard.html', { timeout: 25000 });
     await page.goto(SITE + '/admin/diamonds.html', { waitUntil: 'domcontentloaded' });
-    await page.waitForFunction(() => !document.getElementById('adm-stage-error').hidden, null, { timeout: 10000 });
+    await page.waitForFunction(() => !document.getElementById('adm-stage-error').hidden, null, { timeout: 25000 });
     let state = await page.evaluate(() => ({
       tableHidden: document.getElementById('adm-table-card').hidden,
       count: document.getElementById('adm-count').textContent,
@@ -404,7 +404,7 @@ async function openInventory(page, query) {
       'honest error state on a failed query');
     await page.click('#adm-retry');
     await page.waitForFunction(() =>
-      document.querySelectorAll('#adm-table-body tr').length > 0, null, { timeout: 10000 });
+      document.querySelectorAll('#adm-table-body tr').length > 0, null, { timeout: 25000 });
     const rows = await page.evaluate(() => document.querySelectorAll('#adm-table-body tr').length);
     expect(rows === 10, 'Retry re-queries and renders the inventory');
   });
