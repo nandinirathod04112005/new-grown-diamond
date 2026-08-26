@@ -132,17 +132,31 @@ async function scenario(name, opts, fn) {
     }, null, { timeout: 5000 });
   });
 
-  await scenario('desktop layout: 4 cards per row', {}, async (page) => {
+  await scenario('desktop: a single showcase strip with a working arrow', {}, async (page) => {
     await page.goto(SITE + '/index.html', { waitUntil: 'networkidle' });
-    const rows = await page.evaluate(() => {
-      const tops = [...document.querySelectorAll('#diamond-shapes .ngd-shape-card')]
+    await page.waitForSelector('.ngd-strip-arrow', { timeout: 8000 });
+    const st = await page.evaluate(() => {
+      const strip = document.querySelector('#diamond-shapes .ngd-shape-strip');
+      const tops = [...strip.querySelectorAll('.ngd-shape-card')]
         .map((c) => Math.round(c.getBoundingClientRect().top));
-      return [...new Set(tops)].length;
+      return {
+        rows: [...new Set(tops)].length,
+        scrollable: strip.scrollWidth > strip.clientWidth + 40,
+        arrowVisible: getComputedStyle(document.querySelector('.ngd-strip-arrow')).display !== 'none',
+        headingHidden: getComputedStyle(
+          document.querySelector('#diamond-shapes h2').closest('.visually-hidden')).position === 'absolute',
+      };
     });
-    expect(rows === 2, `2 rows of 4 on desktop, got ${rows} distinct row tops`);
+    expect(st.rows === 1, `all eight cards ride one strip row, got ${st.rows}`);
+    expect(st.scrollable, 'the strip extends past the container');
+    expect(st.arrowVisible, 'the gold arrow stands ready');
+    expect(st.headingHidden, 'the heading serves screen readers only — the strip flows from the hero');
+    await page.click('.ngd-strip-arrow');
+    await page.waitForFunction(() =>
+      document.querySelector('#diamond-shapes .ngd-shape-strip').scrollLeft > 60, null, { timeout: 5000 });
   });
 
-  await scenario('mobile layout: 2 per row, no overflow', { viewport: { width: 390, height: 844 } }, async (page) => {
+  await scenario('mobile: one swipeable strip row, no page overflow', { viewport: { width: 390, height: 844 } }, async (page) => {
     await page.goto(SITE + '/index.html', { waitUntil: 'networkidle' });
     const state = await page.evaluate(() => {
       const cards = [...document.querySelectorAll('#diamond-shapes .ngd-shape-card')];
@@ -153,8 +167,17 @@ async function scenario(name, opts, fn) {
         clientW: document.documentElement.clientWidth,
       };
     });
-    expect(state.rowCount === 4, `4 rows of 2 on mobile, got ${state.rowCount}`);
-    expect(state.scrollW <= state.clientW + 1, `no overflow s=${state.scrollW} c=${state.clientW}`);
+    expect(state.rowCount === 1, `the strip stays one swipeable row on mobile, got ${state.rowCount}`);
+    expect(state.scrollW <= state.clientW + 1, `no page overflow s=${state.scrollW} c=${state.clientW}`);
+    const swipe = await page.evaluate(() => {
+      const strip = document.querySelector('#diamond-shapes .ngd-shape-strip');
+      return {
+        scrollable: strip.scrollWidth > strip.clientWidth + 40,
+        arrowHidden: getComputedStyle(document.querySelector('.ngd-strip-arrow')).display === 'none',
+      };
+    });
+    expect(swipe.scrollable, 'the strip swipes horizontally');
+    expect(swipe.arrowHidden, 'no arrow on touch — the thumb does the work');
     await page.evaluate(() => document.querySelector('#diamond-shapes').scrollIntoView());
     await page.waitForTimeout(900);
     await page.screenshot({ path: path.join(SCREEN_DIR, 'shapes-mobile.png') });
@@ -165,6 +188,62 @@ async function scenario(name, opts, fn) {
     await page.evaluate(() => document.querySelector('#diamond-shapes').scrollIntoView({ block: 'start' }));
     await page.waitForTimeout(900);
     await page.screenshot({ path: path.join(SCREEN_DIR, 'shapes-desktop.png') });
+  });
+
+  await scenario('dark showroom styling: charcoal cards, gold pin, dark glass coin', {}, async (page) => {
+    await page.goto(SITE + '/index.html', { waitUntil: 'domcontentloaded' });
+    const st = await page.evaluate(() => {
+      const section = document.querySelector('#diamond-shapes');
+      const card = section.querySelector('.ngd-shape-card');
+      const cs = getComputedStyle(card);
+      const pin = getComputedStyle(card, '::before');
+      const media = getComputedStyle(card.querySelector('.ngd-shape-media'));
+      return {
+        darkClass: section.classList.contains('ngd-section-dark') &&
+          section.classList.contains('ngd-shapes-dark'),
+        border: cs.borderColor,
+        pin: pin.content !== 'none' && parseFloat(pin.width) > 4,
+        nameColor: getComputedStyle(card.querySelector('.ngd-shape-name')).color,
+        coinAnim: media.animationName,
+      };
+    });
+    expect(st.darkClass, 'the section wears the dark showroom classes');
+    expect(/rgba?\(207, 174, 110/.test(st.border), 'gold-tinted card border, got ' + st.border);
+    expect(st.pin, 'the gold pin crowns each card');
+    expect(st.nameColor === 'rgb(244, 239, 230)',
+      'light shape names on the dark card, got ' + st.nameColor);
+    expect(st.coinAnim !== 'none', 'the dark glass coin breathes');
+  });
+
+  await scenario('the Round card carries the real photographed stone; the rest keep their line-art', {}, async (page) => {
+    await page.goto(SITE + '/index.html', { waitUntil: 'domcontentloaded' });
+    await page.waitForFunction(() =>
+      document.querySelector('#diamond-shapes .ngd-shape-media.has-photo'), null, { timeout: 15000 });
+    const st = await page.evaluate(() => {
+      const round = document.querySelector('.ngd-shape-card[href*="shape=round"]');
+      const img = round.querySelector('.ngd-shape-photo');
+      const svgHidden = getComputedStyle(round.querySelector('.ngd-shape-media svg')).display;
+      const others = Array.from(document.querySelectorAll('#diamond-shapes .ngd-shape-media'))
+        .filter((m) => !m.classList.contains('has-photo'));
+      const othersWithArt = others.filter((m) => {
+        const svg = m.querySelector('svg');
+        return svg && getComputedStyle(svg).display !== 'none';
+      });
+      return {
+        src: img ? img.getAttribute('src') : null,
+        loaded: img ? img.naturalWidth > 0 : false,
+        breathe: img ? getComputedStyle(img).animationName : 'none',
+        svgHidden,
+        others: others.length,
+        othersWithArt: othersWithArt.length,
+      };
+    });
+    expect(/hero-diamond\.webp$/.test(st.src || ''), 'Round falls back to the shipped photograph');
+    expect(st.loaded, 'the photograph decoded');
+    expect(st.breathe !== 'none', 'the stone breathes gently');
+    expect(st.svgHidden === 'none', 'the line-art yields to the photograph');
+    expect(st.others === 7 && st.othersWithArt === 7,
+      'the seven cards without dedicated files keep their engraved line-art');
   });
 
   await browser.close();

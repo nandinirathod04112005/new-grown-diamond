@@ -1073,6 +1073,34 @@ code {
 
 .ngd-hero3d-stage.is-3d .ngd-hero-fallback { display: none; }
 
+/* Quiet text-style Sign in beside the gold Create account pill */
+.ngd-nav-signin {
+  padding: 0.45rem 0.4rem;
+  font-family: var(--ngd-font-sans, "Jost", sans-serif);
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: rgba(28, 25, 20, 0.78);
+  transition: color var(--ngd-fast, 0.2s) ease;
+}
+.ngd-navbar-dark .ngd-nav-signin { color: rgba(244, 239, 230, 0.82); }
+.ngd-nav-signin:hover,
+.ngd-nav-signin:focus-visible { color: var(--ngd-gold, #cfae6e); }
+
+/* Arrow that rides inside CTAs and inline links */
+.ngd-btn-arrow {
+  width: 1em;
+  height: 1em;
+  margin-left: 0.5em;
+  vertical-align: -0.14em;
+  flex: none;
+  transition: transform 0.3s ease;
+}
+.ngd-btn:hover .ngd-btn-arrow,
+a:hover > .ngd-btn-arrow { transform: translateX(3px); }
+
 /* Trust badges under the hero CTAs */
 .ngd-hero-badges {
   margin-top: 2rem;
