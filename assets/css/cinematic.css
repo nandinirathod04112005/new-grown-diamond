@@ -602,9 +602,14 @@ html.ngd-env-on body[data-ngd-page="home"] #manufacturing-story::before {
 }
 /* light chapters float as translucent panels over the bright
    crystal state of the environment */
-html.ngd-env-on body[data-ngd-page="home"] #diamond-shapes,
 html.ngd-env-on body[data-ngd-page="home"] #recently-viewed {
   background: rgba(244, 242, 238, 0.9);
+}
+/* the Cut Collection joined the dark showroom — the canvas is its
+   ground when the environment runs */
+html.ngd-env-on body[data-ngd-page="home"] #diamond-shapes {
+  background-color: transparent;
+  background-image: none;
 }
 
 /* Fine Jewellery becomes the black / champagne studio on the
@@ -1325,6 +1330,14 @@ html.ngd-fx-ready .ngd-reveal.is-visible .ngd-divider {
 }
 
 /* ══════════ CUT COLLECTION — dark showroom cards ══════════ */
+/* unconditional dark ground, so the look holds without the canvas */
+body[data-ngd-page="home"] #diamond-shapes.ngd-shapes-dark {
+  background-color: #0a0d15;
+  background-image:
+    radial-gradient(50rem 26rem at 82% 10%, rgba(90, 130, 220, 0.08), transparent 60%),
+    radial-gradient(44rem 24rem at 12% 92%, rgba(217, 192, 138, 0.06), transparent 58%);
+  color: #f4f2ee;
+}
 .ngd-shapes-dark .ngd-shape-card {
   position: relative;
   background: linear-gradient(168deg, rgba(24, 28, 41, 0.94), rgba(9, 11, 18, 0.97));
