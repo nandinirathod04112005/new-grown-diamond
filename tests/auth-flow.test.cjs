@@ -555,7 +555,11 @@ async function alertText(page, boxId) {
     await uiLogin(page, 'customer@ngd.test', 'Customer#12345');
     await page.waitForURL('**/account/dashboard.html', { timeout: 8000 });
     backend.users['customer@ngd.test'].profile.account_status = 'suspended';
-    await page.reload({ waitUntil: 'domcontentloaded' });
+    await page.reload({ waitUntil: 'domcontentloaded' }).catch((err) => {
+      /* the suspension guard's own redirect can supersede the reload
+         mid-flight — that abort IS the behaviour under test */
+      if (!/ERR_ABORTED|frame was detached/i.test(String(err))) throw err;
+    });
     await page.waitForURL('**/login.html', { timeout: 8000 });
     const text = await alertText(page, 'login-alert');
     expect(/currently unavailable/i.test(text), 'unavailable notice after mid-session suspension');
