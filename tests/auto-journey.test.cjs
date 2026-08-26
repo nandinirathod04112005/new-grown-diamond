@@ -272,9 +272,13 @@ async function fastTour(page, extra) {
     await fastTour(page, { dwell: 4000 });
     await page.waitForFunction(() => window.NGDAutoJourney.state.running(), null, { timeout: 15000 });
     await page.click('.ngd-hero a.ngd-btn-gold[href="diamonds.html"]', { force: true });
-    /* generous window: the software renderer's film frames can stretch
-       the 520 ms departure — priority, not wall-clock, is under test */
-    await page.waitForURL('**/diamonds.html', { timeout: 20000 });
+    /* priority is the claim: the click must engage the departure at
+       once (leaving state), even when the software renderer stretches
+       the actual navigation — which then gets a fatigue-sized window */
+    await page.waitForFunction(() =>
+      document.body.classList.contains('ngd-pt-leaving') ||
+      location.pathname.endsWith('diamonds.html'), null, { timeout: 8000 });
+    await page.waitForURL('**/diamonds.html', { timeout: 30000 });
     const st = await page.evaluate(() => ({
       mode: window.NGDAutoJourney ? window.NGDAutoJourney.state.mode() : null,
       here: location.pathname.endsWith('diamonds.html'),
