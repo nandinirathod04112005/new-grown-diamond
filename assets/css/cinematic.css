@@ -2155,8 +2155,18 @@ body[data-ngd-page="home"] .ngd-reveal.is-visible {
 @media (max-width: 880px) {
   .ngd-atom-runway { --ngd-atom-run: 320vh; }
   .ngd-atom-h { font-size: clamp(2rem, 9vw, 2.7rem); }
+  /* no side room on a phone: the closing statement takes the upper
+     third and the report becomes a centred lower sheet */
+  .ngd-atom-close {
+    justify-content: flex-start;
+    padding-top: 11vh;
+  }
+  .ngd-atom-close .ngd-atom-sub { max-width: 24rem; }
+  .ngd-atom-close .ngd-atom-btnrow { margin-top: 1.2rem; }
   .ngd-atom-cert {
-    right: 0.9rem;
+    top: 64%;
+    right: 50%;
+    margin-right: calc(min(64vw, 340px) / -2);
     width: min(64vw, 340px);
     padding: 0.95rem 1.05rem;
   }

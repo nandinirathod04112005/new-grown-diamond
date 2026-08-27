@@ -303,6 +303,10 @@ const seek = (page, p) => page.evaluate((v) => window.NGDAtomStory.seek(v), p);
       const section = document.querySelector('#atom-story');
       window.NGDAtomStory.seek(0.85);
       const cert = section.querySelector('[data-atom-cert]').getBoundingClientRect();
+      window.NGDAtomStory.seek(0.99);
+      const pinR = section.querySelector('.ngd-atom-pin').getBoundingClientRect();
+      const certEnd = section.querySelector('[data-atom-cert]').getBoundingClientRect();
+      const btnrow = section.querySelector('.ngd-atom-btnrow').getBoundingClientRect();
       return {
         runwayH: section.querySelector('.ngd-atom-runway').offsetHeight,
         vh: window.innerHeight,
@@ -311,12 +315,16 @@ const seek = (page, p) => page.evaluate((v) => window.NGDAtomStory.seek(v), p);
         marksGone: getComputedStyle(section.querySelector('[data-atom-marks]')).display === 'none',
         cueGone: getComputedStyle(section.querySelector('.ngd-atom-cue')).display === 'none',
         h2Fits: section.querySelector('[data-atom-open] h2').getBoundingClientRect().width <= window.innerWidth,
+        ctaClear: btnrow.bottom <= certEnd.top + 8,
+        certOnStage: certEnd.bottom - pinR.top <= window.innerHeight + 1,
       };
     });
     expect(Math.abs(st.runwayH - st.vh * 3.2) < 60, 'the runway compresses to 320vh, got ' + st.runwayH);
     expect(st.certW <= 342 && st.certInside, 'the report fits on screen, got ' + st.certW);
     expect(st.marksGone && st.cueGone, 'marks and cue yield the small stage');
     expect(st.h2Fits, 'the opening line fits the viewport');
+    expect(st.ctaClear, 'the closing CTAs sit clear above the report sheet');
+    expect(st.certOnStage, 'the lower report sheet stays on the pinned stage');
   });
 
   await browser.close();
