@@ -104,6 +104,13 @@
         });
         if (fresh.length) staggerNodes(fresh);
       }).observe(grid, { childList: true, subtree: true });
+
+      /* a very fast fetch can render rows between the grid's own
+         script and this one — catch up on anything already there */
+      var early = Array.prototype.filter.call(grid.children, function (node) {
+        return node.nodeType === 1 && !node.__ngdStag;
+      });
+      if (early.length) staggerNodes(early);
     });
   }
 
