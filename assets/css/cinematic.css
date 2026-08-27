@@ -1871,3 +1871,304 @@ body[data-ngd-page="home"] .ngd-reveal.is-visible {
     animation: none !important;
   }
 }
+
+/* ============================================================
+   FROM ONE ATOM — pinned scroll story (#atom-story)
+   ------------------------------------------------------------
+   A tall runway with a sticky stage inside it. The stage holds
+   the WebGL canvas, the opening/closing headlines, the scale
+   readout, and the grading-report panel; assets/js/atom-story.js
+   drives every one of them from the runway's scroll progress.
+   ============================================================ */
+#atom-story.ngd-atom {
+  position: relative;
+  padding: 0;
+  background:
+    radial-gradient(90% 60% at 50% 0%, rgba(23, 30, 48, 0.55), transparent 62%),
+    radial-gradient(70% 55% at 50% 100%, rgba(16, 20, 33, 0.5), transparent 65%),
+    linear-gradient(180deg, #060810 0%, #04050b 48%, #05070d 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+.ngd-atom-runway {
+  --ngd-atom-run: 420vh;
+  position: relative;
+  height: var(--ngd-atom-run);
+}
+.ngd-atom-pin {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100svh;
+  overflow: hidden;
+}
+.ngd-atom-gl {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  z-index: 1;
+}
+
+/* opening + closing statements: full-stage flex layers so the
+   engine's translateY/scale transforms never fight a centering
+   transform of their own */
+.ngd-atom-open,
+.ngd-atom-close {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0 clamp(1.25rem, 6vw, 4rem);
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+.ngd-atom-close { opacity: 0; }
+.ngd-atom-h {
+  font-family: var(--ngd-font-display);
+  font-weight: 400;
+  font-size: clamp(2.3rem, 5.4vw, 4.1rem);
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+  color: #f4efe4;
+  margin: 0 0 1rem;
+}
+.ngd-atom-h .ngd-italic-accent { color: var(--ngd-gold-soft, #d9c08a); }
+.ngd-atom-mask { display: block; overflow: hidden; }
+.ngd-atom-line { display: block; }
+.ngd-atom-sub {
+  font-family: var(--ngd-font-body);
+  font-size: clamp(0.85rem, 1.05vw, 0.98rem);
+  line-height: 1.65;
+  color: rgba(233, 231, 240, 0.6);
+  max-width: 33rem;
+  margin: 0 auto;
+}
+.ngd-atom-btnrow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  justify-content: center;
+  margin-top: 1.9rem;
+}
+
+/* stage readout — bottom left */
+.ngd-atom-stage {
+  position: absolute;
+  left: clamp(1.25rem, 4.5vw, 3.25rem);
+  bottom: clamp(1.4rem, 5.5vh, 3rem);
+  z-index: 6;
+  pointer-events: none;
+}
+.ngd-atom-name {
+  font-family: var(--ngd-font-display);
+  font-size: clamp(1.35rem, 2.4vw, 2rem);
+  line-height: 1.15;
+  color: #efe9db;
+}
+.ngd-atom-scale {
+  font-family: var(--ngd-font-body);
+  font-size: 0.62rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #9fd8ff;
+  margin: 0.3rem 0 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+.ngd-atom-track {
+  width: clamp(140px, 17vw, 235px);
+  height: 1px;
+  background: rgba(255, 255, 255, 0.14);
+  overflow: hidden;
+}
+.ngd-atom-track i {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, #9fd8ff, var(--ngd-gold-soft, #d9c08a));
+  transition: width 0.18s linear;
+}
+.ngd-atom-marks {
+  display: flex;
+  gap: clamp(0.5rem, 0.9vw, 0.85rem);
+  margin-top: 0.6rem;
+  font-family: var(--ngd-font-body);
+  font-size: 0.53rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(240, 240, 245, 0.34);
+}
+.ngd-atom-marks span { transition: color 0.35s ease; }
+.ngd-atom-marks span.on { color: #9fd8ff; }
+
+/* scroll cue — bottom right */
+.ngd-atom-cue {
+  position: absolute;
+  right: clamp(1.25rem, 4.5vw, 3.25rem);
+  bottom: clamp(1.5rem, 5.5vh, 3.1rem);
+  z-index: 6;
+  font-family: var(--ngd-font-body);
+  font-size: 0.62rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: rgba(240, 240, 245, 0.5);
+  pointer-events: none;
+  animation: ngd-atom-cuefloat 2.4s ease-in-out infinite;
+}
+.ngd-atom-cue b { font-weight: 600; color: var(--ngd-gold-soft, #d9c08a); }
+@keyframes ngd-atom-cuefloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(5px); }
+}
+
+/* the grading report — right of centre, dark glass */
+.ngd-atom-cert {
+  position: absolute;
+  top: 50%;
+  right: clamp(1rem, 5.5vw, 5rem);
+  transform: translateY(-50%) translateX(36px);
+  width: min(36vw, 400px);
+  z-index: 7;
+  padding: clamp(1.1rem, 1.6vw, 1.5rem) clamp(1.2rem, 1.7vw, 1.6rem);
+  background: linear-gradient(160deg, rgba(14, 17, 27, 0.92), rgba(8, 10, 17, 0.88));
+  border: 1px solid rgba(207, 174, 110, 0.26);
+  border-radius: 14px;
+  box-shadow: 0 34px 90px rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  opacity: 0;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+.ngd-atom-cert-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-bottom: 0.65rem;
+  margin-bottom: 0.45rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+.ngd-atom-cert-t {
+  font-family: var(--ngd-font-display);
+  font-style: italic;
+  font-size: 1.02rem;
+  color: #f0ead9;
+}
+.ngd-atom-cert-no {
+  font-family: var(--ngd-font-body);
+  font-size: 0.64rem;
+  letter-spacing: 0.14em;
+  color: var(--ngd-gold-soft, #d9c08a);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.ngd-atom-fld {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.33rem 0;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.07);
+  font-family: var(--ngd-font-body);
+  font-size: 0.78rem;
+}
+.ngd-atom-fld:last-of-type { border-bottom: 0; }
+.ngd-atom-fld span {
+  color: rgba(240, 240, 245, 0.48);
+  letter-spacing: 0.04em;
+}
+.ngd-atom-fld b {
+  font-weight: 500;
+  color: rgba(240, 240, 245, 0.3);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  transition: color 0.4s ease, text-shadow 0.4s ease;
+}
+.ngd-atom-fld.done b {
+  color: #f4efe4;
+  text-shadow: 0 0 16px rgba(159, 216, 255, 0.22);
+}
+.ngd-atom-seal {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.85rem;
+  font-family: var(--ngd-font-body);
+  font-size: 0.6rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--ngd-gold-soft, #d9c08a);
+  opacity: 0;
+}
+
+/* WebGL unavailable: hide the canvas, keep the story over a
+   quiet gradient suggestion of the growing stone */
+.ngd-atom-nogl .ngd-atom-gl { display: none; }
+.ngd-atom-nogl .ngd-atom-pin::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    radial-gradient(58% 48% at 50% 54%, rgba(159, 216, 255, 0.1), transparent 62%),
+    radial-gradient(38% 32% at 50% 57%, rgba(207, 174, 110, 0.09), transparent 66%);
+  pointer-events: none;
+}
+
+/* static mode (reduced motion, or GSAP absent): the finished
+   composition in normal flow — no runway, no canvas */
+.ngd-atom-static .ngd-atom-runway { height: auto; }
+.ngd-atom-static .ngd-atom-pin {
+  position: relative;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2.25rem;
+  padding: clamp(4rem, 9vh, 6.5rem) 1.25rem;
+  overflow: visible;
+}
+.ngd-atom-static .ngd-atom-gl,
+.ngd-atom-static .ngd-atom-open,
+.ngd-atom-static .ngd-atom-cue { display: none; }
+.ngd-atom-static .ngd-atom-close,
+.ngd-atom-static .ngd-atom-stage,
+.ngd-atom-static .ngd-atom-cert {
+  position: static;
+  opacity: 1 !important;
+  transform: none !important;
+  pointer-events: auto;
+}
+.ngd-atom-static .ngd-atom-close { padding: 0 1rem; }
+.ngd-atom-static .ngd-atom-stage { text-align: center; }
+.ngd-atom-static .ngd-atom-track { margin: 0 auto; }
+.ngd-atom-static .ngd-atom-marks { justify-content: center; }
+.ngd-atom-static .ngd-atom-cert { width: min(92vw, 400px); }
+.ngd-atom-static .ngd-atom-seal { opacity: 1 !important; }
+
+/* compact stage */
+@media (max-width: 880px) {
+  .ngd-atom-runway { --ngd-atom-run: 320vh; }
+  .ngd-atom-h { font-size: clamp(2rem, 9vw, 2.7rem); }
+  .ngd-atom-cert {
+    right: 0.9rem;
+    width: min(64vw, 340px);
+    padding: 0.95rem 1.05rem;
+  }
+  .ngd-atom-cert-t { font-size: 0.92rem; }
+  .ngd-atom-fld { font-size: 0.7rem; padding: 0.28rem 0; }
+  .ngd-atom-marks { display: none; }
+  .ngd-atom-cue { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ngd-atom-cue { animation: none; }
+  .ngd-atom-track i { transition: none; }
+  .ngd-atom-marks span,
+  .ngd-atom-fld b { transition: none; }
+}
