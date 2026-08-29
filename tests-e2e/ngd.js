@@ -9,7 +9,7 @@
  */
 
 export const CHAPTERS = [
-  { id: 'genesis',     name: 'Genesis',     heading: /Nothing becomes something/i },
+  { id: 'genesis',     name: 'Genesis',     heading: /Gas becomes stone/i },
   { id: 'precision',   name: 'Precision',   heading: /Four properties/i },
   { id: 'inventory',   name: 'Inventory',   heading: /Stones we actually hold/i },
   { id: 'manufacture', name: 'Manufacture', heading: /Seven stages/i },

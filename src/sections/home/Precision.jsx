@@ -4,6 +4,7 @@ import SplitReveal from '@/components/motion/SplitReveal.jsx';
 import { gsap, useGSAP } from '@/lib/motion/gsap.js';
 import { MQ } from '@/lib/motion/media.js';
 import stoneUrl from '@/assets/diamonds/ngd-brilliant-macro.webp';
+import useChapterEntrance from '@/hooks/useChapterEntrance.js';
 import styles from './Precision.module.css';
 
 /**
@@ -46,6 +47,7 @@ const FACETS = [
 ];
 
 export default function Precision() {
+  const chapter = useChapterEntrance();
   const scope = useRef(null);
   const [active, setActive] = useState(0);
   const facet = FACETS[active];
@@ -73,7 +75,7 @@ export default function Precision() {
 
   return (
     <section ref={scope} id="precision" className={styles.precision} aria-labelledby="precision-title">
-      <div className={`ngd-page ngd-grid ${styles.inner}`}>
+      <div ref={chapter} className={`ngd-page ngd-grid ${styles.inner}`}>
         <p className={`ngd-tech ${styles.chapter}`}>Chapter 02 — Precision</p>
 
         <SplitReveal as="h2" id="precision-title" className={styles.title}>

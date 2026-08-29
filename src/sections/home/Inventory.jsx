@@ -8,6 +8,8 @@ import useAsyncData from '@/hooks/useAsyncData.js';
 import { fetchFeaturedDiamonds } from '@/lib/data/source.js';
 import { formatCarat, formatPrice, diamondSpecLine } from '@/lib/format.js';
 import ShapeGlyph from '@/components/product/ShapeGlyph.jsx';
+import stoneUrl from '@/assets/diamonds/ngd-brilliant-macro.webp';
+import useChapterEntrance from '@/hooks/useChapterEntrance.js';
 import styles from './Inventory.module.css';
 
 /**
@@ -19,6 +21,7 @@ import styles from './Inventory.module.css';
  * breakpoint the rows become self-contained blocks with their own actions.
  */
 export default function Inventory() {
+  const chapter = useChapterEntrance();
   const scope = useRef(null);
   const [focus, setFocus] = useState(0);
   const { data, loading, error } = useAsyncData(() => fetchFeaturedDiamonds(6));
@@ -42,7 +45,7 @@ export default function Inventory() {
 
   return (
     <section ref={scope} id="inventory" className={styles.inventory} aria-labelledby="inventory-title">
-      <div className={`ngd-page ngd-grid ${styles.inner}`}>
+      <div ref={chapter} className={`ngd-page ngd-grid ${styles.inner}`}>
         <p className={`ngd-tech ${styles.chapter}`}>Chapter 03 — Inventory</p>
 
         <SplitReveal as="h2" id="inventory-title" className={styles.title}>
@@ -78,7 +81,23 @@ export default function Inventory() {
           <>
             <div className={styles.plate} aria-hidden="true">
               <div className={styles.plateInner}>
-                <ShapeGlyph shape={current.shape} className={styles.plateGlyph} />
+                {/* The one real NGD photograph is a round brilliant, so it
+                    stands in only for round stones. Showing it beside an
+                    emerald or a pear would misrepresent the stock; those keep
+                    the schematic glyph, which claims nothing. */}
+                {current.shape === 'Round' ? (
+                  <img
+                    className={styles.platePhoto}
+                    src={stoneUrl}
+                    alt=""
+                    width={754}
+                    height={541}
+                    loading="lazy"
+                    decoding="async"
+                  />
+                ) : (
+                  <ShapeGlyph shape={current.shape} className={styles.plateGlyph} />
+                )}
                 <p className={styles.plateCarat}>{formatCarat(current.carat)}</p>
                 <p className={styles.plateShape}>{current.shape}</p>
                 <p className={styles.plateSpec}>{diamondSpecLine(current)}</p>

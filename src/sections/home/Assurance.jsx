@@ -1,5 +1,6 @@
 import SplitReveal from '@/components/motion/SplitReveal.jsx';
 import Reveal from '@/components/motion/Reveal.jsx';
+import useChapterEntrance from '@/hooks/useChapterEntrance.js';
 import styles from './Assurance.module.css';
 
 /**
@@ -50,9 +51,10 @@ const ROWS = [
 ];
 
 export default function Assurance() {
+  const chapter = useChapterEntrance();
   return (
     <section id="assurance" className={styles.assurance} aria-labelledby="assurance-title">
-      <div className={`ngd-page ngd-grid ${styles.inner}`}>
+      <div ref={chapter} className={`ngd-page ngd-grid ${styles.inner}`}>
         <p className={`ngd-tech ${styles.chapter}`}>Chapter 06 — Assurance</p>
 
         <SplitReveal as="h2" id="assurance-title" className={styles.title}>

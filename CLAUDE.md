@@ -73,6 +73,16 @@ order** — the composition made no argument.
 - Pin only where the scroll *is* the story. Both current pins qualify: the
   scroll is the CVD growth, and the scroll is the production traverse. Pins are
   desktop-only — on a phone a pin hijacks the one gesture the user has.
+- **Scrubbed scenes read scroll, they do not hold state.** Diamond Genesis
+  derives its entire six-stage scene from one `progress` ref every frame, so
+  scrubbing backwards is exact and a resize cannot desynchronise two
+  animations from each other. React state holds only the caption index —
+  never per-frame values, or the tree re-renders sixty times a second.
+- **Rough and cut share vertex ordering** so the transition is a per-vertex
+  lerp: the stone is *cut down* to its finished form rather than cross-fading
+  into it. That one-to-one correspondence is what makes it read as cutting.
+  Per-frame buffer writes go through the mesh ref (the live scene object),
+  never through a memoised or stateful binding.
 - Custom cursor and magnetic effects register only under `MQ.pointer`
   (`pointer: fine` **and** motion allowed). Never on touch.
 - No decorative bouncing, spinning or infinite motion. Motion carries meaning
@@ -112,10 +122,10 @@ order** — the composition made no argument.
   WebGL2.
 - Every canvas: cap DPR, pause rendering off-screen and on `visibilitychange`,
   and dispose geometries, materials, textures and the renderer on unmount.
-- No particle system for decoration. The genesis field is permitted because
-  every particle's destination is sampled from the hero's own brilliant
-  geometry — it condenses into the actual stone, which is the argument the
-  chapter is making.
+- No particle system for decoration. The Genesis field is permitted because
+  every particle's destination is sampled from the brilliant's own geometry —
+  it condenses into the actual stone, which is the argument the chapter is
+  making.
 - No horizontal overflow at any width down to 320px. `html` and `body` carry
   `overflow-x: clip`, but that hides the symptom — fix the cause.
 - Reserve space for anything asynchronous. Layout shift is a defect.
