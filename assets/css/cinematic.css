@@ -2155,8 +2155,18 @@ body[data-ngd-page="home"] .ngd-reveal.is-visible {
 @media (max-width: 880px) {
   .ngd-atom-runway { --ngd-atom-run: 320vh; }
   .ngd-atom-h { font-size: clamp(2rem, 9vw, 2.7rem); }
+  /* no side room on a phone: the closing statement takes the upper
+     third and the report becomes a centred lower sheet */
+  .ngd-atom-close {
+    justify-content: flex-start;
+    padding-top: 11vh;
+  }
+  .ngd-atom-close .ngd-atom-sub { max-width: 24rem; }
+  .ngd-atom-close .ngd-atom-btnrow { margin-top: 1.2rem; }
   .ngd-atom-cert {
-    right: 0.9rem;
+    top: 64%;
+    right: 50%;
+    margin-right: calc(min(64vw, 340px) / -2);
     width: min(64vw, 340px);
     padding: 0.95rem 1.05rem;
   }
@@ -2171,4 +2181,171 @@ body[data-ngd-page="home"] .ngd-reveal.is-visible {
   .ngd-atom-track i { transition: none; }
   .ngd-atom-marks span,
   .ngd-atom-fld b { transition: none; }
+}
+
+/* ============================================================
+   HOME MOTION LANGUAGE V2 (home-motion.js)
+   ------------------------------------------------------------
+   Choreography below the hero: owned headers with masked word
+   cascades, the principles ribbon, the journey's rising spine
+   and igniting nodes, ambient atelier art, the magnetic CTAs'
+   ground rules and the scroll-progress hairline.
+   ============================================================ */
+
+/* headers and atelier columns the engine owns: the generic blur
+   reveal stands down (ui.js still toggles .is-visible, and every
+   other page keeps the classic behaviour) */
+body[data-ngd-page="home"] .ngd-reveal.ngd-mo-own {
+  /* outranks the .ngd-reveal blur state by specificity alone —
+     no !important, so the engine's inline GSAP styles stay in
+     charge while they animate */
+  opacity: 1;
+  transform: none;
+  filter: none;
+  transition: none;
+}
+
+/* masked word cascade */
+.ngd-mo-w {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: bottom;
+}
+.ngd-mo-wi { display: inline-block; will-change: transform; }
+.ngd-mo-done .ngd-mo-w { overflow: visible; }
+.ngd-mo-done .ngd-mo-wi { will-change: auto; }
+
+/* ---------- principles ribbon ---------- */
+.ngd-marquee {
+  overflow: hidden;
+  padding: 1.35rem 0;
+  background: linear-gradient(180deg, rgba(8, 10, 17, 0.93), rgba(11, 14, 23, 0.9));
+  border-top: 1px solid rgba(217, 192, 138, 0.22);
+  border-bottom: 1px solid rgba(217, 192, 138, 0.22);
+}
+.ngd-marquee-track {
+  display: flex;
+  width: max-content;
+  white-space: nowrap;
+}
+.ngd-marquee-seq {
+  display: inline-flex;
+  align-items: center;
+  gap: 2.6rem;
+  padding-right: 2.6rem;
+  font-family: var(--ngd-font-body);
+  font-size: 0.72rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: rgba(240, 237, 228, 0.72);
+}
+.ngd-marquee-seq i {
+  font-style: normal;
+  font-size: 0.55rem;
+  color: rgba(217, 192, 138, 0.65);
+}
+.ngd-marquee-seq .ngd-italic-accent {
+  text-transform: none;
+  letter-spacing: 0.04em;
+  font-size: 1.05rem;
+  color: var(--ngd-gold-soft, #d9c08a);
+}
+.ngd-marquee.is-on .ngd-marquee-track {
+  animation: ngd-mo-marquee 30s linear infinite;
+}
+@keyframes ngd-mo-marquee {
+  to { transform: translateX(-50%); }
+}
+/* before the engine clones the sequence (or with JS off): one
+   static centred line that may wrap on small screens */
+.ngd-marquee:not(.is-ready) .ngd-marquee-track {
+  width: 100%;
+  justify-content: center;
+  white-space: normal;
+}
+.ngd-marquee:not(.is-ready) .ngd-marquee-seq {
+  flex-wrap: wrap;
+  justify-content: center;
+  row-gap: 0.5rem;
+  padding-right: 0;
+  text-align: center;
+}
+
+/* ---------- journey spine fill + node ignition ---------- */
+.ngd-mo-spinefill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: calc(var(--ngd-mo-spine, 0) * 100%);
+  background: linear-gradient(180deg,
+      rgba(159, 216, 255, 0.55) 0%,
+      rgba(217, 192, 138, 0.95) 30%,
+      rgba(217, 192, 138, 0.95) 100%);
+  box-shadow: 0 0 14px rgba(217, 192, 138, 0.4);
+}
+.ngd-mo-spinefill::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translate(-50%, 50%);
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #f2ddb0;
+  box-shadow: 0 0 12px 3px rgba(217, 192, 138, 0.55);
+  opacity: min(clamp(0, calc(var(--ngd-mo-spine, 0) * 14), 1),
+               clamp(0, calc((1 - var(--ngd-mo-spine, 0)) * 14), 1));
+}
+.ngd-story-node {
+  transition: border-color 0.45s ease, color 0.45s ease,
+              background-color 0.45s ease, box-shadow 0.45s ease;
+}
+.ngd-story-node.is-lit {
+  border-color: rgba(217, 192, 138, 0.95);
+  color: #f6f1e4;
+  background-color: #241d10;
+  box-shadow: 0 0 0 6px var(--ngd-black),
+              0 0 24px rgba(217, 192, 138, 0.5),
+              0 8px 20px rgba(0, 0, 0, 0.45);
+}
+
+/* ---------- atelier ambience ---------- */
+.ngd-mo-armed .ngd-jewel-figure svg {
+  animation: ngd-mo-figfloat 7s ease-in-out infinite;
+  transition: color 0.45s ease;
+}
+.ngd-mo-armed #fine-jewellery-grid > div:nth-child(2n) .ngd-jewel-figure svg {
+  animation-delay: -3.5s;
+}
+.ngd-mo-armed .ngd-jewel-card:hover .ngd-jewel-figure svg {
+  color: var(--ngd-gold-soft, #d9c08a);
+}
+@keyframes ngd-mo-figfloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-5px); }
+}
+
+/* ---------- scroll progress hairline ---------- */
+.ngd-mo-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  z-index: 1090;
+  pointer-events: none;
+  background: linear-gradient(90deg, #9fd8ff, var(--ngd-gold-soft, #d9c08a) 55%, #b48c47);
+  transform-origin: 0 50%;
+  transform: scaleX(var(--ngd-mo-sp, 0));
+}
+
+/* magnetic CTAs move on their own transform; their hover lift
+   yields to the magnet on fine pointers without a visual jump */
+@media (prefers-reduced-motion: reduce) {
+  .ngd-marquee .ngd-marquee-track { animation: none !important; }
+  .ngd-mo-armed .ngd-jewel-figure svg { animation: none !important; }
+  .ngd-mo-progress { display: none; }
+  .ngd-story-node { transition: none; }
 }

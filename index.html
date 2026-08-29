@@ -476,7 +476,7 @@
       </div>
       <!-- Live cards render from public.diamonds via home-featured.js:
            featured stones first, the newest active stones as fallback. -->
-      <div class="row g-4 mt-1" id="featured-diamonds-grid" aria-live="polite" aria-busy="true">
+      <div class="row g-4 mt-1" id="featured-diamonds-grid" data-anim-grid aria-live="polite" aria-busy="true">
         <div class="col-12" data-home-diamonds-state>
           <p class="ngd-lead text-center py-5 mb-0">Curating our signature stones…</p>
         </div>
@@ -505,7 +505,7 @@
       </div>
       <div id="featured-jewellery" hidden>
         <div class="text-center mt-4"><span class="ngd-eyebrow">Featured · From the Atelier</span></div>
-        <div class="row g-4 mt-1 justify-content-center" id="featured-jewellery-grid" aria-live="polite"></div>
+        <div class="row g-4 mt-1 justify-content-center" id="featured-jewellery-grid" data-anim-grid aria-live="polite"></div>
       </div>
       <div class="row g-4 mt-1" id="fine-jewellery-grid">
         <div class="col-12 col-md-6 col-lg-4 ngd-reveal">
@@ -617,6 +617,24 @@
     </div>
   </section>
 
+  <!-- ══════════ PRINCIPLES RIBBON ══════════
+       Chapter divider between the atelier and the journey. The
+       phrases are the house lines already used across the site;
+       home-motion.js clones the sequence for a seamless loop and
+       only runs it while the band is on screen. Without JS (or
+       under reduced motion) it reads as one static centred line. -->
+  <div class="ngd-marquee" data-ngd-marquee>
+    <div class="ngd-marquee-track" data-marquee-track>
+      <span class="ngd-marquee-seq">
+        <span>Beautiful by nature</span><i aria-hidden="true">◆</i>
+        <span>Ethical by choice</span><i aria-hidden="true">◆</i>
+        <span>Grown by <em class="ngd-italic-accent">science</em></span><i aria-hidden="true">◆</i>
+        <span>Cut for <em class="ngd-italic-accent">fire</em></span><i aria-hidden="true">◆</i>
+        <span>Finished like <em class="ngd-italic-accent">heritage</em></span><i aria-hidden="true">◆</i>
+      </span>
+    </div>
+  </div>
+
   <!-- ══════════ MANUFACTURING STORY ══════════
        Static demo content. Stage blocks are uniform (node, media,
        numeral, title, text) so future copy or imagery can be
@@ -635,7 +653,7 @@
         </div>
         <button type="button" class="ngd-btn ngd-btn-outline ngd-btn-sm" data-recent-clear>Clear Recently Viewed</button>
       </div>
-      <div class="row g-4 mt-1" data-recent-grid aria-live="polite"></div>
+      <div class="row g-4 mt-1" data-recent-grid data-anim-grid aria-live="polite"></div>
     </div>
   </section>
 
@@ -858,6 +876,7 @@
   <script defer src="assets/js/guided-selection.js"></script>
   <script defer src="assets/js/atom-story.js"></script>
   <script defer src="assets/js/scroll-animations.js"></script>
+  <script defer src="assets/js/home-motion.js"></script>
   <script defer src="assets/js/page-transitions.js"></script>
   <script defer src="assets/js/auto-journey.js"></script>
 </body>
