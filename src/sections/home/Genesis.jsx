@@ -63,13 +63,14 @@ export default function Genesis() {
             if (track.current) {
               track.current.style.transform = `scaleY(${self.progress})`;
             }
-            // Stage six hands off from the render to the actual stone. The
-            // sequence has to END on a real NGD photograph — that is the
-            // whole claim the chapter is making, and a render cannot make it.
+            // The polished stone is ALWAYS the real photograph. The rough
+            // crystal hands over as cutting begins, so from the Precision
+            // stage onward the diamond on screen is a photograph of an actual
+            // NGD stone, never a render of one.
             // Written straight to style: this runs on every scrub frame and
             // must not re-render the tree.
             if (handoff.current) {
-              handoff.current.style.opacity = String(ramp(self.progress, 0.9, 1));
+              handoff.current.style.opacity = String(ramp(self.progress, 0.7, 0.84));
             }
           },
         });

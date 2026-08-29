@@ -102,14 +102,19 @@ function CarbonField({ progress, count, surface }) {
 }
 
 /**
- * The crystal: emerges as opaque rough, then is CUT into the brilliant.
+ * The ROUGH crystal, and only the rough.
  *
- * Rough and cut share vertex ordering, so this is a per-vertex lerp — the
- * stone is reduced to its finished form rather than cross-fading into it.
- * The material travels with the geometry: matte and opaque as rough,
- * transmissive with dispersion once faceted.
+ * This mesh never becomes a polished diamond. A finished stone on this site is
+ * always a photograph of a real one — generated geometry cannot carry real
+ * facets, inclusions, transparency or proportions, and rendering a fake
+ * brilliant here would undercut the very claim the chapter is making.
+ *
+ * Rough diamond is the one form generated geometry can depict honestly: it is
+ * genuinely blocky, stepped and opaque, and nobody is being shown a gem. As
+ * the cut begins, this recedes and the real photograph takes over — which is
+ * exactly what happens in the facility.
  */
-function Crystal({ progress, cutGeometry, roughPositions, tier }) {
+function Crystal({ progress, cutGeometry, roughPositions }) {
   const mesh = useRef(null);
   const material = useRef(null);
 
@@ -123,11 +128,6 @@ function Crystal({ progress, cutGeometry, roughPositions, tier }) {
     return g;
   }, [cutGeometry, roughPositions]);
 
-  const cutPositions = useMemo(
-    () => cutGeometry.getAttribute('position').array,
-    [cutGeometry]
-  );
-
   useEffect(() => () => geometry.dispose(), [geometry]);
 
   useFrame((state, delta) => {
@@ -137,50 +137,32 @@ function Crystal({ progress, cutGeometry, roughPositions, tier }) {
     const p = progress.current;
 
     const emerge = ramp(p, 0.54, 0.66);
-    const cut = ramp(p, 0.72, 0.9);
-    const present = ramp(p, 0.9, 1);
+    // The rough hands over to the photograph as cutting begins. From here on
+    // the finished stone on screen is a real one.
+    const handover = ramp(p, 0.7, 0.82);
 
-    node.visible = emerge > 0.001;
+    node.visible = emerge > 0.001 && handover < 0.999;
     if (!node.visible) return;
 
-    // Through the live mesh, not the closure binding.
-    const geo = node.geometry;
-    const arr = geo.attributes.position.array;
-    for (let i = 0; i < arr.length; i += 1) {
-      arr[i] = roughPositions[i] + (cutPositions[i] - roughPositions[i]) * cut;
-    }
-    geo.attributes.position.needsUpdate = true;
-    geo.computeVertexNormals();
-
-    // Slow turn throughout; it settles as the stone is presented.
-    node.rotation.y += delta * (0.24 - present * 0.16);
+    node.rotation.y += delta * 0.2;
     node.rotation.x = -0.3 + (1 - emerge) * 0.35;
     node.scale.setScalar(0.62 + emerge * 0.28);
 
-    // Recedes as the real photograph takes over at stage six: the sequence
-    // must end on the actual stone, not on a render of one.
-    m.opacity = emerge * (1 - present * 0.92);
-    m.transmission = cut;                    // opaque rough → clear brilliant
-    m.roughness = 0.62 * (1 - cut);          // matte → polished
-    m.thickness = 0.4 + cut * 0.6;
-    m.envMapIntensity = 0.5 + cut * 2.6;
-    m.color.setRGB(0.62 + cut * 0.38, 0.6 + cut * 0.4, 0.58 + cut * 0.42);
-    m.flatShading = true;
+    m.opacity = emerge * (1 - handover);
   });
 
   return (
     <mesh ref={mesh} geometry={geometry} position={[0, -0.75, 0]} visible={false}>
-      <meshPhysicalMaterial
+      {/* Opaque and matte, because that is what as-grown rough looks like.
+          No transmission, no dispersion, no bloom: nothing here is pretending
+          to be a polished gem. */}
+      <meshStandardMaterial
         ref={material}
         transparent
         flatShading
-        metalness={0}
-        ior={2.417}
-        reflectivity={1}
-        clearcoat={0}
-        dispersion={tier === 'high' ? 5 : 0}
-        attenuationDistance={6}
-        attenuationColor={new THREE.Color('#fffdfa')}
+        metalness={0.05}
+        roughness={0.66}
+        color={new THREE.Color('#8d857a')}
       />
     </mesh>
   );
@@ -271,7 +253,6 @@ export default function GenesisScene({ progress, active }) {
         progress={progress}
         cutGeometry={cutGeometry}
         roughPositions={roughPositions}
-        tier={tier}
       />
     </Canvas>
   );

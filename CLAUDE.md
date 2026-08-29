@@ -90,9 +90,30 @@ order** — the composition made no argument.
 
 ## 3. Real NGD assets only
 
+**A finished diamond on this site is always a photograph of a real,
+company-owned stone.** Never a render, never an illustration, never generated
+imagery. Procedural geometry cannot carry real facets, inclusions,
+transparency, colour or proportions, and no material setting makes it a
+photograph — it reads as glass or as plaster. Genuine photography outranks
+WebGL for this subject, always.
+
+- The hero contains **no canvas at all**, by decision rather than capability.
+  A test asserts this so it cannot creep back in.
+- Generated geometry may depict ROUGH crystal only — genuinely blocky, stepped
+  and opaque, where nobody is being shown a gem. The moment cutting begins,
+  the real photograph takes over.
+- No bloom, dispersion or post-processing may be applied to anything standing
+  in for a real stone: an effect that changes the diamond's appearance
+  misrepresents the goods.
+- A real photograph may receive only presentation effects that leave the stone
+  as photographed — background isolation, masking, slow scale and parallax, a
+  light sweep travelling across the PLATE (never composited into the stone),
+  contrast beneath it, editorial crop, or a genuine 360° frame sequence.
 - **Never** invent gemstone illustrations, use stock photography, hotlink
   third-party images, or ship framework artwork (`react.svg`, `vite.svg`, the
   Vite template `hero.png`).
+- If no suitable real asset exists, do not substitute one. Record the exact
+  requirement in `lib/assetRequirements.js` and report it.
 - The only real NGD photograph currently in the repository is
   `src/assets/diamonds/ngd-brilliant-macro.webp` (754×541 RGBA, from the
   production site). Prefer it wherever a diamond is shown.
