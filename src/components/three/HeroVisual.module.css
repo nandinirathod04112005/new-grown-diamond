@@ -1,33 +1,68 @@
 .visual { position: absolute; inset: 0; z-index: var(--z-canvas); pointer-events: none; }
 
-.photo, .canvas { position: absolute; inset: 0; }
-
-.photo {
+.plate {
+  position: absolute;
+  inset: 0;
+  margin: 0;
   display: grid;
   place-items: center;
-  transition: opacity 900ms var(--e-expo);
+  overflow: hidden;
 }
 
-.photo img {
-  width: min(86%, 560px);
+/* The light the stone sits in. Behind the photograph, never over it. */
+.pool {
+  position: absolute;
+  width: min(80%, 620px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(201, 168, 106, 0.2) 0%,
+    rgba(201, 168, 106, 0.07) 38%,
+    transparent 68%
+  );
+}
+
+.stone {
+  position: relative;
+  /* Held well under the 754px source so the photograph is never upscaled into
+     softness. When a >=2400px capture arrives this cap can be lifted. */
+  width: min(74%, 470px);
   height: auto;
-  /* The photograph is a cutout on black; a soft champagne glow beneath it
-     seats the stone in light instead of floating it on a flat ground. */
-  filter: drop-shadow(0 0 60px rgba(201, 168, 106, 0.28))
-          drop-shadow(0 30px 70px rgba(0, 0, 0, 0.7));
+  /* Contrast only: seats the stone in the frame. Nothing is composited onto
+     the diamond itself. */
+  filter: drop-shadow(0 26px 60px rgba(0, 0, 0, 0.72));
+  will-change: transform;
 }
 
-.photoOut { opacity: 0; }
-
-.canvas { opacity: 0; animation: canvasIn 1.3s var(--e-expo) forwards; }
-
-@keyframes canvasIn { to { opacity: 1; } }
+/* A highlight travelling across the PLATE, clipped to it. It passes in front
+   of the stone as a sweep of light would across a display case — it does not
+   tint, brighten or otherwise alter the photograph beneath. */
+.sweep {
+  position: absolute;
+  top: 0; bottom: 0;
+  /* Wide and faint on purpose: a narrow, brighter band reads as a hard
+     diagonal edge — a rendering artifact — rather than as light moving
+     through the room. */
+  width: 46%;
+  opacity: 0;
+  background: linear-gradient(
+    100deg,
+    transparent,
+    rgba(255, 255, 255, 0.025) 40%,
+    rgba(255, 255, 255, 0.055) 50%,
+    rgba(255, 255, 255, 0.025) 60%,
+    transparent
+  );
+  transform: skewX(-12deg);
+}
 
 @media (max-width: 767px) {
-  .photo img { width: min(78%, 380px); }
+  .stone { width: min(72%, 340px); }
+  .pool { width: min(94%, 420px); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .canvas { animation: none; opacity: 1; }
-  .photo { transition: none; }
+  .stone { will-change: auto; }
+  .sweep { display: none; }
 }

@@ -38,6 +38,35 @@ test.describe('NGD homepage', () => {
     expect(errors, `console errors: ${errors.join(' | ')}`).toHaveLength(0);
   });
 
+  test('the hero stone is a photograph, never a render', async ({ page }) => {
+    await openHome(page);
+    await page.waitForTimeout(2500);
+
+    // No canvas may exist in the hero at any viewport or capability tier. A
+    // generated brilliant is not a photograph of a company-owned stone, and
+    // this is the assertion that keeps one from creeping back in.
+    //
+    // Scoped by id, not `section:first-of-type`: ScrollTrigger wraps a pinned
+    // section in a spacer div, which makes the pinned section the first of its
+    // type within that wrapper too, so the loose selector matched Genesis's
+    // canvas as well as the hero.
+    const heroCanvases = await page.locator('#hero canvas').count();
+    expect(heroCanvases, 'the hero must contain no WebGL canvas').toBe(0);
+
+    const img = page.locator('#hero img').first();
+    await expect(img).toBeVisible();
+    expect(await img.getAttribute('src')).toMatch(/ngd-brilliant-macro/);
+
+    // The photograph must never be scaled beyond its true resolution, which
+    // is what turns a real stone into a soft approximation of one.
+    const box = await img.boundingBox();
+    const natural = await img.evaluate((el) => el.naturalWidth);
+    expect(
+      box.width,
+      `hero photograph displayed at ${Math.round(box.width)}px from a ${natural}px source — upscaled`
+    ).toBeLessThanOrEqual(natural);
+  });
+
   test('every chapter is present, headed and legible', async ({ page }) => {
     await openHome(page);
     for (const ch of CHAPTERS) {

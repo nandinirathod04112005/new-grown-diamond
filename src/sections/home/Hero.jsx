@@ -83,7 +83,7 @@ export default function Hero() {
   );
 
   return (
-    <section ref={scope} className={styles.hero} aria-labelledby="hero-title">
+    <section ref={scope} id="hero" className={styles.hero} aria-labelledby="hero-title">
       <div className={styles.visual}>
         <HeroVisual />
       </div>
