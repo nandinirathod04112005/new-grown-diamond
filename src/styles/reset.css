@@ -1,0 +1,60 @@
+*,
+*::before,
+*::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  /* Nothing may scroll the page sideways, at any breakpoint. */
+  overflow-x: clip;
+  /* Lenis drives scrolling; native smooth would fight it. */
+  scroll-behavior: auto;
+}
+
+body {
+  min-height: 100dvh;
+  background: var(--surface-0);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: var(--step-0);
+  font-weight: 300;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  /* Guarantee no horizontal overflow anywhere on the page. */
+  overflow-x: clip;
+}
+
+[hidden] { display: none !important; }
+
+img, svg, video, canvas { display: block; max-width: 100%; }
+img, video { height: auto; }
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-weight: 300;
+  line-height: 1.02;
+  letter-spacing: var(--tracking-tight);
+  text-wrap: balance;
+}
+
+p { text-wrap: pretty; }
+
+a { color: inherit; text-decoration: none; }
+ul, ol { list-style: none; }
+
+button, input, select, textarea { font: inherit; color: inherit; }
+button { background: none; border: 0; cursor: pointer; }
+
+:focus-visible {
+  outline: 2px solid var(--ngd-gold);
+  outline-offset: 3px;
+  border-radius: 1px;
+}
+
+::selection { background: rgba(196, 166, 114, 0.3); color: var(--ngd-white); }
+
+/* Lenis */
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-stopped { overflow: hidden; }

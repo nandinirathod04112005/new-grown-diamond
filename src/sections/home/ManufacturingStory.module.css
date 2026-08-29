@@ -1,0 +1,54 @@
+.outer { position: relative; }
+
+.viewport {
+  margin-top: var(--space-8);
+  /* Bleed to the viewport edge so the rail reads as continuing off-screen. */
+  margin-inline: calc(var(--gutter) * -1);
+  padding-inline: var(--gutter);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+.viewport::-webkit-scrollbar { display: none; }
+
+.track {
+  display: flex;
+  gap: var(--space-5);
+  width: max-content;
+  padding-bottom: var(--space-4);
+}
+
+.stage {
+  flex: 0 0 auto;
+  width: min(78vw, 320px);
+  padding: var(--space-6);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(170deg, rgba(28, 25, 23, 0.75), rgba(11, 10, 9, 0.75));
+}
+
+.stageNo {
+  font-family: var(--font-display);
+  font-size: var(--step-3);
+  color: var(--ngd-gold);
+  opacity: 0.55;
+}
+
+.stageTitle { margin-top: var(--space-4); font-size: var(--step-2); color: var(--ngd-white); }
+.stageCopy { margin-top: var(--space-3); font-size: var(--step--1); color: var(--text-muted); }
+
+.cta { margin-top: var(--space-7); }
+
+@media (min-width: 900px) {
+  /* Pinned + scrubbed by GSAP, so native scrolling must be off or the two
+     compete for the same gesture. It stays `hidden` rather than `visible`:
+     the track is wider than the viewport by design, and `visible` would push
+     that width onto the document and scroll the whole page sideways.
+     GSAP translates the track inside this clip. */
+  .viewport { overflow: hidden; }
+  .stage { width: 340px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .viewport { overflow-x: auto; }
+}

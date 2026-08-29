@@ -1,0 +1,25 @@
+.visual {
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-canvas);
+  pointer-events: none;
+}
+
+.still, .canvas { position: absolute; inset: 0; }
+
+.still { transition: opacity 900ms var(--ease-out-expo); }
+.stillHidden { opacity: 0; }
+
+.canvas {
+  opacity: 0;
+  animation: canvasIn 1.2s var(--ease-out-expo) forwards;
+}
+
+@keyframes canvasIn {
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .canvas { animation: none; opacity: 1; }
+  .still { transition: none; }
+}

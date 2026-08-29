@@ -1,0 +1,85 @@
+/* ==========================================================================
+   NEW GROWN DIAMOND — design tokens
+   Dark-first. Warm black ground, warm white type, champagne used AS LIGHT
+   (edges, hairlines, caustics) rather than as fill.
+   ========================================================================== */
+
+:root {
+  /* ---- Colour: warm neutrals ---- */
+  --ngd-black: #0b0a09;   /* page ground */
+  --ngd-ink: #141210;     /* raised surface */
+  --ngd-ink-2: #1c1917;   /* second raise */
+  --ngd-ink-3: #2a2622;   /* borders on dark */
+
+  --ngd-white: #f7f2ea;   /* warm white, primary type on dark */
+  --ngd-pearl: #efe8dc;
+  --ngd-stone: #8a8076;   /* muted type (AA on --ngd-black) */
+  --ngd-stone-2: #635c54;
+
+  /* ---- Colour: champagne ---- */
+  --ngd-gold: #c4a672;
+  --ngd-gold-soft: #ddc79b;
+  --ngd-gold-deep: #9c7c4c;
+
+  /* ---- Semantic ---- */
+  --surface-0: var(--ngd-black);
+  --surface-1: var(--ngd-ink);
+  --surface-2: var(--ngd-ink-2);
+  --text-primary: var(--ngd-white);
+  --text-muted: var(--ngd-stone);
+  --accent: var(--ngd-gold);
+  --line: rgba(247, 242, 234, 0.1);
+  --line-gold: rgba(196, 166, 114, 0.32);
+  --glass: rgba(11, 10, 9, 0.72);
+
+  /* ---- Type ---- */
+  --font-display: 'Cormorant Garamond', 'Iowan Old Style', Georgia, serif;
+  --font-body: 'Jost', 'Segoe UI', system-ui, -apple-system, sans-serif;
+
+  /* Fluid scale. Hero deliberately reaches display sizes. */
+  --step--1: clamp(0.78rem, 0.74rem + 0.18vw, 0.86rem);
+  --step-0: clamp(0.95rem, 0.9rem + 0.24vw, 1.06rem);
+  --step-1: clamp(1.15rem, 1.05rem + 0.5vw, 1.4rem);
+  --step-2: clamp(1.45rem, 1.25rem + 1vw, 2.1rem);
+  --step-3: clamp(1.9rem, 1.5rem + 2vw, 3.2rem);
+  --step-4: clamp(2.4rem, 1.6rem + 3.6vw, 4.8rem);
+  --step-5: clamp(3rem, 1.4rem + 7vw, 8rem);
+  --hero: clamp(3.2rem, 1rem + 11vw, 11.5rem);
+
+  --tracking-wide: 0.22em;   /* small-caps labels */
+  --tracking-tight: -0.02em; /* display headings */
+
+  /* ---- Spacing ---- */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4rem;
+  --space-9: 6rem;
+  --section-y: clamp(5.5rem, 11vw, 13rem);
+
+  /* ---- Layout ---- */
+  --container: 1320px;
+  --container-narrow: 880px;
+  --gutter: clamp(1.25rem, 5vw, 5rem);
+
+  /* ---- Motion ---- */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 220ms;
+  --dur-base: 480ms;
+  --dur-slow: 900ms;
+
+  /* ---- Layers ---- */
+  --z-canvas: 0;
+  --z-content: 10;
+  --z-header: 100;
+  --z-menu: 200;
+
+  --radius: 2px;
+  --radius-lg: 4px;
+}

@@ -1,0 +1,24 @@
+.page {
+  display: flex;
+  align-items: center;
+  min-height: 76svh;
+  padding-block: 180px var(--space-9);
+}
+
+.title {
+  margin: var(--space-5) 0 var(--space-5);
+  font-size: var(--step-4);
+  color: var(--ngd-white);
+}
+
+.copy {
+  margin-bottom: var(--space-7);
+  max-width: 52ch;
+  color: var(--text-muted);
+}
+
+.copy code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.9em;
+  color: var(--ngd-gold-soft);
+}
