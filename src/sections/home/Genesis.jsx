@@ -1,33 +1,36 @@
 import { Suspense, lazy, useEffect, useRef, useState } from 'react';
 
 import SplitReveal from '@/components/motion/SplitReveal.jsx';
-import { gsap, useGSAP } from '@/lib/motion/gsap.js';
+import { gsap, useGSAP, ScrollTrigger } from '@/lib/motion/gsap.js';
 import { MQ } from '@/lib/motion/media.js';
 import { supports3D } from '@/components/three/capability.js';
+import { STAGES, ramp } from '@/lib/genesisStages.js';
+import stoneUrl from '@/assets/diamonds/ngd-brilliant-macro.webp';
 import styles from './Genesis.module.css';
 
-const GenesisField = lazy(() => import('@/components/three/GenesisField.jsx'));
+const GenesisScene = lazy(() => import('@/components/three/GenesisScene.jsx'));
 
 /**
- * Chapter 01 — carbon becomes crystal.
+ * Chapter 01 — DIAMOND GENESIS.
  *
- * Pinned, and the pin earns itself: the scroll IS the growth. Progress drives
- * the particle field from a loose carbon cloud to the surface of the finished
- * stone, while three captions cross-fade to narrate what the reactor is doing.
+ * The centrepiece: one pinned, scroll-controlled transformation from gas to a
+ * stone in the vault, in six stages. The pin earns itself because the scroll
+ * IS the growth — nothing here is decorative motion over static content.
  *
- * The science stays prose. No gauges, no read-outs, no dashboard — a reactor
- * described the way a process is described in a good catalogue.
+ * Scroll drives a single `progress` ref, which the WebGL scene reads every
+ * frame. React state holds only the caption index, so scrubbing does not
+ * re-render the tree sixty times a second.
+ *
+ * Below the desktop breakpoint, and wherever WebGL is refused, the same six
+ * stages are told as a plain vertical sequence ending on the real photograph.
+ * That is a different telling, not a broken one.
  */
-const BEATS = [
-  { at: 0.06, k: 'Seed', t: 'A sliver of diamond, half a millimetre across, is placed in the chamber. Everything that follows grows from it.' },
-  { at: 0.4, k: 'Plasma', t: 'Methane and hydrogen are excited into plasma at eight hundred degrees. Carbon separates, and goes looking for somewhere to sit.' },
-  { at: 0.72, k: 'Lattice', t: 'It finds the seed. Atom by atom, in the same cubic lattice the earth uses, a diamond thickens by a fraction of a millimetre an hour.' },
-];
-
 export default function Genesis() {
   const scope = useRef(null);
   const progress = useRef(0);
-  const [beat, setBeat] = useState(0);
+  const track = useRef(null);
+  const handoff = useRef(null);
+  const [stage, setStage] = useState(0);
   const [use3D, setUse3D] = useState(false);
   const [active, setActive] = useState(false);
 
@@ -40,15 +43,41 @@ export default function Genesis() {
     () => {
       const mm = gsap.matchMedia();
 
-      // Pinning is desktop-only: on a phone it hijacks the one gesture the
-      // user has, and the payoff does not justify that.
       mm.add(MQ.desktop, () => {
-        const st = ScrollTriggerFrom(scope.current, progress, setBeat, setActive);
+        const st = ScrollTrigger.create({
+          trigger: scope.current,
+          start: 'top top',
+          // Long enough that six stages each get real scroll distance; short
+          // enough that nobody feels trapped.
+          end: '+=460%',
+          pin: true,
+          scrub: 0.9,
+          anticipatePin: 1,
+          invalidateOnRefresh: true,
+          onToggle: (self) => setActive(self.isActive),
+          onUpdate: (self) => {
+            progress.current = self.progress;
+            let next = 0;
+            STAGES.forEach((s, i) => { if (self.progress >= s.at) next = i; });
+            setStage(next);
+            if (track.current) {
+              track.current.style.transform = `scaleY(${self.progress})`;
+            }
+            // Stage six hands off from the render to the actual stone. The
+            // sequence has to END on a real NGD photograph — that is the
+            // whole claim the chapter is making, and a render cannot make it.
+            // Written straight to style: this runs on every scrub frame and
+            // must not re-render the tree.
+            if (handoff.current) {
+              handoff.current.style.opacity = String(ramp(self.progress, 0.9, 1));
+            }
+          },
+        });
         return () => st.kill();
       });
 
-      // Small screens and reduced motion: the field settles to its final
-      // state and the captions simply stack as readable prose.
+      // Small screens and reduced motion: the scene rests on its finished
+      // state and every caption is readable as prose.
       mm.add('(max-width: 899px), (prefers-reduced-motion: reduce)', () => {
         progress.current = 1;
         setActive(false);
@@ -65,58 +94,73 @@ export default function Genesis() {
         <div className={styles.field}>
           {use3D ? (
             <Suspense fallback={null}>
-              <GenesisField progress={progress} active={active} />
+              <GenesisScene progress={progress} active={active} />
+              <img
+                ref={handoff}
+                className={styles.handoff}
+                src={stoneUrl}
+                alt="The finished New Grown Diamond round brilliant, graded and in the vault"
+                width={754}
+                height={541}
+                loading="lazy"
+                decoding="async"
+              />
             </Suspense>
           ) : (
-            /* Low-power fallback: a still lattice, no canvas, no cost. */
-            <div className={styles.lattice} aria-hidden="true" />
+            /* No WebGL: the real stone stands in for the finished state, and
+               the lattice wash carries the earlier stages. No canvas, no cost. */
+            <div className={styles.fallback}>
+              <span className={styles.lattice} aria-hidden="true" />
+              <img
+                src={stoneUrl}
+                alt="A New Grown Diamond round brilliant, the finished result of the process described"
+                width={754}
+                height={541}
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
           )}
         </div>
 
         <div className={`ngd-page ngd-grid ${styles.inner}`}>
-          <p className={`ngd-tech ${styles.chapter}`}>Chapter 01 — Genesis</p>
+          <p className={`ngd-tech ${styles.chapter}`}>Chapter 01 — Diamond Genesis</p>
 
           <SplitReveal as="h2" id="genesis-title" className={styles.title}>
-            Nothing becomes something, slowly.
+            Gas becomes stone, slowly.
           </SplitReveal>
 
+          {/* Desktop: one caption at a time, cross-fading with the scene. */}
           <div className={styles.beats}>
-            {BEATS.map((b, i) => (
-              <div
-                key={b.k}
-                className={`${styles.beat} ${i === beat ? styles.beatOn : ''}`}
-                aria-hidden={i === beat ? undefined : 'true'}
+            {STAGES.map((s, i) => (
+              <article
+                key={s.key}
+                className={`${styles.beat} ${i === stage ? styles.beatOn : ''}`}
+                aria-hidden={i === stage ? undefined : 'true'}
               >
-                <p className={styles.beatKey}>{b.k}</p>
-                <p className={styles.beatText}>{b.t}</p>
-              </div>
+                <p className={styles.beatIndex}>
+                  <span>{String(i + 1).padStart(2, '0')}</span>
+                  <span className={styles.beatRule} aria-hidden="true" />
+                  <span className={styles.beatKey}>{s.key}</span>
+                </p>
+                <p className={styles.beatText}>{s.blurb}</p>
+              </article>
             ))}
           </div>
+
+          {/* Stage index, doubling as the scrub position. */}
+          <ol className={styles.ladder} aria-hidden="true">
+            <li className={styles.ladderTrack}>
+              <span ref={track} className={styles.ladderFill} />
+            </li>
+            {STAGES.map((s, i) => (
+              <li key={s.key} className={i <= stage ? styles.ladderOn : ''}>
+                {s.key}
+              </li>
+            ))}
+          </ol>
         </div>
       </div>
     </section>
   );
-}
-
-/** Kept out of the component body so the effect above stays readable. */
-function ScrollTriggerFrom(el, progress, setBeat, setActive) {
-  return gsap.to({}, {
-    ease: 'none',
-    scrollTrigger: {
-      trigger: el,
-      start: 'top top',
-      end: '+=260%',
-      pin: true,
-      scrub: 0.8,
-      anticipatePin: 1,
-      invalidateOnRefresh: true,
-      onToggle: (self) => setActive(self.isActive),
-      onUpdate: (self) => {
-        progress.current = self.progress;
-        let next = 0;
-        BEATS.forEach((b, i) => { if (self.progress >= b.at) next = i; });
-        setBeat(next);
-      },
-    },
-  }).scrollTrigger;
 }

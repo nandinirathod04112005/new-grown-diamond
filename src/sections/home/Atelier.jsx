@@ -5,6 +5,7 @@ import AssetSlot from '@/components/media/AssetSlot.jsx';
 import Reveal from '@/components/motion/Reveal.jsx';
 import useAsyncData from '@/hooks/useAsyncData.js';
 import { fetchFeaturedJewellery } from '@/lib/data/source.js';
+import useChapterEntrance from '@/hooks/useChapterEntrance.js';
 import styles from './Atelier.module.css';
 
 /**
@@ -19,12 +20,13 @@ import styles from './Atelier.module.css';
  * adapter, so the layout is already bound to the source it will ship with.
  */
 export default function Atelier() {
+  const chapter = useChapterEntrance();
   const { data, loading, error } = useAsyncData(() => fetchFeaturedJewellery(3));
   const pieces = data ?? [];
 
   return (
     <section id="atelier" className={styles.atelier} aria-labelledby="atelier-title">
-      <div className={`ngd-page ngd-grid ${styles.inner}`}>
+      <div ref={chapter} className={`ngd-page ngd-grid ${styles.inner}`}>
         <p className={`ngd-tech ${styles.chapter}`}>Chapter 05 — Atelier</p>
 
         <SplitReveal as="h2" id="atelier-title" className={styles.title}>

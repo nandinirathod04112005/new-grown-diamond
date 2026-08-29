@@ -103,3 +103,49 @@ export function createBrilliantGeometry() {
   geometry.center();
   return geometry;
 }
+
+/** Deterministic value noise. Seeded so the rough crystal is the same shape
+ *  on every load — a designed object, not a different lump each visit. */
+function noise3(x, y, z, seed = 1) {
+  const s = Math.sin(x * 12.9898 + y * 78.233 + z * 37.719 + seed * 43.123) * 43758.5453;
+  return s - Math.floor(s);
+}
+
+/**
+ * The SAME brilliant, as it comes out of the reactor.
+ *
+ * Identical vertex count and ordering to the cut geometry, so the two are a
+ * straight per-vertex lerp: the rough does not dissolve into the polished
+ * stone, it is *cut down* to it. That one-to-one correspondence is the whole
+ * reason the transition reads as cutting rather than as a cross-fade.
+ *
+ * Vertices are pushed outward along their own direction by a seeded noise
+ * field, then flattened in bands, which is roughly what an as-grown CVD plate
+ * looks like: blocky, stepped, opaque.
+ */
+export function createRoughPositions(cutGeometry) {
+  const src = cutGeometry.getAttribute('position');
+  const out = new Float32Array(src.count * 3);
+  const v = new THREE.Vector3();
+
+  for (let i = 0; i < src.count; i += 1) {
+    v.fromBufferAttribute(src, i);
+    const dir = v.clone().normalize();
+
+    // Bands of growth, plus a coarse lump so no two sides match.
+    //
+    // Y stays mostly the vertex's own height. Quantising it outright collapses
+    // many vertices onto the same plane, which turns neighbouring triangles
+    // inside out and reads as a spiky mess rather than a blocky crystal — the
+    // banding has to be a nudge, not a replacement.
+    const band = Math.round(v.y * 3.2) / 3.2;
+    const y = v.y * 0.72 + band * 0.28;
+    const lump = noise3(Math.round(dir.x * 3), Math.round(dir.y * 3), Math.round(dir.z * 3), 7);
+
+    const swell = 1.08 + lump * 0.2;
+    out[i * 3] = v.x * swell + dir.x * 0.04;
+    out[i * 3 + 1] = y * swell + dir.y * 0.03;
+    out[i * 3 + 2] = v.z * swell + dir.z * 0.04;
+  }
+  return out;
+}
