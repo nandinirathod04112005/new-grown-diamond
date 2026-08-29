@@ -11,7 +11,7 @@ export default function NotFound() {
 
   return (
     <main id="main" className={styles.page}>
-      <div className="ngd-container-narrow">
+      <div className="ngd-page">
         <Eyebrow>404</Eyebrow>
         <h1 className={styles.title}>That page does not exist.</h1>
         <p className={styles.copy}>

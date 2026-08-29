@@ -1,85 +1,84 @@
 /* ==========================================================================
    NEW GROWN DIAMOND — design tokens
-   Dark-first. Warm black ground, warm white type, champagne used AS LIGHT
-   (edges, hairlines, caustics) rather than as fill.
+   FROM CARBON TO BRILLIANCE
+
+   The palette is a single journey, not a set of swatches: carbon (formless
+   black) through graphite (structure appearing) to brilliance (warm white and
+   spectral light). Spectral hues exist ONLY as narrow highlights — the fire a
+   real stone throws — never as fills or gradients across a surface.
    ========================================================================== */
 
 :root {
-  /* ---- Colour: warm neutrals ---- */
-  --ngd-black: #0b0a09;   /* page ground */
-  --ngd-ink: #141210;     /* raised surface */
-  --ngd-ink-2: #1c1917;   /* second raise */
-  --ngd-ink-3: #2a2622;   /* borders on dark */
+  /* ---- Carbon: the beginning ---- */
+  --carbon: #060606;        /* page ground, near-absolute */
+  --carbon-2: #0b0b0c;
+  --graphite: #131315;      /* raised surface */
+  --graphite-2: #1c1c1f;
+  --graphite-3: #2b2b30;    /* borders on dark */
 
-  --ngd-white: #f7f2ea;   /* warm white, primary type on dark */
-  --ngd-pearl: #efe8dc;
-  --ngd-stone: #8a8076;   /* muted type (AA on --ngd-black) */
-  --ngd-stone-2: #635c54;
+  /* ---- Brilliance: the end ---- */
+  --bright: #f4f1ea;        /* warm white, primary type */
+  --bright-dim: #cfc9bd;
+  --ash: #8d8880;           /* muted type — AA on carbon */
+  --ash-2: #5f5b55;
 
-  /* ---- Colour: champagne ---- */
-  --ngd-gold: #c4a672;
-  --ngd-gold-soft: #ddc79b;
-  --ngd-gold-deep: #9c7c4c;
+  /* ---- Metal: restrained, structural ---- */
+  --champagne: #c9a86a;
+  --champagne-soft: #e2cfa4;
+  --champagne-deep: #8f7038;
+
+  /* ---- Spectral: fire only. Narrow highlights, never fills. ---- */
+  --fire-cyan: #7fd4e8;
+  --fire-violet: #b9a3f0;
+  --fire-amber: #f2c88a;
 
   /* ---- Semantic ---- */
-  --surface-0: var(--ngd-black);
-  --surface-1: var(--ngd-ink);
-  --surface-2: var(--ngd-ink-2);
-  --text-primary: var(--ngd-white);
-  --text-muted: var(--ngd-stone);
-  --accent: var(--ngd-gold);
-  --line: rgba(247, 242, 234, 0.1);
-  --line-gold: rgba(196, 166, 114, 0.32);
-  --glass: rgba(11, 10, 9, 0.72);
+  --surface-0: var(--carbon);
+  --surface-1: var(--graphite);
+  --text-primary: var(--bright);
+  --text-muted: var(--ash);
+  --accent: var(--champagne);
+  --line: rgba(244, 241, 234, 0.09);
+  --line-strong: rgba(244, 241, 234, 0.18);
+  --line-gold: rgba(201, 168, 106, 0.3);
 
-  /* ---- Type ---- */
+  /* ---- Type ----
+     Two registers in deliberate tension: an editorial serif for the luxury
+     voice, and a wide-tracked technical sans for the laboratory voice. The
+     brand lives in the gap between them. */
   --font-display: 'Cormorant Garamond', 'Iowan Old Style', Georgia, serif;
   --font-body: 'Jost', 'Segoe UI', system-ui, -apple-system, sans-serif;
 
-  /* Fluid scale. Hero deliberately reaches display sizes. */
-  --step--1: clamp(0.78rem, 0.74rem + 0.18vw, 0.86rem);
-  --step-0: clamp(0.95rem, 0.9rem + 0.24vw, 1.06rem);
-  --step-1: clamp(1.15rem, 1.05rem + 0.5vw, 1.4rem);
-  --step-2: clamp(1.45rem, 1.25rem + 1vw, 2.1rem);
-  --step-3: clamp(1.9rem, 1.5rem + 2vw, 3.2rem);
-  --step-4: clamp(2.4rem, 1.6rem + 3.6vw, 4.8rem);
-  --step-5: clamp(3rem, 1.4rem + 7vw, 8rem);
-  --hero: clamp(3.2rem, 1rem + 11vw, 11.5rem);
+  --step--2: 0.66rem;
+  --step--1: clamp(0.76rem, 0.73rem + 0.15vw, 0.84rem);
+  --step-0: clamp(0.94rem, 0.9rem + 0.22vw, 1.05rem);
+  --step-1: clamp(1.12rem, 1.02rem + 0.5vw, 1.38rem);
+  --step-2: clamp(1.4rem, 1.2rem + 1vw, 2.05rem);
+  --step-3: clamp(1.85rem, 1.45rem + 2vw, 3.1rem);
+  --step-4: clamp(2.3rem, 1.5rem + 3.6vw, 4.6rem);
+  --step-5: clamp(2.9rem, 1.3rem + 7vw, 7.5rem);
+  --display: clamp(3rem, 0.6rem + 11.5vw, 12rem);
 
-  --tracking-wide: 0.22em;   /* small-caps labels */
-  --tracking-tight: -0.02em; /* display headings */
+  --track-tech: 0.28em;     /* laboratory labels */
+  --track-tight: -0.025em;  /* display headings */
 
-  /* ---- Spacing ---- */
-  --space-1: 0.25rem;
-  --space-2: 0.5rem;
-  --space-3: 0.75rem;
-  --space-4: 1rem;
-  --space-5: 1.5rem;
-  --space-6: 2rem;
-  --space-7: 3rem;
-  --space-8: 4rem;
-  --space-9: 6rem;
-  --section-y: clamp(5.5rem, 11vw, 13rem);
+  /* ---- Space ---- */
+  --s1: 0.25rem; --s2: 0.5rem;  --s3: 0.75rem; --s4: 1rem;
+  --s5: 1.5rem;  --s6: 2rem;    --s7: 3rem;    --s8: 4rem;
+  --s9: 6rem;    --s10: 9rem;
+  --chapter-y: clamp(6rem, 13vw, 16rem);
 
-  /* ---- Layout ---- */
-  --container: 1320px;
-  --container-narrow: 880px;
-  --gutter: clamp(1.25rem, 5vw, 5rem);
+  /* ---- Layout: a real 12-column grid, used asymmetrically ---- */
+  --page: 1440px;
+  --gutter: clamp(1.25rem, 4.5vw, 6rem);
+  --col-gap: clamp(1rem, 2vw, 2rem);
 
   /* ---- Motion ---- */
-  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
-  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
-  --dur-fast: 220ms;
-  --dur-base: 480ms;
-  --dur-slow: 900ms;
+  --e-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --e-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --e-inout: cubic-bezier(0.76, 0, 0.24, 1);
+  --d-fast: 240ms; --d-base: 520ms; --d-slow: 1000ms;
 
-  /* ---- Layers ---- */
-  --z-canvas: 0;
-  --z-content: 10;
-  --z-header: 100;
-  --z-menu: 200;
-
-  --radius: 2px;
-  --radius-lg: 4px;
+  --z-canvas: 0; --z-content: 10; --z-rail: 60;
+  --z-header: 100; --z-cursor: 300; --z-preload: 500;
 }

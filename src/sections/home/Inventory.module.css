@@ -1,0 +1,152 @@
+.inventory { position: relative; padding-block: var(--chapter-y); background: var(--graphite); }
+
+.chapter { grid-column: 1 / -1; margin-bottom: var(--s6); }
+.title { grid-column: 1 / -1; font-size: var(--step-4); color: var(--bright); max-width: 14ch; }
+.standfirst {
+  grid-column: 1 / -1;
+  margin-top: var(--s5);
+  max-width: 48ch;
+  color: var(--ash);
+  line-height: 1.8;
+}
+
+/* Inspection plate — fixed position on desktop, so the eye stays put. */
+.plate { display: none; }
+.plateInner {
+  position: sticky;
+  top: 22vh;
+  padding: var(--s7) var(--s6);
+  border: 1px solid var(--line);
+  background:
+    radial-gradient(circle at 50% 34%, rgba(201, 168, 106, 0.12), transparent 62%),
+    var(--carbon);
+}
+.plateGlyph { width: 96px; color: var(--champagne-soft); opacity: 0.85; margin-bottom: var(--s6); }
+.plateCarat {
+  font-size: var(--step--2);
+  letter-spacing: var(--track-tech);
+  text-transform: uppercase;
+  color: var(--champagne);
+}
+.plateShape {
+  font-family: var(--font-display);
+  font-size: var(--step-3);
+  color: var(--bright);
+  margin-top: var(--s2);
+  line-height: 1;
+}
+.plateSpec { margin-top: var(--s3); font-size: var(--step--1); color: var(--ash); }
+
+.ledger { grid-column: 1 / -1; margin-top: var(--s8); border-top: 1px solid var(--line); }
+
+.row {
+  display: grid;
+  gap: var(--s2) var(--s4);
+  grid-template-columns: auto 1fr;
+  padding: var(--s5) 0;
+  border-bottom: 1px solid var(--line);
+  transition: background-color var(--d-fast), padding-inline var(--d-base) var(--e-quint);
+}
+
+.rowCarat {
+  font-family: var(--font-display);
+  font-size: var(--step-2);
+  color: var(--bright);
+  line-height: 1;
+}
+.rowShape {
+  font-size: var(--step--1);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--champagne-soft);
+  align-self: center;
+}
+.rowSpec { grid-column: 1 / -1; font-size: var(--step--1); color: var(--ash); }
+.rowGrowth {
+  grid-column: 1 / -1;
+  justify-self: start;
+  padding: 0.2em 0.7em;
+  border: 1px solid var(--line-gold);
+  border-radius: 999px;
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  color: var(--champagne-soft);
+}
+.rowPrice { grid-column: 1 / -1; font-size: var(--step--1); color: var(--bright-dim); }
+
+.rowActions { grid-column: 1 / -1; display: flex; gap: var(--s5); margin-top: var(--s3); }
+
+.view, .enquire {
+  position: relative;
+  font-size: var(--step--2);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding-bottom: 0.4em;
+  border-bottom: 1px solid currentColor;
+}
+.view { color: var(--bright); }
+.enquire { color: var(--ash); }
+.view:hover, .view:focus-visible { color: var(--champagne-soft); }
+.enquire:hover, .enquire:focus-visible { color: var(--bright); }
+
+.skeleton {
+  height: 5.5rem;
+  border-bottom: 1px solid var(--line);
+  background: linear-gradient(100deg, rgba(28,28,31,0.7) 30%, rgba(43,43,48,0.7) 50%, rgba(28,28,31,0.7) 70%);
+  background-size: 220% 100%;
+  animation: shimmer 1.5s linear infinite;
+}
+@keyframes shimmer { from { background-position: 140% 0; } to { background-position: -40% 0; } }
+
+.state {
+  grid-column: 1 / -1;
+  margin-top: var(--s8);
+  padding: var(--s7);
+  border: 1px solid var(--line);
+  color: var(--ash);
+  max-width: 52ch;
+}
+
+.all {
+  grid-column: 1 / -1;
+  justify-self: start;
+  margin-top: var(--s7);
+  font-size: var(--step--1);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--champagne);
+}
+.all:hover, .all:focus-visible { color: var(--champagne-soft); }
+
+@media (min-width: 1100px) {
+  .title { grid-column: 1 / 7; }
+  .standfirst { grid-column: 1 / 6; }
+  .plate { display: block; grid-column: 1 / 4; margin-top: var(--s8); }
+  .ledger { grid-column: 5 / 13; }
+  .all { grid-column: 5 / 13; }
+
+  .row {
+    grid-template-columns: 5.5rem 7rem 1fr 5rem 8rem;
+    align-items: center;
+    gap: var(--s4);
+  }
+  .rowSpec, .rowGrowth, .rowPrice, .rowActions { grid-column: auto; margin-top: 0; }
+  .rowPrice { text-align: right; }
+  .rowActions {
+    grid-column: 1 / -1;
+    max-height: 0;
+    overflow: hidden;
+    margin-top: 0;
+    opacity: 0;
+    transition: max-height var(--d-base) var(--e-quint), opacity var(--d-base), margin-top var(--d-base);
+  }
+  .rowOn { background: rgba(201, 168, 106, 0.04); padding-inline: var(--s4); }
+  .rowOn .rowActions { max-height: 4rem; opacity: 1; margin-top: var(--s4); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .row, .rowActions { transition: none; }
+  .skeleton { animation: none; }
+  /* Never hide actions behind a hover-only transition when motion is off. */
+  .rowActions { max-height: none; opacity: 1; margin-top: var(--s4); }
+}

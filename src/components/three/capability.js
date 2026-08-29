@@ -1,38 +1,50 @@
 /**
- * Decides whether this device should run the WebGL hero at all.
+ * Decides whether this device runs WebGL at all, and at what quality.
  *
- * The 3D scene is a progressive enhancement layered over a static fallback
- * that is always rendered first. Anything uncertain resolves to "no": a missing
- * API, a low-power device, a data saver, or a stated preference for less
- * motion. Being wrong here costs battery and frame rate on exactly the devices
- * least able to absorb it.
+ * The 3D is a progressive enhancement over a real photograph that always
+ * renders first. Anything uncertain resolves downward: a missing API, a
+ * low-power device, a data saver, or a stated preference for less motion.
+ * Being wrong here costs battery and frame rate on exactly the devices least
+ * able to absorb it.
  */
-export function supports3D() {
-  if (typeof window === 'undefined') return false;
 
-  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return false;
+function conn() {
+  return navigator.connection ?? null;
+}
 
-  // Coarse pointer + narrow viewport => phone. The static hero is the design
-  // there, not a degraded version of it.
-  if (window.matchMedia?.('(max-width: 767px)').matches) return false;
+/** 'off' | 'low' | 'high' */
+export function qualityTier() {
+  if (typeof window === 'undefined') return 'off';
 
-  const connection = navigator.connection;
-  if (connection?.saveData) return false;
-  if (connection?.effectiveType && /(^|-)2g$/.test(connection.effectiveType)) return false;
+  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return 'off';
 
-  if (typeof navigator.deviceMemory === 'number' && navigator.deviceMemory < 4) return false;
-  // < 4, not <= 4: plenty of capable laptops report exactly four cores and
-  // render a single low-poly transmissive mesh without trouble.
-  if (typeof navigator.hardwareConcurrency === 'number' && navigator.hardwareConcurrency < 4) {
-    return false;
-  }
+  const c = conn();
+  if (c?.saveData) return 'off';
+  if (c?.effectiveType && /(^|-)2g$/.test(c.effectiveType)) return 'off';
 
   try {
-    const canvas = document.createElement('canvas');
-    if (!canvas.getContext('webgl2')) return false;
+    if (!document.createElement('canvas').getContext('webgl2')) return 'off';
   } catch {
-    return false;
+    return 'off';
   }
 
-  return true;
+  const mem = navigator.deviceMemory;
+  const cores = navigator.hardwareConcurrency;
+  if (typeof mem === 'number' && mem < 4) return 'off';
+  if (typeof cores === 'number' && cores < 4) return 'off';
+
+  // Phones get the photograph, not a canvas: it is the better image there and
+  // costs a fraction of the battery.
+  if (window.matchMedia?.('(max-width: 767px)').matches) return 'off';
+
+  // Mid-tier machines render, but without dispersion, bloom or antialiasing.
+  if ((typeof mem === 'number' && mem < 8) || (typeof cores === 'number' && cores < 8)) {
+    return 'low';
+  }
+
+  return 'high';
+}
+
+export function supports3D() {
+  return qualityTier() !== 'off';
 }

@@ -4,19 +4,19 @@
   top: 0;
   z-index: var(--z-header);
   transition:
-    background-color var(--dur-base) var(--ease-out-quint),
-    border-color var(--dur-base) var(--ease-out-quint),
-    backdrop-filter var(--dur-base) var(--ease-out-quint);
+    background-color var(--d-base) var(--e-quint),
+    border-color var(--d-base) var(--e-quint),
+    backdrop-filter var(--d-base) var(--e-quint);
   border-bottom: 1px solid transparent;
 }
 
 .scrolled {
-  background: var(--glass);
+  background: rgba(6, 6, 6, 0.72);
   backdrop-filter: blur(14px) saturate(1.1);
   border-bottom-color: var(--line);
 }
 @supports not (backdrop-filter: blur(1px)) {
-  .scrolled { background: rgba(11, 10, 9, 0.95); }
+  .scrolled { background: rgba(6, 6, 6, 0.96); }
 }
 
 .bar {
@@ -40,11 +40,11 @@
   font-weight: 400;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--ngd-white);
+  color: var(--bright);
   opacity: 0.82;
-  transition: opacity var(--dur-fast), color var(--dur-fast);
+  transition: opacity var(--d-fast), color var(--d-fast);
 }
-.navLink:hover, .navLink:focus-visible { opacity: 1; color: var(--ngd-gold-soft); }
+.navLink:hover, .navLink:focus-visible { opacity: 1; color: var(--champagne-soft); }
 
 /* Mega panel */
 .panel {
@@ -54,15 +54,15 @@
   translate: -50% 0;
   min-width: 420px;
   padding: var(--space-6);
-  background: rgba(20, 18, 16, 0.97);
+  background: rgba(19, 19, 21, 0.97);
   backdrop-filter: blur(18px);
   border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
+  border-radius: 0;
   box-shadow: 0 30px 70px -30px rgba(0, 0, 0, 0.8);
   opacity: 0;
   transform: translateY(-8px);
-  transition: opacity var(--dur-fast) var(--ease-out-quint),
-              transform var(--dur-fast) var(--ease-out-quint);
+  transition: opacity var(--d-fast) var(--e-quint),
+              transform var(--d-fast) var(--e-quint);
 }
 .panelOpen { opacity: 1; transform: translateY(0); }
 
@@ -73,7 +73,7 @@
   font-size: 0.62rem;
   letter-spacing: var(--tracking-wide);
   text-transform: uppercase;
-  color: var(--ngd-gold);
+  color: var(--champagne);
 }
 
 .colList { display: grid; gap: 0.55rem; }
@@ -81,14 +81,14 @@
 .colLink {
   font-family: var(--font-display);
   font-size: 1.02rem;
-  color: var(--ngd-white);
+  color: var(--bright);
   opacity: 0.8;
-  transition: opacity var(--dur-fast), transform var(--dur-fast);
+  transition: opacity var(--d-fast), transform var(--d-fast);
 }
 .colLink:hover, .colLink:focus-visible {
   opacity: 1;
   transform: translateX(4px);
-  color: var(--ngd-gold-soft);
+  color: var(--champagne-soft);
 }
 
 .actions { display: flex; align-items: center; gap: var(--space-4); }
@@ -99,9 +99,9 @@
   place-items: center;
   width: 42px;
   height: 42px;
-  color: var(--ngd-white);
+  color: var(--bright);
   border: 1px solid var(--line);
-  border-radius: var(--radius);
+  border-radius: 0;
 }
 .burger:hover { border-color: var(--line-gold); }
 
@@ -110,11 +110,11 @@
 .drawer {
   position: fixed;
   inset: 0;
-  z-index: var(--z-menu);
+  z-index: 200;
   display: none;
   flex-direction: column;
   padding: var(--space-5) var(--gutter) var(--space-8);
-  background: var(--ngd-black);
+  background: var(--carbon);
   overflow-y: auto;
   overscroll-behavior: contain;
 }
@@ -128,7 +128,7 @@
   min-height: 84px;
   margin-bottom: var(--space-7);
 }
-.drawerClose { color: var(--ngd-white); padding: var(--space-2); }
+.drawerClose { color: var(--bright); padding: var(--space-2); }
 
 .drawerNav { flex: 1; }
 .drawerNav ul { display: grid; gap: var(--space-2); }
@@ -139,13 +139,13 @@
   font-family: var(--font-display);
   font-size: clamp(2rem, 9vw, 3.2rem);
   font-weight: 300;
-  color: var(--ngd-white);
+  color: var(--bright);
   border-bottom: 1px solid var(--line);
   opacity: 0;
-  animation: drawerIn 0.6s var(--ease-out-expo) forwards;
+  animation: drawerIn 0.6s var(--e-expo) forwards;
   animation-delay: calc(var(--i) * 55ms + 60ms);
 }
-.drawerLink:hover, .drawerLink:focus-visible { color: var(--ngd-gold-soft); }
+.drawerLink:hover, .drawerLink:focus-visible { color: var(--champagne-soft); }
 
 @keyframes drawerIn {
   from { opacity: 0; transform: translateY(22px); }

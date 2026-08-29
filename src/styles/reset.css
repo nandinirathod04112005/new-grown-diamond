@@ -47,12 +47,12 @@ button, input, select, textarea { font: inherit; color: inherit; }
 button { background: none; border: 0; cursor: pointer; }
 
 :focus-visible {
-  outline: 2px solid var(--ngd-gold);
+  outline: 2px solid var(--champagne);
   outline-offset: 3px;
   border-radius: 1px;
 }
 
-::selection { background: rgba(196, 166, 114, 0.3); color: var(--ngd-white); }
+::selection { background: rgba(196, 166, 114, 0.3); color: var(--bright); }
 
 /* Lenis */
 html.lenis, html.lenis body { height: auto; }

@@ -71,7 +71,7 @@ export default function Header() {
       <a className="ngd-skip" href="#main">Skip to content</a>
 
       <header className={`${styles.header} ${scrolled ? styles.scrolled : ''}`}>
-        <div className={`ngd-container ${styles.bar}`}>
+        <div className={`ngd-page ${styles.bar}`}>
           <Logo />
 
           <nav className={styles.nav} aria-label="Primary">

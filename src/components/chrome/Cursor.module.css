@@ -1,0 +1,25 @@
+.wrap { position: fixed; inset: 0; z-index: var(--z-cursor); pointer-events: none; }
+
+.ring, .dot { position: fixed; top: 0; left: 0; border-radius: 50%; will-change: transform; }
+
+.ring {
+  display: grid;
+  place-items: center;
+  width: 34px; height: 34px;
+  margin: -17px 0 0 -17px;
+  border: 1px solid var(--line-gold);
+}
+
+.dot { width: 4px; height: 4px; margin: -2px 0 0 -2px; background: var(--champagne); }
+
+.label {
+  font-family: var(--font-body);
+  font-size: 5.2px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--champagne-soft);
+  white-space: nowrap;
+}
+
+:global(html.ngd-has-cursor),
+:global(html.ngd-has-cursor *) { cursor: none !important; }

@@ -1,0 +1,74 @@
+.manufacture { position: relative; padding-block: var(--chapter-y) var(--s8); background: var(--carbon); overflow: hidden; }
+
+.head { margin-bottom: var(--s8); }
+.title { margin-top: var(--s5); font-size: var(--step-4); color: var(--bright); max-width: 12ch; }
+
+.viewport {
+  padding-inline: var(--gutter);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+.viewport::-webkit-scrollbar { display: none; }
+
+.track { display: flex; gap: var(--s5); width: max-content; padding-bottom: var(--s5); }
+
+.stage {
+  position: relative;
+  flex: 0 0 auto;
+  width: min(80vw, 340px);
+  min-height: 26rem;
+  padding: var(--s6);
+  scroll-snap-align: start;
+  border: 1px solid var(--line);
+  background: linear-gradient(165deg, rgba(28, 28, 31, 0.9), rgba(6, 6, 6, 0.9));
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+}
+
+/* The stage number, set enormous and clipped — a printed plate mark. */
+.ghost {
+  position: absolute;
+  top: -0.34em;
+  right: -0.06em;
+  font-family: var(--font-display);
+  font-size: 14rem;
+  line-height: 1;
+  color: var(--bright);
+  opacity: 0.045;
+  pointer-events: none;
+}
+
+.stageBody { position: relative; }
+.stageNo {
+  font-size: var(--step--2);
+  letter-spacing: var(--track-tech);
+  color: var(--champagne);
+  margin-bottom: var(--s4);
+}
+.stageTitle { font-size: var(--step-3); color: var(--bright); }
+.stageCopy { margin-top: var(--s4); max-width: 30ch; font-size: var(--step--1); color: var(--ash); line-height: 1.75; }
+
+.foot { margin-top: var(--s7); }
+.more {
+  font-size: var(--step--1);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--champagne);
+}
+.more:hover, .more:focus-visible { color: var(--champagne-soft); }
+
+@media (min-width: 900px) {
+  /* Pinned and scrubbed by GSAP, so native scrolling must be off or the two
+     compete for the same gesture. `hidden`, never `visible`: the track is
+     wider than the viewport by design and `visible` would push that width
+     onto the document and scroll the whole page sideways. */
+  .viewport { overflow: hidden; scroll-snap-type: none; }
+  .stage { width: 380px; min-height: 30rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .viewport { overflow-x: auto; scroll-snap-type: x proximity; }
+}
