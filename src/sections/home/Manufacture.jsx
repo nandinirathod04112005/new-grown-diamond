@@ -71,7 +71,18 @@ export default function Manufacture() {
         </div>
       </div>
 
-      <div className={styles.viewport}>
+      {/*
+        A scrollable region with no focusable content cannot be reached by
+        keyboard at all (WCAG 2.1.1). Making the scroller itself focusable and
+        naming it lets arrow keys drive the traverse on touch and small
+        screens, where this is a native scroller rather than a GSAP pin.
+      */}
+      <div
+        className={styles.viewport}
+        tabIndex={0}
+        role="region"
+        aria-label="Manufacturing stages, scrollable"
+      >
         <ol ref={track} className={styles.track}>
           {STAGES.map((s) => (
             <li key={s.n} className={styles.stage}>
