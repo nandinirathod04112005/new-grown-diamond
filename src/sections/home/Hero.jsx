@@ -42,14 +42,24 @@ export default function Hero() {
           .from(`.${styles.visual}`, { opacity: 0, scale: 1.06, duration: 1.8 }, 0.1)
           .from(`.${styles.cue}`, { opacity: 0, duration: 0.8 }, 1.3);
 
-        // The stone lifts and dims as the hero leaves — depth without a pin.
-        //
-        // fromTo with immediateRender:false is load-bearing. A plain `to`
-        // records its start value the moment it is created, which is the same
-        // tick the intro `from` above has just set opacity to 0 — so the
-        // scrubbed tween would inherit 0 as its resting value and the stone
-        // would never appear at all.
-        gsap.fromTo(
+        return () => { tl.scrollTrigger?.kill(); tl.kill(); };
+      });
+
+      // The stone lifts and dims as the hero leaves — depth without a pin.
+      //
+      // DESKTOP ONLY, and that is not a performance choice. The tween has to
+      // name an explicit opacity to start from (see below), and the resting
+      // opacity differs by breakpoint: 1 on desktop where the stone has its
+      // own column, 0.22 on small screens where it sits behind the headline.
+      // Running one tween across both would force the mobile stone to full
+      // strength and make the headline unreadable over it.
+      //
+      // fromTo with immediateRender:false is likewise load-bearing: a plain
+      // `to` records its start value the moment it is created — the same tick
+      // the intro `from` has just set opacity to 0 — so the scrubbed tween
+      // would inherit 0 and the stone would never appear at all.
+      mm.add(MQ.desktop, () => {
+        const drift = gsap.fromTo(
           `.${styles.visual}`,
           { yPercent: 0, opacity: 1 },
           {
@@ -57,8 +67,8 @@ export default function Hero() {
             scrollTrigger: { trigger: scope.current, start: 'top top', end: 'bottom top', scrub: 0.9 },
           }
         );
+        return () => { drift.scrollTrigger?.kill(); drift.kill(); };
 
-        return () => { tl.scrollTrigger?.kill(); tl.kill(); };
       });
 
       mm.add(MQ.still, () => {

@@ -28,3 +28,8 @@ dist-ssr
 .env
 .env.*
 !.env.example
+
+# Playwright
+tests-e2e/report
+tests-e2e/screenshots
+test-results
