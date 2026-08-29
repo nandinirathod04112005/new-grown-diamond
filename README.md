@@ -109,6 +109,7 @@ Bootstrap 5 + vanilla JavaScript** frontend backed by **Supabase**
 ## Documentation
 
 - [`docs/DESIGN_SYSTEM.md`](docs/DESIGN_SYSTEM.md) — tokens & reusable `ngd-` classes
+- [`.claude/skills/ngd-design/`](.claude/skills/ngd-design/SKILL.md) — company design context for Claude's `design` plugin (brand & voice, tokens, measured contrast matrix, critique rubric, handoff rules)
 - [`docs/SUPABASE_AUTH_SETUP.md`](docs/SUPABASE_AUTH_SETUP.md) — auth configuration & behaviour
 - [`docs/FIRST_ADMIN_SETUP.md`](docs/FIRST_ADMIN_SETUP.md) — promoting the first admin with `supabase/first-admin.sql`
 - [`supabase/diamond-edit-status-archive.sql`](supabase/diamond-edit-status-archive.sql) — soft-archive column and active-admin-only diamond update policy for Backend Step 5
