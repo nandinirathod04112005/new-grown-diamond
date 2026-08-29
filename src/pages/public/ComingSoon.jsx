@@ -19,7 +19,7 @@ export default function ComingSoon({ title, phase }) {
 
   return (
     <main id="main" className={styles.page}>
-      <div className="ngd-container-narrow">
+      <div className="ngd-page">
         <Eyebrow>Not yet built</Eyebrow>
         <h1 className={styles.title}>{title}</h1>
         <p className={styles.copy}>

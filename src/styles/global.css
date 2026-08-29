@@ -1,16 +1,7 @@
 @import './fonts.css';
 @import './tokens.css';
 @import './reset.css';
-
-.ngd-container {
-  width: min(var(--container), 100% - var(--gutter) * 2);
-  margin-inline: auto;
-}
-
-.ngd-container-narrow {
-  width: min(var(--container-narrow), 100% - var(--gutter) * 2);
-  margin-inline: auto;
-}
+@import './grid.css';
 
 .ngd-visually-hidden {
   position: absolute;
@@ -20,26 +11,24 @@
   white-space: nowrap;
 }
 
-/* Skip link — visible only on keyboard focus. */
 .ngd-skip {
   position: absolute;
-  top: var(--space-4);
-  left: var(--space-4);
+  top: var(--s4); left: var(--s4);
   z-index: 1000;
-  padding: var(--space-3) var(--space-5);
-  background: var(--ngd-white);
-  color: var(--ngd-black);
+  padding: var(--s3) var(--s5);
+  background: var(--bright);
+  color: var(--carbon);
   font-size: var(--step--1);
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  transform: translateY(-200%);
+  transform: translateY(-250%);
 }
 .ngd-skip:focus { transform: translateY(0); }
 
-/* Elements animated by GSAP start hidden. If JS never runs, this class is
-   never applied, so content stays visible — progressive enhancement. */
-.js-reveal { will-change: transform, opacity; }
+/* SplitType writes these; declared once here so every reveal shares them. */
+.line { display: block; overflow: hidden; }
+.line-inner { display: block; }
 
 @media (prefers-reduced-motion: reduce) {
-  .js-reveal { will-change: auto; }
+  .line { overflow: visible; }
 }

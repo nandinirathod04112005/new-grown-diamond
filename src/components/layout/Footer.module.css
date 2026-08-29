@@ -27,15 +27,15 @@
   font-size: var(--step--1);
   color: var(--text-muted);
 }
-.contact svg { color: var(--ngd-gold); flex: none; }
-.contact a:hover, .contact a:focus-visible { color: var(--ngd-gold-soft); }
+.contact svg { color: var(--champagne); flex: none; }
+.contact a:hover, .contact a:focus-visible { color: var(--champagne-soft); }
 
 .colTitle {
   margin-bottom: var(--space-4);
   font-size: 0.62rem;
   letter-spacing: var(--tracking-wide);
   text-transform: uppercase;
-  color: var(--ngd-gold);
+  color: var(--champagne);
 }
 
 .colList { display: grid; gap: var(--space-3); }
@@ -43,10 +43,10 @@
 .link {
   font-size: var(--step--1);
   color: var(--text-muted);
-  transition: color var(--dur-fast), transform var(--dur-fast);
+  transition: color var(--d-fast), transform var(--d-fast);
   display: inline-block;
 }
-.link:hover, .link:focus-visible { color: var(--ngd-white); transform: translateX(3px); }
+.link:hover, .link:focus-visible { color: var(--bright); transform: translateX(3px); }
 
 .bottom {
   display: flex;
@@ -59,7 +59,7 @@
   border-top: 1px solid var(--line);
   font-size: 0.68rem;
   letter-spacing: 0.08em;
-  color: var(--ngd-stone-2);
+  color: var(--ash-2);
 }
 .made { letter-spacing: 0.16em; text-transform: uppercase; }
 

@@ -1,0 +1,77 @@
+.genesis { position: relative; background: var(--carbon); }
+
+.stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 100svh;
+  padding-block: var(--s9);
+  overflow: hidden;
+}
+
+.field { position: absolute; inset: 0; z-index: var(--z-canvas); }
+
+/* Fallback when WebGL is refused: a static crystalline field, drawn with
+   gradients only — no canvas, no particles, no cost. */
+.lattice {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 46%, rgba(226, 207, 164, 0.16), transparent 46%),
+    radial-gradient(circle at 30% 62%, rgba(127, 212, 232, 0.06), transparent 36%),
+    radial-gradient(circle at 70% 34%, rgba(185, 163, 240, 0.06), transparent 34%);
+}
+
+.inner { position: relative; z-index: var(--z-content); }
+
+.chapter { grid-column: 1 / -1; margin-bottom: var(--s6); }
+
+.title {
+  grid-column: 1 / -1;
+  max-width: 16ch;
+  font-size: var(--step-4);
+  color: var(--bright);
+}
+
+.beats { grid-column: 1 / -1; position: relative; margin-top: var(--s7); min-height: 12rem; }
+
+.beat {
+  transition: opacity var(--d-base) var(--e-quint), transform var(--d-base) var(--e-quint);
+}
+
+.beatKey {
+  font-size: var(--step--2);
+  letter-spacing: var(--track-tech);
+  text-transform: uppercase;
+  color: var(--champagne);
+  margin-bottom: var(--s3);
+}
+
+.beatText {
+  max-width: 46ch;
+  font-family: var(--font-display);
+  font-size: var(--step-2);
+  font-weight: 300;
+  line-height: 1.45;
+  color: var(--bright-dim);
+}
+
+@media (min-width: 900px) {
+  .title { grid-column: 1 / 6; }
+  /* Only one beat is visible at a time on desktop, cross-fading as the
+     reaction proceeds; they are stacked, so the block never reflows. */
+  .beats { grid-column: 7 / 12; }
+  .beat { position: absolute; inset: 0; opacity: 0; transform: translateY(14px); pointer-events: none; }
+  .beatOn { opacity: 1; transform: none; }
+}
+
+@media (max-width: 899px) {
+  /* Stacked and all readable: no pin, so nothing gates the prose. */
+  .beats { display: grid; gap: var(--s6); min-height: 0; }
+  .stage { min-height: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .beat { transition: none; position: static; opacity: 1; transform: none; }
+  .beats { display: grid; gap: var(--s6); min-height: 0; }
+}

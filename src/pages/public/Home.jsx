@@ -1,29 +1,40 @@
 import { useEffect } from 'react';
 
+import ChapterRail from '@/components/chrome/ChapterRail.jsx';
 import Hero from '@/sections/home/Hero.jsx';
-import FeaturedDiamonds from '@/sections/home/FeaturedDiamonds.jsx';
-import DiamondFinder from '@/sections/home/DiamondFinder.jsx';
-import GrowthMethods from '@/sections/home/GrowthMethods.jsx';
-import ManufacturingStory from '@/sections/home/ManufacturingStory.jsx';
-import JewelleryPreview from '@/sections/home/JewelleryPreview.jsx';
-import Certifications from '@/sections/home/Certifications.jsx';
-import EnquiryCTA from '@/sections/home/EnquiryCTA.jsx';
+import Genesis from '@/sections/home/Genesis.jsx';
+import Precision from '@/sections/home/Precision.jsx';
+import Inventory from '@/sections/home/Inventory.jsx';
+import Manufacture from '@/sections/home/Manufacture.jsx';
+import Atelier from '@/sections/home/Atelier.jsx';
+import Assurance from '@/sections/home/Assurance.jsx';
+import Ascent from '@/sections/home/Ascent.jsx';
 
+/**
+ * FROM CARBON TO BRILLIANCE
+ *
+ * One continuous descent from carbon into light, in seven chapters. The order
+ * is the argument: what a diamond is, how it is made, what we hold, how it is
+ * cut, what it becomes, who vouches for it, and what to do about it.
+ */
 export default function Home() {
   useEffect(() => {
-    document.title = 'New Grown Diamond — Lab-grown diamonds & fine jewellery';
+    document.title = 'New Grown Diamond — From carbon to brilliance';
   }, []);
 
   return (
-    <main id="main">
-      <Hero />
-      <FeaturedDiamonds />
-      <DiamondFinder />
-      <GrowthMethods />
-      <ManufacturingStory />
-      <JewelleryPreview />
-      <Certifications />
-      <EnquiryCTA />
-    </main>
+    <>
+      <ChapterRail />
+      <main id="main">
+        <Hero />
+        <Genesis />
+        <Precision />
+        <Inventory />
+        <Manufacture />
+        <Atelier />
+        <Assurance />
+        <Ascent />
+      </main>
+    </>
   );
 }

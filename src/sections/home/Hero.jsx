@@ -1,18 +1,22 @@
 import { useRef } from 'react';
-import { ArrowDown } from 'lucide-react';
 
 import HeroVisual from '@/components/three/HeroVisual.jsx';
-import Button from '@/components/primitives/Button.jsx';
 import { gsap, useGSAP } from '@/lib/motion/gsap.js';
 import { MQ } from '@/lib/motion/media.js';
 import { useSmoothScroll } from '@/providers/smoothScrollContext.js';
+import { useReady } from '@/app/readyContext.js';
 import styles from './Hero.module.css';
 
 /**
- * Full-height opening. The headline is authored as masked lines and animated
- * by a single timeline; the visual sits behind it and never gates it.
+ * Chapter 00 — the thesis, stated once.
+ *
+ * The composition is deliberately off-axis: the title sits low-left against
+ * the stone high-right, with the technical register (lab, method, grading) in
+ * the outer margin. Nothing is centred, because centring is what makes a
+ * luxury page look like every other luxury page.
  */
 export default function Hero() {
+  const ready = useReady();
   const scope = useRef(null);
   const { scrollTo } = useSmoothScroll();
 
@@ -21,63 +25,52 @@ export default function Hero() {
       const mm = gsap.matchMedia();
 
       mm.add(MQ.motion, () => {
+        // The timeline is not BUILT until the preloader has left. Building it
+        // paused and playing it later hides the copy the moment the tweens
+        // render their start values — so if that play were ever missed, the
+        // hero would sit blank. This way the untouched state is the visible
+        // one, and the animation is purely additive.
+        if (!ready) return undefined;
+
         const tl = gsap.timeline({ defaults: { ease: 'expo.out' } });
 
-        tl.from(`.${styles.lineInner}`, {
-          yPercent: 115,
-          duration: 1.5,
-          stagger: 0.11,
-        })
-          .from(`.${styles.eyebrow}`, { opacity: 0, y: 18, duration: 1 }, 0.25)
-          .from(`.${styles.lede}`, { opacity: 0, y: 22, duration: 1.1 }, '-=0.85')
-          .from(`.${styles.actions} > *`, {
-            opacity: 0,
-            y: 20,
-            duration: 0.9,
-            stagger: 0.1,
-          }, '-=0.8')
-          .from(`.${styles.meta} li`, {
-            opacity: 0,
-            y: 16,
-            duration: 0.8,
-            stagger: 0.08,
-          }, '-=0.7')
-          .from(`.${styles.scrollCue}`, { opacity: 0, duration: 0.8 }, '-=0.5');
+        tl.from(`.${styles.word}`, { yPercent: 118, duration: 1.5, stagger: 0.09 })
+          .from(`.${styles.rule}`, { scaleX: 0, duration: 1.2 }, 0.5)
+          .from(`.${styles.marginItem}`, { opacity: 0, x: -14, duration: 0.9, stagger: 0.08 }, 0.6)
+          .from(`.${styles.lede}`, { opacity: 0, y: 22, duration: 1 }, 0.75)
+          .from(`.${styles.actions} > *`, { opacity: 0, y: 18, duration: 0.9, stagger: 0.1 }, 0.9)
+          .from(`.${styles.visual}`, { opacity: 0, scale: 1.06, duration: 1.8 }, 0.1)
+          .from(`.${styles.cue}`, { opacity: 0, duration: 0.8 }, 1.3);
 
-        // The stone drifts up slightly as the hero leaves — depth without pinning.
-        gsap.to(`.${styles.visual}`, {
-          yPercent: -12,
-          ease: 'none',
-          scrollTrigger: {
-            trigger: scope.current,
-            start: 'top top',
-            end: 'bottom top',
-            scrub: 0.9,
-          },
-        });
+        // The stone lifts and dims as the hero leaves — depth without a pin.
+        //
+        // fromTo with immediateRender:false is load-bearing. A plain `to`
+        // records its start value the moment it is created, which is the same
+        // tick the intro `from` above has just set opacity to 0 — so the
+        // scrubbed tween would inherit 0 as its resting value and the stone
+        // would never appear at all.
+        gsap.fromTo(
+          `.${styles.visual}`,
+          { yPercent: 0, opacity: 1 },
+          {
+            yPercent: -14, opacity: 0.25, ease: 'none', immediateRender: false,
+            scrollTrigger: { trigger: scope.current, start: 'top top', end: 'bottom top', scrub: 0.9 },
+          }
+        );
+
+        return () => { tl.scrollTrigger?.kill(); tl.kill(); };
       });
 
-      // Reduced motion: everything is already in its final position.
       mm.add(MQ.still, () => {
-        gsap.set(
-          [
-            `.${styles.lineInner}`,
-            `.${styles.eyebrow}`,
-            `.${styles.lede}`,
-            `.${styles.actions} > *`,
-            `.${styles.meta} li`,
-            `.${styles.scrollCue}`,
-          ],
-          { clearProps: 'all' }
-        );
+        gsap.set([`.${styles.word}`, `.${styles.rule}`, `.${styles.marginItem}`,
+          `.${styles.lede}`, `.${styles.actions} > *`, `.${styles.visual}`, `.${styles.cue}`],
+        { clearProps: 'all' });
       });
 
       return () => mm.revert();
     },
-    { scope }
+    { scope, dependencies: [ready] }
   );
-
-  const lines = ['Grown', 'in light,', 'cut for it.'];
 
   return (
     <section ref={scope} className={styles.hero} aria-labelledby="hero-title">
@@ -85,56 +78,43 @@ export default function Hero() {
         <HeroVisual />
       </div>
 
-      <div className={`ngd-container ${styles.inner}`}>
-        <p className={styles.eyebrow}>New Grown Diamond · Surat, India</p>
-
-        <h1 id="hero-title" className={styles.title}>
-          <span className="ngd-visually-hidden">Grown in light, cut for it.</span>
-          <span aria-hidden="true">
-            {lines.map((line, i) => (
-              <span key={i} className={styles.line}>
-                <span className={styles.lineInner}>
-                  {i === 2 ? (
-                    <>
-                      cut <em>for it.</em>
-                    </>
-                  ) : (
-                    line
-                  )}
-                </span>
-              </span>
-            ))}
-          </span>
-        </h1>
-
-        <p className={styles.lede}>
-          Laboratory-grown diamonds of certified origin, cut in our own
-          facility and set into jewellery made to last generations.
-        </p>
-
-        <div className={styles.actions}>
-          <Button to="/diamonds" variant="solid" size="lg" magnetic>
-            View the inventory
-          </Button>
-          <Button to="/diamond-finder" variant="outline" size="lg">
-            Find my diamond
-          </Button>
-        </div>
-
-        <ul className={styles.meta}>
-          <li><strong>IGI &amp; GIA</strong><span>Certified stones</span></li>
-          <li><strong>CVD &amp; HPHT</strong><span>Both grown in-house</span></li>
-          <li><strong>0.30–5.00 ct</strong><span>Current inventory</span></li>
+      <div className={`ngd-page ngd-grid ${styles.inner}`}>
+        <ul className={styles.margin} aria-label="At a glance">
+          <li className={styles.marginItem}><span>Method</span><strong>CVD / HPHT</strong></li>
+          <li className={styles.marginItem}><span>Grading</span><strong>IGI · GIA</strong></li>
+          <li className={styles.marginItem}><span>Facility</span><strong>Surat, India</strong></li>
         </ul>
+
+        <div className={styles.title}>
+          <h1 id="hero-title" className={styles.h1}>
+            <span className="ngd-visually-hidden">From carbon to brilliance</span>
+            <span aria-hidden="true">
+              <span className={styles.lineBox}><span className={styles.word}>From carbon</span></span>
+              <span className={styles.lineBox}><span className={styles.word}>to <em>brilliance</em></span></span>
+            </span>
+          </h1>
+
+          <span className={styles.rule} aria-hidden="true" />
+
+          <p className={styles.lede}>
+            Nine weeks in a reactor. Fifty-seven facets cut to a tolerance
+            finer than a human hair. One certificate that says what it is.
+          </p>
+
+          <div className={styles.actions}>
+            <a className={styles.primary} href="/diamonds" data-cursor="View">
+              The inventory
+            </a>
+            <a className={styles.secondary} href="/diamond-finder">
+              Find my diamond
+            </a>
+          </div>
+        </div>
       </div>
 
-      <button
-        type="button"
-        className={styles.scrollCue}
-        onClick={() => scrollTo('#featured-diamonds')}
-      >
-        <span>Explore</span>
-        <ArrowDown size={15} aria-hidden="true" />
+      <button type="button" className={styles.cue} onClick={() => scrollTo('#genesis')}>
+        <span className={styles.cueLine} aria-hidden="true" />
+        <span>Begin</span>
       </button>
     </section>
   );

@@ -8,7 +8,7 @@
 .title {
   margin: var(--space-5) 0 var(--space-5);
   font-size: var(--step-4);
-  color: var(--ngd-white);
+  color: var(--bright);
 }
 
 .copy {
@@ -20,5 +20,5 @@
 .copy code {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.9em;
-  color: var(--ngd-gold-soft);
+  color: var(--champagne-soft);
 }

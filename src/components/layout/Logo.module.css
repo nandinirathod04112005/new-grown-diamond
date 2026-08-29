@@ -2,15 +2,15 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-3);
-  color: var(--ngd-white);
+  color: var(--bright);
 }
 
 .mark {
   width: 30px;
   height: 30px;
   flex: none;
-  color: var(--ngd-gold);
-  transition: transform var(--dur-slow) var(--ease-out-expo);
+  color: var(--champagne);
+  transition: transform var(--d-slow) var(--e-expo);
 }
 .logo:hover .mark { transform: rotate(45deg); }
 
@@ -30,7 +30,7 @@
   font-weight: 300;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--ngd-stone);
+  color: var(--ash);
 }
 
 @media (max-width: 420px) {

@@ -1,0 +1,45 @@
+.slot {
+  position: relative;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  aspect-ratio: var(--ratio);
+  padding: var(--s6);
+  border: 1px dashed var(--graphite-3);
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      transparent 0 14px,
+      rgba(244, 241, 234, 0.016) 14px 28px
+    ),
+    var(--graphite);
+}
+
+.light { background: rgba(244, 241, 234, 0.04); border-color: rgba(244, 241, 234, 0.2); }
+
+.corner {
+  position: absolute;
+  inset: 10px;
+  border: 1px solid transparent;
+  border-image: none;
+  outline: 1px solid rgba(201, 168, 106, 0.16);
+  outline-offset: 0;
+}
+
+.body { display: grid; gap: var(--s3); text-align: center; max-width: 30ch; }
+
+.tag {
+  font-size: 0.58rem;
+  letter-spacing: var(--track-tech);
+  text-transform: uppercase;
+  color: var(--champagne);
+}
+
+.label {
+  font-family: var(--font-display);
+  font-size: var(--step-1);
+  color: var(--bright-dim);
+  line-height: 1.25;
+}
+
+.spec { font-size: var(--step--2); line-height: 1.7; color: var(--ash-2); }

@@ -11,7 +11,7 @@ export default function Footer() {
 
   return (
     <footer className={styles.footer}>
-      <div className="ngd-container">
+      <div className="ngd-page">
         <Reveal className={styles.top} selector={`.${styles.topCell}`} stagger={0.08} y={26}>
           <div className={`${styles.brand} ${styles.topCell}`}>
             <Logo />

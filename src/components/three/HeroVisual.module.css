@@ -1,25 +1,33 @@
-.visual {
-  position: absolute;
-  inset: 0;
-  z-index: var(--z-canvas);
-  pointer-events: none;
+.visual { position: absolute; inset: 0; z-index: var(--z-canvas); pointer-events: none; }
+
+.photo, .canvas { position: absolute; inset: 0; }
+
+.photo {
+  display: grid;
+  place-items: center;
+  transition: opacity 900ms var(--e-expo);
 }
 
-.still, .canvas { position: absolute; inset: 0; }
-
-.still { transition: opacity 900ms var(--ease-out-expo); }
-.stillHidden { opacity: 0; }
-
-.canvas {
-  opacity: 0;
-  animation: canvasIn 1.2s var(--ease-out-expo) forwards;
+.photo img {
+  width: min(86%, 560px);
+  height: auto;
+  /* The photograph is a cutout on black; a soft champagne glow beneath it
+     seats the stone in light instead of floating it on a flat ground. */
+  filter: drop-shadow(0 0 60px rgba(201, 168, 106, 0.28))
+          drop-shadow(0 30px 70px rgba(0, 0, 0, 0.7));
 }
 
-@keyframes canvasIn {
-  to { opacity: 1; }
+.photoOut { opacity: 0; }
+
+.canvas { opacity: 0; animation: canvasIn 1.3s var(--e-expo) forwards; }
+
+@keyframes canvasIn { to { opacity: 1; } }
+
+@media (max-width: 767px) {
+  .photo img { width: min(78%, 380px); }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .canvas { animation: none; opacity: 1; }
-  .still { transition: none; }
+  .photo { transition: none; }
 }

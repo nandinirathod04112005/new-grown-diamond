@@ -1,0 +1,106 @@
+/* --dawn runs 0 → 1 as the section is scrubbed. Every colour below is mixed
+   against it, so one scrubbed property lifts the entire section out of the
+   dark in step. */
+.ascent {
+  --dawn: 0;
+  position: relative;
+  padding-block: clamp(7rem, 18vw, 18rem);
+  overflow: hidden;
+  background: color-mix(in oklab, var(--carbon) calc((1 - var(--dawn)) * 100%), #f4f1ea);
+  transition: background-color 120ms linear;
+}
+
+.glow {
+  position: absolute;
+  left: 50%; top: 62%;
+  translate: -50% -50%;
+  width: min(150vw, 1400px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(226, 207, 164, calc(0.22 + var(--dawn) * 0.3)) 0%,
+    rgba(201, 168, 106, calc(0.06 + var(--dawn) * 0.12)) 38%,
+    transparent 68%
+  );
+  pointer-events: none;
+}
+
+.inner { position: relative; z-index: var(--z-content); text-align: center; }
+
+.chapter {
+  font-family: var(--font-body);
+  font-size: var(--step--2);
+  letter-spacing: var(--track-tech);
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--champagne) calc((1 - var(--dawn)) * 100%), #8f7038);
+  margin-bottom: var(--s6);
+}
+
+.title {
+  font-size: var(--step-5);
+  line-height: 0.94;
+  max-width: 16ch;
+  margin-inline: auto;
+  color: color-mix(in oklab, var(--bright) calc((1 - var(--dawn)) * 100%), #14120f);
+}
+
+.copy { margin-top: var(--s6); }
+.copy p {
+  max-width: 46ch;
+  margin-inline: auto;
+  font-size: var(--step-1);
+  line-height: 1.75;
+  color: color-mix(in oklab, var(--ash) calc((1 - var(--dawn)) * 100%), #5f5b55);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--s5);
+  margin-top: var(--s7);
+}
+
+.primary, .secondary {
+  display: inline-flex;
+  align-items: center;
+  padding: 1.05em 2.4em;
+  font-size: var(--step--1);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+  transition: background-color var(--d-fast), color var(--d-fast), border-color var(--d-fast);
+}
+
+.primary {
+  background: color-mix(in oklab, var(--champagne) calc((1 - var(--dawn)) * 100%), #14120f);
+  color: color-mix(in oklab, #14120f calc((1 - var(--dawn)) * 100%), #f4f1ea);
+}
+
+.secondary {
+  border-color: color-mix(in oklab, var(--line-gold) calc((1 - var(--dawn)) * 100%), rgba(20,18,15,0.3));
+  color: color-mix(in oklab, var(--bright) calc((1 - var(--dawn)) * 100%), #14120f);
+}
+
+.meta { margin-top: var(--s7); }
+.meta p {
+  font-size: var(--step--2);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--ash-2) calc((1 - var(--dawn)) * 100%), #6b665f);
+}
+.meta a { border-bottom: 1px solid currentColor; }
+
+@supports not (background: color-mix(in oklab, red 50%, blue)) {
+  /* Older engines simply get the lit end state — legible, just not scrubbed. */
+  .ascent { background: #f4f1ea; }
+  .title, .secondary { color: #14120f; }
+  .copy p { color: #5f5b55; }
+  .primary { background: #14120f; color: #f4f1ea; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ascent { transition: none; }
+  .primary, .secondary { transition: none; }
+}
