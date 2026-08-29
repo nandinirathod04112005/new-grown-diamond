@@ -1,0 +1,167 @@
+.header {
+  position: fixed;
+  inset-inline: 0;
+  top: 0;
+  z-index: var(--z-header);
+  transition:
+    background-color var(--dur-base) var(--ease-out-quint),
+    border-color var(--dur-base) var(--ease-out-quint),
+    backdrop-filter var(--dur-base) var(--ease-out-quint);
+  border-bottom: 1px solid transparent;
+}
+
+.scrolled {
+  background: var(--glass);
+  backdrop-filter: blur(14px) saturate(1.1);
+  border-bottom-color: var(--line);
+}
+@supports not (backdrop-filter: blur(1px)) {
+  .scrolled { background: rgba(11, 10, 9, 0.95); }
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-5);
+  min-height: 84px;
+}
+
+.nav { display: none; }
+.navList { display: flex; align-items: center; gap: clamp(0.9rem, 2vw, 2rem); }
+.navItem { position: relative; }
+
+.navLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  padding: 0.5rem 0;
+  font-size: 0.74rem;
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ngd-white);
+  opacity: 0.82;
+  transition: opacity var(--dur-fast), color var(--dur-fast);
+}
+.navLink:hover, .navLink:focus-visible { opacity: 1; color: var(--ngd-gold-soft); }
+
+/* Mega panel */
+.panel {
+  position: absolute;
+  top: calc(100% + 18px);
+  left: 50%;
+  translate: -50% 0;
+  min-width: 420px;
+  padding: var(--space-6);
+  background: rgba(20, 18, 16, 0.97);
+  backdrop-filter: blur(18px);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 30px 70px -30px rgba(0, 0, 0, 0.8);
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity var(--dur-fast) var(--ease-out-quint),
+              transform var(--dur-fast) var(--ease-out-quint);
+}
+.panelOpen { opacity: 1; transform: translateY(0); }
+
+.panelInner { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-7); }
+
+.colTitle {
+  margin-bottom: var(--space-4);
+  font-size: 0.62rem;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--ngd-gold);
+}
+
+.colList { display: grid; gap: 0.55rem; }
+
+.colLink {
+  font-family: var(--font-display);
+  font-size: 1.02rem;
+  color: var(--ngd-white);
+  opacity: 0.8;
+  transition: opacity var(--dur-fast), transform var(--dur-fast);
+}
+.colLink:hover, .colLink:focus-visible {
+  opacity: 1;
+  transform: translateX(4px);
+  color: var(--ngd-gold-soft);
+}
+
+.actions { display: flex; align-items: center; gap: var(--space-4); }
+.cta { display: none; }
+
+.burger {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  color: var(--ngd-white);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.burger:hover { border-color: var(--line-gold); }
+
+/* Drawer — closed by default; `.drawerOpen` and the `hidden` attribute both
+   have to agree before it covers the page. */
+.drawer {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-menu);
+  display: none;
+  flex-direction: column;
+  padding: var(--space-5) var(--gutter) var(--space-8);
+  background: var(--ngd-black);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.drawerOpen { display: flex; }
+
+.drawerHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 84px;
+  margin-bottom: var(--space-7);
+}
+.drawerClose { color: var(--ngd-white); padding: var(--space-2); }
+
+.drawerNav { flex: 1; }
+.drawerNav ul { display: grid; gap: var(--space-2); }
+
+.drawerLink {
+  display: block;
+  padding: 0.42em 0;
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 9vw, 3.2rem);
+  font-weight: 300;
+  color: var(--ngd-white);
+  border-bottom: 1px solid var(--line);
+  opacity: 0;
+  animation: drawerIn 0.6s var(--ease-out-expo) forwards;
+  animation-delay: calc(var(--i) * 55ms + 60ms);
+}
+.drawerLink:hover, .drawerLink:focus-visible { color: var(--ngd-gold-soft); }
+
+@keyframes drawerIn {
+  from { opacity: 0; transform: translateY(22px); }
+  to { opacity: 1; transform: none; }
+}
+
+.drawerFoot { margin-top: var(--space-8); }
+
+@media (prefers-reduced-motion: reduce) {
+  .drawerLink { opacity: 1; animation: none; }
+  .panel, .navLink, .colLink, .header { transition: none; }
+}
+
+@media (min-width: 1024px) {
+  .nav { display: block; }
+  .cta { display: inline-flex; }
+  .burger { display: none; }
+  .drawer { display: none; }
+}

@@ -1,0 +1,68 @@
+.btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6em;
+  overflow: hidden;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  font-family: var(--font-body);
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition:
+    background-color var(--dur-fast) var(--ease-out-quint),
+    color var(--dur-fast) var(--ease-out-quint),
+    border-color var(--dur-fast) var(--ease-out-quint);
+}
+
+.md { padding: 1.05em 2.3em; font-size: var(--step--1); }
+.sm { padding: 0.8em 1.6em; font-size: 0.74rem; }
+.lg { padding: 1.25em 2.9em; font-size: var(--step--1); }
+
+.label { position: relative; z-index: 1; }
+
+/* Champagne sweep on hover — the accent behaves like light passing across. */
+.sheen {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    transparent 20%,
+    rgba(255, 255, 255, 0.22) 50%,
+    transparent 80%
+  );
+  transform: translateX(-110%);
+  transition: transform var(--dur-slow) var(--ease-out-expo);
+}
+.btn:hover .sheen, .btn:focus-visible .sheen { transform: translateX(110%); }
+
+.solid {
+  background: var(--ngd-gold);
+  color: #17130c;
+}
+.solid:hover, .solid:focus-visible { background: var(--ngd-gold-soft); }
+
+.outline {
+  border-color: var(--line-gold);
+  color: var(--ngd-white);
+}
+.outline:hover, .outline:focus-visible {
+  border-color: var(--ngd-gold);
+  background: rgba(196, 166, 114, 0.08);
+}
+
+.ghost {
+  padding-inline: 0;
+  color: var(--ngd-white);
+  border-bottom: 1px solid var(--line-gold);
+  border-radius: 0;
+}
+.ghost:hover, .ghost:focus-visible { border-bottom-color: var(--ngd-gold); }
+.ghost .sheen { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sheen { display: none; }
+}

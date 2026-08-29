@@ -1,19 +1,21 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import './index.css'
+
+import './styles/global.css'
 import App from './App.jsx'
 import EnvironmentNotice from '@/components/feedback/EnvironmentNotice.jsx'
-import { supabaseEnvStatus } from '@/lib/supabase/client.js'
+import { resolveSupabaseEnv, SETUP_INSTRUCTIONS } from '@/lib/supabase/env.js'
 
-// A missing or misnamed environment variable replaces the app with a screen
-// naming the exact problem, rather than failing deep inside the Supabase SDK.
-const root = supabaseEnvStatus.ok ? (
+// The guard reads the PURE env module, not the client. Importing the client
+// here would pull the whole Supabase SDK (~54 kB gzip) into the first load for
+// a homepage that does not query it — the SDK arrives with the code that
+// actually needs it.
+const env = resolveSupabaseEnv()
+
+const root = env.ok ? (
   <App />
 ) : (
-  <EnvironmentNotice
-    problems={supabaseEnvStatus.problems}
-    instructions={supabaseEnvStatus.instructions}
-  />
+  <EnvironmentNotice problems={env.problems} instructions={SETUP_INSTRUCTIONS} />
 )
 
 createRoot(document.getElementById('root')).render(
