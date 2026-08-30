@@ -10,9 +10,15 @@ import styles from './HeroVisual.module.css';
  *
  * THE STONE IS NEVER GENERATED, AND NEVER ALTERED. Everything cinematic happens
  * in the AIR AROUND the photograph — which is how a macro lens produces this
- * look in the first place: out-of-focus lights behind, beams across the stage,
- * fine sparkle in front, the frame closing in, and the whole scene dollying
- * toward the viewer on scroll. Nothing composites onto the diamond.
+ * look in the first place: out-of-focus lights, beams across the stage, fine
+ * sparkle, the frame closing in, and the whole scene dollying toward the viewer
+ * on scroll.
+ *
+ * Every one of those layers paints BEHIND the plate. That is a load-bearing
+ * fact, not a detail: this file used to say "nothing composites onto the
+ * diamond" while the mote layer sat at z-index 14 against the plate's 12, and
+ * measurably drew glowing dots on the crown of a real graded stone. Ordering is
+ * the only thing that makes the claim true, so a test now asserts it.
  *
  * NO CANVAS, deliberately: the hero is asserted to contain zero WebGL.
  */
@@ -33,13 +39,22 @@ const BOKEH = [
   [72, 50, 70, 12, 0.25, 7], [36, 88, 130, 30, 0.13, 3],
 ];
 
-/** Sparkle motes: [xPct, yPct, sizePx, opacity] */
+/**
+ * Sparkle motes: [xPct, yPct, sizePx, opacity]
+ *
+ * A phyllotaxis spiral pushed OUT to a 30-63% annulus and spread nearly evenly
+ * in y. The old 18-51% band with y squashed to 0.72 put the spiral straight
+ * across the middle of the frame, which is exactly where the stone sits — so
+ * the sparkle read as dust on the diamond rather than air around it. Layering
+ * (moteLayer sits behind the plate) is what makes drawing on the stone
+ * impossible; this is what keeps the motes visible once it is.
+ */
 const MOTES = Array.from({ length: 22 }, (_, i) => {
   const a = (i * 137.5 * Math.PI) / 180;
-  const r = 18 + (i % 7) * 5.5;
+  const r = 30 + (i % 7) * 5.5;
   return [
     50 + Math.cos(a) * r,
-    50 + Math.sin(a) * r * 0.72,
+    50 + Math.sin(a) * r * 0.95,
     1.5 + (i % 3),
     0.25 + (i % 4) * 0.14,
   ];
@@ -262,6 +277,7 @@ export default function HeroVisual() {
           />
         </figure>
 
+        {/* Behind the plate — see .moteLayer. Never over the stone. */}
         <div className={styles.moteLayer} aria-hidden="true">
           {MOTES.map(([x, y, size, op], i) => (
             <span
