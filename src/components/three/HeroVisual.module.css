@@ -1,11 +1,19 @@
-.visual { position: absolute; inset: 0; z-index: var(--z-canvas); pointer-events: none; }
+/* Perspective must live on the PARENT of the rotated element. Declaring it on
+   .stage — the element that receives rotateX/rotateY — puts it outside the
+   projection chain, so the lean renders as a flat skew and the whole depth
+   effect is fake. */
+.visual {
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-canvas);
+  pointer-events: none;
+  perspective: 1200px;
+  perspective-origin: 62% 50%;
+}
 
-/* Perspective on the stage is what makes the pointer lean read as looking
-   AROUND the stone rather than skewing a flat picture. */
 .stage {
   position: absolute;
   inset: 0;
-  perspective: 1200px;
   transform-style: preserve-3d;
   overflow: hidden;
 }
@@ -15,24 +23,16 @@
 .bokehLayer {
   position: absolute;
   inset: -10%;
-  transform-origin: 50% 46%;
   will-change: transform, opacity;
 }
 
+/* Promoted so the per-disc blur rasterises once and the drift is a pure
+   composite. The layer this sits in translates rather than scales, which is
+   what makes that safe. */
 .bokeh {
   position: absolute;
   translate: -50% -50%;
   border-radius: 50%;
-  /* Warm champagne light going out of focus. A real fast lens renders these
-     brightest at the rim, which is what the inner stop does. */
-  background: radial-gradient(
-    circle,
-    rgba(240, 224, 186, 0.92) 0%,
-    rgba(214, 180, 116, 0.72) 55%,
-    rgba(201, 168, 106, 0.28) 76%,
-    rgba(201, 168, 106, 0.04) 88%,
-    transparent 92%
-  );
   will-change: transform;
 }
 
@@ -53,7 +53,20 @@
   transform: skewX(-14deg);
 }
 .beamA { left: 4%; }
-.beamB { left: 48%; width: 30%; opacity: 0.7; }
+/* Authored strength lives in the gradient, not in an opacity the intro tween
+   would overwrite. */
+.beamB {
+  left: 48%;
+  width: 30%;
+  background: linear-gradient(
+    100deg,
+    transparent,
+    rgba(255, 255, 255, 0.02) 44%,
+    rgba(255, 255, 255, 0.042) 50%,
+    rgba(255, 255, 255, 0.02) 56%,
+    transparent
+  );
+}
 
 /* ---- The photograph ---- */
 
@@ -79,20 +92,30 @@
   );
 }
 
+/* The stone's shadow, as its own element. Keeping it off the <img> means the
+   scaling photograph never re-rasterises a 60px filter every frame. */
+.cast {
+  position: absolute;
+  width: min(58%, 380px);
+  height: 70px;
+  translate: 0 150px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(0, 0, 0, 0.72) 0%, transparent 70%);
+}
+
 .stone {
   position: relative;
-  /* Base size against a 754px source. The scroll push-in takes this to 1.55x
-     (~728px), which stays under the source width — the stone comes toward you
-     without ever being enlarged past what was actually photographed. */
+  /* Base size against a 754px source. The push-in reaches 1.55x (~728px),
+     still under the source width — the stone comes toward you without ever
+     being enlarged past what was actually photographed. */
   width: min(74%, 470px);
   height: auto;
-  filter: drop-shadow(0 26px 60px rgba(0, 0, 0, 0.75));
   will-change: transform;
 }
 
 /* ---- Sparkle in front ---- */
 
-.moteLayer { position: absolute; inset: 0; z-index: 14; transform-origin: 50% 46%; }
+.moteLayer { position: absolute; inset: 0; z-index: 14; will-change: transform; }
 
 .mote {
   position: absolute;
@@ -117,17 +140,20 @@
   );
 }
 
-@media (max-width: 767px) {
+/* Mitigations run to 899px, matching MQ.desktop. Stopping at 767px left
+   768-899px with the full desktop atmosphere and no pin-scale to justify it. */
+@media (max-width: 899px) {
   .stone { width: min(72%, 340px); }
   .pool { width: min(96%, 440px); }
-  /* Fewer, softer lights: the small screen has less room for atmosphere
-     before it becomes noise behind the headline. */
+  .cast { width: min(64%, 300px); translate: 0 118px; }
+  /* Half the discs. Their drift tweens still run, but a transform on a
+     display:none element costs nothing to composite. */
   .bokeh:nth-child(n + 7) { display: none; }
   .beamB { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .stone, .bokeh, .bokehLayer { will-change: auto; }
+  .stone, .bokehLayer, .moteLayer { will-change: auto; }
   .beam { display: none; }
   .moteLayer { display: none; }
 }
