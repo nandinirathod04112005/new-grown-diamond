@@ -67,6 +67,88 @@ test.describe('NGD homepage', () => {
     ).toBeLessThanOrEqual(natural);
   });
 
+  test('nothing is composited onto the diamond photograph', async ({ page }) => {
+    await openHome(page);
+    await page.waitForTimeout(2500);
+
+    // A real, company-owned, graded stone may carry presentation effects around
+    // it and none on it. This shipped wrong once: the mote layer sat at
+    // z-index 14 against the plate's 12 and drew glowing sparkles directly on
+    // the crown — on fully opaque pixels of the photograph, at every one of the
+    // five viewports.
+    //
+    // What makes a mote a defect is being PAINTED OVER the stone, not merely
+    // positioned there: behind an opaque photograph it is occluded and harmless.
+    // So a mote counts against us only when its layer paints at or above the
+    // plate AND its centre maps to an opaque pixel of the source WebP.
+    //
+    // Both halves are asserted. Ordering alone is the mechanism, and the pixel
+    // check is what actually caught this — keeping both means restoring either
+    // half of the old bug fails the suite.
+    //
+    // Scoped to discrete sparkle. The vignette is a full-bleed gradient, which
+    // is the frame closing in, not decoration drawn on the goods.
+    const check = async () => page.evaluate(() => {
+      const hero = document.querySelector('#hero');
+      const img = hero.querySelector('img');
+      const motes = [...hero.querySelectorAll('[data-o]')];
+      if (!img || motes.length === 0) return { skip: true };
+
+      const zOf = (el) => {
+        const z = getComputedStyle(el).zIndex;
+        return z === 'auto' ? 0 : Number(z);
+      };
+      const plateZ = zOf(img.closest('figure'));
+      const moteZ = zOf(motes[0].parentElement);
+
+      const r = img.getBoundingClientRect();
+      if (r.width === 0) return { plateZ, moteZ, drawnOnStone: [] };
+
+      const c = document.createElement('canvas');
+      c.width = img.naturalWidth;
+      c.height = img.naturalHeight;
+      const cx = c.getContext('2d', { willReadFrequently: true });
+      cx.drawImage(img, 0, 0);
+
+      const drawnOnStone = [];
+      motes.forEach((m, i) => {
+        const b = m.getBoundingClientRect();
+        if (b.width === 0 || getComputedStyle(m).display === 'none') return;
+        if (zOf(m.parentElement) < plateZ) return; // occluded by the photograph
+        const px = Math.round(((b.left + b.width / 2 - r.left) / r.width) * c.width);
+        const py = Math.round(((b.top + b.height / 2 - r.top) / r.height) * c.height);
+        if (px < 0 || py < 0 || px >= c.width || py >= c.height) return;
+        if (cx.getImageData(px, py, 1, 1).data[3] > 250) {
+          drawnOnStone.push(`mote ${i} at source px (${px},${py}), opacity ${m.dataset.o}`);
+        }
+      });
+      return { plateZ, moteZ, drawnOnStone };
+    });
+
+    const atRest = await check();
+    if (atRest.skip) return;
+
+    expect(
+      atRest.moteZ,
+      `sparkle layer paints at z-index ${atRest.moteZ} against the photograph's `
+        + `${atRest.plateZ} — it must sit behind`
+    ).toBeLessThan(atRest.plateZ);
+    expect(
+      atRest.drawnOnStone,
+      `decoration drawn on the stone: ${atRest.drawnOnStone.join(' | ')}`
+    ).toEqual([]);
+
+    // Again mid push-in, where the stone grows to 1.55x and covers far more of
+    // the frame than it does at rest.
+    await page.evaluate(() => window.scrollBy(0, window.innerHeight * 0.5));
+    await page.waitForTimeout(1200);
+    const pushedIn = await check();
+    expect(
+      pushedIn.drawnOnStone,
+      `decoration drawn on the stone mid push-in: ${pushedIn.drawnOnStone.join(' | ')}`
+    ).toEqual([]);
+  });
+
   test('every chapter is present, headed and legible', async ({ page }) => {
     await openHome(page);
     for (const ch of CHAPTERS) {

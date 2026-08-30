@@ -115,7 +115,14 @@
 
 /* ---- Sparkle in front ---- */
 
-.moteLayer { position: absolute; inset: 0; z-index: 14; will-change: transform; }
+/* BEHIND the photograph, not in front of it (z-index 10 against the plate's
+   12). At z-index 14 these sparkles painted ON the stone — measured landing on
+   fully opaque pixels of the diamond at all five viewports, one of them at 0.67
+   opacity with a 6px glow sitting on the crown. A real graded stone may not be
+   drawn over. Behind the plate it is arithmetically impossible: the photograph
+   is opaque wherever the diamond is, so a mote can only ever show through the
+   transparent air around it. */
+.moteLayer { position: absolute; inset: 0; z-index: 10; will-change: transform; }
 
 .mote {
   position: absolute;
