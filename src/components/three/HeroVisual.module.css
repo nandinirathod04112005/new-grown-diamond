@@ -1,4 +1,74 @@
-.visual { position: absolute; inset: 0; z-index: var(--z-canvas); pointer-events: none; }
+/* Perspective must live on the PARENT of the rotated element. Declaring it on
+   .stage — the element that receives rotateX/rotateY — puts it outside the
+   projection chain, so the lean renders as a flat skew and the whole depth
+   effect is fake. */
+.visual {
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-canvas);
+  pointer-events: none;
+  perspective: 1200px;
+  perspective-origin: 62% 50%;
+}
+
+.stage {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  overflow: hidden;
+}
+
+/* ---- Atmosphere behind the stone: light, never gems ---- */
+
+.bokehLayer {
+  position: absolute;
+  inset: -10%;
+  will-change: transform, opacity;
+}
+
+/* Promoted so the per-disc blur rasterises once and the drift is a pure
+   composite. The layer this sits in translates rather than scales, which is
+   what makes that safe. */
+.bokeh {
+  position: absolute;
+  translate: -50% -50%;
+  border-radius: 50%;
+  will-change: transform;
+}
+
+.beam {
+  position: absolute;
+  top: -25%;
+  bottom: -25%;
+  width: 40%;
+  pointer-events: none;
+  background: linear-gradient(
+    100deg,
+    transparent,
+    rgba(255, 255, 255, 0.028) 44%,
+    rgba(255, 255, 255, 0.06) 50%,
+    rgba(255, 255, 255, 0.028) 56%,
+    transparent
+  );
+  transform: skewX(-14deg);
+}
+.beamA { left: 4%; }
+/* Authored strength lives in the gradient, not in an opacity the intro tween
+   would overwrite. */
+.beamB {
+  left: 48%;
+  width: 30%;
+  background: linear-gradient(
+    100deg,
+    transparent,
+    rgba(255, 255, 255, 0.02) 44%,
+    rgba(255, 255, 255, 0.042) 50%,
+    rgba(255, 255, 255, 0.02) 56%,
+    transparent
+  );
+}
+
+/* ---- The photograph ---- */
 
 .plate {
   position: absolute;
@@ -6,63 +76,84 @@
   margin: 0;
   display: grid;
   place-items: center;
-  overflow: hidden;
+  z-index: 12;
 }
 
-/* The light the stone sits in. Behind the photograph, never over it. */
 .pool {
   position: absolute;
-  width: min(80%, 620px);
+  width: min(84%, 660px);
   aspect-ratio: 1;
   border-radius: 50%;
   background: radial-gradient(
     circle,
-    rgba(201, 168, 106, 0.2) 0%,
-    rgba(201, 168, 106, 0.07) 38%,
+    rgba(201, 168, 106, 0.22) 0%,
+    rgba(201, 168, 106, 0.07) 40%,
     transparent 68%
   );
 }
 
+/* The stone's shadow, as its own element. Keeping it off the <img> means the
+   scaling photograph never re-rasterises a 60px filter every frame. */
+.cast {
+  position: absolute;
+  width: min(58%, 380px);
+  height: 70px;
+  translate: 0 150px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(0, 0, 0, 0.72) 0%, transparent 70%);
+}
+
 .stone {
   position: relative;
-  /* Held well under the 754px source so the photograph is never upscaled into
-     softness. When a >=2400px capture arrives this cap can be lifted. */
+  /* Base size against a 754px source. The push-in reaches 1.55x (~728px),
+     still under the source width — the stone comes toward you without ever
+     being enlarged past what was actually photographed. */
   width: min(74%, 470px);
   height: auto;
-  /* Contrast only: seats the stone in the frame. Nothing is composited onto
-     the diamond itself. */
-  filter: drop-shadow(0 26px 60px rgba(0, 0, 0, 0.72));
   will-change: transform;
 }
 
-/* A highlight travelling across the PLATE, clipped to it. It passes in front
-   of the stone as a sweep of light would across a display case — it does not
-   tint, brighten or otherwise alter the photograph beneath. */
-.sweep {
+/* ---- Sparkle in front ---- */
+
+.moteLayer { position: absolute; inset: 0; z-index: 14; will-change: transform; }
+
+.mote {
   position: absolute;
-  top: 0; bottom: 0;
-  /* Wide and faint on purpose: a narrow, brighter band reads as a hard
-     diagonal edge — a rendering artifact — rather than as light moving
-     through the room. */
-  width: 46%;
-  opacity: 0;
-  background: linear-gradient(
-    100deg,
-    transparent,
-    rgba(255, 255, 255, 0.025) 40%,
-    rgba(255, 255, 255, 0.055) 50%,
-    rgba(255, 255, 255, 0.025) 60%,
-    transparent
-  );
-  transform: skewX(-12deg);
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: rgba(255, 250, 240, 0.9);
+  box-shadow: 0 0 6px rgba(226, 207, 164, 0.7);
 }
 
-@media (max-width: 767px) {
+/* ---- The frame closing in ---- */
+
+.vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 16;
+  opacity: 0.55;
+  background: radial-gradient(
+    ellipse 62% 58% at 50% 48%,
+    transparent 40%,
+    rgba(6, 6, 6, 0.5) 78%,
+    rgba(6, 6, 6, 0.88) 100%
+  );
+}
+
+/* Mitigations run to 899px, matching MQ.desktop. Stopping at 767px left
+   768-899px with the full desktop atmosphere and no pin-scale to justify it. */
+@media (max-width: 899px) {
   .stone { width: min(72%, 340px); }
-  .pool { width: min(94%, 420px); }
+  .pool { width: min(96%, 440px); }
+  .cast { width: min(64%, 300px); translate: 0 118px; }
+  /* Half the discs. Their drift tweens still run, but a transform on a
+     display:none element costs nothing to composite. */
+  .bokeh:nth-child(n + 7) { display: none; }
+  .beamB { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .stone { will-change: auto; }
-  .sweep { display: none; }
+  .stone, .bokehLayer, .moteLayer { will-change: auto; }
+  .beam { display: none; }
+  .moteLayer { display: none; }
 }
