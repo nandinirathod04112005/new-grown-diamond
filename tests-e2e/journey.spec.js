@@ -26,7 +26,11 @@ test.describe('Diamond journey', () => {
     const rail = page.locator('nav[aria-label="Journey chapters"]');
     if (await rail.count()) {
       for (const c of CHAPTERS) {
-        await expect(rail.getByText(c.label, { exact: false })).toBeAttached();
+        // Each rail button carries a visible SHORT label plus the full name for
+        // assistive technology, so a chapter whose short form equals its label
+        // (Carbon, Plasma, Jewellery) matches twice. Both are wanted; the
+        // assertion is that the chapter is named at all.
+        await expect(rail.getByText(c.label, { exact: false }).first()).toBeAttached();
       }
     }
   });

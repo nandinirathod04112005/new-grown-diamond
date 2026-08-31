@@ -49,7 +49,7 @@ export default function Atelier() {
 
       <div className={styles.gallery}>
       <div ref={chapter} className={`ngd-page ngd-grid ${styles.inner}`}>
-        <p className={`ngd-tech ${styles.chapter}`}>Chapter 07 — Atelier</p>
+        <p className={`ngd-tech ${styles.chapter}`}>Inside the atelier</p>
 
         <SplitReveal as="h2" id="atelier-title" className={styles.title}>
           Once the stone is right, the setting can begin.

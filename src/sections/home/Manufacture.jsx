@@ -5,7 +5,11 @@ import SplitReveal from '@/components/motion/SplitReveal.jsx';
 import styles from './Manufacture.module.css';
 
 /**
- * Chapter 04 — reactor to polished stone.
+ * MANUFACTURE — reactor to polished stone.
+ *
+ * A supporting section, not one of the journey's seven chapters. Those are
+ * numbered 01-07 by the scene and shown on the rail; a second numbering here
+ * ran backwards down the page and printed "Chapter 07" twice.
  *
  * A horizontal traverse. Each stage is a tall plate with its number set large
  * in the background, so the sequence reads as a contact sheet rather than a
@@ -43,7 +47,7 @@ export default function Manufacture() {
     <section ref={scope} id="manufacture" className={styles.manufacture} aria-labelledby="mfg-title">
       <div className={styles.head}>
         <div className="ngd-page">
-          <p className="ngd-tech">Chapter 04 — Manufacture</p>
+          <p className="ngd-tech">Manufacture</p>
           <SplitReveal as="h2" id="mfg-title" className={styles.title}>
             Seven stages, one roof.
           </SplitReveal>

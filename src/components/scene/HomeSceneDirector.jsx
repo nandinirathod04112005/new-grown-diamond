@@ -253,8 +253,14 @@ export default function HomeSceneDirector({ children, onJump }) {
       // an inset mask opens from the centre across the handover. Masking is on
       // the short list of treatments a real photograph may receive, because it
       // changes what you can SEE of the stone, never how the stone looks.
-      const openMask = (1 - returned) * 50;
-      stone.style.clipPath = returned > 0.001 && returned < 0.999
+      //
+      // Guarded on the canvas, exactly like the opacity above it. Written
+      // unconditionally, the mask closed to inset(50% 30%) on a device with no
+      // WebGL — erasing the photograph that the opacity guard three lines up
+      // exists to keep on screen. There is nothing to reveal FROM when there is
+      // no scene to hand over from, so there is nothing to mask.
+      const openMask = canvasUpRef.current ? (1 - returned) * 50 : 0;
+      stone.style.clipPath = openMask > 0.01
         ? `inset(${openMask.toFixed(2)}% ${(openMask * 0.6).toFixed(2)}% round 2%)`
         : 'none';
 
@@ -302,6 +308,16 @@ export default function HomeSceneDirector({ children, onJump }) {
     // which is the same thing the pointer lean already leans — the photograph
     // is not being turned on its own axis, which a single fixed viewpoint
     // cannot honestly do.
+    // The rotating layer holds the ATMOSPHERE and the canvas — never the
+    // photograph.
+    //
+    // rotateY under a perspective is a projective transform: it keystones what
+    // it turns, magnifying one side of the frame relative to the other
+    // (measured at 1920: a 507px left edge against a 488px right edge). On a
+    // photograph of a real graded stone that is a distortion of the goods, and
+    // it is not on the list of treatments one may receive. The stone is now a
+    // sibling of this layer rather than a child, so the scene turns around it
+    // and the photograph is only ever scaled and masked.
     const inner = innerRef.current;
     if (inner) {
       const yaw = (p - 0.5) * 9;
@@ -478,9 +494,14 @@ export default function HomeSceneDirector({ children, onJump }) {
             </Suspense>
           )}
 
-          {/* ALWAYS mounted. The finished diamond is a photograph of a real
-              stone — never a render — so it can never depend on WebGL being
-              available. Without a canvas it simply starts visible. */}
+          {/* Contrast for the copy column. Over the PLATE, never composited
+              into the stone — it darkens the air the text sits on, and the
+              photograph keeps its own exposure. */}
+          <span className={styles.readable} aria-hidden="true" />
+          </div>
+
+          {/* Outside .stageInner, deliberately: the photograph does not turn. */}
+          <span className={styles.vignette} aria-hidden="true" />
           <img
             ref={stoneRef}
             className={styles.stone}
@@ -491,12 +512,6 @@ export default function HomeSceneDirector({ children, onJump }) {
             fetchPriority="high"
             decoding="async"
           />
-          <span className={styles.vignette} aria-hidden="true" />
-          {/* Contrast for the copy column. Over the PLATE, never composited
-              into the stone — it darkens the air the text sits on, and the
-              photograph keeps its own exposure. */}
-          <span className={styles.readable} aria-hidden="true" />
-          </div>
         </div>
 
         {/* Inside the provider, deliberately. Rendered as a sibling of the

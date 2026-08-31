@@ -79,27 +79,38 @@
    the stone put display type straight across its facets, which is both
    unreadable and the generic answer. */
 @media (min-width: 900px) {
-  /* The subject moves so it never reaches under the chapter rail — a scrim
-     behind the rail would be painting over the photograph, which is the one
-     thing that is not allowed. The rail appears at 1100px, and the push-in
-     multiplies the stone by up to 1.56, so narrow desktops need it pulled in
-     further than wide ones. Measured at 1100, 1440 and 1920. */
-  .stone { left: 52%; width: min(34vw, 340px); }
-  .halo { left: 52%; }
-  .stage { perspective-origin: 56% 50%; }
+  /*
+   * The subject lives in the CORRIDOR between the copy column and the chapter
+   * rail, and it has to fit there at full push-in as well as at rest.
+   *
+   * Both edges are hard: text over the stone's facets is unreadable, and a
+   * scrim behind the rail would mean painting over the photograph, which is
+   * the one treatment that is never allowed. Moving the subject is the only
+   * lever. It was moved left once to clear the rail, which put it straight
+   * across the headline instead — one overlap traded for another, because only
+   * the edge being fixed was measured.
+   *
+   * The corridor's width is set by the headline's longest word, so it does not
+   * grow with the viewport as fast as the stone would: the width is held in vw
+   * with a hard cap, and both edges are measured at 1100, 1280, 1440, 1600 and
+   * 1920 at rest AND at full scale.
+   */
+  .stone { left: 72%; width: min(14vw, 300px); }
+  .halo { left: 72%; }
+  .stage { perspective-origin: 70% 50%; }
 }
 
-/* 1100-1279 is the tightest desktop band: the rail has just appeared and there
-   is little room beside the copy column, so the subject is smallest here. */
+/* 1100-1279 is the tightest band: the rail has just appeared and the corridor
+   is at its narrowest, so the subject is smallest here. */
 @media (min-width: 1100px) and (max-width: 1279px) {
-  .stone { left: 46%; width: min(30vw, 300px); }
-  .halo { left: 46%; }
+  .stone { left: 70%; width: min(11vw, 190px); }
+  .halo { left: 70%; }
 }
 
-/* Wide desktops have room to place the subject further right and larger. */
+/* Wide viewports open the corridor up, so the subject can be larger. */
 @media (min-width: 1600px) {
-  .stone { left: 58%; width: min(34vw, 440px); }
-  .halo { left: 58%; }
+  .stone { left: 73%; width: min(15vw, 400px); }
+  .halo { left: 73%; }
 }
 
 /* A ground for the copy column, so text over the scene is legible. It darkens
@@ -209,9 +220,9 @@
    them claimed they darkened only the air. That is the same defect as the
    sparkle layer, in different elements: a treatment is only "around" the stone
    if it paints BEHIND it. Ordering is the guarantee. */
-.readable { z-index: 2; }
-.vignette { z-index: 3; }
-.stone { z-index: 4; }
+.stageInner { z-index: 1; }
+.vignette { z-index: 2; }
+.stone { z-index: 3; }
 
 @media (prefers-reduced-motion: reduce) {
   .air { will-change: auto; }

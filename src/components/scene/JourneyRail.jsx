@@ -46,7 +46,10 @@ export default function JourneyRail({ onJump, hidden = false }) {
               aria-current={i === active ? 'step' : undefined}
             >
               <span className={styles.n}>{c.n}</span>
-              <span className={styles.label}>{c.label}</span>
+              {/* Short form: the rail must have a bounded width, or it grows
+                  leftward onto the photograph. The full name is announced. */}
+              <span className={styles.label} aria-hidden="true">{c.short}</span>
+              <span className="ngd-visually-hidden">{c.label}</span>
               <span className={styles.tick} aria-hidden="true" />
             </button>
           </li>

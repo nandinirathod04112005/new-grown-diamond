@@ -2,7 +2,11 @@
    which is read over the shared stage — a graphite ground here painted straight
    over the sticky stage and left chapter 07 with an empty frame behind it.
    The gallery below the chapter panel brings its own ground instead. */
-.atelier { position: relative; padding-block: 0 var(--chapter-y); }
+/* No padding of its own. The chapter panel sizes itself and the gallery below
+   carries its own padding AND its own ground; a second chapter-y here had no
+   background behind it and showed a bare strip of the sticky stage between the
+   gallery and Manufacture. */
+.atelier { position: relative; }
 
 /* The magazine spread, on its own ground, once the chapter is done. */
 .gallery {

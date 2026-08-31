@@ -81,9 +81,15 @@
   }
 }
 
+/* Reduced motion gets the same opaque ground as small screens, and for the
+   same reason: the panels become ordinary blocks over a sticky, full-brightness
+   stage, so without it the copy is back on the photograph. Scoping the fix to
+   max-width:899px left every desktop reduced-motion reader with exactly the
+   problem it was added to solve. */
 @media (prefers-reduced-motion: reduce) {
   .slot { min-height: 0; }
   .panel {
+    background: var(--carbon);
     position: relative;
     height: auto;
     min-height: 0;
