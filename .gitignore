@@ -43,4 +43,4 @@ test-results
 /scratch-*.mjs
 /drive*.mjs
 /shot-*.png
-/shots/
+/shots*/
