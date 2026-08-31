@@ -12,6 +12,23 @@ function conn() {
   return navigator.connection ?? null;
 }
 
+/** Cached WebGL2 support probe. Allocates at most one context, and releases it. */
+let webgl2 = null;
+function probeWebGL2() {
+  if (webgl2 !== null) return webgl2;
+  try {
+    const canvas = document.createElement('canvas');
+    const gl = canvas.getContext('webgl2');
+    webgl2 = !!gl;
+    // Hand the context straight back rather than waiting for GC.
+    gl?.getExtension('WEBGL_lose_context')?.loseContext();
+    return webgl2;
+  } catch {
+    webgl2 = false;
+    return false;
+  }
+}
+
 /** 'off' | 'low' | 'high' */
 export function qualityTier() {
   if (typeof window === 'undefined') return 'off';
@@ -22,11 +39,13 @@ export function qualityTier() {
   if (c?.saveData) return 'off';
   if (c?.effectiveType && /(^|-)2g$/.test(c.effectiveType)) return 'off';
 
-  try {
-    if (!document.createElement('canvas').getContext('webgl2')) return 'off';
-  } catch {
-    return 'off';
-  }
+  // Probe once, and give the context back.
+  //
+  // This used to create a canvas and a WebGL2 context on EVERY call and drop
+  // both on the floor. Browsers cap live contexts (typically 8-16) and reclaim
+  // them by killing the oldest, so repeated probing can evict the context the
+  // page is actually drawing with.
+  if (!probeWebGL2()) return 'off';
 
   const mem = navigator.deviceMemory;
   const cores = navigator.hardwareConcurrency;

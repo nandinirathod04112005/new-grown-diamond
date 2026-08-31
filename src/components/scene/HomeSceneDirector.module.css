@@ -52,7 +52,12 @@
      actually photographed. */
   width: min(58vw, 560px);
   height: auto;
-  opacity: 0;
+  /* Visible by default, and dimmed by the director from there.
+     At opacity 0 the stage was blank until JS had run and the capability probe
+     had resolved — so a slow three chunk, a script error or a blocked bundle
+     left the page showing nothing at all. The untouched state has to be the
+     visible one. */
+  opacity: 1;
   will-change: transform, opacity;
 }
 

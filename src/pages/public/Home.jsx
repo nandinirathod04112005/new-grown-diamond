@@ -40,8 +40,19 @@ export default function Home() {
   const jump = useCallback((key, index) => {
     const journey = document.getElementById('journey');
     if (!journey) return;
-    const { at } = CHAPTERS[index];
-    const top = journey.offsetTop + journey.offsetHeight * (at * SCENE_END);
+    const c = CHAPTERS[index];
+    // Aim at the MIDDLE of the chapter, not its first frame. Landing exactly on
+    // a boundary put the reader a chapter short — chapterAt() picks the last
+    // chapter whose start is <= progress, so arriving a rounding error below
+    // the boundary resolves to the previous one. The middle is also simply
+    // where "go to this chapter" should put you.
+    const at = c.at + (c.to - c.at) * 0.5;
+    // The director's progress runs `top top` -> `bottom bottom`, so it is
+    // measured over the journey's height MINUS one viewport, not its full
+    // height. Using the full height overshot every chapter, landing past the
+    // copy the button names.
+    const travel = Math.max(0, journey.offsetHeight - window.innerHeight);
+    const top = journey.offsetTop + travel * (at * SCENE_END);
     scrollTo(Math.round(top));
   }, [scrollTo]);
 

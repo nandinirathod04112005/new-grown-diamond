@@ -96,7 +96,8 @@ export default function Hero() {
         </ul>
 
         <div className={styles.title}>
-          <LetterAssemble as="h1" id="hero-title" className={styles.h1}>
+          {/* Held until the preloader has left, so the assembly is seen. */}
+          <LetterAssemble as="h1" id="hero-title" className={styles.h1} active={ready}>
             From carbon to brilliance
           </LetterAssemble>
 

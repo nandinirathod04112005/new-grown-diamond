@@ -65,6 +65,9 @@ export default function HomeSceneDirector({ children, onJump }) {
   const [pinned, setPinned] = useState(false);
   const [use3D, setUse3D] = useState(false);
   const [live, setLive] = useState(true);
+  // The six-chapter scene finishes well before the director's span does. Past
+  // that the canvas has nothing left to draw.
+  const [sceneOver, setSceneOver] = useState(false);
 
   // Capability is read after first paint so the photograph renders first and
   // the canvas is a genuine enhancement rather than a render blocker.
@@ -132,13 +135,20 @@ export default function HomeSceneDirector({ children, onJump }) {
       // Slow push toward the viewer at both ends, never past the source width.
       const grow = 1 + ramp(p, 0, 0.15) * 0.3 + ramp(p, HANDOFF.from, 1) * 0.22;
       stone.style.transform = `scale(${grow.toFixed(4)})`;
-      // Focus pull: the stone softens only as it DISSOLVES, never while it is
-      // the subject. A photograph of a real diamond is shown sharp or not at
-      // all — blurring the goods misrepresents them.
-      const dissolving = ramp(p, 0.06, 0.15) * (1 - returned);
-      stone.style.filter = dissolving > 0.01
-        ? `blur(${(dissolving * 9).toFixed(2)}px)`
-        : 'none';
+      // NO FILTER ON THE PHOTOGRAPH. Ever.
+      //
+      // There was a focus pull here. Scoped to the dissolve it still put 1.2px
+      // of blur on the stone while it was 70% visible, and before that it had
+      // been 7.2px through the whole handover. Narrowing the window was
+      // treating the symptom: blur is not on the list of things a real
+      // photograph may receive (background isolation, masking, slow scale and
+      // parallax, a light sweep across the plate, contrast beneath it,
+      // editorial crop, a genuine 360 sequence). It changes how the goods look,
+      // which is the one thing none of this may do.
+      //
+      // The focus pull moved to the AIR, below, where defocusing is free and
+      // reads the same to the eye.
+      stone.style.filter = 'none';
     }
 
     const halo = haloRef.current;
@@ -157,6 +167,11 @@ export default function HomeSceneDirector({ children, onJump }) {
     if (air) {
       air.style.opacity = String(Math.max(opening, returned) * 0.9);
       air.style.transform = `translate3d(0, ${(-p * 8).toFixed(2)}%, 0)`;
+      // The focus pull lives here instead of on the stone. These are
+      // out-of-focus points of light — defocusing them further is what they
+      // already are, and it costs the photograph nothing.
+      const pull = ramp(p, 0.04, 0.16) * opening;
+      air.style.filter = pull > 0.01 ? `blur(${(pull * 9).toFixed(2)}px)` : 'none';
     }
     // The stage recedes once the scene is over, so the dense content sections
     // that follow are read on their own ground rather than over a photograph.
@@ -197,7 +212,11 @@ export default function HomeSceneDirector({ children, onJump }) {
           onToggle: (self) => setPinned(self.isActive),
           onUpdate: (self) => {
             apply(self.progress);
-            setChapter(chapterAt(sceneProgressOf(self.progress)));
+            const sp = sceneProgressOf(self.progress);
+            setChapter(chapterAt(sp));
+            // One flip, not a per-frame write: the canvas ran at full cost for
+            // the last stretch of the journey producing frames nobody sees.
+            setSceneOver(sp >= 1);
           },
         });
         return () => { scrubRef.current = false; st.kill(); };
@@ -254,7 +273,9 @@ export default function HomeSceneDirector({ children, onJump }) {
     { scope }
   );
 
-  const canvasLive = use3D && live && pinned;
+  // Rendered only where there is something to render: WebGL earned, tab
+  // visible, the journey on screen, and the scene not yet finished.
+  const canvasLive = use3D && live && pinned && !sceneOver;
 
   return (
     <SceneProgressContext.Provider value={value}>

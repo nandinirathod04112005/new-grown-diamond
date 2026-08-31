@@ -29,6 +29,7 @@ export default function LetterAssemble({
   id,
   delay = 0.15,
   seed = 0x4d1a,
+  active = true,
 }) {
   const scope = useRef(null);
 
@@ -40,6 +41,15 @@ export default function LetterAssemble({
       const mm = gsap.matchMedia();
 
       mm.add(MQ.motion, () => {
+        // Nothing is built until the caller says the heading is on screen.
+        // The assembly used to run on mount, which is behind the preloader
+        // curtain — it played to completion in the dark and the reader arrived
+        // to a heading that had already finished assembling.
+        //
+        // Not building is also the safe state: with no split there are no
+        // character spans, so the heading is ordinary, fully opaque text.
+        if (!active) return undefined;
+
         const split = new SplitType(el, {
           types: 'lines,chars',
           lineClass: 'line',
@@ -86,7 +96,7 @@ export default function LetterAssemble({
       // nothing to clear, because nothing was ever set.
       return () => mm.revert();
     },
-    { scope, dependencies: [children, delay, seed] }
+    { scope, dependencies: [children, delay, seed, active] }
   );
 
   return (
