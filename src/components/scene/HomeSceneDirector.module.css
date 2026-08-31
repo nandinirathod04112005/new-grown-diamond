@@ -1,0 +1,168 @@
+/* The journey: a tall scroll container whose first child is a sticky stage.
+   `position: sticky` rather than `fixed` so the stage is scoped to the
+   journey's own length — it appears with Hero and leaves with Atelier,
+   without a ScrollTrigger pin having to add and remove a spacer. */
+.journey {
+  position: relative;
+  background: var(--carbon);
+}
+
+.stage {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  width: 100%;
+  overflow: hidden;
+  /* Behind every panel that scrolls over it. */
+  z-index: 0;
+  background: var(--carbon);
+  /* The stage is the parent of the leaning layers, so perspective belongs
+     here — declaring it on a rotated element puts it outside its own
+     projection chain and the depth becomes a flat skew. */
+  perspective: 1400px;
+}
+
+/* The light that contracts into the stone as the journey begins. */
+.halo {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(120vw, 1500px);
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border-radius: 50%;
+  opacity: 0.5;
+  background: radial-gradient(
+    circle,
+    rgba(214, 180, 116, 0.16) 0%,
+    rgba(201, 168, 106, 0.07) 34%,
+    rgba(201, 168, 106, 0.02) 58%,
+    transparent 74%
+  );
+  will-change: transform, opacity;
+}
+
+/* The real photograph. Always mounted; only ever crossfaded. */
+.stone {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  /* Held under the 754px source so the stone is never enlarged past what was
+     actually photographed. */
+  width: min(58vw, 560px);
+  height: auto;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+/* Editorial composition: the subject takes the right of the frame outright and
+   the copy holds the left, rather than the two sharing the middle. Centring
+   the stone put display type straight across its facets, which is both
+   unreadable and the generic answer. */
+@media (min-width: 900px) {
+  .stone { left: 68%; width: min(42vw, 500px); }
+  .halo { left: 68%; }
+  .stage { perspective-origin: 68% 50%; }
+}
+
+/* A ground for the copy column, so text over the scene is always legible
+   without dimming the photograph itself. */
+.readable {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  background: linear-gradient(
+    100deg,
+    rgba(6, 6, 6, 0.92) 0%,
+    rgba(6, 6, 6, 0.74) 28%,
+    rgba(6, 6, 6, 0.24) 52%,
+    transparent 70%
+  );
+}
+@media (max-width: 899px) {
+  .readable {
+    background: linear-gradient(
+      180deg,
+      rgba(6, 6, 6, 0.5) 0%,
+      rgba(6, 6, 6, 0.72) 60%,
+      rgba(6, 6, 6, 0.92) 100%
+    );
+  }
+}
+
+.vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 66% 62% at 50% 50%,
+    transparent 42%,
+    rgba(6, 6, 6, 0.42) 76%,
+    rgba(6, 6, 6, 0.86) 100%
+  );
+}
+
+/* Panels scroll over the stage. `margin-top: -100svh` pulls the flow back up
+   so the first panel starts against the stage rather than one screen below
+   it; the stage's own sticky positioning does the rest. */
+.flow {
+  position: relative;
+  z-index: 1;
+  margin-top: -100svh;
+}
+
+/* Small screens: no sticky stage at all. The journey becomes an ordinary
+   vertical document, which is the right shape for a phone — a pin there
+   hijacks the one gesture the reader has. */
+/* Small screens keep the overlay composition — copy over a sticky stage —
+   because dropping the stage into the flow opened the page on a full screen
+   of photograph with no words on it at all. What mobile does NOT get is the
+   pin, the scrub or the canvas: the stage simply holds the real stone while
+   the chapters scroll past as ordinary blocks. */
+@media (max-width: 899px) {
+  .stage { height: 100svh; }
+  .flow { margin-top: -100svh; }
+  .stone { width: min(70vw, 380px); left: 50%; }
+  .halo { left: 50%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .halo, .stone, .air { will-change: auto; }
+}
+
+/* ---- Atmosphere: light in the air, never on the stone ---- */
+
+.air {
+  position: absolute;
+  inset: -8%;
+  will-change: transform, opacity;
+  /* Below the photograph, so a disc can never paint over a real graded stone.
+     Ordering is the guarantee; nothing here relies on coordinates. */
+  z-index: 0;
+}
+
+.mote {
+  position: absolute;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 244, 222, 0.9) 0%,
+    rgba(232, 205, 152, 0.5) 55%,
+    rgba(214, 180, 116, 0) 100%
+  );
+}
+
+/* The photograph sits above the atmosphere. */
+.stone { z-index: 2; }
+.vignette { z-index: 3; }
+
+@media (prefers-reduced-motion: reduce) {
+  .air { will-change: auto; }
+}
+
+/* The canvas sits between the atmosphere and the photograph, so a generated
+   form can never paint over a real stone. */
+.canvasHolder { position: absolute; inset: 0; z-index: 1; }

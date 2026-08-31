@@ -61,11 +61,11 @@
 .more:hover, .more:focus-visible { color: var(--champagne-soft); }
 
 @media (min-width: 900px) {
-  /* Pinned and scrubbed by GSAP, so native scrolling must be off or the two
-     compete for the same gesture. `hidden`, never `visible`: the track is
-     wider than the viewport by design and `visible` would push that width
-     onto the document and scroll the whole page sideways. */
-  .viewport { overflow: hidden; scroll-snap-type: none; }
+  /* A native scroller at every width now that the GSAP pin is gone — the two
+     used to compete for the same gesture. `auto`, never `visible`: the track
+     is wider than the viewport by design and `visible` would push that width
+     onto the document and scroll the whole PAGE sideways. */
+  .viewport { overflow-x: auto; scroll-snap-type: x proximity; }
   .stage { width: 380px; min-height: 30rem; }
 }
 

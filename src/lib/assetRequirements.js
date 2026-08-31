@@ -40,3 +40,62 @@ export const HERO_ASSET_SHORTFALL = {
   mustPreserve: 'Facets, transparency, inclusions, colour, reflections, proportions, and the certificate number if the stone is a listed one',
   neverAcceptable: 'Rendered, AI-generated, illustrated or stock diamonds; upscaled versions of this file',
 };
+
+/**
+ * REAL FOOTAGE STILL REQUIRED.
+ *
+ * Every one of these renders today as a <MediaSlot> placeholder: the real NGD
+ * photograph, dimmed, under a plainly labelled notice stating what is needed.
+ * Nothing is invented to fill the gap — no stock clip, no generated gemstone,
+ * no illustrated stand-in — because a placeholder that admits what it is costs
+ * nothing, and a convincing fake costs the company's word.
+ *
+ * Supplying one is a one-line change: pass `src` to the slot.
+ *
+ * Common requirements unless stated otherwise:
+ *   · 10–20s silent loop, cutting cleanly back to its first frame
+ *   · ≥1920×1080, H.264 MP4 plus WebM, no burned-in text or logo
+ *   · Shot on NGD premises, of NGD equipment and NGD stones
+ *   · A poster frame at the same resolution
+ */
+export const FOOTAGE_REQUIRED = [
+  {
+    slot: 'CVD reactor plasma',
+    where: 'Genesis — chapter 02, Plasma',
+    subject: 'Through the reactor viewport: the plasma ball over the seed plate',
+    shot: 'Static locked-off, no camera move, no relight',
+  },
+  {
+    slot: 'Rough diamond scanning',
+    where: 'Precision — chapter 04, Rough Diamond',
+    subject: 'A rough crystal on the scanner bed, inclusion map on the operator screen',
+    shot: 'Static or a very slow push; the screen must be legible',
+  },
+  {
+    slot: 'Laser cutting and polishing',
+    where: 'Precision — chapter 05, Precision Cut',
+    subject: 'Laser sawing, then the polishing wheel — real sparks and slurry',
+    shot: 'Macro, shallow depth of field, no added glow',
+  },
+  {
+    slot: 'Polished loose diamond — macro / 360',
+    where: 'Precision — chapter 06, Certified Brilliance',
+    subject: 'A graded NGD stone in tweezers on black',
+    shot: 'Macro. Ideally a genuine 24–60 frame 360° sequence, constant exposure, ≥2400px per frame',
+    note: 'This is the one slot where a still sequence is preferred to video: it is the finished stone, and it must be shown as photographed.',
+  },
+  {
+    slot: 'Jewellery editorial',
+    where: 'Atelier',
+    subject: 'NGD settings worn or on a hand model — ring, pendant, studs',
+    shot: 'Editorial, natural light, no CGI stones and no retouching that alters a stone',
+  },
+];
+
+/** Never acceptable in any of the slots above. */
+export const FOOTAGE_NEVER = [
+  'Stock footage of anyone else\'s factory, stones or jewellery',
+  'CGI or AI-generated diamonds, in stills or motion',
+  'Footage of a competitor\'s goods',
+  'Any grade, effect or composite that changes how a stone actually looks',
+];

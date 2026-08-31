@@ -9,10 +9,10 @@
  */
 
 export const CHAPTERS = [
-  { id: 'genesis',     name: 'Genesis',     heading: /Gas becomes stone/i },
-  { id: 'precision',   name: 'Precision',   heading: /Four properties/i },
-  { id: 'inventory',   name: 'Inventory',   heading: /Stones we actually hold/i },
+  { id: 'genesis',     name: 'Genesis',     heading: /It starts as gas/i },
+  { id: 'precision',   name: 'Precision',   heading: /What comes out is blocky/i },
   { id: 'manufacture', name: 'Manufacture', heading: /Seven stages/i },
+  { id: 'inventory',   name: 'Inventory',   heading: /Stones we actually hold/i },
   { id: 'atelier',     name: 'Atelier',     heading: /Once the stone is right/i },
   { id: 'assurance',   name: 'Assurance',   heading: /Verified by someone/i },
   { id: 'ascent',      name: 'Ascent',      heading: /Tell us what you are looking for/i },

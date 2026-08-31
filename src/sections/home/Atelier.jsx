@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 
 import SplitReveal from '@/components/motion/SplitReveal.jsx';
 import AssetSlot from '@/components/media/AssetSlot.jsx';
+import MediaSlot from '@/components/media/MediaSlot.jsx';
 import Reveal from '@/components/motion/Reveal.jsx';
 import useAsyncData from '@/hooks/useAsyncData.js';
 import { fetchFeaturedJewellery } from '@/lib/data/source.js';
@@ -59,6 +60,16 @@ export default function Atelier() {
                 </figcaption>
               )}
             </figure>
+
+            {/* The jewellery chapter's moving image. Editorial footage of NGD
+                settings, not a stock clip of somebody else's goods. */}
+            <div className={styles.film}>
+              <MediaSlot
+                label="Jewellery editorial"
+                spec="NGD settings worn or on a hand model — ring, pendant, studs. Editorial, natural light. 10–20s silent loop, ≥1920×1080, H.264 MP4 + WebM. No CGI stones."
+                ratio="16 / 9"
+              />
+            </div>
 
             <blockquote className={styles.quote}>
               <p>

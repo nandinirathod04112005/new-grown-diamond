@@ -128,24 +128,52 @@ export function createRoughPositions(cutGeometry) {
   const out = new Float32Array(src.count * 3);
   const v = new THREE.Vector3();
 
+  // A CVD rough is a TABULAR SLAB — a flat plate grown on a seed, with stepped
+  // growth bands on its faces. It is not a swollen gem.
+  //
+  // The previous version only inflated the brilliant by a fifth, which left
+  // the pointed pavilion and flat table intact, so the "rough" still read as a
+  // polished stone. That is not a cosmetic complaint: generated geometry is
+  // permitted to depict rough crystal ONLY, and anything a viewer could take
+  // for a finished diamond breaks that. So each vertex is projected onto a
+  // box and the gem silhouette is destroyed outright.
+  const EX = 1.02;   // half-width
+  const EY = 0.46;   // half-height — flat, as grown
+  const EZ = 0.9;    // half-depth
+  const STEP = 0.14; // growth-band thickness
+  const TOWARD_BOX = 0.82;
+
   for (let i = 0; i < src.count; i += 1) {
     v.fromBufferAttribute(src, i);
-    const dir = v.clone().normalize();
 
-    // Bands of growth, plus a coarse lump so no two sides match.
-    //
-    // Y stays mostly the vertex's own height. Quantising it outright collapses
-    // many vertices onto the same plane, which turns neighbouring triangles
-    // inside out and reads as a spiky mess rather than a blocky crystal — the
-    // banding has to be a nudge, not a replacement.
-    const band = Math.round(v.y * 3.2) / 3.2;
-    const y = v.y * 0.72 + band * 0.28;
-    const lump = noise3(Math.round(dir.x * 3), Math.round(dir.y * 3), Math.round(dir.z * 3), 7);
+    // Project onto the surface of the slab: divide by the largest axis ratio.
+    const m = Math.max(
+      Math.abs(v.x) / EX,
+      Math.abs(v.y) / EY,
+      Math.abs(v.z) / EZ
+    ) || 1e-6;
 
-    const swell = 1.08 + lump * 0.2;
-    out[i * 3] = v.x * swell + dir.x * 0.04;
-    out[i * 3 + 1] = y * swell + dir.y * 0.03;
-    out[i * 3 + 2] = v.z * swell + dir.z * 0.04;
+    let bx = v.x / m;
+    let by = v.y / m;
+    let bz = v.z / m;
+
+    // Stepped growth bands, and a coarse lump so no two sides match.
+    const lump = noise3(
+      Math.round(bx * 2.4),
+      Math.round(by * 2.4),
+      Math.round(bz * 2.4),
+      7
+    );
+    by = Math.round(by / STEP) * STEP + lump * 0.05;
+    bx += lump * 0.09;
+    bz += lump * 0.09;
+
+    // Blend hard toward the slab. Keeping a little of the original preserves
+    // vertex ordering's correspondence with the cut form, which is what lets
+    // the growth read as one continuous solid rather than a cross-fade.
+    out[i * 3] = v.x + (bx - v.x) * TOWARD_BOX;
+    out[i * 3 + 1] = v.y + (by - v.y) * TOWARD_BOX;
+    out[i * 3 + 2] = v.z + (bz - v.z) * TOWARD_BOX;
   }
   return out;
 }

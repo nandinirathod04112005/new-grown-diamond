@@ -52,6 +52,15 @@ order** — the composition made no argument.
 - Every animation lives in `useGSAP` with a `scope`. This is what makes
   StrictMode's double mount revert cleanly instead of stacking a second
   timeline.
+- **The homepage has exactly ONE scroll controller.** `HomeSceneDirector` owns
+  the single ScrollTrigger spanning Hero→Atelier and normalises it to 0..1;
+  the scene, the panels and the rail are pure functions of that number. Adding
+  a second pin or scrub over the same scroll is what let two animations
+  disagree about one element after a resize, twice. Per-element entrance
+  reveals (`SplitReveal`, `once: true`) are not controllers and are fine.
+- **A consumer of scene progress must render inside the provider.** A rail
+  rendered as a sibling of the director reads a null context and sits frozen
+  on chapter one — silently, because a missing context is not an error.
 
 **Traps that have already bitten this codebase — do not repeat them**
 
@@ -97,8 +106,12 @@ transparency, colour or proportions, and no material setting makes it a
 photograph — it reads as glass or as plaster. Genuine photography outranks
 WebGL for this subject, always.
 
-- The hero contains **no canvas at all**, by decision rather than capability.
-  A test asserts this so it cannot creep back in.
+- **No generated geometry may stand in for a FINISHED diamond**, anywhere.
+  This supersedes the older "the hero contains no canvas at all" rule, which
+  was a proxy for it: the homepage now scrolls over one shared stage that
+  legitimately carries a canvas for carbon, plasma and rough crystal. What is
+  forbidden is unchanged and is now asserted directly — the polished stone on
+  screen is the real photograph, present whether or not WebGL exists.
 - Generated geometry may depict ROUGH crystal only — genuinely blocky, stepped
   and opaque, where nobody is being shown a gem. The moment cutting begins,
   the real photograph takes over.

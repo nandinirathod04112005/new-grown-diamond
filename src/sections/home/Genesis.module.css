@@ -1,143 +1,33 @@
-.genesis { position: relative; background: var(--carbon); }
+/* No background and no height of its own: the panels inside carry the height,
+   and the director's stage is the ground. */
+.genesis { position: relative; }
 
-.stage {
-  position: relative;
-  display: flex;
-  align-items: center;
-  min-height: 100svh;
-  padding-block: var(--s9);
-  overflow: hidden;
-}
+.inner { align-items: center; row-gap: var(--s7); }
 
-.field {
-  position: absolute;
-  inset: 0;
-  z-index: var(--z-canvas);
-  /* Small screens: ambient behind the prose, dimmed so nothing competes. */
-  opacity: 0.5;
-}
-
-/* No WebGL: the real stone, lit, standing for the finished state. */
-.fallback { position: absolute; inset: 0; display: grid; place-items: center; }
-.fallback img {
-  width: min(62%, 420px);
-  height: auto;
-  opacity: 0.5;
-  filter: drop-shadow(0 0 60px rgba(201, 168, 106, 0.3));
-}
-.lattice {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(circle at 50% 46%, rgba(226, 207, 164, 0.14), transparent 46%),
-    radial-gradient(circle at 28% 64%, rgba(127, 212, 232, 0.05), transparent 34%),
-    radial-gradient(circle at 72% 32%, rgba(185, 163, 240, 0.05), transparent 32%);
-}
-
-.inner { position: relative; z-index: var(--z-content); }
-
-/* The hand-off: the real stone, faded in over the render as the sequence
-   reaches Inventory. Opacity is written per frame by the scrub. */
-.handoff {
-  position: absolute;
-  left: 50%;
-  top: 66%;
-  translate: -50% -50%;
-  width: min(34%, 320px);
-  height: auto;
-  opacity: 0;
-  pointer-events: none;
-  filter: drop-shadow(0 0 60px rgba(201, 168, 106, 0.35))
-          drop-shadow(0 24px 60px rgba(0, 0, 0, 0.7));
-}
-
-.chapter { grid-column: 1 / -1; margin-bottom: var(--s5); }
+/* Asymmetric by default — the copy holds the left of the grid, never centred. */
+.copy { grid-column: 1 / -1; }
 
 .title {
-  grid-column: 1 / -1;
-  max-width: 14ch;
-  font-size: var(--step-4);
-  color: var(--bright);
-}
-
-.beats { grid-column: 1 / -1; margin-top: var(--s6); }
-
-.beat { transition: opacity var(--d-base) var(--e-quint), transform var(--d-base) var(--e-quint); }
-
-.beatIndex {
-  display: flex;
-  align-items: center;
-  gap: var(--s3);
-  margin-bottom: var(--s4);
-  font-size: var(--step--2);
-  letter-spacing: var(--track-tech);
-  text-transform: uppercase;
-  color: var(--champagne);
-}
-.beatRule { width: 26px; height: 1px; background: currentColor; opacity: 0.5; }
-.beatKey { color: var(--bright-dim); }
-
-.beatText {
-  max-width: 44ch;
   font-family: var(--font-display);
-  font-size: var(--step-2);
-  font-weight: 300;
-  line-height: 1.45;
-  color: var(--bright-dim);
+  font-size: var(--step-4);
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  color: var(--bright);
+  margin-bottom: var(--s5);
+}
+.title :global(.line) { display: block; overflow: hidden; }
+.title :global(.line-inner) { display: block; }
+
+.blurb {
+  max-width: 46ch;
+  font-size: var(--step-0);
+  line-height: 1.75;
+  color: var(--ash);
 }
 
-/* Stage ladder — the scrub position, read as a process index. */
-.ladder {
-  grid-column: 1 / -1;
-  position: relative;
-  display: none;
-  gap: 0.65rem;
-  margin-top: var(--s7);
-  padding-left: var(--s5);
-  font-size: var(--step--2);
-  letter-spacing: var(--track-tech);
-  text-transform: uppercase;
-  color: var(--ash-2);
-}
-.ladder li { transition: color var(--d-base) var(--e-quint); }
-.ladderOn { color: var(--champagne-soft); }
-
-.ladderTrack {
-  position: absolute;
-  left: 0; top: 0.3em; bottom: 0.3em;
-  width: 1px;
-  background: var(--line);
-}
-.ladderFill {
-  position: absolute;
-  inset: 0;
-  background: var(--champagne);
-  transform-origin: 50% 0;
-  transform: scaleY(0);
-}
+.media { grid-column: 1 / -1; }
 
 @media (min-width: 900px) {
-  /* The scene takes the centre-right of the frame, clear of the heading on
-     the left and reading beneath the caption on the right. */
-  .field { inset: 0 0 0 26%; opacity: 1; }
-  .title { grid-column: 1 / 6; }
-  /* One caption at a time, stacked so the block never reflows as they swap. */
-  .beats { grid-column: 7 / 13; position: relative; min-height: 15rem; align-self: center; }
-  .beat { position: absolute; inset: 0; opacity: 0; transform: translateY(16px); pointer-events: none; }
-  .beatOn { opacity: 1; transform: none; }
-  .ladder { grid-column: 1 / 5; display: grid; }
-}
-
-@media (max-width: 899px) {
-  /* No pin: all six stages read as a sequence, nothing gated behind scroll. */
-  .stage { min-height: 0; }
-  .beats { display: grid; gap: var(--s7); }
-  .beat { position: static; opacity: 1; transform: none; }
-  .fallback img { width: min(70%, 300px); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .beat { transition: none; position: static; opacity: 1; transform: none; }
-  .beats { display: grid; gap: var(--s7); min-height: 0; }
-  .ladder li { transition: none; }
+  .copy { grid-column: 2 / 7; }
+  .media { grid-column: 8 / 13; }
 }
