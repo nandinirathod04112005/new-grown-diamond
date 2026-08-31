@@ -44,8 +44,14 @@ export default function SmoothScrollProvider({ children }) {
       return;
     }
     // Reduced motion (or before mount): move natively, no smoothing.
-    if (target === 0) {
-      window.scrollTo(0, 0);
+    //
+    // Numbers are handled FIRST and explicitly. They used to fall through to
+    // the element branch, where `el instanceof Element` is false for a number,
+    // so the call returned having done nothing — every journey rail button was
+    // silently inert under reduced motion, because the rail addresses chapters
+    // by scroll offset rather than by selector.
+    if (typeof target === 'number') {
+      window.scrollTo(0, target);
       return;
     }
     const el = typeof target === 'string' ? document.querySelector(target) : target;

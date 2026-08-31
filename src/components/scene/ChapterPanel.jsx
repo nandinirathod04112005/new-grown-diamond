@@ -32,10 +32,18 @@ export default function ChapterPanel({ index, children, className = '' }) {
     const span = to - at;
     // Feather over a fifth of the chapter at each end.
     const feather = span * 0.2;
+    const isFirst = index === 0;
+    const isLast = index === CHAPTERS.length - 1;
 
     return scene.subscribe((p) => {
-      const enter = ramp(p, at - feather, at + feather);
-      const exit = 1 - ramp(p, to - feather, to + feather);
+      // The journey's outer edges are NOT feathered.
+      //
+      // The last chapter runs to progress 1, so its exit ramp was centred on 1
+      // and could only ever reach smoothstep(0.5) — the sixth chapter, which
+      // the whole page builds to, was mathematically incapable of reaching full
+      // opacity and sat permanently at 0.5. The same applies at the other end.
+      const enter = isFirst ? 1 : ramp(p, at - feather, at + feather);
+      const exit = isLast ? 1 : 1 - ramp(p, to - feather, to + feather);
       const shown = Math.min(enter, exit);
       node.style.opacity = String(shown);
       // A clip mask that opens from below as the panel arrives, so the text is
@@ -45,11 +53,21 @@ export default function ChapterPanel({ index, children, className = '' }) {
       // Off at the extremes so a faded panel never intercepts a click.
       node.style.pointerEvents = shown > 0.5 ? 'auto' : 'none';
     });
-  }, [scene, chapter]);
+  }, [scene, chapter, index]);
 
+  // Each panel sticks inside its OWN slot.
+  //
+  // They used to be sticky siblings sharing the section as a containing block,
+  // so once that section's sticky region was exhausted all three came to rest
+  // at the same screen offset — and the crossfade, which knows only about
+  // progress, then held two superimposed panels at ~0.5 opacity each. Two
+  // headlines and two spec tables printed over one another. Giving each panel
+  // its own slot means only one is ever in sticky position.
   return (
-    <div ref={panel} className={`${styles.panel} ${className}`}>
-      {children}
+    <div className={styles.slot}>
+      <div ref={panel} className={`${styles.panel} ${className}`}>
+        {children}
+      </div>
     </div>
   );
 }

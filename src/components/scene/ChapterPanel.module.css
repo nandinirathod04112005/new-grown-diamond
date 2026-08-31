@@ -1,9 +1,13 @@
-/* Each panel occupies a screen of scroll and holds its content centred while
-   the scene changes behind it. */
+/* The slot owns this chapter's scroll length and is the panel's sticky
+   containing block, so the panel is released before the next one arrives. */
+.slot { min-height: 165svh; }
+
+/* Each panel holds its content centred for the length of its slot while the
+   scene changes behind it. */
 .panel {
   position: sticky;
   top: 0;
-  min-height: 100svh;
+  height: 100svh;
   display: grid;
   align-content: center;
   padding-block: var(--s8);
@@ -53,8 +57,10 @@
 /* Small screens and reduced motion: panels are ordinary blocks in the flow,
    fully opaque, never sticky. The director does not drive them there. */
 @media (max-width: 899px) {
+  .slot { min-height: 0; }
   .panel {
     position: relative;
+    height: auto;
     min-height: 0;
     padding-block: var(--s9);
     opacity: 1 !important;
@@ -65,8 +71,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .slot { min-height: 0; }
   .panel {
     position: relative;
+    height: auto;
     min-height: 0;
     padding-block: var(--s9);
     opacity: 1 !important;

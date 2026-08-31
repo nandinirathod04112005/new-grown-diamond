@@ -3,7 +3,7 @@ import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } fro
 import { gsap, useGSAP, ScrollTrigger } from '@/lib/motion/gsap.js';
 import { MQ } from '@/lib/motion/media.js';
 import { supports3D } from '@/components/three/capability.js';
-import { CHAPTERS, HANDOFF, chapterAt, ramp, sceneProgressOf } from '@/lib/journey.js';
+import { HANDOFF, chapterAt, ramp, sceneProgressOf } from '@/lib/journey.js';
 import stoneUrl from '@/assets/diamonds/ngd-brilliant-macro.webp';
 import JourneyRail from './JourneyRail.jsx';
 import { SceneProgressContext } from './sceneProgress.js';
@@ -50,6 +50,10 @@ export default function HomeSceneDirector({ children, onJump }) {
   const haloRef = useRef(null);
   const airRef = useRef(null);
   const progress = useRef(0);
+  // The director's own 0..1. Kept apart from `progress`, which holds the
+  // SCENE's remapped value — feeding one back into the other divides by
+  // SCENE_END twice and lands the whole stage on its end state.
+  const rawProgress = useRef(0);
   const listeners = useRef(new Set());
 
   // Mirrors `use3D` for the per-frame path, which must not close over state.
@@ -99,6 +103,7 @@ export default function HomeSceneDirector({ children, onJump }) {
    * against a finished stone rather than being further stages of its making.
    */
   const apply = useCallback((raw) => {
+    rawProgress.current = raw;
     const p = sceneProgressOf(raw);
     progress.current = p;
 
@@ -172,7 +177,7 @@ export default function HomeSceneDirector({ children, onJump }) {
   // Capability resolves one frame after mount; re-apply so the stone's
   // opacity reflects whether a canvas actually exists.
   useEffect(() => {
-    apply(progress.current);
+    apply(rawProgress.current);
   }, [use3D, apply]);
 
   useGSAP(
@@ -204,10 +209,44 @@ export default function HomeSceneDirector({ children, onJump }) {
       // telling, not a broken one.
       mm.add('(max-width: 899px), (prefers-reduced-motion: reduce)', () => {
         scrubRef.current = false;
-        apply(1);
-        setChapter(CHAPTERS.length - 1);
         setPinned(false);
-        return undefined;
+        // The scene rests on its finished state: no scrub, no canvas, the real
+        // photograph fully present.
+        apply(1);
+
+        // The RAIL, though, still has to say where the reader is.
+        //
+        // This used to set the last chapter once and never update, so the rail
+        // highlighted "06 Certified Brilliance" from the top of the page and
+        // announced it with aria-current="step" — telling a screen reader user
+        // they were at the end of a journey they had not started. It is read
+        // from the journey's own position, using the same mapping the scrubbed
+        // path uses, so the two can never disagree.
+        const el = scope.current;
+        if (!el) return undefined;
+
+        let frame = 0;
+        const read = () => {
+          frame = 0;
+          const rect = el.getBoundingClientRect();
+          const travel = rect.height - window.innerHeight;
+          const raw = travel > 0
+            ? Math.min(1, Math.max(0, -rect.top / travel))
+            : 0;
+          setChapter(chapterAt(sceneProgressOf(raw)));
+        };
+        const onScroll = () => {
+          if (!frame) frame = requestAnimationFrame(read);
+        };
+
+        read();
+        window.addEventListener('scroll', onScroll, { passive: true });
+        window.addEventListener('resize', onScroll, { passive: true });
+        return () => {
+          if (frame) cancelAnimationFrame(frame);
+          window.removeEventListener('scroll', onScroll);
+          window.removeEventListener('resize', onScroll);
+        };
       });
 
       return () => mm.revert();

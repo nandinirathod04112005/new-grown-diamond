@@ -33,9 +33,15 @@ export function qualityTier() {
   if (typeof mem === 'number' && mem < 4) return 'off';
   if (typeof cores === 'number' && cores < 4) return 'off';
 
-  // Phones get the photograph, not a canvas: it is the better image there and
-  // costs a fraction of the battery.
-  if (window.matchMedia?.('(max-width: 767px)').matches) return 'off';
+  // Phones and tablets get the photograph, not a canvas: it is the better image
+  // there and costs a fraction of the battery.
+  //
+  // 899px, matching MQ.desktop exactly. At 767 the two gates disagreed: this
+  // said "3D is fine" from 768px up, while the director only ever activates the
+  // canvas inside MQ.desktop (>=900px). Every visitor between 768 and 899px
+  // downloaded three.js (234 kB gzip) and got a live WebGL context attached to
+  // a canvas that never drew a single frame.
+  if (window.matchMedia?.('(max-width: 899px)').matches) return 'off';
 
   // Mid-tier machines render, but without dispersion, bloom or antialiasing.
   if ((typeof mem === 'number' && mem < 8) || (typeof cores === 'number' && cores < 8)) {
