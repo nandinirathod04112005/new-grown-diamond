@@ -33,3 +33,14 @@ dist-ssr
 tests-e2e/report
 tests-e2e/screenshots
 test-results
+
+# Throwaway browser probes.
+# Debugging this page means driving it in a real browser, and that leaves
+# one-off scripts and screenshots in the working tree. They are never part of
+# the deliverable — the suite's own screenshots go to tests-e2e/screenshots —
+# so they are ignored rather than repeatedly cleaned up by hand.
+/*probe*.mjs
+/scratch-*.mjs
+/drive*.mjs
+/shot-*.png
+/shots/
