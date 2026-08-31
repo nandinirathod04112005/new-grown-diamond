@@ -5,17 +5,12 @@
   min-height: 100svh;
   padding-block: 148px clamp(4rem, 10vh, 7rem);
   overflow: hidden;
-  background: var(--carbon);
+  /* Transparent: the stage behind is the background. */
 }
 
-/* Small screens: the stone takes the upper half and the copy sits beneath it,
-   so the two never overlap. Dimmed as well — a bright cutout directly behind
-   display type is unreadable at any opacity that still shows the stone. */
-.visual {
-  position: absolute;
-  inset: 0 0 46% 0;
-  opacity: 0.55;
-}
+/* No .visual here any more. The diamond behind this text belongs to the
+   journey's shared stage, so the hero and the scene are one continuous image
+   rather than two that happen to look alike. */
 
 .inner { position: relative; z-index: var(--z-content); align-items: end; }
 
@@ -43,9 +38,15 @@
   letter-spacing: -0.04em;
   color: var(--bright);
 }
-.lineBox { display: block; overflow: hidden; padding-bottom: 0.05em; margin-bottom: -0.05em; }
-.word { display: block; will-change: transform; }
-.h1 em { font-style: italic; font-weight: 300; color: var(--champagne-soft); }
+/* SplitType writes these. They exist only once the script has run, which is
+   what makes the scatter fail visible: with no JS there are no .char spans and
+   the heading is ordinary, fully opaque text. */
+.h1 :global(.line) { display: block; }
+.h1 :global(.char) { display: inline-block; will-change: transform, opacity; }
+
+/* The copy column's ground is painted once by the stage (.readable), so the
+   hero does not darken it a second time. */
+.title { position: relative; }
 
 .rule {
   display: block;
@@ -112,22 +113,18 @@
 
 @media (min-width: 768px) {
   .title { grid-column: 1 / -1; }
-  /* Taller tablet viewports give the stone more room before the copy starts. */
-  .visual { inset: 0 0 52% 0; }
 }
 
 @media (min-width: 1100px) {
   .hero { align-items: center; }
+  /* Break earlier so the display type never reaches into the stone's column. */
+  .h1 { max-width: 9ch; }
   .margin { display: block; grid-column: 1 / 3; align-self: end; padding-bottom: 0.6rem; }
   .title { grid-column: 3 / 9; }
   .cue { left: auto; right: var(--gutter); }
-
-  /* The stone takes the right of the frame outright, clear of the type,
-     rather than sitting behind it at reduced opacity. */
-  .visual { inset: 0 -4% 0 46%; opacity: 1; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .word { will-change: auto; }
+  .h1 :global(.char) { will-change: auto; }
   .primary::after, .secondary::after { transition: none; }
 }

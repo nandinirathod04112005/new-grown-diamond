@@ -1,0 +1,79 @@
+.slot {
+  position: relative;
+  margin: 0;
+  aspect-ratio: var(--ratio);
+  overflow: hidden;
+  background: var(--carbon-2, #0b0b0c);
+  border: 1px solid var(--line);
+}
+
+.video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.caption {
+  position: absolute;
+  left: var(--s4);
+  bottom: var(--s4);
+  font-size: var(--step--2);
+  letter-spacing: var(--track-tech);
+  text-transform: uppercase;
+  color: var(--ash-2);
+}
+
+/* ---- Awaiting real footage ---- */
+
+.pending { display: grid; place-items: center; }
+
+.standIn {
+  position: absolute;
+  width: min(46%, 260px);
+  height: auto;
+  /* No colour filter. This is the one genuine photograph of a company-owned
+     stone in the repository, and desaturating it changes how the goods look —
+     which is not on the list of treatments a real photograph may receive.
+     Fading it back is a presentation effect; grading it is not. */
+  opacity: 0.3;
+}
+
+.scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(6, 6, 6, 0.2), rgba(6, 6, 6, 0.78));
+}
+
+.notice {
+  position: relative;
+  display: grid;
+  gap: var(--s2);
+  justify-items: center;
+  text-align: center;
+  padding: var(--s5);
+  max-width: 46ch;
+}
+
+.tag {
+  font-size: var(--step--2);
+  letter-spacing: var(--track-tech);
+  text-transform: uppercase;
+  color: var(--champagne);
+}
+
+.label {
+  font-family: var(--font-display);
+  font-size: var(--step-1);
+  color: var(--bright);
+}
+
+.spec {
+  font-size: var(--step--1);
+  line-height: 1.6;
+  color: var(--ash-2);
+}
+
+@media (max-width: 599px) {
+  .spec { display: none; }
+}

@@ -1,0 +1,90 @@
+.rail {
+  position: fixed;
+  right: var(--gutter);
+  top: 50%;
+  translate: 0 -50%;
+  z-index: var(--z-chrome, 60);
+  display: none;
+  align-items: center;
+  gap: var(--s4);
+  /* The rail floats over the content column at every width below the page cap,
+     so it must not intercept anything. Without this, a click on the Inventory
+     ledger's price cell landed on a rail button and threw the reader back up
+     into the journey. The buttons take pointer events back for themselves. */
+  pointer-events: none;
+}
+
+.rail ol {
+  display: grid;
+  gap: var(--s3);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.track {
+  position: absolute;
+  right: -12px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--line);
+}
+.fill {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--champagne);
+  transform-origin: 50% 0;
+  transform: scaleY(0);
+}
+
+.mark {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--s3);
+  background: none;
+  border: 0;
+  padding: 0.25rem 0;
+  cursor: pointer;
+  /* --ash (5.76:1), not --ash-2 (3.00:1): this is 10.56px text and AA wants
+     4.5:1 below 18.66px. */
+  color: var(--ash);
+  font-size: var(--step--2);
+  letter-spacing: var(--track-tech);
+  text-transform: uppercase;
+}
+
+/* No opacity multiplier. --ash-2 at 60% composites to about 1.8:1, and on an
+   inactive button the number is the ONLY thing identifying the control. */
+.n { font-variant-numeric: tabular-nums; }
+
+.label {
+  max-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  opacity: 0;
+  transition: max-width 0.5s var(--e-quint), opacity 0.4s var(--e-quint);
+}
+
+.tick { width: 18px; height: 1px; background: currentColor; }
+
+.mark:hover, .mark:focus-visible { color: var(--champagne); }
+/* Content behind hover must also be reachable by focus. */
+.mark:hover .label,
+.mark:focus-visible .label,
+.on .label { max-width: 12rem; opacity: 1; }
+
+.on { color: var(--bright); }
+.on .tick { width: 34px; background: var(--champagne); }
+
+/* Only where there is room for it beside the content. */
+@media (min-width: 1100px) {
+  .rail { display: flex; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .label { transition: none; }
+}

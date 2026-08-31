@@ -84,7 +84,11 @@ export default function SplitReveal({
 
   return (
     <Tag ref={scope} className={className} id={id}>
-      <span data-split>{children}</span>
+      {/* The unsplit string, for assistive technology. SplitType's per-line
+          spans drop the whitespace between lines, which turns a heading into
+          one run-together word in the accessible tree. */}
+      <span className="ngd-visually-hidden">{children}</span>
+      <span data-split aria-hidden="true">{children}</span>
     </Tag>
   );
 }

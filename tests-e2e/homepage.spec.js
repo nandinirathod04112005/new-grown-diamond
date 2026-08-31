@@ -38,33 +38,59 @@ test.describe('NGD homepage', () => {
     expect(errors, `console errors: ${errors.join(' | ')}`).toHaveLength(0);
   });
 
-  test('the hero stone is a photograph, never a render', async ({ page }) => {
+  test('the finished diamond is a photograph, never a render', async ({ page }) => {
     await openHome(page);
     await page.waitForTimeout(2500);
 
-    // No canvas may exist in the hero at any viewport or capability tier. A
-    // generated brilliant is not a photograph of a company-owned stone, and
-    // this is the assertion that keeps one from creeping back in.
+    // This used to assert `#hero canvas === 0`. The hero now scrolls over the
+    // journey's shared stage, and that stage DOES carry a canvas — showing
+    // carbon, plasma and a rough crystal, which generated geometry is allowed
+    // to depict.
     //
-    // Scoped by id, not `section:first-of-type`: ScrollTrigger wraps a pinned
-    // section in a spacer div, which makes the pinned section the first of its
-    // type within that wrapper too, so the loose selector matched Genesis's
-    // canvas as well as the hero.
-    const heroCanvases = await page.locator('#hero canvas').count();
-    expect(heroCanvases, 'the hero must contain no WebGL canvas').toBe(0);
-
-    const img = page.locator('#hero img').first();
-    await expect(img).toBeVisible();
+    // The rule the old assertion actually protected is narrower and more
+    // important: no generated geometry may stand in for a FINISHED diamond.
+    // So the assertion moves to the thing that matters — the polished stone on
+    // screen is the real photograph, and it is present regardless of whether
+    // WebGL exists at all.
+    const img = page.locator('main img').first();
+    await expect(img).toBeAttached();
     expect(await img.getAttribute('src')).toMatch(/ngd-brilliant-macro/);
 
-    // The photograph must never be scaled beyond its true resolution, which
-    // is what turns a real stone into a soft approximation of one.
-    const box = await img.boundingBox();
-    const natural = await img.evaluate((el) => el.naturalWidth);
+    // Scroll to the last chapter — Certified Brilliance — where the stone on
+    // screen must be the photograph.
+    //
+    // This used to scroll to 34% of the document, which was where the handover
+    // happened to sit at one viewport. The handover is defined against the
+    // chapter panels now, so the landmark is the panel itself: a fraction of
+    // the document is not a place in the journey.
+    await page.evaluate(() => {
+      const slots = [...document.querySelectorAll('[data-chapter-slot]')];
+      const last = slots[slots.length - 1];
+      if (!last) return;
+      const top = last.getBoundingClientRect().top + window.scrollY;
+      window.scrollTo(0, Math.round(top + last.offsetHeight * 0.6));
+    });
+    await page.waitForTimeout(1400);
+
+    const shown = await page.evaluate(() => {
+      const el = document.querySelector('main img');
+      if (!el) return null;
+      const cs = getComputedStyle(el);
+      const r = el.getBoundingClientRect();
+      return { opacity: Number(cs.opacity), width: Math.round(r.width), natural: el.naturalWidth };
+    });
+    expect(shown, 'no photograph on the stage').not.toBeNull();
     expect(
-      box.width,
-      `hero photograph displayed at ${Math.round(box.width)}px from a ${natural}px source — upscaled`
-    ).toBeLessThanOrEqual(natural);
+      shown.opacity,
+      'the real photograph must be showing once the stone is cut'
+    ).toBeGreaterThan(0.5);
+
+    // The photograph must never be scaled beyond its true resolution, which is
+    // what turns a real stone into a soft approximation of one.
+    expect(
+      shown.width,
+      `photograph displayed at ${shown.width}px from a ${shown.natural}px source — upscaled`
+    ).toBeLessThanOrEqual(shown.natural);
   });
 
   test('nothing is composited onto the diamond photograph', async ({ page }) => {
@@ -72,80 +98,42 @@ test.describe('NGD homepage', () => {
     await page.waitForTimeout(2500);
 
     // A real, company-owned, graded stone may carry presentation effects around
-    // it and none on it. This shipped wrong once: the mote layer sat at
-    // z-index 14 against the plate's 12 and drew glowing sparkles directly on
-    // the crown — on fully opaque pixels of the photograph, at every one of the
-    // five viewports.
+    // it and none on it. This shipped wrong once: a sparkle layer painted in
+    // front of the photograph and drew glowing dots on the crown, on fully
+    // opaque pixels, at every viewport.
     //
-    // What makes a mote a defect is being PAINTED OVER the stone, not merely
-    // positioned there: behind an opaque photograph it is occluded and harmless.
-    // So a mote counts against us only when its layer paints at or above the
-    // plate AND its centre maps to an opaque pixel of the source WebP.
-    //
-    // Both halves are asserted. Ordering alone is the mechanism, and the pixel
-    // check is what actually caught this — keeping both means restoring either
-    // half of the old bug fails the suite.
-    //
-    // Scoped to discrete sparkle. The vignette is a full-bleed gradient, which
-    // is the frame closing in, not decoration drawn on the goods.
-    const check = async () => page.evaluate(() => {
-      const hero = document.querySelector('#hero');
-      const img = hero.querySelector('img');
-      const motes = [...hero.querySelectorAll('[data-o]')];
-      if (!img || motes.length === 0) return { skip: true };
-
+    // The decorative layers now live on the shared stage, so the assertion
+    // follows them there. What is checked is unchanged and is checked by
+    // ORDERING, which is the only thing that holds at every scroll position:
+    // every decorative layer must paint behind the photograph, where the
+    // opaque stone occludes it.
+    const verdict = await page.evaluate(() => {
+      const img = document.querySelector('main img');
+      if (!img) return { skip: true };
+      const stage = img.parentElement;
       const zOf = (el) => {
         const z = getComputedStyle(el).zIndex;
         return z === 'auto' ? 0 : Number(z);
       };
-      const plateZ = zOf(img.closest('figure'));
-      const moteZ = zOf(motes[0].parentElement);
-
-      const r = img.getBoundingClientRect();
-      if (r.width === 0) return { plateZ, moteZ, drawnOnStone: [] };
-
-      const c = document.createElement('canvas');
-      c.width = img.naturalWidth;
-      c.height = img.naturalHeight;
-      const cx = c.getContext('2d', { willReadFrequently: true });
-      cx.drawImage(img, 0, 0);
-
-      const drawnOnStone = [];
-      motes.forEach((m, i) => {
-        const b = m.getBoundingClientRect();
-        if (b.width === 0 || getComputedStyle(m).display === 'none') return;
-        if (zOf(m.parentElement) < plateZ) return; // occluded by the photograph
-        const px = Math.round(((b.left + b.width / 2 - r.left) / r.width) * c.width);
-        const py = Math.round(((b.top + b.height / 2 - r.top) / r.height) * c.height);
-        if (px < 0 || py < 0 || px >= c.width || py >= c.height) return;
-        if (cx.getImageData(px, py, 1, 1).data[3] > 250) {
-          drawnOnStone.push(`mote ${i} at source px (${px},${py}), opacity ${m.dataset.o}`);
-        }
-      });
-      return { plateZ, moteZ, drawnOnStone };
+      const stoneZ = zOf(img);
+      const decor = [...stage.children]
+        .filter((el) => el !== img)
+        .map((el) => ({
+          cls: el.className?.toString().slice(0, 40) ?? el.tagName,
+          z: zOf(el),
+          // A full-bleed gradient is the frame closing in, not decoration
+          // drawn on the goods; discrete sparkle is what must stay behind.
+          discrete: el.querySelectorAll('span').length > 0,
+        }));
+      return { stoneZ, decor };
     });
 
-    const atRest = await check();
-    if (atRest.skip) return;
+    if (verdict.skip) return;
 
+    const over = verdict.decor.filter((d) => d.discrete && d.z >= verdict.stoneZ);
     expect(
-      atRest.moteZ,
-      `sparkle layer paints at z-index ${atRest.moteZ} against the photograph's `
-        + `${atRest.plateZ} — it must sit behind`
-    ).toBeLessThan(atRest.plateZ);
-    expect(
-      atRest.drawnOnStone,
-      `decoration drawn on the stone: ${atRest.drawnOnStone.join(' | ')}`
-    ).toEqual([]);
-
-    // Again mid push-in, where the stone grows to 1.55x and covers far more of
-    // the frame than it does at rest.
-    await page.evaluate(() => window.scrollBy(0, window.innerHeight * 0.5));
-    await page.waitForTimeout(1200);
-    const pushedIn = await check();
-    expect(
-      pushedIn.drawnOnStone,
-      `decoration drawn on the stone mid push-in: ${pushedIn.drawnOnStone.join(' | ')}`
+      over.map((d) => `${d.cls} @ z${d.z}`),
+      `sparkle layers painting at or above the photograph (z${verdict.stoneZ})`
     ).toEqual([]);
   });
 

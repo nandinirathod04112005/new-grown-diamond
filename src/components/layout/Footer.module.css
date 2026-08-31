@@ -1,29 +1,29 @@
 .footer {
-  padding-block: var(--space-9) var(--space-6);
+  padding-block: var(--s9) var(--s6);
   background: var(--surface-1);
   border-top: 1px solid var(--line);
 }
 
 .top {
   display: grid;
-  gap: var(--space-7);
+  gap: var(--s7);
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr));
 }
 
 .brand { grid-column: 1 / -1; }
 
 .blurb {
-  margin-top: var(--space-5);
+  margin-top: var(--s5);
   max-width: 38ch;
   font-size: var(--step--1);
   color: var(--text-muted);
 }
 
-.contact { display: grid; gap: var(--space-3); margin-top: var(--space-5); }
+.contact { display: grid; gap: var(--s3); margin-top: var(--s5); }
 .contact li {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--s3);
   font-size: var(--step--1);
   color: var(--text-muted);
 }
@@ -31,14 +31,14 @@
 .contact a:hover, .contact a:focus-visible { color: var(--champagne-soft); }
 
 .colTitle {
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--s4);
   font-size: 0.62rem;
   letter-spacing: var(--tracking-wide);
   text-transform: uppercase;
   color: var(--champagne);
 }
 
-.colList { display: grid; gap: var(--space-3); }
+.colList { display: grid; gap: var(--s3); }
 
 .link {
   font-size: var(--step--1);
@@ -53,9 +53,9 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-4);
-  margin-top: var(--space-9);
-  padding-top: var(--space-5);
+  gap: var(--s4);
+  margin-top: var(--s9);
+  padding-top: var(--s5);
   border-top: 1px solid var(--line);
   font-size: 0.68rem;
   letter-spacing: 0.08em;
