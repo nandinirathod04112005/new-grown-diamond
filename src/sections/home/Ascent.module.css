@@ -9,6 +9,12 @@
   background: color-mix(in oklab, var(--carbon) calc((1 - var(--dawn)) * 100%), #f4f1ea);
   transition: background-color 120ms linear;
 }
+.ascent::before {
+  content: attr(data-chapter); position: absolute; left: 50%; top: 8%; translate: -50% 0;
+  font-family: var(--font-display); font-size: clamp(15rem, 38vw, 42rem); line-height: 0.7;
+  color: color-mix(in oklab, var(--bright) calc((1 - var(--dawn)) * 100%), #14120f);
+  opacity: 0.025; pointer-events: none;
+}
 
 .glow {
   position: absolute;
@@ -24,6 +30,11 @@
     transparent 68%
   );
   pointer-events: none;
+}
+.sunline {
+  position: absolute; left: 50%; top: 62%; width: min(92vw, 1500px); height: 1px;
+  translate: -50% -50%; transform: scaleX(var(--dawn)); transform-origin: 50% 50%;
+  background: linear-gradient(90deg, transparent, rgba(201,168,106,0.5), transparent);
 }
 
 .inner { position: relative; z-index: var(--z-content); text-align: center; }

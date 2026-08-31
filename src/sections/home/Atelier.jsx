@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { Link } from 'react-router-dom';
 
 import SplitReveal from '@/components/motion/SplitReveal.jsx';
@@ -6,6 +7,8 @@ import Reveal from '@/components/motion/Reveal.jsx';
 import useAsyncData from '@/hooks/useAsyncData.js';
 import { fetchFeaturedJewellery } from '@/lib/data/source.js';
 import useChapterEntrance from '@/hooks/useChapterEntrance.js';
+import { gsap, useGSAP } from '@/lib/motion/gsap.js';
+import { MQ } from '@/lib/motion/media.js';
 import styles from './Atelier.module.css';
 
 /**
@@ -21,11 +24,37 @@ import styles from './Atelier.module.css';
  */
 export default function Atelier() {
   const chapter = useChapterEntrance();
+  const scope = useRef(null);
   const { data, loading, error } = useAsyncData(() => fetchFeaturedJewellery(3));
   const pieces = data ?? [];
 
+  useGSAP(() => {
+    const mm = gsap.matchMedia();
+    mm.add(MQ.motion, () => {
+      const plates = gsap.utils.toArray(`.${styles.plateLead}, .${styles.plateSmall}`, scope.current);
+      const reveals = plates.map((plate, index) => gsap.from(plate, {
+        clipPath: index === 0 ? 'inset(0 0 100% 0)' : 'inset(100% 0 0 0)',
+        y: index === 0 ? 60 : 90,
+        duration: 1.45,
+        ease: 'expo.out',
+        scrollTrigger: { trigger: plate, start: 'top 88%', once: true },
+      }));
+      return () => reveals.forEach((tween) => { tween.scrollTrigger?.kill(); tween.kill(); });
+    });
+    mm.add(MQ.desktop, () => {
+      const lead = scope.current?.querySelector(`.${styles.plateLead}`);
+      const pair = scope.current?.querySelector(`.${styles.pair}`);
+      const parallax = gsap.timeline({
+        scrollTrigger: { trigger: scope.current, start: 'top bottom', end: 'bottom top', scrub: 1 },
+      }).fromTo(lead, { yPercent: 5 }, { yPercent: -7, ease: 'none', immediateRender: false }, 0)
+        .fromTo(pair, { yPercent: 10 }, { yPercent: -5, ease: 'none', immediateRender: false }, 0);
+      return () => { parallax.scrollTrigger?.kill(); parallax.kill(); };
+    });
+    return () => mm.revert();
+  }, { scope });
+
   return (
-    <section id="atelier" className={styles.atelier} aria-labelledby="atelier-title">
+    <section ref={scope} id="atelier" className={styles.atelier} data-chapter="05" aria-labelledby="atelier-title">
       <div ref={chapter} className={`ngd-page ngd-grid ${styles.inner}`}>
         <p className={`ngd-tech ${styles.chapter}`}>Chapter 05 — Atelier</p>
 

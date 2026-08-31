@@ -1,11 +1,16 @@
 .atelier { position: relative; padding-block: var(--chapter-y); background: var(--graphite); }
+.atelier::before {
+  content: attr(data-chapter); position: absolute; left: 1vw; top: 3%; pointer-events: none;
+  font-family: var(--font-display); font-size: clamp(12rem, 30vw, 34rem); line-height: 0.8;
+  color: var(--bright); opacity: 0.018;
+}
 
 .chapter { grid-column: 1 / -1; margin-bottom: var(--s6); }
 .title { grid-column: 1 / -1; font-size: var(--step-3); color: var(--bright); max-width: 18ch; }
 .lede { grid-column: 1 / -1; margin-top: var(--s5); }
 .lede p { max-width: 46ch; color: var(--ash); line-height: 1.8; }
 
-.plateLead { grid-column: 1 / -1; margin: var(--s8) 0 0; }
+.plateLead { grid-column: 1 / -1; margin: var(--s8) 0 0; overflow: hidden; }
 
 .quote { grid-column: 1 / -1; margin-top: var(--s7); }
 .quote p {
@@ -29,7 +34,7 @@
 }
 
 .pair { grid-column: 1 / -1; display: grid; gap: var(--s5); margin-top: var(--s7); }
-.plateSmall { margin: 0; }
+.plateSmall { margin: 0; overflow: hidden; }
 
 .caption { display: flex; flex-direction: column; gap: 0.25em; margin-top: var(--s4); }
 .capName { font-family: var(--font-display); font-size: var(--step-1); color: var(--bright); }

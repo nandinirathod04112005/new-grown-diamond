@@ -1,4 +1,9 @@
 .inventory { position: relative; padding-block: var(--chapter-y); background: var(--graphite); }
+.inventory::before {
+  content: attr(data-chapter); position: absolute; left: -0.04em; top: 4%; pointer-events: none;
+  font-family: var(--font-display); font-size: clamp(12rem, 30vw, 34rem); line-height: 0.7;
+  color: var(--bright); opacity: 0.018;
+}
 
 .chapter { grid-column: 1 / -1; margin-bottom: var(--s6); }
 .title { grid-column: 1 / -1; font-size: var(--step-4); color: var(--bright); max-width: 14ch; }
@@ -20,6 +25,7 @@
   background:
     radial-gradient(circle at 50% 34%, rgba(201, 168, 106, 0.12), transparent 62%),
     var(--carbon);
+  transform-style: preserve-3d;
 }
 .platePhoto {
   width: 100%;

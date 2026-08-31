@@ -36,6 +36,15 @@ export default function Inventory() {
           scrollTrigger: { trigger: `.${styles.ledger}`, start: 'top 82%', once: true },
         });
       });
+      mm.add(MQ.desktop, () => {
+        const plate = scope.current?.querySelector(`.${styles.plateInner}`);
+        if (!plate) return undefined;
+        const tween = gsap.fromTo(plate, { y: 70, rotateY: -7 }, {
+          y: -30, rotateY: 5, ease: 'none', immediateRender: false,
+          scrollTrigger: { trigger: scope.current, start: 'top bottom', end: 'bottom top', scrub: 1 },
+        });
+        return () => { tween.scrollTrigger?.kill(); tween.kill(); };
+      });
       return () => mm.revert();
     },
     { scope, dependencies: [data] }
@@ -44,7 +53,7 @@ export default function Inventory() {
   const current = data?.[focus];
 
   return (
-    <section ref={scope} id="inventory" className={styles.inventory} aria-labelledby="inventory-title">
+    <section ref={scope} id="inventory" className={styles.inventory} data-chapter="03" aria-labelledby="inventory-title">
       <div ref={chapter} className={`ngd-page ngd-grid ${styles.inner}`}>
         <p className={`ngd-tech ${styles.chapter}`}>Chapter 03 — Inventory</p>
 

@@ -1,6 +1,10 @@
+import { useRef } from 'react';
+
 import SplitReveal from '@/components/motion/SplitReveal.jsx';
 import Reveal from '@/components/motion/Reveal.jsx';
 import useChapterEntrance from '@/hooks/useChapterEntrance.js';
+import { gsap, useGSAP } from '@/lib/motion/gsap.js';
+import { MQ } from '@/lib/motion/media.js';
 import styles from './Assurance.module.css';
 
 /**
@@ -52,8 +56,27 @@ const ROWS = [
 
 export default function Assurance() {
   const chapter = useChapterEntrance();
+  const scope = useRef(null);
+
+  useGSAP(() => {
+    const mm = gsap.matchMedia();
+    mm.add(MQ.motion, () => {
+      const rows = gsap.utils.toArray(`.${styles.row}`, scope.current);
+      const timeline = gsap.timeline({
+        scrollTrigger: { trigger: `.${styles.sheet}`, start: 'top 82%', once: true },
+      });
+      timeline.from(rows, {
+        opacity: 0, xPercent: -4, duration: 1, stagger: 0.1, ease: 'expo.out',
+      }).from(rows.map((row) => row.querySelector(`.${styles.def}`)), {
+        opacity: 0, x: 24, duration: 0.75, stagger: 0.08, ease: 'power3.out',
+      }, 0.18);
+      return () => { timeline.scrollTrigger?.kill(); timeline.kill(); };
+    });
+    return () => mm.revert();
+  }, { scope });
+
   return (
-    <section id="assurance" className={styles.assurance} aria-labelledby="assurance-title">
+    <section ref={scope} id="assurance" className={styles.assurance} data-chapter="06" aria-labelledby="assurance-title">
       <div ref={chapter} className={`ngd-page ngd-grid ${styles.inner}`}>
         <p className={`ngd-tech ${styles.chapter}`}>Chapter 06 — Assurance</p>
 

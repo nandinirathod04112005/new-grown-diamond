@@ -33,7 +33,13 @@ export default function Ascent() {
             scrub: 1,
           },
         });
-        tl.to(scope.current, { '--dawn': 1, ease: 'none' });
+        tl.to(scope.current, { '--dawn': 1, ease: 'none' })
+          .fromTo(`.${styles.glow}`, { scale: 0.55, opacity: 0.25 }, {
+            scale: 1.15, opacity: 1, ease: 'none', immediateRender: false,
+          }, 0)
+          .fromTo(`.${styles.title}`, { letterSpacing: '-0.04em', scale: 0.88 }, {
+            letterSpacing: '-0.015em', scale: 1, ease: 'none', immediateRender: false,
+          }, 0);
         return () => { tl.scrollTrigger?.kill(); tl.kill(); };
       });
 
@@ -47,8 +53,9 @@ export default function Ascent() {
   );
 
   return (
-    <section ref={scope} id="ascent" className={styles.ascent} aria-labelledby="ascent-title">
+    <section ref={scope} id="ascent" className={styles.ascent} data-chapter="07" aria-labelledby="ascent-title">
       <div className={styles.glow} aria-hidden="true" />
+      <span className={styles.sunline} aria-hidden="true" />
 
       <div className={`ngd-page ${styles.inner}`}>
         <p className={`${styles.chapter}`}>Chapter 07 — Brilliance</p>

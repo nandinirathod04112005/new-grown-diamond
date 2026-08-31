@@ -45,10 +45,17 @@ export default function HeroVisual() {
         tl.from(`.${styles.plate}`, {
           clipPath: 'inset(0% 0% 100% 0%)',
           duration: 1.6,
-        }).from(`.${styles.stone}`, {
+        }).from(`.${styles.axis}`, { scaleY: 0, duration: 1.7 }, 0.15)
+          .from(`.${styles.orbit}`, { scale: 0.72, opacity: 0, duration: 1.5, stagger: 0.12 }, 0.35)
+          .from(`.${styles.flare}`, { scale: 0.2, opacity: 0, duration: 1.35 }, 0.48)
+          .from(`.${styles.stone}`, {
           scale: 1.14,
           duration: 2,
-        }, 0);
+        }, 0.12).from(`.${styles.fragment}`, {
+          opacity: 0, scale: 0, x: 0, y: 0, duration: 1.1, stagger: 0.045,
+        }, 0.72).from(`.${styles.calibration}`, {
+          opacity: 0, y: 12, duration: 0.9,
+        }, 1.05);
 
         // One slow pass of light across the plate, well after the reveal.
         tl.fromTo(`.${styles.sweep}`,
@@ -73,11 +80,20 @@ export default function HeroVisual() {
             },
           }
         );
-        return () => { drift.scrollTrigger?.kill(); drift.kill(); };
+        const chamber = gsap.fromTo(`.${styles.chamber}`, { rotate: 0, scale: 1 }, {
+          rotate: 8, scale: 1.08, ease: 'none', immediateRender: false,
+          scrollTrigger: { trigger: scope.current, start: 'top top', end: 'bottom top', scrub: 1 },
+        });
+        return () => {
+          drift.scrollTrigger?.kill(); drift.kill();
+          chamber.scrollTrigger?.kill(); chamber.kill();
+        };
       });
 
       mm.add(MQ.still, () => {
-        gsap.set([`.${styles.plate}`, `.${styles.stone}`, `.${styles.sweep}`],
+        gsap.set([`.${styles.plate}`, `.${styles.stone}`, `.${styles.sweep}`,
+          `.${styles.axis}`, `.${styles.orbit}`, `.${styles.flare}`,
+          `.${styles.fragment}`, `.${styles.calibration}`],
           { clearProps: 'all' });
       });
 
@@ -90,6 +106,16 @@ export default function HeroVisual() {
     <div ref={scope} className={styles.visual}>
       <figure className={styles.plate}>
         <span className={styles.pool} aria-hidden="true" />
+        <span className={styles.axis} aria-hidden="true" />
+        <span className={styles.flare} aria-hidden="true" />
+        <span className={styles.chamber} aria-hidden="true">
+          <span className={`${styles.orbit} ${styles.orbitOuter}`} />
+          <span className={`${styles.orbit} ${styles.orbitInner}`} />
+          <span className={styles.crosshair} />
+          {Array.from({ length: 12 }, (_, index) => (
+            <span key={index} className={`${styles.fragment} ${styles[`fragment${index + 1}`]}`} />
+          ))}
+        </span>
         <img
           className={styles.stone}
           src={stoneUrl}
@@ -99,6 +125,9 @@ export default function HeroVisual() {
           fetchPriority="high"
           decoding="async"
         />
+        <span className={styles.calibration} aria-hidden="true">
+          <span>Carbon / 06</span><i /><span>Brilliance / 57</span>
+        </span>
         <span className={styles.sweep} aria-hidden="true" />
       </figure>
     </div>

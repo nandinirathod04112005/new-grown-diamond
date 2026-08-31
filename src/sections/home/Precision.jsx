@@ -68,13 +68,31 @@ export default function Precision() {
           { opacity: 0, y: 14 },
           { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' });
       });
+      mm.add(MQ.desktop, () => {
+        const stone = scope.current?.querySelector(`.${styles.light} img`);
+        const stage = scope.current?.querySelector(`.${styles.stage}`);
+        const panel = scope.current?.querySelector(`.${styles.panel}`);
+        const timeline = gsap.timeline({
+          scrollTrigger: {
+            trigger: scope.current, start: 'top bottom', end: 'bottom top', scrub: 1,
+          },
+        });
+        timeline.fromTo(stone, { yPercent: 10, rotate: -3, scale: 0.92 }, {
+          yPercent: -10, rotate: 3, scale: 1.05, ease: 'none', immediateRender: false,
+        }, 0).fromTo(stage, { clipPath: 'inset(12% 8% 12% 8%)' }, {
+          clipPath: 'inset(0% 0% 0% 0%)', ease: 'none', immediateRender: false,
+        }, 0).fromTo(panel, { y: 80 }, {
+          y: -40, ease: 'none', immediateRender: false,
+        }, 0);
+        return () => { timeline.scrollTrigger?.kill(); timeline.kill(); };
+      });
       return () => mm.revert();
     },
     { scope, dependencies: [active] }
   );
 
   return (
-    <section ref={scope} id="precision" className={styles.precision} aria-labelledby="precision-title">
+    <section ref={scope} id="precision" className={styles.precision} data-chapter="02" aria-labelledby="precision-title">
       <div ref={chapter} className={`ngd-page ngd-grid ${styles.inner}`}>
         <p className={`ngd-tech ${styles.chapter}`}>Chapter 02 — Precision</p>
 

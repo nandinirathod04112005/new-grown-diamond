@@ -50,6 +50,14 @@ export default function Manufacture() {
             scrub: 0.85,
             anticipatePin: 1,
             invalidateOnRefresh: true,
+            onUpdate: (self) => {
+              const stages = el.querySelectorAll(`.${styles.stage}`);
+              stages.forEach((stage, index) => {
+                const position = index / Math.max(stages.length - 1, 1);
+                const proximity = Math.max(0, 1 - Math.abs(self.progress - position) * 3.2);
+                stage.style.setProperty('--active', proximity.toFixed(3));
+              });
+            },
           },
         });
         return () => { tween.scrollTrigger?.kill(); tween.kill(); };
@@ -61,7 +69,7 @@ export default function Manufacture() {
   );
 
   return (
-    <section ref={scope} id="manufacture" className={styles.manufacture} aria-labelledby="mfg-title">
+    <section ref={scope} id="manufacture" className={styles.manufacture} data-chapter="04" aria-labelledby="mfg-title">
       <div className={styles.head}>
         <div className="ngd-page">
           <p className="ngd-tech">Chapter 04 — Manufacture</p>
