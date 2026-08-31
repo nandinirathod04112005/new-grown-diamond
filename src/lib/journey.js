@@ -72,6 +72,16 @@ const RAW = [
       'By IGI or GIA, with the report number inscribed on the girdle. The stone you can ask to see today began as gas in a sealed chamber.',
     data: [['Grading', 'IGI · GIA'], ['Inscription', 'Girdle'], ['Location', 'Surat']],
   },
+  {
+    key: 'jewellery',
+    n: '07',
+    label: 'Jewellery',
+    at: 1,
+    title: 'And then it is worn.',
+    blurb:
+      'Set by hand in our own atelier. A setting should be the last thing anybody notices, and the first thing that fails if it is done badly.',
+    data: [['Metals', 'Pt · 18k'], ['Setting', 'By hand'], ['Made', 'In house']],
+  },
 ];
 
 /**
@@ -114,7 +124,13 @@ export const CHAPTERS = RAW.map((c, i) => ({
  * depict rough crystal only. The moment cutting begins, the stone on screen is
  * a photograph of an actual company-owned diamond.
  */
-export const HANDOFF = { from: 4 / 6, to: 5 / 6 };
+/**
+ * Where generated geometry stops and the REAL PHOTOGRAPH takes over — on a
+ * chapter boundary, not a hand-picked number: the crystal is gone as Precision
+ * Cutting begins, and the photograph is fully present by Certified Brilliance,
+ * which then carries through Jewellery.
+ */
+export const HANDOFF = { from: 4 / 7, to: 5 / 7 };
 
 /** Which chapter index a normalized progress falls in. */
 export function chapterAt(p) {

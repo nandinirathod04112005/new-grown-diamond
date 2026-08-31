@@ -4,14 +4,14 @@ import { CHAPTERS } from '../src/lib/journey.js';
 import { openHome, walkPage, watchErrors, viewportContent } from './ngd.js';
 
 /**
- * The journey: one fixed stage, one controller, six chapters.
+ * The journey: one fixed stage, one controller, seven chapters.
  *
  * These replace the old genesis.spec.js, which tested a section that owned its
  * own pin and its own scene. Both are gone — the scene is now directed once for
  * the whole page — so the assertions move with it rather than being deleted.
  */
 test.describe('Diamond journey', () => {
-  test('all six chapters are present and named', async ({ page }) => {
+  test('all seven chapters are present and named', async ({ page }) => {
     await openHome(page);
     await walkPage(page);
 

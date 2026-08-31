@@ -23,6 +23,16 @@
 }
 
 /* The light that contracts into the stone as the journey begins. */
+/* The rotating, depth-shifting inner stage. .stage owns the perspective, so
+   this is its child rather than the element carrying it — perspective declared
+   on the element being rotated sits outside its own projection chain. */
+.stageInner {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
 .halo {
   position: absolute;
   left: 50%;
@@ -69,9 +79,27 @@
    the stone put display type straight across its facets, which is both
    unreadable and the generic answer. */
 @media (min-width: 900px) {
-  .stone { left: 68%; width: min(40vw, 460px); }
-  .halo { left: 68%; }
-  .stage { perspective-origin: 68% 50%; }
+  /* The subject moves so it never reaches under the chapter rail — a scrim
+     behind the rail would be painting over the photograph, which is the one
+     thing that is not allowed. The rail appears at 1100px, and the push-in
+     multiplies the stone by up to 1.56, so narrow desktops need it pulled in
+     further than wide ones. Measured at 1100, 1440 and 1920. */
+  .stone { left: 52%; width: min(34vw, 340px); }
+  .halo { left: 52%; }
+  .stage { perspective-origin: 56% 50%; }
+}
+
+/* 1100-1279 is the tightest desktop band: the rail has just appeared and there
+   is little room beside the copy column, so the subject is smallest here. */
+@media (min-width: 1100px) and (max-width: 1279px) {
+  .stone { left: 46%; width: min(30vw, 300px); }
+  .halo { left: 46%; }
+}
+
+/* Wide desktops have room to place the subject further right and larger. */
+@media (min-width: 1600px) {
+  .stone { left: 58%; width: min(34vw, 440px); }
+  .halo { left: 58%; }
 }
 
 /* A ground for the copy column, so text over the scene is legible. It darkens
@@ -146,7 +174,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .halo, .stone, .air { will-change: auto; }
+  .halo, .stone, .air, .stageInner { will-change: auto; }
+  /* No yaw, no depth push: the still path renders the finished state flat. */
+  .stageInner { transform: none !important; }
 }
 
 /* ---- Atmosphere: light in the air, never on the stone ---- */

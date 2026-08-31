@@ -49,6 +49,7 @@ export default function HomeSceneDirector({ children, onJump }) {
   const stoneRef = useRef(null);
   const haloRef = useRef(null);
   const airRef = useRef(null);
+  const innerRef = useRef(null);
   const progress = useRef(0);
   // The director's own 0..1. Kept apart from `progress`, which holds the
   // SCENE's remapped value — feeding one back into the other divides by
@@ -248,6 +249,15 @@ export default function HomeSceneDirector({ children, onJump }) {
         grow = Math.min(grow, stone.naturalWidth / base);
       }
       stone.style.transform = `scale(${grow.toFixed(4)})`;
+      // MASK REVEAL. The photograph is uncovered rather than merely faded up:
+      // an inset mask opens from the centre across the handover. Masking is on
+      // the short list of treatments a real photograph may receive, because it
+      // changes what you can SEE of the stone, never how the stone looks.
+      const openMask = (1 - returned) * 50;
+      stone.style.clipPath = returned > 0.001 && returned < 0.999
+        ? `inset(${openMask.toFixed(2)}% ${(openMask * 0.6).toFixed(2)}% round 2%)`
+        : 'none';
+
       // NO FILTER ON THE PHOTOGRAPH. Ever.
       //
       // There was a focus pull here. Scoped to the dissolve it still put 1.2px
@@ -286,6 +296,20 @@ export default function HomeSceneDirector({ children, onJump }) {
       const pull = ramp(p, 0.04, 0.16) * opening;
       air.style.filter = pull > 0.01 ? `blur(${(pull * 9).toFixed(2)}px)` : 'none';
     }
+    // DEPTH AND ROTATION. The stage carries a slow scroll-driven yaw and a
+    // small push in Z, so the scene reads as a space being moved through
+    // rather than a flat image being cross-faded. It is applied to the STAGE,
+    // which is the same thing the pointer lean already leans — the photograph
+    // is not being turned on its own axis, which a single fixed viewpoint
+    // cannot honestly do.
+    const inner = innerRef.current;
+    if (inner) {
+      const yaw = (p - 0.5) * 9;
+      const push = -60 + ramp(p, 0, 1) * 120;
+      inner.style.transform =
+        `translate3d(0, 0, ${push.toFixed(1)}px) rotateY(${yaw.toFixed(2)}deg)`;
+    }
+
     // The stage recedes once the scene is over, so the dense content sections
     // that follow are read on their own ground rather than over a photograph.
     //
@@ -294,9 +318,16 @@ export default function HomeSceneDirector({ children, onJump }) {
     // reader would meet a ghost of the stone rather than the stone.
     const stage = stageRef.current;
     if (stage) {
-      stage.style.opacity = scrubRef.current
-        ? String(1 - ramp(raw, 0.62, 0.76) * 0.82)
-        : '1';
+      // Recede only once the scene is genuinely OVER — measured against the
+      // last chapter slot, not against a hardcoded fraction of the director's
+      // span. Those thresholds (0.62-0.76) were tuned when the scene ended
+      // earlier in the page; adding the Jewellery chapter pushed the last
+      // panel past them, so the stage faded out from under the chapter the
+      // journey now resolves on.
+      const { to } = sceneBounds.current;
+      const past = to > 0 ? window.scrollY - to : 0;
+      const fade = Math.min(1, Math.max(0, past / (window.innerHeight * 0.9)));
+      stage.style.opacity = scrubRef.current ? String(1 - fade * 0.85) : '1';
     }
 
     listeners.current.forEach((fn) => fn(p, raw));
@@ -408,6 +439,9 @@ export default function HomeSceneDirector({ children, onJump }) {
             trade. The decorative layers carry aria-hidden individually; the
             photograph keeps a real description. */}
         <div ref={stageRef} className={styles.stage}>
+          {/* The moving part of the stage. Kept separate from .stage so the
+              rotation has a parent that owns the perspective. */}
+          <div ref={innerRef} className={styles.stageInner}>
           <span ref={haloRef} className={styles.halo} aria-hidden="true" />
 
           {/* Out-of-focus points of light, strictly BEHIND the photograph.
@@ -462,6 +496,7 @@ export default function HomeSceneDirector({ children, onJump }) {
               into the stone — it darkens the air the text sits on, and the
               photograph keeps its own exposure. */}
           <span className={styles.readable} aria-hidden="true" />
+          </div>
         </div>
 
         {/* Inside the provider, deliberately. Rendered as a sibling of the
