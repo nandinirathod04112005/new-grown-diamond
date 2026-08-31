@@ -56,10 +56,21 @@ test.describe('NGD homepage', () => {
     await expect(img).toBeAttached();
     expect(await img.getAttribute('src')).toMatch(/ngd-brilliant-macro/);
 
-    // Scroll past the handover, where the stone must be the photograph.
-    const height = await page.evaluate(() => document.body.scrollHeight);
-    await page.evaluate((y) => window.scrollTo(0, y), Math.round(height * 0.34));
-    await page.waitForTimeout(1200);
+    // Scroll to the last chapter — Certified Brilliance — where the stone on
+    // screen must be the photograph.
+    //
+    // This used to scroll to 34% of the document, which was where the handover
+    // happened to sit at one viewport. The handover is defined against the
+    // chapter panels now, so the landmark is the panel itself: a fraction of
+    // the document is not a place in the journey.
+    await page.evaluate(() => {
+      const slots = [...document.querySelectorAll('[data-chapter-slot]')];
+      const last = slots[slots.length - 1];
+      if (!last) return;
+      const top = last.getBoundingClientRect().top + window.scrollY;
+      window.scrollTo(0, Math.round(top + last.offsetHeight * 0.6));
+    });
+    await page.waitForTimeout(1400);
 
     const shown = await page.evaluate(() => {
       const el = document.querySelector('main img');

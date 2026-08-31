@@ -27,7 +27,13 @@
 
 .media { grid-column: 1 / -1; }
 
-@media (min-width: 900px) {
+/* 1100px, matching styles/grid.css — NOT 900px.
+   .ngd-grid is 8 columns until 1100px, so a `grid-column: 8 / 13` placement
+   applied at 900px lands past the last line: the browser generates implicit
+   tracks that collapse to 0px, the real columns shrink to make room for their
+   gaps, and the item is squeezed into whatever is left. The media slot
+   rendered as a 170px sliver with its caption clipped. */
+@media (min-width: 1100px) {
   .copy { grid-column: 2 / 7; }
   .media { grid-column: 8 / 13; }
 }

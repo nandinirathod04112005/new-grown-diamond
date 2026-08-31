@@ -3,7 +3,7 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { inSphere } from 'maath/random';
 import * as THREE from 'three';
 
-import { createBrilliantGeometry, createRoughPositions } from './brilliantGeometry.js';
+import { createRoughCrystalGeometry } from './brilliantGeometry.js';
 import { qualityTier } from './capability.js';
 import { HANDOFF, ramp, makeRandom } from '@/lib/journey.js';
 
@@ -117,7 +117,7 @@ function CarbonField({ progress, count, surface }) {
  * to depict. A standard material, deliberately: no transmission, no
  * dispersion, nothing that would let this read as a finished gem.
  */
-function Crystal({ progress, rough }) {
+function Crystal({ progress }) {
   const mesh = useRef(null);
   const material = useRef(null);
 
@@ -127,7 +127,13 @@ function Crystal({ progress, rough }) {
     const p = progress.current;
 
     const grow = ramp(p, 0.3, 0.58);
-    const fade = ramp(p, HANDOFF.from, HANDOFF.to);
+    // The crystal is gone by the MIDPOINT of the handover, before the
+    // photograph starts arriving. A linear crossfade put both near 0.5 at once,
+    // and because the photograph has a transparent background the generated
+    // mesh read straight through the real stone — a low-poly diamond visible
+    // inside a photographed one.
+    const mid = (HANDOFF.from + HANDOFF.to) / 2;
+    const fade = ramp(p, HANDOFF.from, mid);
 
     node.scale.setScalar(0.05 + grow * 0.72);
     node.rotation.y = state.clock.elapsedTime * 0.08 + p * 1.1;
@@ -149,12 +155,7 @@ function Crystal({ progress, rough }) {
    * whole mesh sixty times a second to produce a shape that never changed.
    * The crystal only ever grows in SCALE, so the geometry is static.
    */
-  const geometry = useMemo(() => {
-    const g = createBrilliantGeometry();
-    g.setAttribute('position', new THREE.BufferAttribute(rough, 3));
-    g.computeVertexNormals();
-    return g;
-  }, [rough]);
+  const geometry = useMemo(() => createRoughCrystalGeometry(), []);
 
   useEffect(() => () => geometry.dispose(), [geometry]);
 
@@ -164,7 +165,7 @@ function Crystal({ progress, rough }) {
         ref={material}
         transparent
         opacity={0}
-        color="#cfd4d8"
+        color="#b9bfc6"
         roughness={0.6}
         metalness={0.04}
         flatShading
@@ -204,11 +205,11 @@ export default function JourneyScene({ progress, active }) {
   // The carbon field's destinations are the crystal's own vertices, so the
   // particles condense into the exact thing being grown rather than merely
   // swirling near it.
-  const { rough, surface } = useMemo(() => {
-    const g = createBrilliantGeometry();
-    const r = createRoughPositions(g);
+  const surface = useMemo(() => {
+    const g = createRoughCrystalGeometry();
+    const p = Float32Array.from(g.attributes.position.array);
     g.dispose();
-    return { rough: r, surface: r };
+    return p;
   }, []);
 
   return (
@@ -223,11 +224,11 @@ export default function JourneyScene({ progress, active }) {
       style={{ position: 'absolute', inset: 0 }}
     >
       <Housekeeping active={active} />
-      <ambientLight intensity={0.5} />
-      <directionalLight position={[3, 4, 5]} intensity={1.1} />
-      <directionalLight position={[-4, -2, -3]} intensity={0.35} color="#9fb4c8" />
+      <ambientLight intensity={0.85} />
+      <directionalLight position={[3, 4, 5]} intensity={1.9} />
+      <directionalLight position={[-4, -2, -3]} intensity={0.6} color="#9fb4c8" />
       <CarbonField progress={progress} count={count} surface={surface} />
-      <Crystal progress={progress} rough={rough} />
+      <Crystal progress={progress} />
     </Canvas>
   );
 }

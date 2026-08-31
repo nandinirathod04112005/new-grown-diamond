@@ -29,7 +29,7 @@
    the readable ground does not reach. Legibility outranks alternating a
    layout: the subject is on the right of the frame, so the words live on the
    left of it. Variety comes from the column widths and the media ratio. */
-@media (min-width: 900px) {
+@media (min-width: 1100px) {
   .copy { grid-column: 1 / 6; }
   .media { grid-column: 6 / 11; }
 }

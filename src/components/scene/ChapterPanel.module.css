@@ -22,7 +22,7 @@
   font-size: var(--step--2);
   letter-spacing: var(--track-tech);
   text-transform: uppercase;
-  color: var(--ash-2);
+  color: var(--ash);
 }
 .markN { color: var(--champagne); }
 .markRule { width: 46px; height: 1px; background: currentColor; opacity: 0.5; }
@@ -45,7 +45,10 @@
   font-size: var(--step--2);
   letter-spacing: var(--track-tech);
   text-transform: uppercase;
-  color: var(--ash-2);
+  /* --ash is 5.76:1 on the page ground; --ash-2 is 3.00:1 and this is 10.56px
+     text, where AA requires 4.5:1. The value column beside it is 12.29:1, so
+     the key column was the only half anyone struggled to read. */
+  color: var(--ash);
 }
 .dataRow dd {
   margin: 0;

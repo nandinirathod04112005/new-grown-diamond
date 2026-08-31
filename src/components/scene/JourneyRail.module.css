@@ -7,6 +7,11 @@
   display: none;
   align-items: center;
   gap: var(--s4);
+  /* The rail floats over the content column at every width below the page cap,
+     so it must not intercept anything. Without this, a click on the Inventory
+     ledger's price cell landed on a rail button and threw the reader back up
+     into the journey. The buttons take pointer events back for themselves. */
+  pointer-events: none;
 }
 
 .rail ol {
@@ -35,6 +40,7 @@
 }
 
 .mark {
+  pointer-events: auto;
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -43,13 +49,17 @@
   border: 0;
   padding: 0.25rem 0;
   cursor: pointer;
-  color: var(--ash-2);
+  /* --ash (5.76:1), not --ash-2 (3.00:1): this is 10.56px text and AA wants
+     4.5:1 below 18.66px. */
+  color: var(--ash);
   font-size: var(--step--2);
   letter-spacing: var(--track-tech);
   text-transform: uppercase;
 }
 
-.n { font-variant-numeric: tabular-nums; opacity: 0.6; }
+/* No opacity multiplier. --ash-2 at 60% composites to about 1.8:1, and on an
+   inactive button the number is the ONLY thing identifying the control. */
+.n { font-variant-numeric: tabular-nums; }
 
 .label {
   max-width: 0;

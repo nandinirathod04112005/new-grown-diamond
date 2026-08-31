@@ -41,6 +41,8 @@ test-results
 # so they are ignored rather than repeatedly cleaned up by hand.
 /*probe*.mjs
 /scratch-*.mjs
+/*tmp*.mjs
+/repro*.mjs
 /drive*.mjs
 /shot-*.png
 /shots*/

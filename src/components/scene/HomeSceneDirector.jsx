@@ -3,7 +3,7 @@ import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } fro
 import { gsap, useGSAP, ScrollTrigger } from '@/lib/motion/gsap.js';
 import { MQ } from '@/lib/motion/media.js';
 import { supports3D } from '@/components/three/capability.js';
-import { HANDOFF, chapterAt, ramp, sceneProgressOf } from '@/lib/journey.js';
+import { HANDOFF, ramp } from '@/lib/journey.js';
 import stoneUrl from '@/assets/diamonds/ngd-brilliant-macro.webp';
 import JourneyRail from './JourneyRail.jsx';
 import { SceneProgressContext } from './sceneProgress.js';
@@ -60,6 +60,19 @@ export default function HomeSceneDirector({ children, onJump }) {
   const use3DRef = useRef(false);
   // True only while the desktop director is actually scrubbing.
   const scrubRef = useRef(false);
+  /**
+   * Where the six-chapter scene ends, as a fraction of the director's span —
+   * MEASURED, not assumed.
+   *
+   * This was the constant SCENE_END = 0.58, which silently hard-coded the ratio
+   * between the chapter slots (sized in svh) and the three sections after them
+   * (sized by their content). That ratio moves with the viewport, so the
+   * crossfades only lined up with the panels near 1440x900. At 960x540
+   * chapters 05 and 06 never reached any opacity at all, and at 1920x1080 there
+   * was a dead band of pure photograph between chapters. It is now read from
+   * the layout on every ScrollTrigger refresh.
+   */
+  const sceneBounds = useRef({ from: 0, to: 0 });
 
   const [chapter, setChapter] = useState(0);
   const [pinned, setPinned] = useState(false);
@@ -105,9 +118,63 @@ export default function HomeSceneDirector({ children, onJump }) {
    * progress, which completes earlier — the last three sections are read
    * against a finished stone rather than being further stages of its making.
    */
+  const toScene = useCallback(() => {
+    const { from, to } = sceneBounds.current;
+    if (!(to > from)) return 0;
+    return Math.min(1, Math.max(0, (window.scrollY - from) / (to - from)));
+  }, []);
+
+  /**
+   * The scene's extent, in page pixels, taken from the panels themselves.
+   *
+   * Scene progress used to be `raw / SCENE_END`, a fraction of the director's
+   * span. That is a different quantity from where the panels actually are, and
+   * the two drift with the viewport — which is how the rail came to name one
+   * chapter while a different chapter's copy was on screen. Both now come from
+   * the same measured pixels, so they cannot disagree.
+   */
+  /** The chapter whose panel currently occupies most of the viewport. */
+  const visibleChapter = useCallback(() => {
+    const el = scope.current;
+    if (!el) return 0;
+    const slots = el.querySelectorAll('[data-chapter-slot]');
+    const vh = window.innerHeight;
+    let best = 0;
+    let bestOverlap = 0;
+    slots.forEach((slot, i) => {
+      const panel = slot.firstElementChild;
+      if (!panel) return;
+      const r = panel.getBoundingClientRect();
+      const overlap = Math.max(0, Math.min(r.bottom, vh) - Math.max(r.top, 0));
+      if (overlap > bestOverlap) { bestOverlap = overlap; best = i; }
+    });
+    return best;
+  }, []);
+
+  const measureSceneEnd = useCallback(() => {
+    const el = scope.current;
+    if (!el) return;
+    const slots = el.querySelectorAll('[data-chapter-slot]');
+    const first = slots[0];
+    const last = slots[slots.length - 1];
+    if (!first || !last) return;
+    // Document coordinates, via getBoundingClientRect + scrollY.
+    //
+    // offsetTop is relative to the nearest POSITIONED ancestor, and the
+    // chapter sections are position: relative — so these came back measured
+    // from the top of their own section rather than the top of the page. The
+    // scene then ended after the first section's slots, and every chapter
+    // after the third stayed at zero opacity forever.
+    const top = window.scrollY;
+    sceneBounds.current = {
+      from: first.getBoundingClientRect().top + top,
+      to: last.getBoundingClientRect().bottom + top - window.innerHeight,
+    };
+  }, []);
+
   const apply = useCallback((raw) => {
     rawProgress.current = raw;
-    const p = sceneProgressOf(raw);
+    const p = toScene();
     progress.current = p;
 
     // The stone: the light contracts into it, then it grows toward the viewer.
@@ -121,7 +188,8 @@ export default function HomeSceneDirector({ children, onJump }) {
     //             cutting begins the diamond on screen must be a photograph of
     //             a real stone rather than anything generated.
     const opening = 1 - ramp(p, 0.03, 0.15);
-    const returned = ramp(p, HANDOFF.from, HANDOFF.to);
+    // Arrives only after the crystal has finished leaving (see JourneyScene).
+    const returned = ramp(p, (HANDOFF.from + HANDOFF.to) / 2, HANDOFF.to);
 
     const stone = stoneRef.current;
     if (stone) {
@@ -133,7 +201,19 @@ export default function HomeSceneDirector({ children, onJump }) {
         ? String(Math.max(opening, returned))
         : '1';
       // Slow push toward the viewer at both ends, never past the source width.
-      const grow = 1 + ramp(p, 0, 0.15) * 0.3 + ramp(p, HANDOFF.from, 1) * 0.22;
+      //
+      // The cap is enforced here as well as in CSS, against the element's own
+      // layout width and the file's natural width. A base width and a maximum
+      // scale that multiply out past the source is exactly the arithmetic that
+      // put a 754px photograph on screen at 760px.
+      let grow = 1 + ramp(p, 0, 0.15) * 0.3 + ramp(p, HANDOFF.from, 1) * 0.22;
+      // clientWidth is the LAYOUT width and is unaffected by a transform, so it
+      // is the unscaled base directly — no need to divide out the last scale,
+      // which would compound its own rounding every frame.
+      const base = stone.clientWidth;
+      if (base > 0 && stone.naturalWidth > 0) {
+        grow = Math.min(grow, stone.naturalWidth / base);
+      }
       stone.style.transform = `scale(${grow.toFixed(4)})`;
       // NO FILTER ON THE PHOTOGRAPH. Ever.
       //
@@ -187,7 +267,7 @@ export default function HomeSceneDirector({ children, onJump }) {
     }
 
     listeners.current.forEach((fn) => fn(p, raw));
-  }, []);
+  }, [toScene]);
 
   // Capability resolves one frame after mount; re-apply so the stone's
   // opacity reflects whether a canvas actually exists.
@@ -203,8 +283,10 @@ export default function HomeSceneDirector({ children, onJump }) {
       // scroll IS the transformation, not decoration laid over static copy.
       mm.add(MQ.desktop, () => {
         scrubRef.current = true;
+        measureSceneEnd();
         const st = ScrollTrigger.create({
           trigger: scope.current,
+          onRefresh: () => { measureSceneEnd(); apply(rawProgress.current); },
           start: 'top top',
           end: 'bottom bottom',
           scrub: 0.85,
@@ -212,8 +294,10 @@ export default function HomeSceneDirector({ children, onJump }) {
           onToggle: (self) => setPinned(self.isActive),
           onUpdate: (self) => {
             apply(self.progress);
-            const sp = sceneProgressOf(self.progress);
-            setChapter(chapterAt(sp));
+            const sp = progress.current;
+            // Named from the panels, not from a progress fraction, so the rail
+            // can never say one chapter while another's copy is on screen.
+            setChapter(visibleChapter());
             // One flip, not a per-frame write: the canvas ran at full cost for
             // the last stretch of the journey producing frames nobody sees.
             setSceneOver(sp >= 1);
@@ -241,6 +325,7 @@ export default function HomeSceneDirector({ children, onJump }) {
         // they were at the end of a journey they had not started. It is read
         // from the journey's own position, using the same mapping the scrubbed
         // path uses, so the two can never disagree.
+        measureSceneEnd();
         const el = scope.current;
         if (!el) return undefined;
 
@@ -252,7 +337,13 @@ export default function HomeSceneDirector({ children, onJump }) {
           const raw = travel > 0
             ? Math.min(1, Math.max(0, -rect.top / travel))
             : 0;
-          setChapter(chapterAt(sceneProgressOf(raw)));
+          // Push it through the listeners as well. Only setting React state
+          // left the rail's progress fill pinned at the 100% that apply(1) had
+          // written at mount, for the whole page.
+          rawProgress.current = raw;
+          progress.current = toScene();
+          listeners.current.forEach((fn) => fn(progress.current, raw));
+          setChapter(visibleChapter());
         };
         const onScroll = () => {
           if (!frame) frame = requestAnimationFrame(read);
@@ -338,7 +429,7 @@ export default function HomeSceneDirector({ children, onJump }) {
         {/* Inside the provider, deliberately. Rendered as a sibling of the
             director it would read a null context and sit frozen on chapter one
             — which is exactly what it did. */}
-        <JourneyRail onJump={onJump} />
+        <JourneyRail onJump={onJump} hidden={sceneOver} />
 
         <div className={styles.flow}>{children}</div>
       </div>

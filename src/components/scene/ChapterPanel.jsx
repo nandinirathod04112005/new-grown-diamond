@@ -27,32 +27,50 @@ export default function ChapterPanel({ index, children, className = '' }) {
   useEffect(() => {
     const node = panel.current;
     if (!node || !scene) return undefined;
+    const slot = node.parentElement;
+    if (!slot) return undefined;
 
-    const { at, to } = chapter;
-    const span = to - at;
-    // Feather over a fifth of the chapter at each end.
-    const feather = span * 0.2;
-    const isFirst = index === 0;
-    const isLast = index === CHAPTERS.length - 1;
-
-    return scene.subscribe((p) => {
-      // The journey's outer edges are NOT feathered.
+    /**
+     * Opacity comes from where this panel actually IS, not from where the
+     * scene thinks the journey has got to.
+     *
+     * It used to be a pure function of scene progress. Panel opacity was
+     * therefore driven by a normalized number while panel POSITION was driven
+     * by layout — svh-sized slots against content-sized sections — and the two
+     * drift apart as the viewport changes. At 1920x1080 that produced screens
+     * showing the photograph and nothing else: a panel was at full opacity
+     * while its copy sat below the fold, and the panel whose copy was on screen
+     * was at zero. Reading the element's own rect cannot drift, because there
+     * is nothing left to drift from.
+     */
+    const measure = () => {
+      // How much of THIS PANEL is on screen, as a fraction of the viewport.
       //
-      // The last chapter runs to progress 1, so its exit ramp was centred on 1
-      // and could only ever reach smoothstep(0.5) — the sixth chapter, which
-      // the whole page builds to, was mathematically incapable of reaching full
-      // opacity and sat permanently at 0.5. The same applies at the other end.
-      const enter = isFirst ? 1 : ramp(p, at - feather, at + feather);
-      const exit = isLast ? 1 : 1 - ramp(p, to - feather, to + feather);
-      const shown = Math.min(enter, exit);
+      // The first attempt measured progress through the slot's sticky travel,
+      // which only describes the panel once it is already stuck — so a panel
+      // approaching the top of the viewport, fully on screen, was held at
+      // opacity 0. Overlap answers the question the reader actually cares
+      // about: is this text in front of me?
+      const r = node.getBoundingClientRect();
+      const vh = window.innerHeight;
+      const overlap = Math.max(0, Math.min(r.bottom, vh) - Math.max(r.top, 0));
+      const frac = vh > 0 ? overlap / vh : 0;
+
+      const shown = ramp(frac, 0.3, 0.82);
       node.style.opacity = String(shown);
-      // A clip mask that opens from below as the panel arrives, so the text is
-      // revealed rather than merely faded up.
-      const cut = (1 - shown) * 16;
+      const cut = (1 - shown) * 14;
       node.style.clipPath = `inset(${cut.toFixed(2)}% 0% ${cut.toFixed(2)}% 0%)`;
-      // Off at the extremes so a faded panel never intercepts a click.
       node.style.pointerEvents = shown > 0.5 ? 'auto' : 'none';
-    });
+    };
+
+    measure();
+    // Ticked by the director's single controller — no ScrollTrigger of its own.
+    const stop = scene.subscribe(measure);
+    window.addEventListener('resize', measure, { passive: true });
+    return () => {
+      stop();
+      window.removeEventListener('resize', measure);
+    };
   }, [scene, chapter, index]);
 
   // Each panel sticks inside its OWN slot.
@@ -64,7 +82,7 @@ export default function ChapterPanel({ index, children, className = '' }) {
   // headlines and two spec tables printed over one another. Giving each panel
   // its own slot means only one is ever in sticky position.
   return (
-    <div className={styles.slot}>
+    <div className={styles.slot} data-chapter-slot={index}>
       <div ref={panel} className={`${styles.panel} ${className}`}>
         {children}
       </div>

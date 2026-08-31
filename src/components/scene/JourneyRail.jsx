@@ -14,7 +14,7 @@ import styles from './JourneyRail.module.css';
  * Real <button>s in a <nav>, so it is operable by keyboard rather than being
  * decorative scroll furniture.
  */
-export default function JourneyRail({ onJump }) {
+export default function JourneyRail({ onJump, hidden = false }) {
   const fill = useRef(null);
   const scene = useSceneProgressOptional();
   const active = scene?.chapter ?? 0;
@@ -27,7 +27,12 @@ export default function JourneyRail({ onJump }) {
   }, [scene]);
 
   return (
-    <nav className={styles.rail} aria-label="Journey chapters">
+    /* `hidden` is a real attribute, not a class: reset.css carries
+       [hidden] { display: none !important }, so nothing in a stylesheet can
+       quietly out-specify it. The rail indexes the JOURNEY, so once the scene
+       is over it has nothing left to point at and must get out of the way of
+       the sections below. */
+    <nav className={styles.rail} aria-label="Journey chapters" hidden={hidden}>
       <span className={styles.track} aria-hidden="true">
         <span ref={fill} className={styles.fill} />
       </span>

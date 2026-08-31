@@ -91,10 +91,19 @@ export function sceneProgressOf(p) {
   return Math.min(1, Math.max(0, p / SCENE_END));
 }
 
-/** Chapters with derived, non-overlapping ranges. */
+/**
+ * Chapters with derived, non-overlapping, EQUAL ranges.
+ *
+ * `at` was hand-authored (0, 0.17, 0.36, 0.56, 0.74, 0.9) while each chapter
+ * renders into a panel of identical height. Scene progress and panel index
+ * therefore disagreed, and the rail would say "Crystal Growth" while the copy
+ * on screen read "It starts as gas". One chapter is one panel is one equal
+ * share of the scene; the ranges are computed so they cannot drift apart.
+ */
 export const CHAPTERS = RAW.map((c, i) => ({
   ...c,
-  to: i === RAW.length - 1 ? 1 : RAW[i + 1].at,
+  at: i / RAW.length,
+  to: (i + 1) / RAW.length,
 }));
 
 /**
@@ -105,7 +114,7 @@ export const CHAPTERS = RAW.map((c, i) => ({
  * depict rough crystal only. The moment cutting begins, the stone on screen is
  * a photograph of an actual company-owned diamond.
  */
-export const HANDOFF = { from: 0.66, to: 0.8 };
+export const HANDOFF = { from: 4 / 6, to: 5 / 6 };
 
 /** Which chapter index a normalized progress falls in. */
 export function chapterAt(p) {

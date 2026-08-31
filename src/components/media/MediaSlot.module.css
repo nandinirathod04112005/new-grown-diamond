@@ -32,8 +32,11 @@
   position: absolute;
   width: min(46%, 260px);
   height: auto;
-  opacity: 0.34;
-  filter: grayscale(0.35);
+  /* No colour filter. This is the one genuine photograph of a company-owned
+     stone in the repository, and desaturating it changes how the goods look —
+     which is not on the list of treatments a real photograph may receive.
+     Fading it back is a presentation effect; grading it is not. */
+  opacity: 0.3;
 }
 
 .scrim {

@@ -1,7 +1,6 @@
 import { useCallback, useEffect } from 'react';
 
 import HomeSceneDirector from '@/components/scene/HomeSceneDirector.jsx';
-import { CHAPTERS, SCENE_END } from '@/lib/journey.js';
 import { useSmoothScroll } from '@/providers/smoothScrollContext.js';
 import Hero from '@/sections/home/Hero.jsx';
 import Genesis from '@/sections/home/Genesis.jsx';
@@ -38,22 +37,26 @@ export default function Home() {
   // The rail addresses chapters, which are positions in the scene rather than
   // elements, so a jump is a scroll to a fraction of the journey's height.
   const jump = useCallback((key, index) => {
+    // Scroll to the chapter's own slot.
+    //
+    // This used to compute a fraction of the journey's height from the
+    // chapter's normalized start and a hard-coded SCENE_END. Both halves were
+    // approximations of a layout that is measured elsewhere, and they drifted
+    // apart at any viewport that was not roughly 1440x900. The panel knows
+    // where it is; ask it.
+    const slot = document.querySelector(`[data-chapter-slot="${index}"]`);
+    if (slot) {
+      // Document coordinates: offsetTop would be measured from the chapter's
+      // own section, which is position: relative, not from the page.
+      const top = slot.getBoundingClientRect().top + window.scrollY;
+      // A little into the slot, so the panel is settled rather than arriving.
+      scrollTo(Math.round(top + slot.offsetHeight * 0.25));
+      return;
+    }
     const journey = document.getElementById('journey');
-    if (!journey) return;
-    const c = CHAPTERS[index];
-    // Aim at the MIDDLE of the chapter, not its first frame. Landing exactly on
-    // a boundary put the reader a chapter short — chapterAt() picks the last
-    // chapter whose start is <= progress, so arriving a rounding error below
-    // the boundary resolves to the previous one. The middle is also simply
-    // where "go to this chapter" should put you.
-    const at = c.at + (c.to - c.at) * 0.5;
-    // The director's progress runs `top top` -> `bottom bottom`, so it is
-    // measured over the journey's height MINUS one viewport, not its full
-    // height. Using the full height overshot every chapter, landing past the
-    // copy the button names.
-    const travel = Math.max(0, journey.offsetHeight - window.innerHeight);
-    const top = journey.offsetTop + travel * (at * SCENE_END);
-    scrollTo(Math.round(top));
+    if (journey) {
+      scrollTo(Math.round(journey.getBoundingClientRect().top + window.scrollY));
+    }
   }, [scrollTo]);
 
   return (

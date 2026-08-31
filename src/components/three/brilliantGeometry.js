@@ -123,57 +123,52 @@ function noise3(x, y, z, seed = 1) {
  * field, then flattened in bands, which is roughly what an as-grown CVD plate
  * looks like: blocky, stepped, opaque.
  */
-export function createRoughPositions(cutGeometry) {
-  const src = cutGeometry.getAttribute('position');
-  const out = new Float32Array(src.count * 3);
+/**
+ * A CVD rough crystal: a flat, stepped, irregular BLOCK.
+ *
+ * This is built from scratch rather than derived from the brilliant, and that
+ * is the whole point. The previous version projected the brilliant's vertices
+ * onto a box, which changes where the vertices sit but not how they are
+ * CONNECTED — the mesh kept the crown, girdle and pavilion rings it was built
+ * from, so it still read unmistakably as a cut gem with a table and a point.
+ * Looking at a screenshot is what settled it; the arithmetic looked fine.
+ *
+ * Generated geometry may depict rough crystal ONLY. Anything a viewer could
+ * take for a finished diamond breaks that rule, so the safe construction is one
+ * that cannot accidentally resemble a gem: a subdivided slab, quantised into
+ * growth steps, with no radial symmetry anywhere in it.
+ */
+export function createRoughCrystalGeometry() {
+  // Tabular: wide, deep, and distinctly flat, as grown on a seed plate.
+  const geo = new THREE.BoxGeometry(2.0, 0.92, 1.7, 4, 3, 4);
+  const pos = geo.getAttribute('position');
   const v = new THREE.Vector3();
+  const STEP = 0.13;
 
-  // A CVD rough is a TABULAR SLAB — a flat plate grown on a seed, with stepped
-  // growth bands on its faces. It is not a swollen gem.
-  //
-  // The previous version only inflated the brilliant by a fifth, which left
-  // the pointed pavilion and flat table intact, so the "rough" still read as a
-  // polished stone. That is not a cosmetic complaint: generated geometry is
-  // permitted to depict rough crystal ONLY, and anything a viewer could take
-  // for a finished diamond breaks that. So each vertex is projected onto a
-  // box and the gem silhouette is destroyed outright.
-  const EX = 1.02;   // half-width
-  const EY = 0.46;   // half-height — flat, as grown
-  const EZ = 0.9;    // half-depth
-  const STEP = 0.14; // growth-band thickness
-  const TOWARD_BOX = 0.82;
+  for (let i = 0; i < pos.count; i += 1) {
+    v.fromBufferAttribute(pos, i);
 
-  for (let i = 0; i < src.count; i += 1) {
-    v.fromBufferAttribute(src, i);
+    // Stepped growth bands up the crystal's height.
+    const banded = Math.round(v.y / STEP) * STEP;
 
-    // Project onto the surface of the slab: divide by the largest axis ratio.
-    const m = Math.max(
-      Math.abs(v.x) / EX,
-      Math.abs(v.y) / EY,
-      Math.abs(v.z) / EZ
-    ) || 1e-6;
-
-    let bx = v.x / m;
-    let by = v.y / m;
-    let bz = v.z / m;
-
-    // Stepped growth bands, and a coarse lump so no two sides match.
+    // A coarse, deterministic lump per lattice cell, so no two faces match and
+    // nothing is symmetrical.
     const lump = noise3(
-      Math.round(bx * 2.4),
-      Math.round(by * 2.4),
-      Math.round(bz * 2.4),
-      7
+      Math.round(v.x * 2.2),
+      Math.round(banded * 2.2),
+      Math.round(v.z * 2.2),
+      11
     );
-    by = Math.round(by / STEP) * STEP + lump * 0.05;
-    bx += lump * 0.09;
-    bz += lump * 0.09;
 
-    // Blend hard toward the slab. Keeping a little of the original preserves
-    // vertex ordering's correspondence with the cut form, which is what lets
-    // the growth read as one continuous solid rather than a cross-fade.
-    out[i * 3] = v.x + (bx - v.x) * TOWARD_BOX;
-    out[i * 3 + 1] = v.y + (by - v.y) * TOWARD_BOX;
-    out[i * 3 + 2] = v.z + (bz - v.z) * TOWARD_BOX;
+    pos.setXYZ(
+      i,
+      v.x * (1 + lump * 0.14) + lump * 0.06,
+      banded * (1 + lump * 0.1),
+      v.z * (1 + lump * 0.12) - lump * 0.05
+    );
   }
-  return out;
+
+  pos.needsUpdate = true;
+  geo.computeVertexNormals();
+  return geo;
 }
