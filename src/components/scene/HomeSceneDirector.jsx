@@ -58,6 +58,19 @@ export default function HomeSceneDirector({ children, onJump }) {
 
   // Mirrors `use3D` for the per-frame path, which must not close over state.
   const use3DRef = useRef(false);
+  /**
+   * Whether a canvas is actually MOUNTED — not merely whether the device could
+   * run one.
+   *
+   * The fade used to key off capability, which resolves one frame after mount,
+   * while JourneyScene is React.lazy behind the 234 kB `three` chunk that only
+   * starts downloading after first paint. For the whole of that download the
+   * director believed there was something to dissolve into and drove the
+   * photograph to opacity 0 over a canvas that did not exist yet — a black
+   * rectangle with the chapter copy floating on it, which is precisely the
+   * outcome the comment in apply() says may never happen.
+   */
+  const canvasUpRef = useRef(false);
   // True only while the desktop director is actually scrubbing.
   const scrubRef = useRef(false);
   /**
@@ -91,6 +104,26 @@ export default function HomeSceneDirector({ children, onJump }) {
       setUse3D(ok);
     });
     return () => cancelAnimationFrame(id);
+  }, []);
+
+  /**
+   * Is the stage on screen at all?
+   *
+   * `pinned` came only from the ScrollTrigger's onToggle, which does not fire
+   * while the scroller is sitting exactly at the trigger's start — so on load,
+   * and every time the reader returned to the top, the canvas was mounted with
+   * frameloop 'never' and drew zero frames. The carbon field then popped in on
+   * the first wheel tick. An observer answers the question directly.
+   */
+  useEffect(() => {
+    const node = stageRef.current;
+    if (!node) return undefined;
+    const io = new IntersectionObserver(
+      ([e]) => setPinned(e.isIntersecting),
+      { threshold: 0.01 }
+    );
+    io.observe(node);
+    return () => io.disconnect();
   }, []);
 
   // Nothing renders or animates behind a hidden tab.
@@ -197,7 +230,7 @@ export default function HomeSceneDirector({ children, onJump }) {
       // simply carries the whole journey. Fading it out on a device without
       // WebGL would leave a blank stage — the one outcome this may never
       // produce.
-      stone.style.opacity = use3DRef.current
+      stone.style.opacity = canvasUpRef.current
         ? String(Math.max(opening, returned))
         : '1';
       // Slow push toward the viewer at both ends, never past the source width.
@@ -291,7 +324,6 @@ export default function HomeSceneDirector({ children, onJump }) {
           end: 'bottom bottom',
           scrub: 0.85,
           invalidateOnRefresh: true,
-          onToggle: (self) => setPinned(self.isActive),
           onUpdate: (self) => {
             apply(self.progress);
             const sp = progress.current;
@@ -312,7 +344,6 @@ export default function HomeSceneDirector({ children, onJump }) {
       // telling, not a broken one.
       mm.add('(max-width: 899px), (prefers-reduced-motion: reduce)', () => {
         scrubRef.current = false;
-        setPinned(false);
         // The scene rests on its finished state: no scrub, no canvas, the real
         // photograph fully present.
         apply(1);
@@ -401,7 +432,14 @@ export default function HomeSceneDirector({ children, onJump }) {
               {/* Decorative: the carbon, plasma and rough crystal are told in
                   words by the panels beside them. */}
               <div className={styles.canvasHolder} aria-hidden="true">
-                <JourneyScene progress={progress} active={canvasLive} />
+                <JourneyScene
+                  progress={progress}
+                  active={canvasLive}
+                  onReady={() => {
+                    canvasUpRef.current = true;
+                    apply(rawProgress.current);
+                  }}
+                />
               </div>
             </Suspense>
           )}
