@@ -4,14 +4,14 @@ import { CHAPTERS } from '../src/lib/journey.js';
 import { openHome, walkPage, watchErrors, viewportContent } from './ngd.js';
 
 /**
- * The journey: one fixed stage, one controller, six chapters.
+ * The journey: one fixed stage, one controller, seven chapters.
  *
  * These replace the old genesis.spec.js, which tested a section that owned its
  * own pin and its own scene. Both are gone — the scene is now directed once for
  * the whole page — so the assertions move with it rather than being deleted.
  */
 test.describe('Diamond journey', () => {
-  test('all six chapters are present and named', async ({ page }) => {
+  test('all seven chapters are present and named', async ({ page }) => {
     await openHome(page);
     await walkPage(page);
 
@@ -26,7 +26,11 @@ test.describe('Diamond journey', () => {
     const rail = page.locator('nav[aria-label="Journey chapters"]');
     if (await rail.count()) {
       for (const c of CHAPTERS) {
-        await expect(rail.getByText(c.label, { exact: false })).toBeAttached();
+        // Each rail button carries a visible SHORT label plus the full name for
+        // assistive technology, so a chapter whose short form equals its label
+        // (Carbon, Plasma, Jewellery) matches twice. Both are wanted; the
+        // assertion is that the chapter is named at all.
+        await expect(rail.getByText(c.label, { exact: false }).first()).toBeAttached();
       }
     }
   });

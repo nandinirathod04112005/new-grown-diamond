@@ -75,7 +75,7 @@
 /* Content behind hover must also be reachable by focus. */
 .mark:hover .label,
 .mark:focus-visible .label,
-.on .label { max-width: 12rem; opacity: 1; }
+.on .label { max-width: 7rem; opacity: 1; }
 
 .on { color: var(--bright); }
 .on .tick { width: 34px; background: var(--champagne); }

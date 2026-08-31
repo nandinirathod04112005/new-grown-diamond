@@ -9,7 +9,7 @@ import { MQ } from '@/lib/motion/media.js';
 import styles from './Ascent.module.css';
 
 /**
- * Chapter 07 — carbon to brilliance, completed.
+ * BRILLIANCE — carbon to brilliance, completed.
  *
  * The one place the page leaves black. As this section is scrubbed through,
  * the ground lifts from carbon to warm white and the type inverts with it, so
@@ -51,7 +51,7 @@ export default function Ascent() {
       <div className={styles.glow} aria-hidden="true" />
 
       <div className={`ngd-page ${styles.inner}`}>
-        <p className={`${styles.chapter}`}>Chapter 07 — Brilliance</p>
+        <p className={`${styles.chapter}`}>Brilliance</p>
 
         <SplitReveal as="h2" id="ascent-title" className={styles.title}>
           Tell us what you are looking for.

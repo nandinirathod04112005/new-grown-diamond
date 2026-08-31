@@ -23,6 +23,16 @@
 }
 
 /* The light that contracts into the stone as the journey begins. */
+/* The rotating, depth-shifting inner stage. .stage owns the perspective, so
+   this is its child rather than the element carrying it — perspective declared
+   on the element being rotated sits outside its own projection chain. */
+.stageInner {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
 .halo {
   position: absolute;
   left: 50%;
@@ -69,9 +79,38 @@
    the stone put display type straight across its facets, which is both
    unreadable and the generic answer. */
 @media (min-width: 900px) {
-  .stone { left: 68%; width: min(40vw, 460px); }
-  .halo { left: 68%; }
-  .stage { perspective-origin: 68% 50%; }
+  /*
+   * The subject lives in the CORRIDOR between the copy column and the chapter
+   * rail, and it has to fit there at full push-in as well as at rest.
+   *
+   * Both edges are hard: text over the stone's facets is unreadable, and a
+   * scrim behind the rail would mean painting over the photograph, which is
+   * the one treatment that is never allowed. Moving the subject is the only
+   * lever. It was moved left once to clear the rail, which put it straight
+   * across the headline instead — one overlap traded for another, because only
+   * the edge being fixed was measured.
+   *
+   * The corridor's width is set by the headline's longest word, so it does not
+   * grow with the viewport as fast as the stone would: the width is held in vw
+   * with a hard cap, and both edges are measured at 1100, 1280, 1440, 1600 and
+   * 1920 at rest AND at full scale.
+   */
+  .stone { left: 72%; width: min(14vw, 300px); }
+  .halo { left: 72%; }
+  .stage { perspective-origin: 70% 50%; }
+}
+
+/* 1100-1279 is the tightest band: the rail has just appeared and the corridor
+   is at its narrowest, so the subject is smallest here. */
+@media (min-width: 1100px) and (max-width: 1279px) {
+  .stone { left: 70%; width: min(11vw, 190px); }
+  .halo { left: 70%; }
+}
+
+/* Wide viewports open the corridor up, so the subject can be larger. */
+@media (min-width: 1600px) {
+  .stone { left: 73%; width: min(15vw, 400px); }
+  .halo { left: 73%; }
 }
 
 /* A ground for the copy column, so text over the scene is legible. It darkens
@@ -146,7 +185,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .halo, .stone, .air { will-change: auto; }
+  .halo, .stone, .air, .stageInner { will-change: auto; }
+  /* No yaw, no depth push: the still path renders the finished state flat. */
+  .stageInner { transform: none !important; }
 }
 
 /* ---- Atmosphere: light in the air, never on the stone ---- */
@@ -179,9 +220,9 @@
    them claimed they darkened only the air. That is the same defect as the
    sparkle layer, in different elements: a treatment is only "around" the stone
    if it paints BEHIND it. Ordering is the guarantee. */
-.readable { z-index: 2; }
-.vignette { z-index: 3; }
-.stone { z-index: 4; }
+.stageInner { z-index: 1; }
+.vignette { z-index: 2; }
+.stone { z-index: 3; }
 
 @media (prefers-reduced-motion: reduce) {
   .air { will-change: auto; }

@@ -1,4 +1,19 @@
-.atelier { position: relative; padding-block: var(--chapter-y); background: var(--graphite); }
+/* No background on the SECTION. It carries the journey's seventh chapter,
+   which is read over the shared stage — a graphite ground here painted straight
+   over the sticky stage and left chapter 07 with an empty frame behind it.
+   The gallery below the chapter panel brings its own ground instead. */
+/* No padding of its own. The chapter panel sizes itself and the gallery below
+   carries its own padding AND its own ground; a second chapter-y here had no
+   background behind it and showed a bare strip of the sticky stage between the
+   gallery and Manufacture. */
+.atelier { position: relative; }
+
+/* The magazine spread, on its own ground, once the chapter is done. */
+.gallery {
+  position: relative;
+  background: var(--graphite);
+  padding-block: var(--chapter-y);
+}
 
 .chapter { grid-column: 1 / -1; margin-bottom: var(--s6); }
 .title { grid-column: 1 / -1; font-size: var(--step-3); color: var(--bright); max-width: 18ch; }
@@ -73,4 +88,30 @@
 
 @media (min-width: 1100px) {
   .film { grid-column: 6 / 13; margin-block: var(--s7); }
+}
+
+/* ---- The journey's seventh chapter, over the shared stage ---- */
+
+.chapterCopy { grid-column: 1 / -1; }
+
+.chapterTitle {
+  font-family: var(--font-display);
+  font-size: var(--step-4);
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  color: var(--bright);
+  margin-bottom: var(--s5);
+}
+.chapterTitle :global(.line) { display: block; overflow: hidden; }
+.chapterTitle :global(.line-inner) { display: block; }
+
+.chapterBlurb {
+  max-width: 46ch;
+  font-size: var(--step-0);
+  line-height: 1.75;
+  color: var(--ash);
+}
+
+@media (min-width: 1100px) {
+  .chapterCopy { grid-column: 2 / 7; }
 }

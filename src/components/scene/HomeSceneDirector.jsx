@@ -6,6 +6,7 @@ import { supports3D } from '@/components/three/capability.js';
 import { HANDOFF, ramp } from '@/lib/journey.js';
 import stoneUrl from '@/assets/diamonds/ngd-brilliant-macro.webp';
 import JourneyRail from './JourneyRail.jsx';
+import { viewportOverlap } from './stickyGeometry.js';
 import { SceneProgressContext } from './sceneProgress.js';
 import styles from './HomeSceneDirector.module.css';
 
@@ -49,6 +50,7 @@ export default function HomeSceneDirector({ children, onJump }) {
   const stoneRef = useRef(null);
   const haloRef = useRef(null);
   const airRef = useRef(null);
+  const innerRef = useRef(null);
   const progress = useRef(0);
   // The director's own 0..1. Kept apart from `progress`, which holds the
   // SCENE's remapped value — feeding one back into the other divides by
@@ -58,6 +60,19 @@ export default function HomeSceneDirector({ children, onJump }) {
 
   // Mirrors `use3D` for the per-frame path, which must not close over state.
   const use3DRef = useRef(false);
+  /**
+   * Whether a canvas is actually MOUNTED — not merely whether the device could
+   * run one.
+   *
+   * The fade used to key off capability, which resolves one frame after mount,
+   * while JourneyScene is React.lazy behind the 234 kB `three` chunk that only
+   * starts downloading after first paint. For the whole of that download the
+   * director believed there was something to dissolve into and drove the
+   * photograph to opacity 0 over a canvas that did not exist yet — a black
+   * rectangle with the chapter copy floating on it, which is precisely the
+   * outcome the comment in apply() says may never happen.
+   */
+  const canvasUpRef = useRef(false);
   // True only while the desktop director is actually scrubbing.
   const scrubRef = useRef(false);
   /**
@@ -73,6 +88,10 @@ export default function HomeSceneDirector({ children, onJump }) {
    * the layout on every ScrollTrigger refresh.
    */
   const sceneBounds = useRef({ from: 0, to: 0 });
+  /** Cached document-space geometry of each chapter panel. */
+  const slotGeom = useRef([]);
+  /** The measurements apply() took this frame, for consumers after it. */
+  const frame = useRef({ scrollNow: 0, viewH: 0 });
 
   const [chapter, setChapter] = useState(0);
   const [pinned, setPinned] = useState(false);
@@ -91,6 +110,26 @@ export default function HomeSceneDirector({ children, onJump }) {
       setUse3D(ok);
     });
     return () => cancelAnimationFrame(id);
+  }, []);
+
+  /**
+   * Is the stage on screen at all?
+   *
+   * `pinned` came only from the ScrollTrigger's onToggle, which does not fire
+   * while the scroller is sitting exactly at the trigger's start — so on load,
+   * and every time the reader returned to the top, the canvas was mounted with
+   * frameloop 'never' and drew zero frames. The carbon field then popped in on
+   * the first wheel tick. An observer answers the question directly.
+   */
+  useEffect(() => {
+    const node = stageRef.current;
+    if (!node) return undefined;
+    const io = new IntersectionObserver(
+      ([e]) => setPinned(e.isIntersecting),
+      { threshold: 0.01 }
+    );
+    io.observe(node);
+    return () => io.disconnect();
   }, []);
 
   // Nothing renders or animates behind a hidden tab.
@@ -124,6 +163,7 @@ export default function HomeSceneDirector({ children, onJump }) {
     return Math.min(1, Math.max(0, (window.scrollY - from) / (to - from)));
   }, []);
 
+
   /**
    * The scene's extent, in page pixels, taken from the panels themselves.
    *
@@ -133,21 +173,25 @@ export default function HomeSceneDirector({ children, onJump }) {
    * chapter while a different chapter's copy was on screen. Both now come from
    * the same measured pixels, so they cannot disagree.
    */
-  /** The chapter whose panel currently occupies most of the viewport. */
-  const visibleChapter = useCallback(() => {
-    const el = scope.current;
-    if (!el) return 0;
-    const slots = el.querySelectorAll('[data-chapter-slot]');
-    const vh = window.innerHeight;
+  /**
+   * The chapter whose panel currently occupies most of the viewport.
+   *
+   * Arithmetic on cached geometry, not seven getBoundingClientRect() calls a
+   * frame. Those ran after the director's ten style writes, so each one forced
+   * a synchronous layout — the panels' positions only move on resize or
+   * reflow, which is when they are measured.
+   */
+  const visibleChapter = useCallback((scrollNow, viewH) => {
+    const geom = slotGeom.current;
+    if (!geom.length) return 0;
+    const y = scrollNow === undefined ? window.scrollY : scrollNow;
+    const h = viewH === undefined ? window.innerHeight : viewH;
     let best = 0;
     let bestOverlap = 0;
-    slots.forEach((slot, i) => {
-      const panel = slot.firstElementChild;
-      if (!panel) return;
-      const r = panel.getBoundingClientRect();
-      const overlap = Math.max(0, Math.min(r.bottom, vh) - Math.max(r.top, 0));
+    for (let i = 0; i < geom.length; i += 1) {
+      const overlap = viewportOverlap(geom[i], y, h);
       if (overlap > bestOverlap) { bestOverlap = overlap; best = i; }
-    });
+    }
     return best;
   }, []);
 
@@ -170,12 +214,38 @@ export default function HomeSceneDirector({ children, onJump }) {
       from: first.getBoundingClientRect().top + top,
       to: last.getBoundingClientRect().bottom + top - window.innerHeight,
     };
+    // Every panel's position, cached here so the per-frame path never measures.
+    slotGeom.current = [...slots].map((slot) => {
+      const panel = slot.firstElementChild || slot;
+      return {
+        slotTop: slot.getBoundingClientRect().top + top,
+        slotHeight: slot.offsetHeight,
+        panelHeight: panel.offsetHeight,
+      };
+    });
   }, []);
 
   const apply = useCallback((raw) => {
     rawProgress.current = raw;
     const p = toScene();
     progress.current = p;
+
+    /*
+     * READ FIRST, THEN WRITE.
+     *
+     * apply() used to write ten inline styles and only then read window.scrollY
+     * for the stage fade — a read after a write in the same frame, which
+     * flushes style and forces a synchronous layout. Measured across 150
+     * rAF-paced scroll steps: 0 forced layouts per frame before this scene
+     * existed against 0.4-0.6 after, with script time per frame roughly
+     * doubling. Every measurement this function needs is taken here, before
+     * anything is mutated.
+     */
+    const scrollNow = window.scrollY;
+    const viewH = window.innerHeight;
+    frame.current = { scrollNow, viewH };
+    const stoneBase = stoneRef.current ? stoneRef.current.clientWidth : 0;
+    const stoneNatural = stoneRef.current ? stoneRef.current.naturalWidth : 0;
 
     // The stone: the light contracts into it, then it grows toward the viewer.
     // Written straight to style — this runs every scrub frame and must not
@@ -197,7 +267,7 @@ export default function HomeSceneDirector({ children, onJump }) {
       // simply carries the whole journey. Fading it out on a device without
       // WebGL would leave a blank stage — the one outcome this may never
       // produce.
-      stone.style.opacity = use3DRef.current
+      stone.style.opacity = canvasUpRef.current
         ? String(Math.max(opening, returned))
         : '1';
       // Slow push toward the viewer at both ends, never past the source width.
@@ -210,11 +280,25 @@ export default function HomeSceneDirector({ children, onJump }) {
       // clientWidth is the LAYOUT width and is unaffected by a transform, so it
       // is the unscaled base directly — no need to divide out the last scale,
       // which would compound its own rounding every frame.
-      const base = stone.clientWidth;
-      if (base > 0 && stone.naturalWidth > 0) {
-        grow = Math.min(grow, stone.naturalWidth / base);
+      if (stoneBase > 0 && stoneNatural > 0) {
+        grow = Math.min(grow, stoneNatural / stoneBase);
       }
       stone.style.transform = `scale(${grow.toFixed(4)})`;
+      // MASK REVEAL. The photograph is uncovered rather than merely faded up:
+      // an inset mask opens from the centre across the handover. Masking is on
+      // the short list of treatments a real photograph may receive, because it
+      // changes what you can SEE of the stone, never how the stone looks.
+      //
+      // Guarded on the canvas, exactly like the opacity above it. Written
+      // unconditionally, the mask closed to inset(50% 30%) on a device with no
+      // WebGL — erasing the photograph that the opacity guard three lines up
+      // exists to keep on screen. There is nothing to reveal FROM when there is
+      // no scene to hand over from, so there is nothing to mask.
+      const openMask = canvasUpRef.current ? (1 - returned) * 50 : 0;
+      stone.style.clipPath = openMask > 0.01
+        ? `inset(${openMask.toFixed(2)}% ${(openMask * 0.6).toFixed(2)}% round 2%)`
+        : 'none';
+
       // NO FILTER ON THE PHOTOGRAPH. Ever.
       //
       // There was a focus pull here. Scoped to the dissolve it still put 1.2px
@@ -253,6 +337,30 @@ export default function HomeSceneDirector({ children, onJump }) {
       const pull = ramp(p, 0.04, 0.16) * opening;
       air.style.filter = pull > 0.01 ? `blur(${(pull * 9).toFixed(2)}px)` : 'none';
     }
+    // DEPTH AND ROTATION. The stage carries a slow scroll-driven yaw and a
+    // small push in Z, so the scene reads as a space being moved through
+    // rather than a flat image being cross-faded. It is applied to the STAGE,
+    // which is the same thing the pointer lean already leans — the photograph
+    // is not being turned on its own axis, which a single fixed viewpoint
+    // cannot honestly do.
+    // The rotating layer holds the ATMOSPHERE and the canvas — never the
+    // photograph.
+    //
+    // rotateY under a perspective is a projective transform: it keystones what
+    // it turns, magnifying one side of the frame relative to the other
+    // (measured at 1920: a 507px left edge against a 488px right edge). On a
+    // photograph of a real graded stone that is a distortion of the goods, and
+    // it is not on the list of treatments one may receive. The stone is now a
+    // sibling of this layer rather than a child, so the scene turns around it
+    // and the photograph is only ever scaled and masked.
+    const inner = innerRef.current;
+    if (inner) {
+      const yaw = (p - 0.5) * 9;
+      const push = -60 + ramp(p, 0, 1) * 120;
+      inner.style.transform =
+        `translate3d(0, 0, ${push.toFixed(1)}px) rotateY(${yaw.toFixed(2)}deg)`;
+    }
+
     // The stage recedes once the scene is over, so the dense content sections
     // that follow are read on their own ground rather than over a photograph.
     //
@@ -261,12 +369,22 @@ export default function HomeSceneDirector({ children, onJump }) {
     // reader would meet a ghost of the stone rather than the stone.
     const stage = stageRef.current;
     if (stage) {
-      stage.style.opacity = scrubRef.current
-        ? String(1 - ramp(raw, 0.62, 0.76) * 0.82)
-        : '1';
+      // Recede only once the scene is genuinely OVER — measured against the
+      // last chapter slot, not against a hardcoded fraction of the director's
+      // span. Those thresholds (0.62-0.76) were tuned when the scene ended
+      // earlier in the page; adding the Jewellery chapter pushed the last
+      // panel past them, so the stage faded out from under the chapter the
+      // journey now resolves on.
+      const { to } = sceneBounds.current;
+      const past = to > 0 ? scrollNow - to : 0;
+      const fade = Math.min(1, Math.max(0, past / (viewH * 0.9)));
+      stage.style.opacity = scrubRef.current ? String(1 - fade * 0.85) : '1';
     }
 
-    listeners.current.forEach((fn) => fn(p, raw));
+    // Hand the frame's measurements to the listeners so they do not each
+    // have to take their own — seven getBoundingClientRect() calls after ten
+    // style writes is seven forced layouts a frame.
+    listeners.current.forEach((fn) => fn(p, raw, scrollNow, viewH));
   }, [toScene]);
 
   // Capability resolves one frame after mount; re-apply so the stone's
@@ -291,13 +409,12 @@ export default function HomeSceneDirector({ children, onJump }) {
           end: 'bottom bottom',
           scrub: 0.85,
           invalidateOnRefresh: true,
-          onToggle: (self) => setPinned(self.isActive),
           onUpdate: (self) => {
             apply(self.progress);
             const sp = progress.current;
             // Named from the panels, not from a progress fraction, so the rail
             // can never say one chapter while another's copy is on screen.
-            setChapter(visibleChapter());
+            setChapter(visibleChapter(frame.current.scrollNow, frame.current.viewH));
             // One flip, not a per-frame write: the canvas ran at full cost for
             // the last stretch of the journey producing frames nobody sees.
             setSceneOver(sp >= 1);
@@ -312,7 +429,6 @@ export default function HomeSceneDirector({ children, onJump }) {
       // telling, not a broken one.
       mm.add('(max-width: 899px), (prefers-reduced-motion: reduce)', () => {
         scrubRef.current = false;
-        setPinned(false);
         // The scene rests on its finished state: no scrub, no canvas, the real
         // photograph fully present.
         apply(1);
@@ -343,7 +459,7 @@ export default function HomeSceneDirector({ children, onJump }) {
           rawProgress.current = raw;
           progress.current = toScene();
           listeners.current.forEach((fn) => fn(progress.current, raw));
-          setChapter(visibleChapter());
+          setChapter(visibleChapter(window.scrollY, window.innerHeight));
         };
         const onScroll = () => {
           if (!frame) frame = requestAnimationFrame(read);
@@ -377,6 +493,9 @@ export default function HomeSceneDirector({ children, onJump }) {
             trade. The decorative layers carry aria-hidden individually; the
             photograph keeps a real description. */}
         <div ref={stageRef} className={styles.stage}>
+          {/* The moving part of the stage. Kept separate from .stage so the
+              rotation has a parent that owns the perspective. */}
+          <div ref={innerRef} className={styles.stageInner}>
           <span ref={haloRef} className={styles.halo} aria-hidden="true" />
 
           {/* Out-of-focus points of light, strictly BEHIND the photograph.
@@ -401,14 +520,26 @@ export default function HomeSceneDirector({ children, onJump }) {
               {/* Decorative: the carbon, plasma and rough crystal are told in
                   words by the panels beside them. */}
               <div className={styles.canvasHolder} aria-hidden="true">
-                <JourneyScene progress={progress} active={canvasLive} />
+                <JourneyScene
+                  progress={progress}
+                  active={canvasLive}
+                  onReady={() => {
+                    canvasUpRef.current = true;
+                    apply(rawProgress.current);
+                  }}
+                />
               </div>
             </Suspense>
           )}
 
-          {/* ALWAYS mounted. The finished diamond is a photograph of a real
-              stone — never a render — so it can never depend on WebGL being
-              available. Without a canvas it simply starts visible. */}
+          {/* Contrast for the copy column. Over the PLATE, never composited
+              into the stone — it darkens the air the text sits on, and the
+              photograph keeps its own exposure. */}
+          <span className={styles.readable} aria-hidden="true" />
+          </div>
+
+          {/* Outside .stageInner, deliberately: the photograph does not turn. */}
+          <span className={styles.vignette} aria-hidden="true" />
           <img
             ref={stoneRef}
             className={styles.stone}
@@ -419,11 +550,6 @@ export default function HomeSceneDirector({ children, onJump }) {
             fetchPriority="high"
             decoding="async"
           />
-          <span className={styles.vignette} aria-hidden="true" />
-          {/* Contrast for the copy column. Over the PLATE, never composited
-              into the stone — it darkens the air the text sits on, and the
-              photograph keeps its own exposure. */}
-          <span className={styles.readable} aria-hidden="true" />
         </div>
 
         {/* Inside the provider, deliberately. Rendered as a sibling of the

@@ -175,7 +175,7 @@ function Crystal({ progress }) {
 }
 
 /** Caps the device pixel ratio and releases the context on unmount. */
-function Housekeeping({ active }) {
+function Housekeeping({ active, onReady }) {
   const { gl, invalidate } = useThree();
 
   useEffect(() => {
@@ -185,6 +185,12 @@ function Housekeeping({ active }) {
   useEffect(() => {
     if (active) invalidate();
   }, [active, invalidate]);
+
+  // The canvas exists and has a context: the director may now hand the
+  // photograph over to it.
+  useEffect(() => {
+    onReady?.();
+  }, [onReady]);
 
   useEffect(() => () => {
     // Three does not release the WebGL context on its own; without this a few
@@ -197,7 +203,7 @@ function Housekeeping({ active }) {
   return null;
 }
 
-export default function JourneyScene({ progress, active }) {
+export default function JourneyScene({ progress, active, onReady }) {
   const tier = useMemo(() => qualityTier(), []);
   const count = tier === 'high' ? 2600 : 1100;
 
@@ -223,7 +229,7 @@ export default function JourneyScene({ progress, active }) {
       camera={{ position: [0, 0, 4.2], fov: 42 }}
       style={{ position: 'absolute', inset: 0 }}
     >
-      <Housekeeping active={active} />
+      <Housekeeping active={active} onReady={onReady} />
       <ambientLight intensity={0.85} />
       <directionalLight position={[3, 4, 5]} intensity={1.9} />
       <directionalLight position={[-4, -2, -3]} intensity={0.6} color="#9fb4c8" />

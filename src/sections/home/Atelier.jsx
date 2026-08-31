@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 
+import ChapterPanel, { ChapterData, ChapterMark } from '@/components/scene/ChapterPanel.jsx';
 import SplitReveal from '@/components/motion/SplitReveal.jsx';
 import AssetSlot from '@/components/media/AssetSlot.jsx';
 import MediaSlot from '@/components/media/MediaSlot.jsx';
@@ -7,10 +8,15 @@ import Reveal from '@/components/motion/Reveal.jsx';
 import useAsyncData from '@/hooks/useAsyncData.js';
 import { fetchFeaturedJewellery } from '@/lib/data/source.js';
 import useChapterEntrance from '@/hooks/useChapterEntrance.js';
+import { CHAPTERS } from '@/lib/journey.js';
 import styles from './Atelier.module.css';
 
 /**
- * Chapter 05 — jewellery, as a magazine spread.
+ * Chapter 07 — JEWELLERY, and the journey's last scene chapter.
+ *
+ * It opens with the seventh chapter panel, so the fixed scene resolves here
+ * rather than stopping at the certified stone: the stone is grown, cut, graded
+ * — and then worn. Below the panel the section becomes a magazine spread.
  *
  * Roughly a quarter of the page's weight, and it earns that by being quieter
  * than the diamond chapters rather than louder: one large plate, two smaller
@@ -25,12 +31,35 @@ export default function Atelier() {
   const { data, loading, error } = useAsyncData(() => fetchFeaturedJewellery(3));
   const pieces = data ?? [];
 
+  const seventh = CHAPTERS[6];
+
   return (
     <section id="atelier" className={styles.atelier} aria-labelledby="atelier-title">
-      <div ref={chapter} className={`ngd-page ngd-grid ${styles.inner}`}>
-        <p className={`ngd-tech ${styles.chapter}`}>Chapter 05 — Atelier</p>
+      {/* The section's own heading, as in Genesis and Precision. Without it the
+          chapter-07 panel was an h2 while chapters 01-06 are h3, so the seventh
+          chapter sat at a different level from the six it belongs with and the
+          gallery's heading came after it at the same level. */}
+      <h2 id="atelier-title" className="ngd-visually-hidden">
+        Jewellery: the finished stone, set by hand
+      </h2>
 
-        <SplitReveal as="h2" id="atelier-title" className={styles.title}>
+      {/* The journey's final chapter, over the shared stage. */}
+      <ChapterPanel index={6}>
+        <div className={`ngd-page ngd-grid ${styles.inner}`}>
+          <div className={styles.chapterCopy}>
+            <ChapterMark n={seventh.n} label={seventh.label} />
+            <SplitReveal as="h3" className={styles.chapterTitle}>{seventh.title}</SplitReveal>
+            <p className={styles.chapterBlurb}>{seventh.blurb}</p>
+            <ChapterData rows={seventh.data} />
+          </div>
+        </div>
+      </ChapterPanel>
+
+      <div className={styles.gallery}>
+      <div ref={chapter} className={`ngd-page ngd-grid ${styles.inner}`}>
+        <p className={`ngd-tech ${styles.chapter}`}>Inside the atelier</p>
+
+        <SplitReveal as="h3" className={styles.title}>
           Once the stone is right, the setting can begin.
         </SplitReveal>
 
@@ -102,6 +131,7 @@ export default function Atelier() {
             </Link>
           </>
         )}
+      </div>
       </div>
     </section>
   );

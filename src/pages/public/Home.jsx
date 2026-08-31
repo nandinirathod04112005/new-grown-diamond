@@ -17,15 +17,22 @@ import Ascent from '@/sections/home/Ascent.jsx';
  * One continuous descent from carbon into light, over ONE fixed stage and ONE
  * scroll controller.
  *
- * The journey — Hero, Genesis, Precision, Manufacture, Inventory, Atelier —
+ * The journey — Hero, Genesis, Precision, Atelier, then Manufacture and
+ * Inventory —
  * scrolls over a single sticky scene directed by HomeSceneDirector. Every
  * chapter, the scene, the rail and the crossfades read the same normalized
  * progress, so nothing on the page can hold a different opinion about where
  * the reader is. Assurance and Ascent close the page after the stage releases.
  *
- * The weighting is deliberate: five of the six journey sections are the
- * diamonds themselves — how they are grown, cut, made and held — and one is
- * the jewellery they end up in.
+ * The seven scene chapters run Carbon → Plasma → Crystal Growth → Rough
+ * Diamond → Precision Cut → Certified Brilliance → Jewellery, and they are
+ * CONTIGUOUS: Genesis carries 01-03, Precision 04-06 and Atelier 07. The
+ * cinematic journey therefore resolves on the finished piece, and Manufacture
+ * and Inventory follow as the supporting detail — the factory and the vault —
+ * once the scene is over.
+ *
+ * The weighting is deliberate: four of the five content sections are the
+ * diamonds themselves, and one is the jewellery they end up in.
  */
 export default function Home() {
   const { scrollTo } = useSmoothScroll();
@@ -66,9 +73,9 @@ export default function Home() {
           <Hero />
           <Genesis />
           <Precision />
+          <Atelier />
           <Manufacture />
           <Inventory />
-          <Atelier />
         </HomeSceneDirector>
         <Assurance />
         <Ascent />

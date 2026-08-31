@@ -4,7 +4,7 @@ import useChapterEntrance from '@/hooks/useChapterEntrance.js';
 import styles from './Assurance.module.css';
 
 /**
- * Chapter 06 — what comes with the stone.
+ * ASSURANCE — what comes with the stone.
  *
  * Set as a specification sheet, because that is what trust looks like in this
  * trade: terms in the left column, plain answers in the right. No icon grid —
@@ -55,7 +55,7 @@ export default function Assurance() {
   return (
     <section id="assurance" className={styles.assurance} aria-labelledby="assurance-title">
       <div ref={chapter} className={`ngd-page ngd-grid ${styles.inner}`}>
-        <p className={`ngd-tech ${styles.chapter}`}>Chapter 06 — Assurance</p>
+        <p className={`ngd-tech ${styles.chapter}`}>Assurance</p>
 
         <SplitReveal as="h2" id="assurance-title" className={styles.title}>
           Verified by someone who does not work for us.

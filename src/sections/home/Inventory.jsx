@@ -13,7 +13,7 @@ import useChapterEntrance from '@/hooks/useChapterEntrance.js';
 import styles from './Inventory.module.css';
 
 /**
- * Chapter 03 — real stones.
+ * THE INVENTORY — real stones, supporting the journey rather than part of it.
  *
  * A ledger, not a card grid: one row per stone, the way a dealer's list reads.
  * Hovering a row raises that stone's plate in the fixed inspection panel, so
@@ -46,7 +46,7 @@ export default function Inventory() {
   return (
     <section ref={scope} id="inventory" className={styles.inventory} aria-labelledby="inventory-title">
       <div ref={chapter} className={`ngd-page ngd-grid ${styles.inner}`}>
-        <p className={`ngd-tech ${styles.chapter}`}>Chapter 03 — Inventory</p>
+        <p className={`ngd-tech ${styles.chapter}`}>The inventory</p>
 
         <SplitReveal as="h2" id="inventory-title" className={styles.title}>
           Stones we actually hold.

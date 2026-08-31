@@ -11,9 +11,20 @@
  * chapter begins. `to` is derived, so the ranges can never drift apart.
  */
 
+/**
+ * `label` is the chapter's full name, used in the panels. `short` is what the
+ * fixed rail shows.
+ *
+ * The rail is an overlay pinned to the right edge, and its width was set by
+ * whichever label happened to be active — "Certified Brilliance" expanded it
+ * leftward far enough to sit on the photograph, at every desktop width. A rail
+ * whose footprint depends on its content cannot be laid out around; short
+ * forms make it bounded and predictable.
+ */
 const RAW = [
   {
     key: 'carbon',
+    short: 'Carbon',
     n: '01',
     label: 'Carbon',
     at: 0,
@@ -24,6 +35,7 @@ const RAW = [
   },
   {
     key: 'plasma',
+    short: 'Plasma',
     n: '02',
     label: 'Plasma',
     at: 0.17,
@@ -34,6 +46,7 @@ const RAW = [
   },
   {
     key: 'growth',
+    short: 'Growth',
     n: '03',
     label: 'Crystal Growth',
     at: 0.36,
@@ -44,6 +57,7 @@ const RAW = [
   },
   {
     key: 'rough',
+    short: 'Rough',
     n: '04',
     label: 'Rough Diamond',
     at: 0.56,
@@ -54,6 +68,7 @@ const RAW = [
   },
   {
     key: 'cut',
+    short: 'Cutting',
     n: '05',
     label: 'Precision Cut',
     at: 0.74,
@@ -64,6 +79,7 @@ const RAW = [
   },
   {
     key: 'certified',
+    short: 'Certified',
     n: '06',
     label: 'Certified Brilliance',
     at: 0.9,
@@ -71,6 +87,17 @@ const RAW = [
     blurb:
       'By IGI or GIA, with the report number inscribed on the girdle. The stone you can ask to see today began as gas in a sealed chamber.',
     data: [['Grading', 'IGI · GIA'], ['Inscription', 'Girdle'], ['Location', 'Surat']],
+  },
+  {
+    key: 'jewellery',
+    short: 'Jewellery',
+    n: '07',
+    label: 'Jewellery',
+    at: 1,
+    title: 'And then it is worn.',
+    blurb:
+      'Set by hand in our own atelier, in platinum or eighteen carat. The stone decides the setting — never the other way round, which is how a good stone ends up in a mounting that fights it.',
+    data: [['Metals', 'Pt · 18k'], ['Setting', 'By hand'], ['Made', 'In house']],
   },
 ];
 
@@ -114,7 +141,13 @@ export const CHAPTERS = RAW.map((c, i) => ({
  * depict rough crystal only. The moment cutting begins, the stone on screen is
  * a photograph of an actual company-owned diamond.
  */
-export const HANDOFF = { from: 4 / 6, to: 5 / 6 };
+/**
+ * Where generated geometry stops and the REAL PHOTOGRAPH takes over — on a
+ * chapter boundary, not a hand-picked number: the crystal is gone as Precision
+ * Cutting begins, and the photograph is fully present by Certified Brilliance,
+ * which then carries through Jewellery.
+ */
+export const HANDOFF = { from: 4 / 7, to: 5 / 7 };
 
 /** Which chapter index a normalized progress falls in. */
 export function chapterAt(p) {
