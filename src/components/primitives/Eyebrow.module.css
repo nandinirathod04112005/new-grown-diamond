@@ -1,7 +1,7 @@
 .eyebrow {
   display: flex;
   align-items: center;
-  gap: var(--space-4);
+  gap: var(--s4);
   font-family: var(--font-body);
   font-size: 0.7rem;
   font-weight: 400;

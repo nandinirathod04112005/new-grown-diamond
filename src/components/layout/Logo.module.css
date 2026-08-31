@@ -1,7 +1,7 @@
 .logo {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--s3);
   color: var(--bright);
 }
 
