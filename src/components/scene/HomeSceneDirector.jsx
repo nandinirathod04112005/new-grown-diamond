@@ -294,8 +294,20 @@ export default function HomeSceneDirector({ children, onJump }) {
       // WebGL — erasing the photograph that the opacity guard three lines up
       // exists to keep on screen. There is nothing to reveal FROM when there is
       // no scene to hand over from, so there is nothing to mask.
-      const openMask = canvasUpRef.current ? (1 - returned) * 50 : 0;
-      stone.style.clipPath = openMask > 0.01
+      // The mask belongs to the RETURN, and only to the return.
+      //
+      // `openMask` is (1 - returned) * 50, which is 50 — a full clip — whenever
+      // `returned` is 0. That is the whole of the hero, before the handover has
+      // started. Gating on `openMask > 0.01` therefore erased the hero diamond
+      // completely, and the suite stayed green because its photograph test
+      // checks the LAST chapter, where `returned` is 1 and no mask applies.
+      //
+      // So the guard is the range of the handover itself, plus the canvas guard
+      // above it: no canvas means nothing to reveal from, and outside the
+      // handover there is nothing being revealed.
+      const masking = canvasUpRef.current && returned > 0.001 && returned < 0.999;
+      const openMask = (1 - returned) * 50;
+      stone.style.clipPath = masking
         ? `inset(${openMask.toFixed(2)}% ${(openMask * 0.6).toFixed(2)}% round 2%)`
         : 'none';
 

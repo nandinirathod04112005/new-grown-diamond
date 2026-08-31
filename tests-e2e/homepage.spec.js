@@ -38,6 +38,58 @@ test.describe('NGD homepage', () => {
     expect(errors, `console errors: ${errors.join(' | ')}`).toHaveLength(0);
   });
 
+  test('the photograph is actually visible, not just present', async ({ page }) => {
+    await openHome(page);
+    await page.waitForTimeout(2600);
+
+    // The suite once passed 110/110 with the hero diamond clipped to nothing.
+    // Every existing check asked whether the <img> was ATTACHED, had the right
+    // src, or had opacity at the LAST chapter — none asked whether any of it
+    // was on screen at the top of the page, which is where a visitor starts.
+    //
+    // Rendered area, not attachment: opacity, clip-path, transforms and
+    // ancestors all get a vote, which is what a reader's eye does too.
+    const shown = await page.evaluate(() => {
+      const img = document.querySelector('main img');
+      if (!img) return null;
+      const r = img.getBoundingClientRect();
+      const cs = getComputedStyle(img);
+
+      // A clip-path that removes everything is as invisible as opacity 0.
+      const clip = cs.clipPath || 'none';
+      const inset = /inset\(\s*([\d.]+)%/.exec(clip);
+      const clippedAway = inset ? Number(inset[1]) >= 45 : false;
+
+      let hidden = false;
+      for (let a = img.parentElement; a && a !== document.body; a = a.parentElement) {
+        const ac = getComputedStyle(a);
+        if (ac.display === 'none' || ac.visibility === 'hidden' || Number(ac.opacity) < 0.05) {
+          hidden = true;
+          break;
+        }
+      }
+      return {
+        width: Math.round(r.width),
+        height: Math.round(r.height),
+        opacity: Number(cs.opacity),
+        clip,
+        clippedAway,
+        hidden,
+        onScreen: r.bottom > 0 && r.top < window.innerHeight && r.right > 0 && r.left < window.innerWidth,
+      };
+    });
+
+    expect(shown, 'no photograph in main').not.toBeNull();
+    expect(shown.hidden, 'an ancestor is hiding the photograph').toBe(false);
+    expect(shown.opacity, `photograph at opacity ${shown.opacity} on the hero`).toBeGreaterThan(0.3);
+    expect(
+      shown.clippedAway,
+      `photograph clipped away on the hero: clip-path ${shown.clip}`
+    ).toBe(false);
+    expect(shown.onScreen, 'photograph is positioned off screen').toBe(true);
+    expect(shown.width, 'photograph has no rendered width').toBeGreaterThan(40);
+  });
+
   test('the finished diamond is a photograph, never a render', async ({ page }) => {
     await openHome(page);
     await page.waitForTimeout(2500);
