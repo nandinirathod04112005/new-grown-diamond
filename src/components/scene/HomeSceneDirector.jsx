@@ -6,6 +6,7 @@ import { supports3D } from '@/components/three/capability.js';
 import { HANDOFF, ramp } from '@/lib/journey.js';
 import stoneUrl from '@/assets/diamonds/ngd-brilliant-macro.webp';
 import JourneyRail from './JourneyRail.jsx';
+import { viewportOverlap } from './stickyGeometry.js';
 import { SceneProgressContext } from './sceneProgress.js';
 import styles from './HomeSceneDirector.module.css';
 
@@ -87,6 +88,10 @@ export default function HomeSceneDirector({ children, onJump }) {
    * the layout on every ScrollTrigger refresh.
    */
   const sceneBounds = useRef({ from: 0, to: 0 });
+  /** Cached document-space geometry of each chapter panel. */
+  const slotGeom = useRef([]);
+  /** The measurements apply() took this frame, for consumers after it. */
+  const frame = useRef({ scrollNow: 0, viewH: 0 });
 
   const [chapter, setChapter] = useState(0);
   const [pinned, setPinned] = useState(false);
@@ -158,6 +163,7 @@ export default function HomeSceneDirector({ children, onJump }) {
     return Math.min(1, Math.max(0, (window.scrollY - from) / (to - from)));
   }, []);
 
+
   /**
    * The scene's extent, in page pixels, taken from the panels themselves.
    *
@@ -167,21 +173,25 @@ export default function HomeSceneDirector({ children, onJump }) {
    * chapter while a different chapter's copy was on screen. Both now come from
    * the same measured pixels, so they cannot disagree.
    */
-  /** The chapter whose panel currently occupies most of the viewport. */
-  const visibleChapter = useCallback(() => {
-    const el = scope.current;
-    if (!el) return 0;
-    const slots = el.querySelectorAll('[data-chapter-slot]');
-    const vh = window.innerHeight;
+  /**
+   * The chapter whose panel currently occupies most of the viewport.
+   *
+   * Arithmetic on cached geometry, not seven getBoundingClientRect() calls a
+   * frame. Those ran after the director's ten style writes, so each one forced
+   * a synchronous layout — the panels' positions only move on resize or
+   * reflow, which is when they are measured.
+   */
+  const visibleChapter = useCallback((scrollNow, viewH) => {
+    const geom = slotGeom.current;
+    if (!geom.length) return 0;
+    const y = scrollNow === undefined ? window.scrollY : scrollNow;
+    const h = viewH === undefined ? window.innerHeight : viewH;
     let best = 0;
     let bestOverlap = 0;
-    slots.forEach((slot, i) => {
-      const panel = slot.firstElementChild;
-      if (!panel) return;
-      const r = panel.getBoundingClientRect();
-      const overlap = Math.max(0, Math.min(r.bottom, vh) - Math.max(r.top, 0));
+    for (let i = 0; i < geom.length; i += 1) {
+      const overlap = viewportOverlap(geom[i], y, h);
       if (overlap > bestOverlap) { bestOverlap = overlap; best = i; }
-    });
+    }
     return best;
   }, []);
 
@@ -204,12 +214,38 @@ export default function HomeSceneDirector({ children, onJump }) {
       from: first.getBoundingClientRect().top + top,
       to: last.getBoundingClientRect().bottom + top - window.innerHeight,
     };
+    // Every panel's position, cached here so the per-frame path never measures.
+    slotGeom.current = [...slots].map((slot) => {
+      const panel = slot.firstElementChild || slot;
+      return {
+        slotTop: slot.getBoundingClientRect().top + top,
+        slotHeight: slot.offsetHeight,
+        panelHeight: panel.offsetHeight,
+      };
+    });
   }, []);
 
   const apply = useCallback((raw) => {
     rawProgress.current = raw;
     const p = toScene();
     progress.current = p;
+
+    /*
+     * READ FIRST, THEN WRITE.
+     *
+     * apply() used to write ten inline styles and only then read window.scrollY
+     * for the stage fade — a read after a write in the same frame, which
+     * flushes style and forces a synchronous layout. Measured across 150
+     * rAF-paced scroll steps: 0 forced layouts per frame before this scene
+     * existed against 0.4-0.6 after, with script time per frame roughly
+     * doubling. Every measurement this function needs is taken here, before
+     * anything is mutated.
+     */
+    const scrollNow = window.scrollY;
+    const viewH = window.innerHeight;
+    frame.current = { scrollNow, viewH };
+    const stoneBase = stoneRef.current ? stoneRef.current.clientWidth : 0;
+    const stoneNatural = stoneRef.current ? stoneRef.current.naturalWidth : 0;
 
     // The stone: the light contracts into it, then it grows toward the viewer.
     // Written straight to style — this runs every scrub frame and must not
@@ -244,9 +280,8 @@ export default function HomeSceneDirector({ children, onJump }) {
       // clientWidth is the LAYOUT width and is unaffected by a transform, so it
       // is the unscaled base directly — no need to divide out the last scale,
       // which would compound its own rounding every frame.
-      const base = stone.clientWidth;
-      if (base > 0 && stone.naturalWidth > 0) {
-        grow = Math.min(grow, stone.naturalWidth / base);
+      if (stoneBase > 0 && stoneNatural > 0) {
+        grow = Math.min(grow, stoneNatural / stoneBase);
       }
       stone.style.transform = `scale(${grow.toFixed(4)})`;
       // MASK REVEAL. The photograph is uncovered rather than merely faded up:
@@ -341,12 +376,15 @@ export default function HomeSceneDirector({ children, onJump }) {
       // panel past them, so the stage faded out from under the chapter the
       // journey now resolves on.
       const { to } = sceneBounds.current;
-      const past = to > 0 ? window.scrollY - to : 0;
-      const fade = Math.min(1, Math.max(0, past / (window.innerHeight * 0.9)));
+      const past = to > 0 ? scrollNow - to : 0;
+      const fade = Math.min(1, Math.max(0, past / (viewH * 0.9)));
       stage.style.opacity = scrubRef.current ? String(1 - fade * 0.85) : '1';
     }
 
-    listeners.current.forEach((fn) => fn(p, raw));
+    // Hand the frame's measurements to the listeners so they do not each
+    // have to take their own — seven getBoundingClientRect() calls after ten
+    // style writes is seven forced layouts a frame.
+    listeners.current.forEach((fn) => fn(p, raw, scrollNow, viewH));
   }, [toScene]);
 
   // Capability resolves one frame after mount; re-apply so the stone's
@@ -376,7 +414,7 @@ export default function HomeSceneDirector({ children, onJump }) {
             const sp = progress.current;
             // Named from the panels, not from a progress fraction, so the rail
             // can never say one chapter while another's copy is on screen.
-            setChapter(visibleChapter());
+            setChapter(visibleChapter(frame.current.scrollNow, frame.current.viewH));
             // One flip, not a per-frame write: the canvas ran at full cost for
             // the last stretch of the journey producing frames nobody sees.
             setSceneOver(sp >= 1);
@@ -421,7 +459,7 @@ export default function HomeSceneDirector({ children, onJump }) {
           rawProgress.current = raw;
           progress.current = toScene();
           listeners.current.forEach((fn) => fn(progress.current, raw));
-          setChapter(visibleChapter());
+          setChapter(visibleChapter(window.scrollY, window.innerHeight));
         };
         const onScroll = () => {
           if (!frame) frame = requestAnimationFrame(read);

@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 
 import SplitReveal from '@/components/motion/SplitReveal.jsx';
 import { CHAPTERS, ramp } from '@/lib/journey.js';
+import { viewportOverlap } from './stickyGeometry.js';
 import { useSceneProgressOptional } from './sceneProgress.js';
 import styles from './ChapterPanel.module.css';
 
@@ -27,8 +28,6 @@ export default function ChapterPanel({ index, children, className = '' }) {
   useEffect(() => {
     const node = panel.current;
     if (!node || !scene) return undefined;
-    const slot = node.parentElement;
-    if (!slot) return undefined;
 
     /**
      * Opacity comes from where this panel actually IS, not from where the
@@ -43,18 +42,36 @@ export default function ChapterPanel({ index, children, className = '' }) {
      * was at zero. Reading the element's own rect cannot drift, because there
      * is nothing left to drift from.
      */
-    const measure = () => {
+    /*
+     * Geometry is cached, not measured every frame.
+     *
+     * This used to call getBoundingClientRect() on each scrub tick, in each of
+     * seven panels, immediately after the director had written ten inline
+     * styles — so every frame paid seven forced synchronous layouts. The
+     * panel's position in the document only changes on resize or reflow, so it
+     * is measured then and the per-frame work becomes arithmetic.
+     */
+    // The SLOT is the stable thing: an ordinary block whose document position
+    // only moves on reflow. The panel inside it is sticky, so its own rect is
+    // its live position and caching that would be caching a moving target —
+    // which made the rail disagree with the panels at three scroll positions.
+    const slot = node.parentElement;
+    let geom = null;
+    const remeasure = () => {
+      if (!slot) return;
+      geom = {
+        slotTop: slot.getBoundingClientRect().top + window.scrollY,
+        slotHeight: slot.offsetHeight,
+        panelHeight: node.offsetHeight,
+      };
+    };
+
+    const paint = (scrollNow, viewH) => {
+      if (!geom) return;
       // How much of THIS PANEL is on screen, as a fraction of the viewport.
-      //
-      // The first attempt measured progress through the slot's sticky travel,
-      // which only describes the panel once it is already stuck — so a panel
-      // approaching the top of the viewport, fully on screen, was held at
-      // opacity 0. Overlap answers the question the reader actually cares
-      // about: is this text in front of me?
-      const r = node.getBoundingClientRect();
-      const vh = window.innerHeight;
-      const overlap = Math.max(0, Math.min(r.bottom, vh) - Math.max(r.top, 0));
-      const frac = vh > 0 ? overlap / vh : 0;
+      // Overlap answers the question the reader actually cares about: is this
+      // text in front of me?
+      const frac = viewportOverlap(geom, scrollNow, viewH);
 
       const shown = ramp(frac, 0.3, 0.82);
       node.style.opacity = String(shown);
@@ -63,13 +80,25 @@ export default function ChapterPanel({ index, children, className = '' }) {
       node.style.pointerEvents = shown > 0.5 ? 'auto' : 'none';
     };
 
-    measure();
+    remeasure();
+    paint(window.scrollY, window.innerHeight);
+
     // Ticked by the director's single controller — no ScrollTrigger of its own.
-    const stop = scene.subscribe(measure);
-    window.addEventListener('resize', measure, { passive: true });
+    const stop = scene.subscribe((p, raw, scrollNow, viewH) => {
+      paint(
+        scrollNow === undefined ? window.scrollY : scrollNow,
+        viewH === undefined ? window.innerHeight : viewH
+      );
+    });
+
+    const onResize = () => { remeasure(); paint(window.scrollY, window.innerHeight); };
+    window.addEventListener('resize', onResize, { passive: true });
+    // Fonts settle after first paint and move everything below them.
+    if (document.fonts?.ready) document.fonts.ready.then(onResize).catch(() => {});
+
     return () => {
       stop();
-      window.removeEventListener('resize', measure);
+      window.removeEventListener('resize', onResize);
     };
   }, [scene, chapter, index]);
 
