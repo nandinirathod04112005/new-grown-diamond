@@ -1,0 +1,102 @@
+/* The slot owns this chapter's scroll length and is the panel's sticky
+   containing block, so the panel is released before the next one arrives. */
+.slot { min-height: 165svh; }
+
+/* Each panel holds its content centred for the length of its slot while the
+   scene changes behind it. */
+.panel {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  display: grid;
+  align-content: center;
+  padding-block: var(--s8);
+  will-change: opacity, clip-path;
+}
+
+.mark {
+  display: flex;
+  align-items: center;
+  gap: var(--s4);
+  margin-bottom: var(--s5);
+  font-size: var(--step--2);
+  letter-spacing: var(--track-tech);
+  text-transform: uppercase;
+  color: var(--ash);
+}
+.markN { color: var(--champagne); }
+.markRule { width: 46px; height: 1px; background: currentColor; opacity: 0.5; }
+.markLabel { color: var(--ash); }
+
+.data {
+  display: grid;
+  gap: 0;
+  margin-top: var(--s6);
+  max-width: 34ch;
+}
+.dataRow {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--s4);
+  padding-block: var(--s3);
+  border-bottom: 1px solid var(--line);
+}
+.dataRow dt {
+  font-size: var(--step--2);
+  letter-spacing: var(--track-tech);
+  text-transform: uppercase;
+  /* --ash is 5.76:1 on the page ground; --ash-2 is 3.00:1 and this is 10.56px
+     text, where AA requires 4.5:1. The value column beside it is 12.29:1, so
+     the key column was the only half anyone struggled to read. */
+  color: var(--ash);
+}
+.dataRow dd {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--step-0);
+  color: var(--bright-dim);
+}
+
+/* Small screens and reduced motion: panels are ordinary blocks in the flow,
+   fully opaque, never sticky. The director does not drive them there. */
+/* Small screens: the chapters carry their own ground.
+   The stage is sticky behind the whole journey, so on a phone — where panels
+   are full-width blocks rather than a column beside the stone — body copy ran
+   straight across the photograph's near-white facets at 1.8:1. The scrim that
+   used to solve that painted OVER the stone, which is not allowed. Giving the
+   chapters an opaque ground fixes the contrast without touching the goods:
+   the hero still reads over the photograph, and the chapters read on carbon. */
+@media (max-width: 899px) {
+  .slot { min-height: 0; }
+  .panel {
+    background: var(--carbon);
+    position: relative;
+    height: auto;
+    min-height: 0;
+    padding-block: var(--s9);
+    opacity: 1 !important;
+    clip-path: none !important;
+    pointer-events: auto !important;
+    will-change: auto;
+  }
+}
+
+/* Reduced motion gets the same opaque ground as small screens, and for the
+   same reason: the panels become ordinary blocks over a sticky, full-brightness
+   stage, so without it the copy is back on the photograph. Scoping the fix to
+   max-width:899px left every desktop reduced-motion reader with exactly the
+   problem it was added to solve. */
+@media (prefers-reduced-motion: reduce) {
+  .slot { min-height: 0; }
+  .panel {
+    background: var(--carbon);
+    position: relative;
+    height: auto;
+    min-height: 0;
+    padding-block: var(--s9);
+    opacity: 1 !important;
+    clip-path: none !important;
+    pointer-events: auto !important;
+    will-change: auto;
+  }
+}

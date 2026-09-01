@@ -41,12 +41,13 @@ test.describe('WebGL fallback', () => {
     expect(errors, `errors without WebGL: ${errors.join(' | ')}`).toHaveLength(0);
   });
 
-  test('genesis chapter still reads without its particle field', async ({ page }) => {
+  test('the journey still reads without its particle field', async ({ page }) => {
     await openHome(page);
     await page.evaluate(() => document.getElementById('genesis')?.scrollIntoView({ block: 'start', behavior: 'instant' }));
     await page.waitForTimeout(900);
 
-    await expect(page.locator('#genesis').getByRole('heading')).toBeVisible();
+    // Several headings now: a section heading plus one per chapter panel.
+    await expect(page.locator('#genesis').getByRole('heading').first()).toBeAttached();
     const hidden = await invisibleText(page);
     const inGenesis = hidden.filter((h) => h.section === 'genesis');
     expect(inGenesis, `genesis prose hidden without WebGL: ${JSON.stringify(inGenesis)}`).toHaveLength(0);

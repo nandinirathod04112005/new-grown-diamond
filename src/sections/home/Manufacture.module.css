@@ -1,9 +1,4 @@
 .manufacture { position: relative; padding-block: var(--chapter-y) var(--s8); background: var(--carbon); overflow: hidden; }
-.manufacture::before {
-  content: attr(data-chapter); position: absolute; right: 0; top: 0; pointer-events: none;
-  font-family: var(--font-display); font-size: clamp(13rem, 32vw, 36rem); line-height: 0.8;
-  color: var(--bright); opacity: 0.018;
-}
 
 .head { margin-bottom: var(--s8); }
 .title { margin-top: var(--s5); font-size: var(--step-4); color: var(--bright); max-width: 12ch; }
@@ -20,7 +15,6 @@
 .track { display: flex; gap: var(--s5); width: max-content; padding-bottom: var(--s5); }
 
 .stage {
-  --active: 0;
   position: relative;
   flex: 0 0 auto;
   width: min(80vw, 340px);
@@ -43,7 +37,7 @@
   font-size: 14rem;
   line-height: 1;
   color: var(--bright);
-  opacity: calc(0.035 + var(--active) * 0.07);
+  opacity: 0.045;
   pointer-events: none;
 }
 
@@ -67,20 +61,14 @@
 .more:hover, .more:focus-visible { color: var(--champagne-soft); }
 
 @media (min-width: 900px) {
-  /* Pinned and scrubbed by GSAP, so native scrolling must be off or the two
-     compete for the same gesture. `hidden`, never `visible`: the track is
-     wider than the viewport by design and `visible` would push that width
-     onto the document and scroll the whole page sideways. */
-  .viewport { overflow: hidden; scroll-snap-type: none; }
-  .stage {
-    width: 380px; min-height: 30rem;
-    transform: translateY(calc((1 - var(--active)) * 2.5rem)) scale(calc(0.94 + var(--active) * 0.06));
-    border-color: color-mix(in oklab, var(--line) calc((1 - var(--active)) * 100%), var(--line-gold));
-    transition: border-color 120ms linear;
-  }
+  /* A native scroller at every width now that the GSAP pin is gone — the two
+     used to compete for the same gesture. `auto`, never `visible`: the track
+     is wider than the viewport by design and `visible` would push that width
+     onto the document and scroll the whole PAGE sideways. */
+  .viewport { overflow-x: auto; scroll-snap-type: x proximity; }
+  .stage { width: 380px; min-height: 30rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .viewport { overflow-x: auto; scroll-snap-type: x proximity; }
-  .stage { transform: none; transition: none; }
 }

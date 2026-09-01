@@ -123,29 +123,52 @@ function noise3(x, y, z, seed = 1) {
  * field, then flattened in bands, which is roughly what an as-grown CVD plate
  * looks like: blocky, stepped, opaque.
  */
-export function createRoughPositions(cutGeometry) {
-  const src = cutGeometry.getAttribute('position');
-  const out = new Float32Array(src.count * 3);
+/**
+ * A CVD rough crystal: a flat, stepped, irregular BLOCK.
+ *
+ * This is built from scratch rather than derived from the brilliant, and that
+ * is the whole point. The previous version projected the brilliant's vertices
+ * onto a box, which changes where the vertices sit but not how they are
+ * CONNECTED — the mesh kept the crown, girdle and pavilion rings it was built
+ * from, so it still read unmistakably as a cut gem with a table and a point.
+ * Looking at a screenshot is what settled it; the arithmetic looked fine.
+ *
+ * Generated geometry may depict rough crystal ONLY. Anything a viewer could
+ * take for a finished diamond breaks that rule, so the safe construction is one
+ * that cannot accidentally resemble a gem: a subdivided slab, quantised into
+ * growth steps, with no radial symmetry anywhere in it.
+ */
+export function createRoughCrystalGeometry() {
+  // Tabular: wide, deep, and distinctly flat, as grown on a seed plate.
+  const geo = new THREE.BoxGeometry(2.0, 0.92, 1.7, 4, 3, 4);
+  const pos = geo.getAttribute('position');
   const v = new THREE.Vector3();
+  const STEP = 0.13;
 
-  for (let i = 0; i < src.count; i += 1) {
-    v.fromBufferAttribute(src, i);
-    const dir = v.clone().normalize();
+  for (let i = 0; i < pos.count; i += 1) {
+    v.fromBufferAttribute(pos, i);
 
-    // Bands of growth, plus a coarse lump so no two sides match.
-    //
-    // Y stays mostly the vertex's own height. Quantising it outright collapses
-    // many vertices onto the same plane, which turns neighbouring triangles
-    // inside out and reads as a spiky mess rather than a blocky crystal — the
-    // banding has to be a nudge, not a replacement.
-    const band = Math.round(v.y * 3.2) / 3.2;
-    const y = v.y * 0.72 + band * 0.28;
-    const lump = noise3(Math.round(dir.x * 3), Math.round(dir.y * 3), Math.round(dir.z * 3), 7);
+    // Stepped growth bands up the crystal's height.
+    const banded = Math.round(v.y / STEP) * STEP;
 
-    const swell = 1.08 + lump * 0.2;
-    out[i * 3] = v.x * swell + dir.x * 0.04;
-    out[i * 3 + 1] = y * swell + dir.y * 0.03;
-    out[i * 3 + 2] = v.z * swell + dir.z * 0.04;
+    // A coarse, deterministic lump per lattice cell, so no two faces match and
+    // nothing is symmetrical.
+    const lump = noise3(
+      Math.round(v.x * 2.2),
+      Math.round(banded * 2.2),
+      Math.round(v.z * 2.2),
+      11
+    );
+
+    pos.setXYZ(
+      i,
+      v.x * (1 + lump * 0.14) + lump * 0.06,
+      banded * (1 + lump * 0.1),
+      v.z * (1 + lump * 0.12) - lump * 0.05
+    );
   }
-  return out;
+
+  pos.needsUpdate = true;
+  geo.computeVertexNormals();
+  return geo;
 }

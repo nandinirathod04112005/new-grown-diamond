@@ -23,7 +23,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-5);
+  gap: var(--s5);
   min-height: 84px;
 }
 
@@ -53,7 +53,7 @@
   left: 50%;
   translate: -50% 0;
   min-width: 420px;
-  padding: var(--space-6);
+  padding: var(--s6);
   background: rgba(19, 19, 21, 0.97);
   backdrop-filter: blur(18px);
   border: 1px solid var(--line);
@@ -66,10 +66,10 @@
 }
 .panelOpen { opacity: 1; transform: translateY(0); }
 
-.panelInner { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-7); }
+.panelInner { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s7); }
 
 .colTitle {
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--s4);
   font-size: 0.62rem;
   letter-spacing: var(--tracking-wide);
   text-transform: uppercase;
@@ -91,7 +91,7 @@
   color: var(--champagne-soft);
 }
 
-.actions { display: flex; align-items: center; gap: var(--space-4); }
+.actions { display: flex; align-items: center; gap: var(--s4); }
 .cta { display: none; }
 
 .burger {
@@ -113,7 +113,7 @@
   z-index: 200;
   display: none;
   flex-direction: column;
-  padding: var(--space-5) var(--gutter) var(--space-8);
+  padding: var(--s5) var(--gutter) var(--s8);
   background: var(--carbon);
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -126,12 +126,12 @@
   align-items: center;
   justify-content: space-between;
   min-height: 84px;
-  margin-bottom: var(--space-7);
+  margin-bottom: var(--s7);
 }
-.drawerClose { color: var(--bright); padding: var(--space-2); }
+.drawerClose { color: var(--bright); padding: var(--s2); }
 
 .drawerNav { flex: 1; }
-.drawerNav ul { display: grid; gap: var(--space-2); }
+.drawerNav ul { display: grid; gap: var(--s2); }
 
 .drawerLink {
   display: block;
@@ -152,7 +152,12 @@
   to { opacity: 1; transform: none; }
 }
 
-.drawerFoot { margin-top: var(--space-8); }
+/* The nav above carries `flex: 1`, so in this column the foot is already
+   pushed to the bottom of the drawer. A 4rem margin on top of that was 4rem of
+   pure overflow — it pushed the call to action past the fold on a 375px phone,
+   where it had previously fitted. The margin only needs to keep the CTA off the
+   last link when the content is tall enough to scroll. */
+.drawerFoot { margin-top: var(--s5); }
 
 @media (prefers-reduced-motion: reduce) {
   .drawerLink { opacity: 1; animation: none; }

@@ -1,18 +1,22 @@
-import { useRef } from 'react';
 import { Link } from 'react-router-dom';
 
+import ChapterPanel, { ChapterData, ChapterMark } from '@/components/scene/ChapterPanel.jsx';
 import SplitReveal from '@/components/motion/SplitReveal.jsx';
 import AssetSlot from '@/components/media/AssetSlot.jsx';
+import MediaSlot from '@/components/media/MediaSlot.jsx';
 import Reveal from '@/components/motion/Reveal.jsx';
 import useAsyncData from '@/hooks/useAsyncData.js';
 import { fetchFeaturedJewellery } from '@/lib/data/source.js';
 import useChapterEntrance from '@/hooks/useChapterEntrance.js';
-import { gsap, useGSAP } from '@/lib/motion/gsap.js';
-import { MQ } from '@/lib/motion/media.js';
+import { CHAPTERS } from '@/lib/journey.js';
 import styles from './Atelier.module.css';
 
 /**
- * Chapter 05 — jewellery, as a magazine spread.
+ * Chapter 07 — JEWELLERY, and the journey's last scene chapter.
+ *
+ * It opens with the seventh chapter panel, so the fixed scene resolves here
+ * rather than stopping at the certified stone: the stone is grown, cut, graded
+ * — and then worn. Below the panel the section becomes a magazine spread.
  *
  * Roughly a quarter of the page's weight, and it earns that by being quieter
  * than the diamond chapters rather than louder: one large plate, two smaller
@@ -24,41 +28,38 @@ import styles from './Atelier.module.css';
  */
 export default function Atelier() {
   const chapter = useChapterEntrance();
-  const scope = useRef(null);
   const { data, loading, error } = useAsyncData(() => fetchFeaturedJewellery(3));
   const pieces = data ?? [];
 
-  useGSAP(() => {
-    const mm = gsap.matchMedia();
-    mm.add(MQ.motion, () => {
-      const plates = gsap.utils.toArray(`.${styles.plateLead}, .${styles.plateSmall}`, scope.current);
-      const reveals = plates.map((plate, index) => gsap.from(plate, {
-        clipPath: index === 0 ? 'inset(0 0 100% 0)' : 'inset(100% 0 0 0)',
-        y: index === 0 ? 60 : 90,
-        duration: 1.45,
-        ease: 'expo.out',
-        scrollTrigger: { trigger: plate, start: 'top 88%', once: true },
-      }));
-      return () => reveals.forEach((tween) => { tween.scrollTrigger?.kill(); tween.kill(); });
-    });
-    mm.add(MQ.desktop, () => {
-      const lead = scope.current?.querySelector(`.${styles.plateLead}`);
-      const pair = scope.current?.querySelector(`.${styles.pair}`);
-      const parallax = gsap.timeline({
-        scrollTrigger: { trigger: scope.current, start: 'top bottom', end: 'bottom top', scrub: 1 },
-      }).fromTo(lead, { yPercent: 5 }, { yPercent: -7, ease: 'none', immediateRender: false }, 0)
-        .fromTo(pair, { yPercent: 10 }, { yPercent: -5, ease: 'none', immediateRender: false }, 0);
-      return () => { parallax.scrollTrigger?.kill(); parallax.kill(); };
-    });
-    return () => mm.revert();
-  }, { scope });
+  const seventh = CHAPTERS[6];
 
   return (
-    <section ref={scope} id="atelier" className={styles.atelier} data-chapter="05" aria-labelledby="atelier-title">
-      <div ref={chapter} className={`ngd-page ngd-grid ${styles.inner}`}>
-        <p className={`ngd-tech ${styles.chapter}`}>Chapter 05 — Atelier</p>
+    <section id="atelier" className={styles.atelier} aria-labelledby="atelier-title">
+      {/* The section's own heading, as in Genesis and Precision. Without it the
+          chapter-07 panel was an h2 while chapters 01-06 are h3, so the seventh
+          chapter sat at a different level from the six it belongs with and the
+          gallery's heading came after it at the same level. */}
+      <h2 id="atelier-title" className="ngd-visually-hidden">
+        Jewellery: the finished stone, set by hand
+      </h2>
 
-        <SplitReveal as="h2" id="atelier-title" className={styles.title}>
+      {/* The journey's final chapter, over the shared stage. */}
+      <ChapterPanel index={6}>
+        <div className={`ngd-page ngd-grid ${styles.inner}`}>
+          <div className={styles.chapterCopy}>
+            <ChapterMark n={seventh.n} label={seventh.label} />
+            <SplitReveal as="h3" className={styles.chapterTitle}>{seventh.title}</SplitReveal>
+            <p className={styles.chapterBlurb}>{seventh.blurb}</p>
+            <ChapterData rows={seventh.data} />
+          </div>
+        </div>
+      </ChapterPanel>
+
+      <div className={styles.gallery}>
+      <div ref={chapter} className={`ngd-page ngd-grid ${styles.inner}`}>
+        <p className={`ngd-tech ${styles.chapter}`}>Inside the atelier</p>
+
+        <SplitReveal as="h3" className={styles.title}>
           Once the stone is right, the setting can begin.
         </SplitReveal>
 
@@ -88,6 +89,16 @@ export default function Atelier() {
                 </figcaption>
               )}
             </figure>
+
+            {/* The jewellery chapter's moving image. Editorial footage of NGD
+                settings, not a stock clip of somebody else's goods. */}
+            <div className={styles.film}>
+              <MediaSlot
+                label="Jewellery editorial"
+                spec="NGD settings worn or on a hand model — ring, pendant, studs. Editorial, natural light. 10–20s silent loop, ≥1920×1080, H.264 MP4 + WebM. No CGI stones."
+                ratio="16 / 9"
+              />
+            </div>
 
             <blockquote className={styles.quote}>
               <p>
@@ -120,6 +131,7 @@ export default function Atelier() {
             </Link>
           </>
         )}
+      </div>
       </div>
     </section>
   );

@@ -2,16 +2,18 @@ import { useRef } from 'react';
 import { Link } from 'react-router-dom';
 
 import SplitReveal from '@/components/motion/SplitReveal.jsx';
-import { gsap, useGSAP } from '@/lib/motion/gsap.js';
-import { MQ } from '@/lib/motion/media.js';
 import styles from './Manufacture.module.css';
 
 /**
- * Chapter 04 — reactor to polished stone.
+ * MANUFACTURE — reactor to polished stone.
  *
- * Pinned horizontal traverse on desktop. Each stage is a tall plate with its
- * number set large in the background, so the sequence reads as a contact sheet
- * rather than a row of cards. Below 900px it degrades to a native horizontal
+ * A supporting section, not one of the journey's seven chapters. Those are
+ * numbered 01-07 by the scene and shown on the rail; a second numbering here
+ * ran backwards down the page and printed "Chapter 07" twice.
+ *
+ * A horizontal traverse. Each stage is a tall plate with its number set large
+ * in the background, so the sequence reads as a contact sheet rather than a
+ * row of cards. It is a native horizontal
  * scroller with snap points — still a traverse, still one gesture, but the
  * user keeps control of it.
  */
@@ -29,50 +31,23 @@ export default function Manufacture() {
   const scope = useRef(null);
   const track = useRef(null);
 
-  useGSAP(
-    () => {
-      const mm = gsap.matchMedia();
-
-      mm.add(MQ.desktop, () => {
-        const el = track.current;
-        if (!el) return undefined;
-        const distance = () => el.scrollWidth - el.clientWidth;
-        if (distance() <= 0) return undefined;
-
-        const tween = gsap.to(el, {
-          x: () => -distance(),
-          ease: 'none',
-          scrollTrigger: {
-            trigger: scope.current,
-            start: 'top top',
-            end: () => `+=${distance() + window.innerHeight * 0.5}`,
-            pin: true,
-            scrub: 0.85,
-            anticipatePin: 1,
-            invalidateOnRefresh: true,
-            onUpdate: (self) => {
-              const stages = el.querySelectorAll(`.${styles.stage}`);
-              stages.forEach((stage, index) => {
-                const position = index / Math.max(stages.length - 1, 1);
-                const proximity = Math.max(0, 1 - Math.abs(self.progress - position) * 3.2);
-                stage.style.setProperty('--active', proximity.toFixed(3));
-              });
-            },
-          },
-        });
-        return () => { tween.scrollTrigger?.kill(); tween.kill(); };
-      });
-
-      return () => mm.revert();
-    },
-    { scope }
-  );
+  /*
+   * No ScrollTrigger here any more, deliberately.
+   *
+   * This section used to pin itself and drive the rail horizontally on scroll.
+   * That was a second controller: it fought the journey's sticky stage for the
+   * same scroll, and a pin inside a sticky container is a spacer inserted
+   * underneath one — the two disagree the moment anything is resized.
+   *
+   * The traverse is now a native horizontal scroller at every width. It is
+   * focusable and labelled, so arrow keys drive it, and it costs nothing.
+   */
 
   return (
-    <section ref={scope} id="manufacture" className={styles.manufacture} data-chapter="04" aria-labelledby="mfg-title">
+    <section ref={scope} id="manufacture" className={styles.manufacture} aria-labelledby="mfg-title">
       <div className={styles.head}>
         <div className="ngd-page">
-          <p className="ngd-tech">Chapter 04 — Manufacture</p>
+          <p className="ngd-tech">Manufacture</p>
           <SplitReveal as="h2" id="mfg-title" className={styles.title}>
             Seven stages, one roof.
           </SplitReveal>

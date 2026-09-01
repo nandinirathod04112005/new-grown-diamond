@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-import { CHAPTERS, openHome, gotoChapter, viewportContent } from './ngd.js';
+import { openHome, gotoChapter, viewportContent } from './ngd.js';
 
 /**
  * Scroll-behaviour QA: the failures that only exist while the page is moving.
@@ -33,10 +33,13 @@ test.describe('scroll integrity', () => {
     ).toHaveLength(0);
   });
 
-  test('pinned sections never leave a blank viewport', async ({ page }) => {
+  test('sticky sections never leave a blank viewport', async ({ page }) => {
     await openHome(page);
 
-    // Genesis and Manufacture are the two pinned chapters. Traverse each in
+    // Genesis carries the sticky chapter panels and Manufacture the traverse.
+    // Neither pins any more — one director owns the scroll — but the failure
+    // this guards against is unchanged: a sticky section whose content has
+    // scrolled out leaves a correct DOM and an empty screen. Traverse each in
     // small increments and assert something is on screen the whole way — a
     // pin whose content has scrolled out leaves a correct DOM and an empty
     // screen, which only pixels can catch.
@@ -52,32 +55,51 @@ test.describe('scroll integrity', () => {
         const content = await viewportContent(page);
         expect(
           content.count,
-          `${id} step ${i}: nothing readable on screen — pinned section left a blank viewport. sample=${JSON.stringify(content.sample)}`
+          `${id} step ${i}: nothing readable on screen — sticky section left a blank viewport. sample=${JSON.stringify(content.sample)}`
         ).toBeGreaterThan(0);
       }
     }
   });
 
-  test('chapter rail navigates to each chapter', async ({ page }) => {
+  test('the journey rail navigates to each chapter', async ({ page }) => {
     await openHome(page);
-    const rail = page.getByRole('navigation', { name: 'Chapters' });
 
-    // The rail is a desktop affordance; below its breakpoint it is hidden by
-    // design, and that is a pass, not a skip.
+    // The rail now addresses CHAPTERS of the journey — positions in one
+    // continuous scene — rather than section elements, so a jump is verified by
+    // the scroll position moving and the rail agreeing, not by a section
+    // arriving at the top of the viewport.
+    const rail = page.getByRole('navigation', { name: 'Journey chapters' });
+
+    // A desktop affordance; below its breakpoint it is hidden by design, and
+    // that is a pass, not a skip.
     if (!(await rail.isVisible().catch(() => false))) {
       expect(page.viewportSize().width).toBeLessThan(1100);
       return;
     }
 
-    for (const ch of CHAPTERS.slice(0, 3)) {
-      await rail.getByRole('button', { name: new RegExp(ch.name, 'i') }).click();
-      await page.waitForTimeout(1400);
-      const box = await page.locator(`#${ch.id}`).boundingBox();
-      expect(box, `${ch.name} has no box after rail navigation`).not.toBeNull();
-      expect(
-        Math.abs(box.y),
-        `rail did not bring ${ch.name} near the top (y=${box?.y})`
-      ).toBeLessThan(page.viewportSize().height * 0.9);
+    const seen = [];
+    for (const label of ['Plasma', 'Rough Diamond', 'Certified Brilliance']) {
+      await rail.getByRole('button', { name: new RegExp(label, 'i') }).click();
+      await page.waitForTimeout(1600);
+      seen.push(await page.evaluate(() => {
+        const on = document.querySelector('nav[aria-label="Journey chapters"] [aria-current]');
+        return {
+          y: Math.round(window.scrollY),
+          active: on ? on.textContent.replace(/\s+/g, ' ').trim() : null,
+        };
+      }));
     }
+
+    // Each jump must land further down than the last, and the rail must follow.
+    for (let i = 1; i < seen.length; i += 1) {
+      expect(
+        seen[i].y,
+        `jumping to a later chapter did not scroll further (${JSON.stringify(seen)})`
+      ).toBeGreaterThan(seen[i - 1].y);
+    }
+    expect(
+      seen[seen.length - 1].active,
+      `rail did not follow its own navigation (${JSON.stringify(seen)})`
+    ).toMatch(/Certified/i);
   });
 });

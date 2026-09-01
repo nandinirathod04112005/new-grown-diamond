@@ -1,0 +1,233 @@
+/* The journey: a tall scroll container whose first child is a sticky stage.
+   `position: sticky` rather than `fixed` so the stage is scoped to the
+   journey's own length — it appears with Hero and leaves with Atelier,
+   without a ScrollTrigger pin having to add and remove a spacer. */
+.journey {
+  position: relative;
+  background: var(--carbon);
+}
+
+.stage {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  width: 100%;
+  overflow: hidden;
+  /* Behind every panel that scrolls over it. */
+  z-index: 0;
+  background: var(--carbon);
+  /* The stage is the parent of the leaning layers, so perspective belongs
+     here — declaring it on a rotated element puts it outside its own
+     projection chain and the depth becomes a flat skew. */
+  perspective: 1400px;
+}
+
+/* The light that contracts into the stone as the journey begins. */
+/* The rotating, depth-shifting inner stage. .stage owns the perspective, so
+   this is its child rather than the element carrying it — perspective declared
+   on the element being rotated sits outside its own projection chain. */
+.stageInner {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.halo {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(120vw, 1500px);
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border-radius: 50%;
+  opacity: 0.5;
+  background: radial-gradient(
+    circle,
+    rgba(214, 180, 116, 0.16) 0%,
+    rgba(201, 168, 106, 0.07) 34%,
+    rgba(201, 168, 106, 0.02) 58%,
+    transparent 74%
+  );
+  will-change: transform, opacity;
+}
+
+/* The real photograph. Always mounted; only ever crossfaded. */
+.stone {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  /* Held under the 754px source so the stone is never enlarged past what was
+     actually photographed.
+     The push-in reaches 1.52x, so the base width has to satisfy
+     base * 1.52 <= 754, i.e. base <= 496px. At 560 it rendered at 760px —
+     six pixels of invented detail on a real graded stone. */
+  width: min(52vw, 470px);
+  height: auto;
+  /* Visible by default, and dimmed by the director from there.
+     At opacity 0 the stage was blank until JS had run and the capability probe
+     had resolved — so a slow three chunk, a script error or a blocked bundle
+     left the page showing nothing at all. The untouched state has to be the
+     visible one. */
+  opacity: 1;
+  will-change: transform, opacity;
+}
+
+/* Editorial composition: the subject takes the right of the frame outright and
+   the copy holds the left, rather than the two sharing the middle. Centring
+   the stone put display type straight across its facets, which is both
+   unreadable and the generic answer. */
+@media (min-width: 900px) {
+  /*
+   * The subject lives in the CORRIDOR between the copy column and the chapter
+   * rail, and it has to fit there at full push-in as well as at rest.
+   *
+   * Both edges are hard: text over the stone's facets is unreadable, and a
+   * scrim behind the rail would mean painting over the photograph, which is
+   * the one treatment that is never allowed. Moving the subject is the only
+   * lever. It was moved left once to clear the rail, which put it straight
+   * across the headline instead — one overlap traded for another, because only
+   * the edge being fixed was measured.
+   *
+   * The corridor's width is set by the headline's longest word, so it does not
+   * grow with the viewport as fast as the stone would: the width is held in vw
+   * with a hard cap, and both edges are measured at 1100, 1280, 1440, 1600 and
+   * 1920 at rest AND at full scale.
+   */
+  .stone { left: 72%; width: min(14vw, 300px); }
+  .halo { left: 72%; }
+  .stage { perspective-origin: 70% 50%; }
+}
+
+/* 1100-1279 is the tightest band: the rail has just appeared and the corridor
+   is at its narrowest, so the subject is smallest here. */
+@media (min-width: 1100px) and (max-width: 1279px) {
+  .stone { left: 70%; width: min(11vw, 190px); }
+  .halo { left: 70%; }
+}
+
+/* Wide viewports open the corridor up, so the subject can be larger. */
+@media (min-width: 1600px) {
+  .stone { left: 73%; width: min(15vw, 400px); }
+  .halo { left: 73%; }
+}
+
+/* A ground for the copy column, so text over the scene is legible. It darkens
+   the canvas and the air BENEATH the photograph; the stone itself is painted
+   over the top of it and keeps its own exposure. */
+.readable {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    100deg,
+    rgba(6, 6, 6, 0.92) 0%,
+    rgba(6, 6, 6, 0.74) 28%,
+    rgba(6, 6, 6, 0.24) 52%,
+    transparent 70%
+  );
+}
+/* On small screens the panels are ordinary blocks running the full width, and
+   the stage rests on the finished photograph — so body copy crosses the
+   stone's near-white facets, which is exactly the middle of the frame. The
+   old wash was lightest there (0.5 at the top, 0.72 at 60%) and measured as
+   low as 1.8:1 over a third of the text's area. It is now heaviest across the
+   middle band, where the stone actually is. */
+@media (max-width: 899px) {
+  .readable {
+    background: linear-gradient(
+      180deg,
+      rgba(6, 6, 6, 0.74) 0%,
+      rgba(6, 6, 6, 0.86) 34%,
+      rgba(6, 6, 6, 0.9) 62%,
+      rgba(6, 6, 6, 0.95) 100%
+    );
+  }
+  /* And the stone itself sits back, rather than competing with the words. */
+  .stone { opacity: 0.55; }
+}
+
+.vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 66% 62% at 50% 50%,
+    transparent 42%,
+    rgba(6, 6, 6, 0.42) 76%,
+    rgba(6, 6, 6, 0.86) 100%
+  );
+}
+
+/* Panels scroll over the stage. `margin-top: -100svh` pulls the flow back up
+   so the first panel starts against the stage rather than one screen below
+   it; the stage's own sticky positioning does the rest. */
+.flow {
+  position: relative;
+  z-index: 1;
+  margin-top: -100svh;
+}
+
+/* Small screens: no sticky stage at all. The journey becomes an ordinary
+   vertical document, which is the right shape for a phone — a pin there
+   hijacks the one gesture the reader has. */
+/* Small screens keep the overlay composition — copy over a sticky stage —
+   because dropping the stage into the flow opened the page on a full screen
+   of photograph with no words on it at all. What mobile does NOT get is the
+   pin, the scrub or the canvas: the stage simply holds the real stone while
+   the chapters scroll past as ordinary blocks. */
+@media (max-width: 899px) {
+  .stage { height: 100svh; }
+  .flow { margin-top: -100svh; }
+  .stone { width: min(70vw, 380px); left: 50%; }
+  .halo { left: 50%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .halo, .stone, .air, .stageInner { will-change: auto; }
+  /* No yaw, no depth push: the still path renders the finished state flat. */
+  .stageInner { transform: none !important; }
+}
+
+/* ---- Atmosphere: light in the air, never on the stone ---- */
+
+.air {
+  position: absolute;
+  inset: -8%;
+  will-change: transform, opacity;
+  /* Below the photograph, so a disc can never paint over a real graded stone.
+     Ordering is the guarantee; nothing here relies on coordinates. */
+  z-index: 0;
+}
+
+.mote {
+  position: absolute;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 244, 222, 0.9) 0%,
+    rgba(232, 205, 152, 0.5) 55%,
+    rgba(214, 180, 116, 0) 100%
+  );
+}
+
+/* THE PHOTOGRAPH PAINTS LAST.
+   The scrim and the vignette used to sit above it (z 4 and 3, against the
+   stone's 2), so both black gradients composited straight over the real stone
+   — dimming the goods by more than half on phones — while the comments beside
+   them claimed they darkened only the air. That is the same defect as the
+   sparkle layer, in different elements: a treatment is only "around" the stone
+   if it paints BEHIND it. Ordering is the guarantee. */
+.stageInner { z-index: 1; }
+.vignette { z-index: 2; }
+.stone { z-index: 3; }
+
+@media (prefers-reduced-motion: reduce) {
+  .air { will-change: auto; }
+}
+
+/* The canvas sits between the atmosphere and the photograph, so a generated
+   form can never paint over a real stone. */
+.canvasHolder { position: absolute; inset: 0; z-index: 1; }
