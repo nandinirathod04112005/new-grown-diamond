@@ -5,6 +5,8 @@ import Header from '@/components/layout/Header.jsx';
 import Footer from '@/components/layout/Footer.jsx';
 import { ScrollTrigger } from '@/lib/motion/gsap.js';
 import { useSmoothScroll } from '@/providers/smoothScrollContext.js';
+import PageTransition from '@/components/motion/PageTransition.jsx';
+import ScrollProgress from '@/components/motion/ScrollProgress.jsx';
 
 /**
  * Shared chrome plus per-navigation scroll handling: jump to the top, then
@@ -25,7 +27,8 @@ export default function RootLayout() {
   return (
     <>
       <Header />
-      <Outlet />
+      <ScrollProgress />
+      <PageTransition><Outlet /></PageTransition>
       <Footer />
     </>
   );
