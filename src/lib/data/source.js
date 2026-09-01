@@ -12,9 +12,12 @@
  */
 import { MOCK_DIAMONDS } from './mock/diamonds.js';
 import { MOCK_JEWELLERY } from './mock/jewellery.js';
+import { resolveSupabaseEnv } from '@/lib/supabase/env.js';
 
 /** Flip to true once the storefront queries are implemented (Phase 3). */
-export const USE_SUPABASE = false;
+// Visual/E2E runs can explicitly choose deterministic records without
+// weakening production's live-data default.
+export const USE_SUPABASE = resolveSupabaseEnv().ok && import.meta.env.VITE_USE_MOCK_DATA !== 'true';
 
 export const DIAMOND_LIST_COLUMNS =
   'public_id,stock_number,shape,carat,color,clarity,cut,laboratory,' +
@@ -58,4 +61,34 @@ export async function fetchFeaturedJewellery(limit = 3) {
     .limit(limit);
   if (error) throw error;
   return data ?? [];
+}
+
+export async function fetchDiamonds() {
+  if (!USE_SUPABASE) return MOCK_DIAMONDS;
+  const { getSupabase } = await import('@/lib/supabase/client.js');
+  const { data, error } = await getSupabase().from('diamonds').select(`${DIAMOND_LIST_COLUMNS},total_price,currency,price_visible`).eq('active', true).is('archived_at', null).order('created_at', { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function fetchDiamond(publicId) {
+  if (!USE_SUPABASE) return MOCK_DIAMONDS.find((row) => row.public_id === publicId) ?? null;
+  const { getSupabase } = await import('@/lib/supabase/client.js');
+  const { data, error } = await getSupabase().from('diamonds').select(`${DIAMOND_LIST_COLUMNS},total_price,currency,price_visible,certificate_url,measurements,depth_percentage,table_percentage,polish,symmetry,fluorescence`).eq('public_id', publicId).eq('active', true).is('archived_at', null).maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+export async function fetchJewellery() {
+  if (!USE_SUPABASE) return MOCK_JEWELLERY;
+  const { getSupabase } = await import('@/lib/supabase/client.js');
+  const { data, error } = await getSupabase().from('jewellery').select(JEWELLERY_LIST_COLUMNS).eq('active', true).is('archived_at', null).order('created_at', { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function fetchJewelleryPiece(publicId) {
+  if (!USE_SUPABASE) return MOCK_JEWELLERY.find((row) => row.public_id === publicId) ?? null;
+  const rows = await fetchJewellery();
+  return rows.find((row) => row.public_id === publicId) ?? null;
 }
