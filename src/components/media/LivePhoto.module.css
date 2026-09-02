@@ -1,0 +1,127 @@
+/*
+ * Everything here composites OVER a real photograph. Nothing replaces or
+ * redraws the subject, which is why it cannot end up looking synthetic.
+ */
+.root {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  perspective: 1200px;
+  /* The photo is the ground; a transparent box would let the page show through
+     the moment an image is slow to decode. */
+  background: #0a0a0c;
+}
+
+.shot {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform:
+    rotateY(var(--ry, 0deg))
+    rotateX(var(--rx, 0deg))
+    scale(1.06);
+  /* Slow drift, long enough that it never reads as a loop. */
+  animation: drift 34s var(--ease-inout) infinite alternate;
+  will-change: transform;
+}
+
+@keyframes drift {
+  from { scale: 1; translate: -1.2% 0.6%; }
+  to { scale: 1.07; translate: 1.2% -0.8%; }
+}
+
+/*
+ * A soft highlight that follows the pointer. This is the single pass that does
+ * most of the work: a photograph whose specular moves with you reads as an
+ * object under a light, where a static crop reads as a picture of one.
+ */
+.glare {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  opacity: 0.5;
+  background: radial-gradient(
+    38% 38% at var(--lx, 50%) var(--ly, 50%),
+    rgba(255, 250, 235, 0.34),
+    transparent 72%
+  );
+  transition: opacity var(--dur-slow) var(--ease-primary);
+}
+
+.root:hover .glare { opacity: 0.85; }
+
+/* One band of light crossing the facets, on a long cycle so it stays an event. */
+.sweep {
+  position: absolute;
+  top: -25%;
+  bottom: -25%;
+  left: 0;
+  width: 34%;
+  z-index: 3;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  background: linear-gradient(
+    102deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.06) 36%,
+    rgba(255, 255, 255, 0.28) 50%,
+    rgba(214, 226, 255, 0.10) 64%,
+    transparent 100%
+  );
+  filter: blur(9px);
+  animation: sweep 11s var(--ease-inout) infinite;
+}
+
+@keyframes sweep {
+  0% { transform: translateX(-190%); }
+  58%, 100% { transform: translateX(330%); }
+}
+
+/*
+ * Points of fire. Offset in both position and phase so they never blink
+ * together — simultaneous sparkles are the giveaway that something is faked.
+ */
+.spark {
+  position: absolute;
+  z-index: 4;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 10px 3px rgba(255, 255, 255, 0.75);
+  opacity: 0;
+  pointer-events: none;
+  animation: spark 7s var(--ease-inout) infinite;
+  animation-delay: calc(var(--i) * -2.4s);
+}
+
+.spark:nth-child(3) { top: 31%; left: 27%; }
+.spark:nth-child(4) { top: 57%; left: 66%; }
+.spark:nth-child(5) { top: 43%; left: 48%; }
+.spark:nth-child(6) { top: 68%; left: 34%; }
+.spark:nth-child(7) { top: 24%; left: 61%; }
+
+@keyframes spark {
+  0%, 74%, 100% { opacity: 0; transform: scale(0.3); }
+  82% { opacity: 1; transform: scale(1.5); }
+  88% { opacity: 0.25; transform: scale(0.9); }
+}
+
+/* A trace of grain. A perfectly clean crop is what reads as rendered. */
+.grain {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shot { animation: none; transform: none; }
+  .sweep, .spark { display: none; }
+  .glare { opacity: 0.35; }
+}

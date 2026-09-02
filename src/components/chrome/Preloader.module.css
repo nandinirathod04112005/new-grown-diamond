@@ -1,0 +1,75 @@
+.root {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  background: var(--ink);
+  /* Wipes upward off the screen when the sequence completes. */
+  clip-path: inset(0 0 0 0);
+}
+
+.mark {
+  overflow: hidden;
+}
+
+.markInner {
+  display: block;
+  font-family: var(--font-display);
+  font-size: var(--t-xl);
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--ivory);
+  /* Revealed bottom-up, the way the reference site reveals its logo. */
+  clip-path: inset(100% 0 0 0);
+}
+
+.bar {
+  position: absolute;
+  bottom: 12vh;
+  left: var(--gutter);
+  right: var(--gutter);
+  height: 1px;
+  background: var(--ink-line);
+}
+
+.barFill {
+  height: 100%;
+  width: 100%;
+  background: var(--gold);
+  transform-origin: left center;
+  transform: scaleX(0);
+}
+
+/*
+ * The escape hatch. Held low and quiet, and only fading in after a beat — a
+ * skip control that appears instantly announces that the thing it skips was
+ * not worth watching, which is the wrong note to open on.
+ */
+.skip {
+  position: absolute;
+  bottom: var(--s-4);
+  right: var(--gutter);
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--ink-line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.5625rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  cursor: pointer;
+  opacity: 0;
+  animation: skipIn var(--dur-slow) var(--ease-primary) 0.7s forwards;
+  transition: color var(--dur-base) var(--ease-primary), border-color var(--dur-base) var(--ease-primary);
+}
+
+.skip:hover,
+.skip:focus-visible { color: var(--ivory); border-color: var(--accent); }
+
+@keyframes skipIn { to { opacity: 0.7; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .skip { animation: none; opacity: 0.7; }
+}

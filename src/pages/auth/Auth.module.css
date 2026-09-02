@@ -1,0 +1,406 @@
+/*
+ * The account stage. A darkened room with one lit object in it — the same
+ * language as the hero, so signing in does not feel like leaving the site.
+ */
+.stage {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: calc(var(--s-8) + 1rem) var(--gutter) var(--s-7);
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--ink);
+}
+
+/* Built, not photographed — a key pool where the card sits, a warm bounce
+   low, a cool rim high, and a drafting grid masked away from the edges. */
+.field {
+  position: absolute;
+  inset: 0;
+  z-index: -3;
+  pointer-events: none;
+  background:
+    radial-gradient(46% 44% at 50% 38%, rgba(158, 178, 212, 0.16), transparent 72%),
+    radial-gradient(56% 40% at 18% 88%, rgba(0, 206, 201, 0.09), transparent 74%),
+    radial-gradient(38% 30% at 88% 10%, rgba(96, 124, 176, 0.1), transparent 70%),
+    linear-gradient(158deg, #101319 0%, #0a0b0e 48%, #060608 100%);
+}
+
+.field::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(238, 236, 231, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(238, 236, 231, 0.05) 1px, transparent 1px);
+  background-size: 84px 84px;
+  mask-image: radial-gradient(70% 68% at 50% 44%, #000 20%, transparent 80%);
+  -webkit-mask-image: radial-gradient(70% 68% at 50% 44%, #000 20%, transparent 80%);
+}
+
+.field::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    80% 78% at 50% 44%,
+    transparent 36%,
+    rgba(4, 4, 6, 0.58) 82%,
+    rgba(4, 4, 6, 0.88) 100%
+  );
+}
+
+/* One very soft beam on a long period, so the ground is never twice the same
+   without ever being caught animating. */
+.beam {
+  position: absolute;
+  inset: -30% -20%;
+  z-index: -2;
+  pointer-events: none;
+  background: radial-gradient(32% 58% at 50% 50%, rgba(0, 206, 201, 0.1), transparent 70%);
+  filter: blur(50px);
+  animation: beam 46s var(--ease-inout) infinite alternate;
+}
+
+@keyframes beam {
+  from { transform: translate3d(-12%, -6%, 0) scale(1); }
+  to   { transform: translate3d(12%, 8%, 0) scale(1.2); }
+}
+
+.grain {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Held back and dimmed: the drafting layer is texture here, not the subject.
+   At hero strength it would sit on top of the very words being typed. */
+.plan {
+  z-index: -1;
+  opacity: 0.16;
+}
+
+/* The brand mark, doubling as the route home. */
+.mark {
+  position: absolute;
+  top: var(--s-4);
+  left: var(--gutter);
+  z-index: 2;
+  font-family: var(--font-display);
+  font-size: var(--t-sm);
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--ivory);
+  opacity: 0.72;
+  transition: opacity var(--dur-base) var(--ease-primary);
+  animation: rise 0.8s var(--ease-primary) both;
+}
+
+.mark:hover, .mark:focus-visible { opacity: 1; }
+
+/*
+ * The camera. Perspective lives here and clipping does not — an element that
+ * both clips and declares preserve-3d is forced flat by the spec, and the
+ * card's layers would collapse into its face with no error to show for it.
+ */
+.frame {
+  position: relative;
+  width: min(100%, 30rem);
+  perspective: 1400px;
+  perspective-origin: 50% 44%;
+}
+
+.card {
+  position: relative;
+  display: grid;
+  gap: var(--s-4);
+  padding: clamp(1.75rem, 5vw, 2.75rem);
+  background: rgba(19, 19, 23, 0.72);
+  backdrop-filter: blur(22px) saturate(1.1);
+  -webkit-backdrop-filter: blur(22px) saturate(1.1);
+  border: 1px solid var(--ink-line);
+  transform-style: preserve-3d;
+  transform:
+    rotateY(calc(var(--mx, 0) * 4deg))
+    rotateX(calc(var(--my, 0) * -3deg));
+  box-shadow: 0 40px 90px rgba(0, 0, 0, 0.5);
+  animation: cardIn 0.9s var(--ease-primary) both;
+}
+
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(1.5rem) scale(0.97); }
+}
+
+/* The rim, forward of the surface, so it parts from the border below it as
+   the card turns. That parting is the cue that these are separate planes. */
+.rim {
+  position: absolute;
+  inset: 0;
+  transform: translateZ(26px);
+  pointer-events: none;
+  border: 1px solid rgba(0, 206, 201, 0.16);
+}
+
+.head {
+  display: grid;
+  gap: var(--s-2);
+  transform: translateZ(34px);
+}
+
+.eyebrow {
+  font-size: 0.5625rem;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--accent-lift);
+  animation: rise 0.7s var(--ease-primary) 0.1s both;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-weight: 300;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--ivory);
+  font-size: clamp(1.9rem, 1.2rem + 2.2vw, 2.9rem);
+  animation: rise 0.8s var(--ease-primary) 0.16s both;
+}
+
+.intro {
+  color: var(--text-muted);
+  font-size: var(--t-sm);
+  line-height: 1.7;
+  animation: rise 0.8s var(--ease-primary) 0.22s both;
+}
+
+.rule {
+  width: 3.25rem;
+  height: 1px;
+  margin-top: var(--s-2);
+  background: linear-gradient(90deg, var(--accent), transparent);
+  transform-origin: left center;
+  animation: ruleIn 0.9s var(--ease-primary) 0.3s both;
+}
+
+@keyframes rise { from { opacity: 0; transform: translateY(0.7rem); } }
+@keyframes ruleIn { from { transform: scaleX(0); } }
+
+.body {
+  display: grid;
+  gap: var(--s-3);
+  transform: translateZ(18px);
+}
+
+.aside {
+  transform: translateZ(10px);
+  padding-top: var(--s-3);
+  border-top: 1px solid var(--ink-line);
+  color: var(--text-muted);
+  font-size: var(--t-sm);
+}
+
+.aside a { color: var(--accent-lift); border-bottom: 1px solid currentColor; padding-bottom: 1px; }
+
+/* ---------------- fields ---------------- */
+.field2 {
+  display: grid;
+  gap: 0.4rem;
+  animation: rise 0.7s var(--ease-primary) both;
+  animation-delay: calc(0.34s + var(--i, 0) * 0.06s);
+}
+
+.label {
+  font-size: 0.5625rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.input {
+  width: 100%;
+  padding: 0.85rem 0.9rem;
+  background: rgba(8, 8, 10, 0.5);
+  border: 1px solid var(--ink-line);
+  color: var(--ivory);
+  font: inherit;
+  font-size: var(--t-sm);
+  border-radius: 2px;
+  transition:
+    border-color var(--dur-base) var(--ease-primary),
+    box-shadow var(--dur-base) var(--ease-primary),
+    background-color var(--dur-base) var(--ease-primary);
+}
+
+.input::placeholder { color: var(--slate); }
+
+.input:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: rgba(8, 8, 10, 0.72);
+  box-shadow: 0 0 0 3px rgba(0, 206, 201, 0.16);
+}
+
+/* A field the browser has flagged invalid only after a submit attempt — not
+   while someone is still halfway through typing their address. */
+.card[data-tried] .input:invalid {
+  border-color: rgba(224, 108, 108, 0.65);
+}
+
+.hint { font-size: 0.6875rem; color: var(--slate); }
+.recovery { width: max-content; color: var(--accent-lift); font-size: var(--t-sm); border-bottom: 1px solid currentColor; padding-bottom: 2px; }
+
+/* ---------------- actions ---------------- */
+.submit {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: var(--s-2);
+  padding: 0.95rem 1.4rem;
+  border: 1px solid var(--accent);
+  background: transparent;
+  color: var(--ivory);
+  font: inherit;
+  font-size: var(--t-xs);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  cursor: pointer;
+  overflow: hidden;
+  isolation: isolate;
+  transform: translateZ(28px);
+  transition: color var(--dur-slow) var(--ease-primary);
+}
+
+/* The fill rises from below rather than fading: a fade reads as a state
+   change, a rise reads as a control being pressed. */
+.submit::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--accent);
+  transform: translateY(101%);
+  transition: transform var(--dur-slow) var(--ease-primary);
+}
+
+.submit:hover:not(:disabled)::before,
+.submit:focus-visible:not(:disabled)::before { transform: translateY(0); }
+.submit:hover:not(:disabled),
+.submit:focus-visible:not(:disabled) { color: var(--text-invert); }
+
+.submit:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* A determinate-looking spinner would imply progress we cannot measure; this
+   is a pulse that only says "working". */
+.spinner {
+  width: 0.7rem;
+  height: 0.7rem;
+  border: 1.5px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin { to { rotate: 360deg; } }
+
+.ghost {
+  padding: 0.7rem 1rem;
+  border: 1px solid var(--ink-line);
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: var(--t-xs);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color var(--dur-base) var(--ease-primary), border-color var(--dur-base) var(--ease-primary);
+}
+
+.ghost:hover, .ghost:focus-visible { color: var(--ivory); border-color: var(--accent); }
+
+/* ---------------- status ---------------- */
+.note {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.8rem 0.9rem;
+  border-left: 2px solid var(--accent);
+  background: rgba(0, 206, 201, 0.07);
+  color: var(--text-muted);
+  font-size: var(--t-sm);
+  line-height: 1.6;
+  animation: rise 0.4s var(--ease-primary) both;
+}
+
+.note[data-tone='error'] {
+  border-left-color: #e06c6c;
+  background: rgba(224, 108, 108, 0.09);
+}
+
+.note[data-tone='good'] {
+  border-left-color: #4fbf8b;
+  background: rgba(79, 191, 139, 0.09);
+}
+
+.note strong { color: var(--ivory); font-weight: 400; }
+
+/* ---------------- profile ---------------- */
+.rows { display: grid; gap: 0; margin: 0; transform: translateZ(14px); }
+
+.row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding: 0.7rem 0;
+  border-bottom: 1px solid var(--ink-line);
+}
+
+.row dt {
+  font-size: 0.5625rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.row dd { margin: 0; color: var(--ivory); font-size: var(--t-sm); text-align: right; }
+
+/* Privilege fields are shown but never editable — see ProfilePage. */
+.locked {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--slate);
+}
+
+.locked svg { width: 0.7rem; height: 0.7rem; }
+
+.actions { display: flex; flex-wrap: wrap; gap: var(--s-2); transform: translateZ(22px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .beam { animation: none; }
+  .card,
+  .eyebrow,
+  .title,
+  .intro,
+  .rule,
+  .field2,
+  .note { animation: none; }
+  .card { transform: none; }
+  .spinner { animation: none; }
+}
+
+/* No pointer on a phone, so nothing to turn toward — and a rotated card only
+   costs legible width. */
+@media (max-width: 899px) {
+  .frame { perspective: none; }
+  .card { transform: none; }
+  .head, .body, .rows, .actions, .submit, .rim { transform: none; }
+}
+
+/* The same thrown light as the hero, behind the same built ground. */
+.caustics { z-index: -2; opacity: 0.85; }

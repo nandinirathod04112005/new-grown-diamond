@@ -1,0 +1,22 @@
+/*
+ * Screen-blended, like every other light layer on the site: the shader draws
+ * light on black, and screen adds it to whatever is beneath rather than
+ * covering it. The plinth, the drape and the stone all survive underneath.
+ */
+.root {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  animation: starsIn 2.6s var(--ease-primary) both;
+}
+
+@keyframes starsIn { from { opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  /* The component never starts its loop; this hides the empty canvas. */
+  .root { display: none; }
+}

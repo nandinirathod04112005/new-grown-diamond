@@ -1,0 +1,74 @@
+/*
+ * The mural fills the whole chapter rather than sitting in a column. The
+ * artwork is a panorama; boxing it into half the frame would waste it.
+ */
+.mural {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  background: #08080a;
+}
+
+.shot {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* transform-origin and scale are written per frame by the camera loop. */
+  transform-origin: 50% 45%;
+  transform: scale(1.06);
+  will-change: transform;
+}
+
+/* A slow pass of light so the mural is alive even while the scroll is still. */
+.sweep {
+  position: absolute;
+  top: -20%;
+  bottom: -20%;
+  left: 0;
+  width: 36%;
+  pointer-events: none;
+  background: linear-gradient(
+    100deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.045) 40%,
+    rgba(217, 192, 138, 0.10) 50%,
+    rgba(255, 255, 255, 0.045) 60%,
+    transparent 100%
+  );
+  filter: blur(14px);
+  mix-blend-mode: screen;
+  animation: muralSweep 13s var(--ease-inout) infinite;
+}
+
+@keyframes muralSweep {
+  0% { transform: translateX(-170%); }
+  60%, 100% { transform: translateX(300%); }
+}
+
+/*
+ * The copy sits over the mural, so the ground under it has to be dark enough
+ * to read against a busy image. This is a diagonal, weighted to the copy side,
+ * rather than an even wash that would flatten the artwork everywhere.
+ */
+.vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(100deg, rgba(8, 8, 10, 0.94) 0%, rgba(8, 8, 10, 0.78) 34%, rgba(8, 8, 10, 0.30) 62%, transparent 88%),
+    radial-gradient(120% 90% at 50% 50%, transparent 40%, rgba(8, 8, 10, 0.72) 92%);
+}
+
+@media (max-width: 899px) {
+  /* On a phone the copy needs the whole width, so the wash covers more. */
+  .vignette {
+    background:
+      linear-gradient(180deg, rgba(8, 8, 10, 0.9) 0%, rgba(8, 8, 10, 0.6) 40%, rgba(8, 8, 10, 0.88) 100%),
+      radial-gradient(120% 90% at 50% 50%, transparent 30%, rgba(8, 8, 10, 0.8) 95%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sweep { display: none; }
+}

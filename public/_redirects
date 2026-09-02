@@ -1,0 +1,10 @@
+# SPA fallback — Netlify and Cloudflare Pages.
+#
+# This app decides what to render from window.location.pathname, so /blogs and
+# /login are not files on disk. Without this rule a static host answers 404 to
+# every URL except "/", which breaks refreshes, shared links and anything a
+# search engine has indexed.
+#
+# 200 (rewrite), not 301/302: the browser must keep the URL it asked for, or
+# the router has nothing to read.
+/*    /index.html   200

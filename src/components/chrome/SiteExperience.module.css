@@ -1,0 +1,95 @@
+.progress{position:fixed;inset:0 0 auto;z-index:95;height:2px;pointer-events:none}.progress span{display:block;width:100%;height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-lift));transform:scaleX(var(--page-progress,0));transform-origin:left;will-change:transform}.transition{position:fixed;inset:0;z-index:90;display:grid;place-items:center;pointer-events:none;background:var(--ink);clip-path:inset(100% 0 0);transition:clip-path .62s var(--ease-strong)}.transition[data-leaving]{clip-path:inset(0)}.transitionLine{position:absolute;width:min(36rem,72vw);height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);transform:scaleX(0);transition:transform .5s .08s var(--ease-primary)}.transition[data-leaving] .transitionLine{transform:scaleX(1)}.transitionMark{position:relative;padding:1rem;background:var(--ink);font:300 var(--t-xl)/1 var(--font-display);letter-spacing:.28em;color:var(--ivory);opacity:0;transition:opacity .3s .2s}.transition[data-leaving] .transitionMark{opacity:1}.cursor,.halo{position:fixed;z-index:110;left:0;top:0;pointer-events:none;border-radius:50%;translate:-50% -50%}.cursor{width:4px;height:4px;background:var(--ivory)}.halo{width:34px;height:34px;border:1px solid rgba(217,192,138,.55);transition:width .3s,height .3s,background .3s,border-color .3s}.halo[data-active]{width:54px;height:54px;background:rgba(180,140,71,.1);border-color:var(--gold-lift)}@media(pointer:coarse){.cursor,.halo{display:none}}@media(prefers-reduced-motion:reduce){.transition{display:none}.cursor,.halo{display:none}}
+
+.worldBackground{position:fixed;inset:0;z-index:-4;overflow:hidden;pointer-events:none;background:#030407;isolation:isolate}
+.deepField{position:absolute;inset:-12%;background:radial-gradient(ellipse at 50% 42%,#111822 0%,#080b11 34%,#030407 72%);animation:fieldBreath 12s ease-in-out infinite alternate}
+.prismBeam{position:absolute;left:-25%;top:-38%;width:42%;height:180%;transform-origin:50% 50%;filter:blur(22px);mix-blend-mode:screen;opacity:.2;background:linear-gradient(90deg,transparent,rgba(93,228,237,.42),rgba(242,250,255,.74),rgba(105,137,224,.32),transparent);animation:prismSweep 20s cubic-bezier(.45,0,.55,1) infinite alternate}
+.prismBeam:nth-of-type(3){left:48%;top:-46%;width:24%;opacity:.13;animation-duration:29s;animation-direction:alternate-reverse;background:linear-gradient(90deg,transparent,rgba(217,184,117,.45),rgba(255,248,223,.66),transparent)}
+.prismBeam:nth-of-type(4){left:72%;top:-32%;width:18%;opacity:.1;animation-duration:37s;background:linear-gradient(90deg,transparent,rgba(128,184,255,.48),transparent)}
+.facetLattice{position:absolute;width:min(82vw,74rem);aspect-ratio:1;right:-24vw;top:-38vh;opacity:.18;background:repeating-conic-gradient(from 30deg,rgba(207,232,244,.36) 0 1deg,transparent 1deg 30deg);mask-image:radial-gradient(circle,black 4%,rgba(0,0,0,.8) 42%,transparent 72%);animation:latticeTurn 54s linear infinite}
+.facetLattice::after{content:'';position:absolute;inset:17%;border:1px solid rgba(216,237,247,.35);clip-path:polygon(50% 0,93% 25%,100% 72%,50% 100%,0 72%,7% 25%);box-shadow:inset 0 0 80px rgba(92,205,224,.09)}
+.lightGrid{position:absolute;inset:-20%;opacity:.1;background-image:linear-gradient(rgba(210,232,241,.14) 1px,transparent 1px),linear-gradient(90deg,rgba(210,232,241,.1) 1px,transparent 1px);background-size:84px 84px;transform:perspective(600px) rotateX(63deg) translateY(45%);transform-origin:center bottom;mask-image:linear-gradient(transparent 12%,black 72%,transparent);animation:gridTravel 15s linear infinite}
+.horizonGlow{position:absolute;left:-10%;right:-10%;top:47%;height:2px;background:linear-gradient(90deg,transparent,rgba(105,218,232,.45),rgba(255,255,255,.9),rgba(211,175,103,.38),transparent);box-shadow:0 0 36px rgba(118,221,235,.24);opacity:.5;animation:horizonPulse 7s ease-in-out infinite}
+.diamondCore{position:absolute;left:50%;top:47%;width:min(34vw,28rem);aspect-ratio:1;translate:-50% -50%;opacity:.2;filter:drop-shadow(0 0 28px rgba(181,228,244,.2));animation:coreFloat 10s ease-in-out infinite alternate}
+.diamondCore i{position:absolute;inset:20%;border:1px solid rgba(229,244,249,.42);clip-path:polygon(50% 0,92% 28%,76% 100%,24% 100%,8% 28%);animation:coreTurn 18s linear infinite}
+.diamondCore i:nth-child(2){inset:29%;border-color:rgba(213,184,122,.44);animation-direction:reverse;animation-duration:13s}.diamondCore i:nth-child(3){inset:38%;border-color:rgba(123,218,235,.52);animation-duration:9s}
+.dust{position:absolute;inset:0;opacity:.24;background-image:radial-gradient(circle,rgba(255,255,255,.8) 0 1px,transparent 1.5px),radial-gradient(circle,rgba(114,220,235,.7) 0 1px,transparent 1.5px);background-position:0 0,37px 61px;background-size:137px 137px,191px 191px;mask-image:linear-gradient(90deg,transparent,black 22%,black 78%,transparent);animation:dustRise 30s linear infinite}
+@keyframes fieldBreath{to{transform:scale(1.08);filter:brightness(1.14)}}
+@keyframes prismSweep{from{transform:rotate(-24deg) translateX(-18%)}to{transform:rotate(19deg) translateX(34%)}}
+@keyframes latticeTurn{to{rotate:360deg}}
+@keyframes gridTravel{to{background-position:0 84px,84px 0}}
+@keyframes horizonPulse{50%{opacity:.85;transform:scaleX(.82)}}
+@keyframes coreFloat{to{transform:translateY(-3vh) scale(1.07)}}
+@keyframes coreTurn{to{rotate:360deg}}
+@keyframes dustRise{to{background-position:0 -274px,37px -321px}}
+@media(max-width:767px){.prismBeam:nth-of-type(4),.facetLattice,.diamondCore i:nth-child(3){display:none}.diamondCore{width:76vw;opacity:.13}.lightGrid{background-size:54px 54px}.dust{opacity:.14}}
+@media(prefers-reduced-motion:reduce){.deepField,.prismBeam,.facetLattice,.lightGrid,.horizonGlow,.diamondCore,.diamondCore i,.dust{animation:none}}
+
+/* ==================================================================
+   THE POINTER
+
+   The brand gem replaces the dot. It keeps the existing damped
+   follow — the mark trails the true pointer position slightly, which
+   is what stops a custom cursor feeling like a stuck sticker.
+   ================================================================== */
+/*
+ * Position pinned HERE rather than inherited.
+ *
+ * The JS writes the pointer position as a transform and relies on the element
+ * starting at the viewport origin. It was landing about 13% of the viewport
+ * down and right of the true pointer, which is the signature of `left`/`top`
+ * not resolving to 0 — so they are stated on the element that actually needs
+ * them instead of being picked up from a shared rule.
+ */
+.cursor {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 110;
+  pointer-events: none;
+  width: 22px;
+  height: 22px;
+  background: none;
+  border-radius: 0;
+  /* The gem's point is its business end, so the mark hangs from roughly
+     where the tip sits rather than from its centre. */
+  translate: -30% -18%;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.55));
+}
+
+.cursor svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+  transition: scale var(--dur-base) var(--ease-primary);
+}
+
+.cursor :global(.ngdGemBody) {
+  fill: url(#ngd-cursor-gem);
+  stroke: rgba(8, 12, 16, 0.85);
+  stroke-width: 1.1;
+  stroke-linejoin: round;
+}
+
+.cursor :global(.ngdGemFacet) {
+  fill: none;
+  stroke: rgba(8, 12, 16, 0.7);
+  stroke-width: 0.9;
+  stroke-linecap: round;
+}
+
+/*
+ * CURSOR VISIBILITY IS NOT DECIDED HERE ANY MORE.
+ *
+ * This file used to hide the native cursor behind a `(pointer: fine)` query
+ * alone. DiamondCursor refuses to run below 900px — but that rule kept firing,
+ * so at 800px the system cursor was hidden with nothing drawn in its place and
+ * the visitor had NO pointer at all. Hiding is now gated on a flag the cursor
+ * component sets only once it is actually running, so it can never take the
+ * pointer away without replacing it.
+ */
+.cursor:has(~ .halo[data-active]) svg { scale: 1.22; }
+
+@media (pointer: coarse) {
+  :global(html) { cursor: auto; }
+}

@@ -1,0 +1,45 @@
+/*
+ * The film sits behind the whole narrative, fixed, so one stone carries every
+ * chapter instead of each chapter starting a new shot. That persistence is the
+ * difference between "a page with 3D on it" and footage the page is cut over.
+ */
+.layer {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  /* Held back until the hero has left, then held to the end. */
+  opacity: var(--film-opacity, 0);
+  transition: opacity var(--dur-xl) var(--ease-primary);
+}
+
+/* A vignette over the film, not under it, and painted in the PAGE's own
+   ground rather than a fixed near-black — in light mode a black vignette
+   frames the page in mourning crepe. */
+/* A vignette over the film, not under it: the stone is atmosphere behind the
+   chapters, and the corners have to fall away or the product photography and
+   the body text both lose their ground. */
+.scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(
+      58% 42% at 50% 50%,
+      transparent 0%,
+      rgb(var(--scrim) / 0.55) 70%,
+      rgb(var(--scrim) / 0.92) 100%
+    );
+}
+
+.poster {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* A photograph at half strength is atmosphere on a dark page and a muddy
+     grey wash on a light one, where it competes with the type instead of
+     sitting behind it. */
+  opacity: var(--film-poster, 0.5);
+  filter: saturate(0.85);
+}

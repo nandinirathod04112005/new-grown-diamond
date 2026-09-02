@@ -1,0 +1,45 @@
+/*
+ * Line-by-line reveal driven by scroll position rather than by a timeline.
+ *
+ * The reference site grants each line a fixed slice of scroll — 30vh on body
+ * blocks, 40vh on headline blocks — and reveals it as that slice passes. The
+ * same behaviour here is one expression: `--p * --total - --i` is a given
+ * line's own 0..1 progress, and clamping it does the staggering with no
+ * per-line JS and no timeline at all.
+ */
+.root {
+  display: block;
+}
+
+.line {
+  display: block;
+  overflow: hidden;
+}
+
+.inner {
+  display: block;
+  /*
+   * Authored breaks are a typographic decision, but they are authored for a
+   * measure the two-column layout does not always give them: at a 449px text
+   * column every body line in every chapter re-wraps, and the natural break
+   * drops a single word onto a row of its own — "…the selected stone" leaving
+   * "stone" alone. Balancing splits the overflow into two even rows instead,
+   * so a line that has to wrap still looks set rather than broken.
+   */
+  text-wrap: balance;
+  /* The fallback lives in var(), NOT as a declaration on the root: declaring
+     --p here would shadow the value inherited from the scene block and every
+     line would render already revealed. With the fallback here, no JS still
+     means fully visible text. */
+  --reveal: clamp(0, (var(--line-progress, var(--p, 1)) * var(--total)) - var(--i), 1);
+  transform: translateY(calc(115% * (1 - var(--reveal))));
+  opacity: var(--reveal);
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .inner {
+    transform: none;
+    opacity: 1;
+  }
+}

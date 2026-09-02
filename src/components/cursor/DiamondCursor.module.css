@@ -1,0 +1,190 @@
+/*
+ * Above everything, and never in the way.
+ *
+ * `pointer-events: none` on the wrapper is load-bearing rather than tidy: this
+ * sits over the entire viewport at the top of the stacking order, so without
+ * it nothing on the site could be clicked at all.
+ */
+.root {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--dur-base, 0.3s) ease;
+}
+
+/* Held back until the pointer has actually moved, so it never flashes in the
+   middle of the screen on load or after the pointer has left the window. */
+.root[data-ready] { opacity: 1; }
+
+/* ---------------- the gem ---------------- */
+.gem {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  /*
+   * The hotspot. The gem hangs from just above its own point rather than from
+   * its centre, so the tip sits where the pointer actually is — which is where
+   * people aim.
+   */
+  margin: -4px 0 0 -11px;
+  will-change: transform;
+}
+
+/*
+ * Scale, rotation and glow live on the IMAGE, never on `.gem`.
+ *
+ * The individual `scale` property composes outside `transform`, so scaling the
+ * element that carries the pointer position multiplies that position too — a
+ * 1.35 scale rendered a pointer at 450px as 607px, and the gem drifted further
+ * off the further across the screen it travelled. Transforming a child leaves
+ * the positioning transform alone.
+ */
+.gem img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* Ice-blue, and slightly warmer on the inner ring so it reads as a lit stone
+     rather than a sticker with a shadow behind it. */
+  filter:
+    drop-shadow(0 0 4px rgba(120, 226, 255, 0.55))
+    drop-shadow(0 0 12px rgba(60, 180, 240, 0.35));
+  transition:
+    scale var(--dur-base, 0.3s) var(--ease-primary, ease),
+    rotate var(--dur-slow, 0.5s) var(--ease-primary, ease),
+    filter var(--dur-base, 0.3s) ease;
+}
+
+/* Over something clickable: larger, turned a few degrees, and brighter. The
+   rotation is small on purpose — a spinning cursor is a toy. */
+.root[data-active] .gem img {
+  scale: 1.35;
+  rotate: 12deg;
+  filter:
+    drop-shadow(0 0 7px rgba(150, 236, 255, 0.85))
+    drop-shadow(0 0 20px rgba(70, 200, 255, 0.55));
+}
+
+/* A press reads as the stone being pushed into the surface. */
+.root[data-press] .gem img { scale: 1.12; rotate: 4deg; }
+
+/* ---------------- the trailing ring ---------------- */
+.ring {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 34px;
+  height: 34px;
+  margin: -17px 0 0 -17px;
+  border: 1px solid rgba(120, 214, 245, 0.45);
+  border-radius: 50%;
+  will-change: transform;
+  transition:
+    width var(--dur-base, 0.3s) var(--ease-primary, ease),
+    height var(--dur-base, 0.3s) var(--ease-primary, ease),
+    margin var(--dur-base, 0.3s) var(--ease-primary, ease),
+    border-color var(--dur-base, 0.3s) ease,
+    background-color var(--dur-base, 0.3s) ease;
+}
+
+.root[data-active] .ring {
+  width: 54px;
+  height: 54px;
+  margin: -27px 0 0 -27px;
+  border-color: rgba(150, 236, 255, 0.75);
+  background: rgba(80, 205, 245, 0.08);
+}
+
+.root[data-press] .ring { width: 26px; height: 26px; margin: -13px 0 0 -13px; }
+
+/* ---------------- the label ---------------- */
+.label {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  translate: -50% 0.5rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(10, 18, 24, 0.82);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid rgba(120, 214, 245, 0.3);
+  color: #cfeeff;
+  font-style: normal;
+  font-size: 0.5rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  opacity: 0;
+  scale: 0.85;
+  transition:
+    opacity var(--dur-base, 0.3s) var(--ease-primary, ease),
+    scale var(--dur-base, 0.3s) var(--ease-primary, ease);
+}
+
+.root[data-label] .label { opacity: 1; scale: 1; }
+
+/* ---------------- the click burst ---------------- */
+.burst {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  /* One animation on the container drives its own removal via animationend,
+     so the burst cleans itself up rather than relying on a timer alone. */
+  animation: burstLife 520ms linear forwards;
+}
+
+.burst i {
+  position: absolute;
+  left: -2px;
+  top: -2px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #d8f6ff;
+  box-shadow: 0 0 8px 2px rgba(120, 226, 255, 0.75);
+  animation: chip 460ms var(--ease-primary, cubic-bezier(0.3, 0.26, 0.38, 1)) forwards;
+  animation-delay: var(--delay, 0ms);
+}
+
+@keyframes burstLife { to { opacity: 1; } }
+
+@keyframes chip {
+  from { transform: translate3d(0, 0, 0) scale(1); opacity: 1; }
+  to { transform: translate3d(var(--dx), var(--dy), 0) scale(0.2); opacity: 0; }
+}
+
+/*
+ * The native cursor is hidden only while this component is actually running —
+ * the flag is set by the component itself, so if it bails out for any reason
+ * the system cursor is never taken away.
+ *
+ * Text fields and disabled controls keep theirs regardless: a caret and a
+ * not-allowed cursor carry information a gem cannot.
+ */
+:global(html[data-custom-cursor='on']),
+:global(html[data-custom-cursor='on'] *) { cursor: none; }
+
+:global(html[data-custom-cursor='on'] input),
+:global(html[data-custom-cursor='on'] textarea),
+:global(html[data-custom-cursor='on'] select),
+:global(html[data-custom-cursor='on'] [contenteditable]) { cursor: auto; }
+
+:global(html[data-custom-cursor='on'] :disabled),
+:global(html[data-custom-cursor='on'] [aria-disabled='true']) { cursor: not-allowed; }
+
+/* Belt and braces — the component already refuses to mount in these cases. */
+@media (pointer: coarse), (max-width: 899px) {
+  .root { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .root { display: none; }
+}

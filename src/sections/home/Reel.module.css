@@ -1,0 +1,364 @@
+.stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  align-content: center;
+  gap: var(--s-4);
+  padding: clamp(1.5rem, 6vh, 4rem) 0;
+  overflow: hidden;
+  background:
+    radial-gradient(100% 70% at 50% 42%, #14171c 0%, transparent 68%),
+    var(--ink);
+}
+
+/*
+ * Cleared of the fixed header. The stage centres its rows, so on a short
+ * viewport the section title landed directly under the navigation — the
+ * kicker and the nav on one line, neither readable.
+ */
+.head {
+  display: grid;
+  gap: var(--s-2);
+  padding-inline: var(--gutter);
+  padding-top: clamp(2.5rem, 7vh, 4.5rem);
+}
+
+.kicker {
+  font-size: 0.5625rem;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--accent-lift);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-weight: 300;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--ivory);
+  font-size: clamp(1.8rem, 1rem + 2.6vw, 3.2rem);
+}
+
+/*
+ * The window the strip runs behind. `overflow: hidden` here and nowhere on the
+ * track, so the track can be wider than the screen without the page gaining a
+ * horizontal scrollbar.
+ */
+.viewport {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+
+/*
+ * THE TRAVERSE.
+ *
+ * A percentage in translateX resolves against the element's OWN width, so
+ * `100vw - 100%` is precisely "viewport minus track" — the exact distance
+ * needed to bring the last card to the right edge, whatever the track's width
+ * turns out to be. Multiplying by the scene's own progress locks the sideways
+ * travel to the vertical scroll with no measurement, no observer, and nothing
+ * that can desynchronise on a resize.
+ */
+.track {
+  display: flex;
+  align-items: center;
+  gap: clamp(1rem, 2.4vw, 2.25rem);
+  padding-inline: max(var(--gutter), calc(50vw - 9rem));
+  margin: 0;
+  list-style: none;
+  width: max-content;
+  transform: translateX(calc(var(--sp, 0) * (100vw - 100%)));
+  will-change: transform;
+}
+
+.cell {
+  flex: 0 0 auto;
+  width: clamp(11rem, 21vw, 17rem);
+}
+
+/*
+ * Distance from the centre of the frame, as a 0..1 number.
+ *
+ * The card's own position along the strip is `--i / (--n - 1)`; the strip's
+ * progress is `--sp`. When those two match, the card is in the middle of the
+ * viewport. The absolute difference is therefore how far off-centre it is —
+ * which is enough to light it, lift it and bring it forward with no
+ * per-element JavaScript at all.
+ */
+.card {
+  --at: calc(var(--i) / (var(--n) - 1));
+  --off: max(calc(var(--at) - var(--sp, 0)), calc(var(--sp, 0) - var(--at)));
+  --focus: clamp(0, calc(1 - var(--off) * 3.4), 1);
+
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 3 / 4;
+  padding: var(--s-4) var(--s-3) var(--s-5);
+  border: 1px solid var(--ink-line);
+  border-radius: 3px;
+  background: linear-gradient(165deg, #23262c 0%, #14161a 58%, #0c0e11 100%);
+
+  /*
+   * Nearer the centre: bigger and brighter.
+   *
+   * `scale` and `filter` only — both composited. The first version also
+   * animated `box-shadow` blur and spread, which forces a full repaint of
+   * every card on every frame; nine of those took a clean 60fps scroll to 27
+   * janky frames. The shadow is fixed now and the depth is carried by scale
+   * and brightness, which cost nothing.
+   */
+  scale: calc(0.88 + var(--focus) * 0.16);
+  box-shadow: 0 22px 48px rgba(0, 0, 0, 0.45);
+
+  /*
+   * Leans with the scroll. Reusing the site-wide velocity means the strip has
+   * the same weight as everything else on the page rather than inventing its
+   * own physics — one vocabulary, not two.
+   */
+  rotate: calc(var(--vel, 0) * -2.2deg);
+  transform-origin: 50% 100%;
+
+  /*
+   * Promoted to its own compositor layer.
+   *
+   * Without this the card is scaled by re-running layout and paint: a vector
+   * has no fixed resolution, so every frame at a new scale means rasterising
+   * all thirty-seven facet paths again, nine cards at a time. Promoted, the
+   * stone is rasterised once and the compositor scales the cached texture —
+   * which is the same work whether the card holds two paths or two hundred.
+   */
+  will-change: transform, opacity;
+}
+
+/*
+ * Off-centre cards are dimmed by an OVERLAY, not by `filter: brightness()`.
+ *
+ * A filter re-rasterises everything beneath it whenever its value changes, and
+ * this value changes on every frame of the traverse. Over the old two-path
+ * outline that was affordable; over a thirty-seven-path faceted stone with a
+ * clip path and two gradients it tripled the section's dropped frames — 24 of
+ * 120 became 56 of 94. Fading a flat black plate is a compositor operation
+ * that costs the same whatever is underneath it.
+ */
+.card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+  background: #05070a;
+  opacity: calc(0.52 - var(--focus) * 0.52);
+}
+
+.pool {
+  position: absolute;
+  top: 34%;
+  left: 50%;
+  width: 118%;
+  height: 46%;
+  translate: -50% -50%;
+  border-radius: 50%;
+  /*
+   * A FIXED gradient faded with opacity, never a gradient whose colour stops
+   * change. Recomputing a radial gradient every frame repaints the element;
+   * fading a finished one is a composited operation the GPU already has.
+   */
+  background: radial-gradient(
+    closest-side,
+    rgba(240, 246, 255, 0.72) 0%,
+    rgba(206, 220, 240, 0.22) 46%,
+    transparent 76%
+  );
+  opacity: calc(0.28 + var(--focus) * 0.72);
+  filter: blur(7px);
+}
+
+.stone {
+  position: relative;
+  z-index: 2;
+  width: 54%;
+  color: rgba(255, 255, 255, 0.96);
+  translate: 0 -14%;
+  /*
+   * NO FILTER HERE, deliberately.
+   *
+   * A fixed-radius drop-shadow is still re-rasterised whenever the element it
+   * sits on changes size — and this element is scaled on every frame by its
+   * distance from the centre of the strip. Over a 37-path faceted stone, nine
+   * at a time, that cost 72 of 86 frames across the traverse. The glow the
+   * shadow was providing is already coming from `.pool` behind the stone,
+   * which fades by opacity and costs nothing.
+   */
+}
+
+/*
+ * No fill rules here any more.
+ *
+ * These used to give ShapeGlyph's hollow outline a body. ShapeFacets carries a
+ * colour on every one of its 33 facets as an attribute, and a CSS `fill`
+ * outranks a presentation attribute — so leaving them in would have repainted
+ * the whole stone one flat grey and thrown away the facet pattern entirely.
+ */
+
+/* The stone on a polished tray throws a dark, compressed double. */
+.echo {
+  position: absolute;
+  z-index: 1;
+  top: 46%;
+  width: 54%;
+  color: rgba(198, 212, 232, 0.36);
+  transform: scaleY(-0.42);
+  transform-origin: top center;
+  filter: blur(2.5px);
+  mask-image: linear-gradient(#000, transparent 70%);
+  -webkit-mask-image: linear-gradient(#000, transparent 70%);
+}
+
+/*
+ * A PHOTOGRAPH, where one exists.
+ *
+ * Sized and placed to sit exactly where the drawn glyph sits, so a strip that
+ * is part photographic and part drawn still scans as one row rather than two
+ * treatments fighting. `contain`, never `cover`: a diamond cropped by its own
+ * frame stops being a picture of a shape, which is the only thing this card
+ * is for.
+ */
+.shot {
+  position: relative;
+  z-index: 2;
+  width: 62%;
+  aspect-ratio: 1;
+  object-fit: contain;
+  translate: 0 -12%;
+  /* Fixed radius, like .stone — a drop-shadow whose blur animates is
+     re-rendered from scratch every frame, and nine of those is the jank that
+     cost this section 27 frames the first time. */
+  filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.65));
+}
+
+.shotEcho {
+  position: absolute;
+  z-index: 1;
+  top: 50%;
+  width: 62%;
+  aspect-ratio: 1;
+  object-fit: contain;
+  transform: scaleY(-0.42);
+  transform-origin: top center;
+  opacity: 0.32;
+  filter: blur(2.5px) saturate(0.7);
+  mask-image: linear-gradient(#000, transparent 70%);
+  -webkit-mask-image: linear-gradient(#000, transparent 70%);
+}
+
+.label {
+  position: absolute;
+  bottom: var(--s-3);
+  display: grid;
+  gap: 0.15rem;
+  text-align: center;
+}
+
+.label b {
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: var(--t-lg);
+  color: var(--ivory);
+}
+
+.label i {
+  font-style: normal;
+  font-size: 0.5rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  /* Only the card in focus names its cut in full. */
+  opacity: var(--focus);
+  transition: opacity var(--dur-base) var(--ease-primary);
+}
+
+.index {
+  position: absolute;
+  top: var(--s-3);
+  left: var(--s-3);
+  font-size: 0.5rem;
+  letter-spacing: 0.2em;
+  color: var(--slate);
+}
+
+/* ---------------- the horizon ---------------- */
+.rail {
+  position: relative;
+  height: 1px;
+  margin-inline: var(--gutter);
+  background: var(--ink-line);
+}
+
+/*
+ * Scaled, never resized.
+ *
+ * This animated `width` on every frame, which is a LAYOUT operation — the
+ * browser reflows to find the new box before it can paint it, sixty times a
+ * second, and layout cannot be handed to the compositor the way a transform
+ * can. It was the single largest source of jank in the section. scaleX from
+ * the left edge produces exactly the same bar for free.
+ */
+.railFill {
+  position: absolute;
+  inset: 0 0 0 0;
+  transform: scaleX(var(--sp, 0));
+  transform-origin: left center;
+  background: linear-gradient(90deg, transparent, var(--accent));
+}
+
+.more {
+  justify-self: start;
+  margin-inline: var(--gutter);
+  font-size: var(--t-xs);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent-lift);
+}
+
+/*
+ * On a phone the traverse is abandoned entirely.
+ *
+ * A pinned horizontal section on touch fights the gesture the visitor already
+ * has — they swipe sideways and the page does nothing, because sideways is
+ * driven by vertical scroll. Here it becomes an ordinary swipeable strip,
+ * which is what a thumb expects.
+ */
+@media (max-width: 899px) {
+  .viewport {
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .track {
+    transform: none;
+    padding-inline: var(--gutter);
+  }
+
+  .cell { scroll-snap-align: center; }
+
+  .card {
+    scale: 1;
+    rotate: 0deg;
+  }
+
+  .card::after { opacity: 0; }
+
+  .label i { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card { rotate: 0deg; scale: 1; }
+  .card::after { opacity: 0; }
+  .label i { opacity: 1; }
+}

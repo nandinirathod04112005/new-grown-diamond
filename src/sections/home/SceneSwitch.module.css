@@ -1,0 +1,128 @@
+/*
+ * The reference site's homeSceneOnOff, rebuilt.
+ *
+ * Two full-bleed states stacked; the upper one is uncovered from the right by
+ * `inset(0 0 0 100%)` -> `inset(0 0 0 0)`. Because the wipe is bound to --p it
+ * reverses exactly when the visitor scrolls back, which a played-once timeline
+ * would not.
+ */
+.stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.panel {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: var(--s-3);
+  text-align: center;
+  padding-inline: var(--gutter);
+}
+
+/*
+ * THE PLATE, and why it is not full-bleed any more.
+ *
+ * A percentage of the viewport with a hard ceiling: the rough photograph is
+ * 525px wide and the brilliant 754px, so 560px is the largest box neither has
+ * to be invented to fill. Stretched edge to edge it was a 3.7x enlargement,
+ * which is how the scale bar and the compression blocks ended up being the
+ * most legible things on the screen.
+ *
+ * Both panels share these numbers exactly. The wipe only reads as one stone
+ * transforming while the two plates occupy the same rectangle.
+ */
+.plate {
+  position: relative;
+  /* 46vw is a desktop number: on a 390px phone it produced a 179px plate, an
+     image smaller than the heading under it. Below the breakpoint the plate
+     takes the width it can actually have. */
+  width: min(86vw, 560px);
+  aspect-ratio: 16 / 9;
+  margin: 0;
+  overflow: hidden;
+  border-radius: 2px;
+  box-shadow: 0 26px 60px rgba(0, 0, 0, 0.5);
+}
+
+.plate img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/*
+ * Each panel owns its own stacking context.
+ *
+ * Without this the two panels are siblings at `z-index: auto`, so a child of
+ * the LOWER panel carrying `z-index: 1` competes directly with the upper panel
+ * itself — and the covered state's heading and copy painted straight through
+ * the ivory, both states legible at once. Isolating each panel means the wipe
+ * hides everything under it, which is the one thing a wipe has to do.
+ */
+.base { z-index: 1; }
+.over { z-index: 2; }
+.panel { isolation: isolate; }
+
+.copy {
+  max-width: 46ch;
+  font-size: var(--t-sm);
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+.over .copy { color: rgba(28, 28, 30, 0.72); }
+
+.base {
+  background: var(--ink);
+}
+
+.over {
+  background: var(--ivory);
+  color: var(--text-invert);
+  clip-path: inset(0 0 0 calc(100% - clamp(0.18, var(--sp, 1) * 1.55, 1) * 100%));
+}
+
+.label {
+  font-family: var(--font-display);
+  font-size: var(--t-2xl);
+  font-weight: 300;
+  line-height: 1;
+}
+
+.base .label { color: var(--ivory); }
+
+.note {
+  font-size: var(--t-sm);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+.base .note { color: var(--gold-lift); }
+.over .note { color: var(--gold-deep); }
+
+/* A hairline that travels with the wipe edge, so the transition reads as an
+   instrument sweeping across rather than a layer fading in. */
+.edge {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--gold);
+  left: calc(100% - clamp(0.18, var(--sp, 1) * 1.55, 1) * 100%);
+  opacity: calc(1 - clamp(0.18, var(--sp, 1) * 1.55, 1));
+}
+
+@media (min-width: 900px) {
+  .plate { width: min(46vw, 560px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .over { clip-path: none; }
+  .edge { display: none; }
+}

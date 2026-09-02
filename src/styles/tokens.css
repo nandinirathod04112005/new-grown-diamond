@@ -1,0 +1,173 @@
+/*
+ * Design + motion tokens.
+ *
+ * The three easing curves and the duration ladder are lifted verbatim from the
+ * reference site's compiled CSS: cubic-bezier(.3,.26,.38,1) carries 63 of its
+ * transitions and is the house curve; the other two are reserved for symmetric
+ * in-out moves and for hard, decisive wipes.
+ */
+:root {
+  color-scheme: dark;
+
+  /*
+   * ---- the house accent ----
+   *
+   * One family, three steps. Everything accented on the site — rules, active
+   * states, the scroll cue, the italic word in a headline — resolves through
+   * these, so the accent is changed in one place rather than in twenty-two
+   * stylesheets.
+   */
+  --accent: #00cec9;
+  --accent-lift: #5cf0ec;
+  --accent-deep: #00918d;
+
+  /* ---- ground: dark-first, ivory is the deliberate vitrine ---- */
+  --ink: #0c0c0e;
+  --ink-raised: #131317;
+  --ink-line: rgba(255, 255, 255, 0.14);
+  --ivory: #faf9f7;
+  --pearl: #f3f1ec;
+  --slate: #8b8b93;
+
+  /*
+   * Chrome ink. Deliberately does NOT flip with the theme.
+   *
+   * The header blends with `mix-blend-mode: difference`, which already adapts
+   * to whatever is behind it: a near-white sits dark on a light ground and
+   * light on a dark one, from the same value. Flipping it per mode inverts
+   * that adaptation and produces near-invisible grey on light.
+   */
+  --chrome: #f4f2ee;
+
+  --text: #f4f2ee;
+  --text-muted: #9b9ba3;
+  --text-invert: #17171b;
+
+  /*
+   * The accent flows through the three gold tokens rather than replacing them
+   * at 77 call sites. The names are historical — they were a metallic gold
+   * (#b48c47 / #d9c08a / #8f6d31) — and pointing them back at those three hex
+   * values is the entire cost of reverting the house colour.
+   */
+  --gold: var(--accent);
+  --gold-lift: var(--accent-lift);
+  --gold-deep: var(--accent-deep);
+
+  /* Scrims and glows, so a stage can be darkened without hard-coding a black
+     that stays black when the page turns light. */
+  --scrim: 12 12 14;
+  --glow: 92 240 236;
+
+  /* How far forward the fixed backdrop film comes. It is atmosphere behind the
+     chapters, and a photograph carries much further on a light ground than on
+     a dark one, so light mode pulls it right back. */
+  --film-poster: 0.5;
+
+  /* ---- motion: the reference site's exact values ---- */
+  --ease-primary: cubic-bezier(0.3, 0.26, 0.38, 1);
+  --ease-inout: cubic-bezier(0.47, 0.16, 0.24, 1);
+  --ease-strong: cubic-bezier(0.43, 0.05, 0.17, 1);
+
+  --dur-xs: 0.15s;
+  --dur-fast: 0.2s;
+  --dur-base: 0.3s;
+  --dur-mid: 0.34s;
+  --dur-slow: 0.5s;
+  --dur-xl: 1s;
+
+  /* Scroll distance granted to one line of a staged text block. The reference
+     allocates 30vh per line on inner blocks and 40vh on headline blocks. */
+  --line-scroll: 30vh;
+  --line-scroll-lead: 40vh;
+
+  /* ---- type ---- */
+  --font-display: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+  --font-body: 'Jost', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+
+  --t-xs: 0.75rem;
+  --t-sm: 0.8125rem;
+  --t-base: 1rem;
+  --t-lg: clamp(1.15rem, 0.95rem + 0.8vw, 1.5rem);
+  --t-xl: clamp(1.6rem, 1.1rem + 2.2vw, 3rem);
+  --t-2xl: clamp(2.4rem, 1.2rem + 5vw, 6rem);
+  --t-3xl: clamp(3rem, 1rem + 9vw, 9.5rem);
+
+  /* ---- space ---- */
+  --s-1: 0.25rem;
+  --s-2: 0.5rem;
+  --s-3: 1rem;
+  --s-4: 1.5rem;
+  --s-5: 2.5rem;
+  --s-6: 4rem;
+  --s-7: 6rem;
+  --s-8: 8.5rem;
+
+  --gutter: clamp(1.25rem, 5vw, 5rem);
+  --measure: 62ch;
+}
+
+/*
+ * ================================================================
+ * LIGHT MODE
+ * ================================================================
+ *
+ * The role names are kept and their VALUES swap: `--ink` is always the page
+ * ground and `--ivory` is always the strongest foreground, whichever way round
+ * that happens to be. Renaming them per mode would mean editing every
+ * stylesheet; swapping the roles consistently means none.
+ *
+ * The accent darkens here. #00cec9 is a bright cyan built to sit on near
+ * black; on white it fails contrast for text outright, so light mode uses the
+ * deeper steps of the same family and keeps the bright one for fills.
+ */
+/* An explicit choice wins in both directions, so the toggle can override the
+   operating system either way. */
+:root[data-theme='light'] {
+  color-scheme: light;
+
+  --accent: #00807c;
+  --accent-lift: #00a49f;
+  --accent-deep: #005f5c;
+
+  --ink: #f7f6f3;
+  --ink-raised: #ffffff;
+  --ink-line: rgba(18, 18, 22, 0.14);
+  --ivory: #14141a;
+  --pearl: #24242b;
+  --slate: #6b6b74;
+
+  --text: #16161c;
+  --text-muted: #55555f;
+  --text-invert: #faf9f7;
+
+  --scrim: 247 246 243;
+  --glow: 0 128 124;
+  --film-poster: 0.14;
+}
+
+/* With no explicit choice stored, follow the operating system. Guarded so a
+   visitor who has chosen dark is not overridden by a light OS setting. */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) {
+    color-scheme: light;
+
+    --accent: #00807c;
+    --accent-lift: #00a49f;
+    --accent-deep: #005f5c;
+
+    --ink: #f7f6f3;
+    --ink-raised: #ffffff;
+    --ink-line: rgba(18, 18, 22, 0.14);
+    --ivory: #14141a;
+    --pearl: #24242b;
+    --slate: #6b6b74;
+
+    --text: #16161c;
+    --text-muted: #55555f;
+    --text-invert: #faf9f7;
+
+    --scrim: 247 246 243;
+    --glow: 0 128 124;
+    --film-poster: 0.14;
+  }
+}

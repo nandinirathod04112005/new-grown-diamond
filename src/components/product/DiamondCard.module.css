@@ -1,0 +1,255 @@
+/*
+ * The inventory section is a deliberate ivory "vitrine" — the one place on a
+ * dark-first site where reading beats atmosphere. These cards are built for
+ * that ground, not for the dark one, so the accent uses the AA-safe deep gold
+ * rather than the lifted gold used on ink.
+ */
+/*
+ * The card is now only the CAMERA. It holds the perspective and nothing else:
+ * the surface, the border and the rotation all moved down to `.plane`, because
+ * an element cannot both clip its corners and open a 3D context — `overflow`
+ * forces `transform-style: flat` and every layer below collapses into the face
+ * with no error to show for it.
+ */
+.card {
+  display: grid;
+  perspective: 950px;
+  perspective-origin: 50% 44%;
+  color: var(--text-invert);
+}
+
+.plane {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  background: var(--white, #fff);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 3px;
+  transform-style: preserve-3d;
+  /* Kept to five degrees. A large tilt keystones the photograph; a small one
+     simply gives the card thickness. */
+  transform:
+    rotateX(var(--rx, 0deg))
+    rotateY(var(--ry, 0deg))
+    scale(var(--tz, 1));
+  transform-origin: center;
+  will-change: transform;
+  transition:
+    border-color var(--dur-slow) var(--ease-primary),
+    box-shadow var(--dur-slow) var(--ease-primary),
+    transform var(--dur-slow) var(--ease-primary);
+}
+
+.card:hover .plane {
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  box-shadow: 0 2px 6px rgba(12, 12, 14, 0.05), 0 26px 60px rgba(12, 12, 14, 0.18);
+}
+
+/*
+ * A specular sheet, held 30px in FRONT of the card face rather than painted on
+ * it. Because it is a separate plane, turning the card slides it across the
+ * photograph — the parallax is what makes the tilt read as glass over a print
+ * instead of a gradient rotating with the box.
+ */
+.gloss {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  transform: translateZ(30px);
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(105deg, transparent 38%, rgba(255,255,255,0.55) 50%, transparent 62%);
+  transition: opacity var(--dur-slow) var(--ease-primary);
+}
+
+.card:hover .gloss { opacity: 0.24; }
+
+/* The rim, floating between the face and the gloss. At this depth it parts
+   visibly from the border below it, which is the cue that says these are
+   separate planes rather than one drawn surface. */
+.rim {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  transform: translateZ(16px);
+  pointer-events: none;
+  border: 1px solid color-mix(in srgb, var(--accent) 0%, transparent);
+  border-radius: 3px;
+  transition: border-color var(--dur-slow) var(--ease-primary);
+}
+
+.card:hover .rim { border-color: color-mix(in srgb, var(--accent) 34%, transparent); }
+
+/* Fixed ratio so the grid never reflows as photographs load. */
+/* Fixed ratio so the grid never reflows as photographs load. Overflow lives
+   here — the only place in the card that clips — and never on the plane. */
+.shot {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: #ecebe6;
+  border-radius: 2px 2px 0 0;
+}
+
+.shot img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 1.2s var(--ease-primary);
+}
+
+.card:hover .shot img { transform: scale(1.05); }
+
+.noShot, .featured, .stock {
+  position: absolute;
+  font-size: 0.625rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 0.3rem 0.55rem;
+}
+
+.noShot {
+  inset-inline: 0;
+  bottom: 0;
+  text-align: center;
+  background: rgba(12, 12, 14, 0.72);
+  color: #e7e5e0;
+}
+
+.featured {
+  top: 0.6rem;
+  left: 0.6rem;
+  background: var(--ink);
+  color: var(--gold-lift);
+}
+
+.stock {
+  top: 0.6rem;
+  right: 0.6rem;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  color: #5c6169;
+}
+
+.stock[data-in] { color: #2f6b4f; border-color: rgba(47, 107, 79, 0.4); }
+
+/* Lifted a little off the face, so the specs sit forward of the photograph
+   rather than on the same sheet. Small: text that floats too far detaches from
+   the card it belongs to. */
+.body {
+  display: grid;
+  align-content: start;
+  gap: var(--s-2);
+  padding: var(--s-3);
+  transform: translateZ(8px);
+}
+
+.ref {
+  font-size: 0.625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold-deep);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 300;
+  color: var(--text-invert);
+  font-variant-numeric: tabular-nums;
+}
+
+.title span { font-style: italic; color: #6e6e76; }
+
+.specs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--s-2);
+  margin: var(--s-1) 0 0;
+  padding-top: var(--s-2);
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.specs dt {
+  font-size: 0.5625rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #82828b;
+}
+
+.specs dd {
+  margin: 0.15rem 0 0;
+  font-size: 0.875rem;
+  color: var(--text-invert);
+  font-variant-numeric: tabular-nums;
+}
+
+.growth {
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #6e6e76;
+}
+
+.enquire {
+  margin-top: var(--s-1);
+  font-size: var(--t-xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold-deep);
+  border-bottom: 1px solid transparent;
+  width: max-content;
+  transition: border-color var(--dur-base) var(--ease-primary);
+}
+
+.enquire:hover { border-bottom-color: var(--gold-deep); }
+
+@media (prefers-reduced-motion: reduce) {
+  .card { transform: none; }
+  .gloss { display: none; }
+  .card:hover .shot img { transform: none; }
+}
+
+/* The inspect control rises out of the photograph on hover, and is always
+   present for keyboard users via focus-within — a hover-only affordance is
+   simply missing for anyone not using a mouse. */
+.inspect {
+  position: absolute;
+  inset-inline: 0.6rem;
+  bottom: 0.6rem;
+  padding: 0.55rem 0.7rem;
+  background: rgba(12, 12, 14, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 2px;
+  color: #f4f2ee;
+  font-size: 0.5625rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  opacity: 0;
+  transform: translateY(0.6rem);
+  transition: opacity var(--dur-slow) var(--ease-primary),
+    transform var(--dur-slow) var(--ease-primary),
+    background var(--dur-base) var(--ease-primary);
+}
+
+.card:hover .inspect,
+.card:focus-within .inspect { opacity: 1; transform: translateY(0); }
+.inspect:hover { background: var(--gold-deep); border-color: var(--gold-deep); }
+
+/* Cards arrive in sequence rather than all at once. */
+.card {
+  animation: cardIn 0.7s var(--ease-primary) both;
+  animation-delay: calc(var(--i, 0) * 70ms);
+}
+
+/* The entrance uses the independent `translate` property, not `transform`.
+   With animation-fill-mode: both, animating transform here would hold it and
+   the perspective tilt would never apply at all. */
+@keyframes cardIn {
+  from { opacity: 0; translate: 0 1.4rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card { animation: none; }
+  .inspect { opacity: 1; transform: none; }
+}

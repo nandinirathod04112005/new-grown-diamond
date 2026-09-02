@@ -1,0 +1,67 @@
+/*
+ * The reference site's iconCircleArrow, rebuilt: a ring that fills from the
+ * bottom while the arrow leaves through the right edge and its replacement
+ * arrives from the left. Every value uses the house curve.
+ */
+.root {
+  --size: 3rem;
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: var(--size);
+  height: var(--size);
+  border: 1px solid var(--ink-line);
+  border-radius: 50%;
+  overflow: hidden;
+  color: var(--text);
+  transition: color var(--dur-base) var(--ease-primary),
+    border-color var(--dur-base) var(--ease-primary);
+}
+
+.fill {
+  position: absolute;
+  inset: 0;
+  background: var(--gold-lift);
+  border-radius: 50%;
+  transform: translateY(101%);
+  transition: transform var(--dur-slow) var(--ease-primary);
+}
+
+.glyphs {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 1em;
+  height: 1em;
+  overflow: hidden;
+}
+
+.glyph {
+  grid-area: 1 / 1;
+  transition: transform var(--dur-slow) var(--ease-primary);
+}
+
+.glyphIn {
+  transform: translateX(-140%);
+}
+
+.root:hover,
+.root:focus-visible {
+  color: var(--text-invert);
+  border-color: var(--gold-lift);
+}
+
+.root:hover .fill,
+.root:focus-visible .fill {
+  transform: translateY(0);
+}
+
+.root:hover .glyphOut,
+.root:focus-visible .glyphOut {
+  transform: translateX(140%);
+}
+
+.root:hover .glyphIn,
+.root:focus-visible .glyphIn {
+  transform: translateX(0);
+}

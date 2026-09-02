@@ -1,0 +1,346 @@
+/*
+ * One lit room. Everything in the frame is lit by the single overhead source,
+ * which is what makes the black read as a space rather than a background
+ * colour — the difference between a photograph and a swatch.
+ */
+.stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  overflow: hidden;
+  background: #000;
+
+  /*
+   * THE SEAM.
+   *
+   * Two numbers drive the whole transformation, and every layer is clipped by
+   * the same pair — so the three states can never overlap or leave a gap
+   * however fast the page is scrolled. Three independent animations trying to
+   * agree on a boundary is exactly how these things tear.
+   *
+   *   --a  the cut plan taking over from the rough crystal
+   *   --b  the polished stone taking over from the cut plan
+   */
+  --a: clamp(0, calc((var(--sp, 0) - 0.10) / 0.28), 1);
+  --b: clamp(0, calc((var(--sp, 0) - 0.46) / 0.30), 1);
+}
+
+/* ---------------- the light ---------------- */
+
+/* The source: a hard ellipse at the top of the frame. */
+.spot {
+  position: absolute;
+  top: -7%;
+  left: 50%;
+  translate: -50% 0;
+  width: min(34vw, 26rem);
+  height: 12vh;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, #fff, rgba(255, 255, 255, 0.72) 46%, transparent 78%);
+  filter: blur(6px);
+  animation: lampOn 1.6s var(--ease-primary) both;
+}
+
+/*
+ * The cone. A trapezoid clipped out of a soft gradient, widening as it falls —
+ * this is the element that tells the eye where the light is coming from, and
+ * without it the stone just looks bright for no reason.
+ */
+.cone {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  translate: -50% 0;
+  width: min(92vw, 74rem);
+  height: 86%;
+  clip-path: polygon(43% 0%, 57% 0%, 100% 100%, 0% 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.20) 0%,
+    rgba(255, 255, 255, 0.06) 30%,
+    transparent 68%
+  );
+  /* Heavily blurred, because a crisply clipped triangle reads as a shape drawn
+     on the page rather than as light falling through it. */
+  filter: blur(42px);
+  animation: lampOn 2s var(--ease-primary) 0.15s both;
+}
+
+@keyframes lampOn { from { opacity: 0; } }
+
+/*
+ * The drafting grid, present only while the stone is being planned. It is tied
+ * to the phase rather than faded in on a timer, so scrubbing back takes the
+ * plan away again — the page runs the process in both directions.
+ */
+.grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background-image:
+    linear-gradient(rgba(238, 236, 231, 0.09) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(238, 236, 231, 0.09) 1px, transparent 1px);
+  background-size: 46px 46px;
+  mask-image: radial-gradient(62% 58% at 50% 46%, #000 10%, transparent 78%);
+  -webkit-mask-image: radial-gradient(62% 58% at 50% 46%, #000 10%, transparent 78%);
+  transition: opacity var(--dur-xl) var(--ease-primary);
+}
+
+:global([data-section='facet']) .grid { opacity: 0.5; }
+:global([data-section='design']) .grid { opacity: 1; }
+
+/* The house initials, thin and cornered, as on the reference sheets. */
+.marks {
+  position: absolute;
+  top: var(--s-5);
+  left: var(--gutter);
+  right: var(--gutter);
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-display);
+  font-size: var(--t-xl);
+  color: rgba(238, 236, 231, 0.34);
+  letter-spacing: 0.1em;
+  animation: lampOn 2s var(--ease-primary) 0.5s both;
+}
+
+/* ---------------- the words ---------------- */
+/*
+ * Cleared of the fixed header. The stage centres its content, so at 800px the
+ * first line landed directly under the navigation — two sets of type on one
+ * line, neither readable.
+ */
+.head {
+  position: relative;
+  z-index: 3;
+  margin-top: clamp(3rem, 9vh, 6rem);
+  display: grid;
+  place-items: center;
+  text-align: center;
+  margin-bottom: clamp(1.5rem, 5vh, 3rem);
+  /* Every line occupies the same cell, so the block never reflows as the
+     wording changes underneath it. */
+  grid-template-areas: 'stack';
+}
+
+.line {
+  grid-area: stack;
+  display: grid;
+  gap: 0.1em;
+  opacity: 0;
+  translate: 0 0.8rem;
+  transition:
+    opacity var(--dur-slow) var(--ease-primary),
+    translate var(--dur-slow) var(--ease-primary);
+}
+
+:global([data-section='rough']) .line[data-for='rough'],
+:global([data-section='facet']) .line[data-for='facet'],
+:global([data-section='design']) .line[data-for='design'],
+:global([data-section='atelier']) .line[data-for='atelier'],
+:global([data-section='out']) .line[data-for='atelier'] {
+  opacity: 1;
+  translate: 0 0;
+}
+
+.line em,
+.line b {
+  display: block;
+  font-family: var(--font-display);
+  font-style: normal;
+  font-weight: 300;
+  line-height: 1.04;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  font-size: clamp(1.5rem, 0.7rem + 2.6vw, 3.1rem);
+}
+
+/* Two tones, as the reference does it: the setup warm, the payoff white. */
+.line em { color: #d8cba6; }
+.line b { color: var(--ivory); }
+
+.sub {
+  position: relative;
+  z-index: 3;
+  margin-top: clamp(1rem, 3vh, 2rem);
+  font-size: 0.5625rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba(238, 236, 231, 0.5);
+  animation: lampOn 2s var(--ease-primary) 0.8s both;
+}
+
+.actions {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--s-3);
+  margin-top: var(--s-3);
+  animation: lampOn 2s var(--ease-primary) 0.95s both;
+}
+
+.actions a {
+  padding: 0.85rem 1.4rem;
+  border: 1px solid rgba(238, 236, 231, 0.24);
+  color: var(--ivory);
+  font-size: var(--t-xs);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  transition: background-color var(--dur-base) var(--ease-primary), color var(--dur-base) var(--ease-primary);
+}
+
+.actions a:first-child { background: var(--ivory); color: #0a0a0c; border-color: var(--ivory); }
+.actions a:hover, .actions a:focus-visible { background: var(--ivory); color: #0a0a0c; }
+
+/* ---------------- the plinth ---------------- */
+.plinth {
+  position: relative;
+  z-index: 2;
+  width: min(72vw, 30rem);
+  display: grid;
+  justify-items: center;
+}
+
+.subject {
+  position: relative;
+  width: min(46vw, 17rem);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  /* Sits on the pedestal rather than in front of it. */
+  margin-bottom: -6%;
+  /*
+   * Clips its contents, and that is load-bearing rather than tidy: the rough
+   * crystal is zoomed with a transform, and a transform on an absolutely
+   * positioned child is NOT bounded by its own box. Without this the specimen
+   * sheet scaled straight past the subject and filled the whole viewport,
+   * scale bar included.
+   */
+  overflow: hidden;
+}
+
+/*
+ * The three states, all filling the same box and clipped by the one seam.
+ *
+ *   rough    left of the first seam
+ *   plan     between the two seams
+ *   polished right of the second seam
+ *
+ * Written as one expression each so they are exact complements — no rounding
+ * gap can open between them at any scroll position.
+ */
+.rough,
+.wire,
+.polished {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* The rough stage is drawn, not photographed — see Atelier.jsx. */
+.rough {
+  clip-path: inset(0 calc(var(--a) * 100%) 0 0);
+  overflow: visible;
+}
+
+/* Enough body to read as a solid crystal catching the lamp, not a wire cage. */
+.roughBody {
+  fill: rgba(226, 236, 250, 0.09);
+  stroke: none;
+}
+
+.wire {
+  clip-path: inset(0 calc(var(--b) * 100%) 0 calc((1 - var(--a)) * 100%));
+  overflow: visible;
+}
+
+.polished {
+  object-fit: contain;
+  clip-path: inset(0 0 0 calc((1 - var(--b)) * 100%));
+  filter: contrast(1.16) brightness(1.16);
+  mix-blend-mode: screen;
+}
+
+.wireLine {
+  fill: none;
+  stroke: rgba(238, 236, 231, 0.72);
+  stroke-width: 0.4;
+  vector-effect: non-scaling-stroke;
+}
+
+.dash {
+  fill: none;
+  stroke: rgba(238, 236, 231, 0.34);
+  stroke-width: 0.4;
+  stroke-dasharray: 0.012 0.02;
+  vector-effect: non-scaling-stroke;
+}
+
+.tick line {
+  stroke: rgba(238, 236, 231, 0.5);
+  stroke-width: 0.5;
+  vector-effect: non-scaling-stroke;
+}
+
+/* The lit top of the pedestal: a shallow ellipse catching the lamp. */
+.top {
+  width: min(58vw, 21rem);
+  height: 2.6rem;
+  border-radius: 50%;
+  background:
+    radial-gradient(closest-side, rgba(255, 250, 240, 0.85), rgba(180, 175, 165, 0.32) 58%, transparent 76%);
+  filter: blur(2px);
+}
+
+/*
+ * The drape. Satin is nothing but alternating light and shadow, so it is drawn
+ * as a set of vertical bands with soft edges rather than a photograph — a real
+ * fabric shot would have to be lit to match this lamp exactly, and any
+ * mismatch reads instantly as a collage.
+ */
+.drape {
+  width: min(66vw, 25rem);
+  height: clamp(7rem, 22vh, 13rem);
+  margin-top: -0.6rem;
+  clip-path: polygon(8% 0%, 92% 0%, 100% 100%, 0% 100%);
+  background:
+    linear-gradient(92deg,
+      #05050600 0%, #1c1c1e 8%, #08080a 18%, #232326 30%, #0b0b0d 42%,
+      #2a2a2e 54%, #0a0a0c 66%, #1e1e21 78%, #070709 90%, #05050600 100%),
+    linear-gradient(180deg, rgba(255, 250, 240, 0.16) 0%, transparent 22%);
+}
+
+/* ---------------- leaving ---------------- */
+:global([data-section='out']) .stage {
+  opacity: calc(1 - var(--p, 0));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spot, .cone, .marks, .sub, .actions { animation: none; }
+  .line { transition: none; }
+}
+
+@media (max-width: 899px) {
+  .subject { width: min(58vw, 13rem); }
+  .plinth { width: 86vw; }
+  .top { width: 66vw; }
+  .drape { width: 78vw; }
+  .marks { font-size: var(--t-lg); }
+}
+
+/*
+ * Behind the plinth and the type, in front of nothing else. The CSS cone stays
+ * as the soft ambient wash from the overhead lamp; the shader supplies the
+ * hard rays, the stars and the flares that a gradient cannot.
+ */
+.sky {
+  z-index: 1;
+  opacity: 0.95;
+}

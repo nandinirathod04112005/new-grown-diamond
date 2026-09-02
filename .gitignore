@@ -22,3 +22,11 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Browser QA caches
+.codex-chrome-*
+
+# Environment — never commit credentials
+.env
+.env.*
+!.env.example

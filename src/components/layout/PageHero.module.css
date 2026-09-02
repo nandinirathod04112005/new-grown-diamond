@@ -1,0 +1,203 @@
+/* Arrived state lives here; the opening state lives in the GSAP timeline. */
+.hero {
+  position: relative;
+  min-height: 82vh;
+  display: grid;
+  align-items: center;
+  padding: calc(var(--s-8) + 1rem) var(--gutter) var(--s-7);
+  isolation: isolate;
+  overflow: hidden;
+}
+
+/* Ambient field, tinted by the page accent. */
+/*
+ * The page pads its main element, so the hero is inset and `overflow: hidden`
+ * clips this glow into a hard-edged rectangle. Masking the field to fade
+ * before it reaches the clip removes the edge without refactoring the page
+ * layouts underneath.
+ */
+.field {
+  position: absolute;
+  inset: -25%;
+  z-index: -2;
+  filter: blur(90px);
+  opacity: 0.5;
+  pointer-events: none;
+  mask-image: radial-gradient(72% 72% at 50% 50%, #000 42%, transparent 92%);
+  -webkit-mask-image: radial-gradient(72% 72% at 50% 50%, #000 42%, transparent 92%);
+}
+.field span { position: absolute; border-radius: 50%; mix-blend-mode: screen; }
+
+.field span:nth-child(1) {
+  width: 44%; aspect-ratio: 1; left: 46%; top: 6%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent-page) 55%, transparent), transparent 68%);
+  animation: fieldA 38s var(--ease-inout) infinite alternate;
+}
+.field span:nth-child(2) {
+  width: 50%; aspect-ratio: 1; right: 4%; top: 26%;
+  background: radial-gradient(circle, rgba(96, 132, 190, 0.34), transparent 70%);
+  animation: fieldB 48s var(--ease-inout) infinite alternate;
+}
+.field span:nth-child(3) {
+  width: 34%; aspect-ratio: 1; left: 8%; bottom: 0%;
+  background: radial-gradient(circle, rgba(226, 214, 190, 0.22), transparent 72%);
+  animation: fieldC 42s var(--ease-inout) infinite alternate;
+}
+
+@keyframes fieldA { from { transform: translate3d(0,0,0) scale(1); } to { transform: translate3d(-12%,8%,0) scale(1.16); } }
+@keyframes fieldB { from { transform: translate3d(0,0,0) scale(1.08); } to { transform: translate3d(-10%,-9%,0) scale(0.94); } }
+@keyframes fieldC { from { transform: translate3d(0,0,0) scale(0.96); } to { transform: translate3d(12%,-10%,0) scale(1.18); } }
+
+.grain {
+  position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: 0.03;
+  mask-image: radial-gradient(80% 80% at 50% 50%, #000 50%, transparent 96%);
+  -webkit-mask-image: radial-gradient(80% 80% at 50% 50%, #000 50%, transparent 96%);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/*
+ * The camera for the whole opening. `perspective` and `transform` are allowed
+ * on the same element, so this stays one box rather than becoming a wrapper —
+ * no markup had to change to put the type into space.
+ */
+.depth {
+  display: grid;
+  gap: var(--s-5);
+  align-items: center;
+  perspective: 1300px;
+  perspective-origin: 32% 50%;
+  transform: translate3d(calc(var(--mx, 0) * -0.6%), calc(var(--my, 0) * -0.6%), 0);
+}
+
+@media (min-width: 900px) {
+  .depth { grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr); gap: var(--s-7); }
+}
+
+/*
+ * The type, in space.
+ *
+ * The rotation is deliberately tiny — three and a half degrees. Type is the
+ * one thing on a page that must not be keystoned: past about five degrees the
+ * far end of a headline starts to lose its counters and the whole line reads
+ * as blurred rather than as angled.
+ *
+ * The depth does the work instead. Each element sits at its own distance, so
+ * moving the pointer parts them from each other, and the headline travels
+ * furthest because it is nearest.
+ */
+.copy {
+  display: grid;
+  gap: var(--s-3);
+  justify-items: start;
+  transform-style: preserve-3d;
+  transform:
+    rotateY(calc(var(--mx, 0) * 3.5deg))
+    rotateX(calc(var(--my, 0) * -2.5deg));
+}
+
+.copy > * { transform-style: preserve-3d; }
+
+.brow { transform: translateZ(12px); }
+.title { transform: translateZ(46px); }
+.rule { transform: translateZ(28px); }
+.intro { transform: translateZ(16px); }
+.action { transform: translateZ(58px); }
+
+.brow { display: flex; flex-wrap: wrap; gap: 0.5em; overflow: hidden; }
+.brow span { display: inline-block; }
+
+.title {
+  font-family: var(--font-display);
+  font-size: clamp(2.2rem, 1rem + 4.4vw, 4.6rem);
+  font-weight: 300;
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  color: var(--ivory);
+  max-width: 18ch;
+}
+
+.word { display: inline-block; white-space: nowrap; }
+.word:not(:last-child) { margin-right: 0.26em; }
+.char { display: inline-block; will-change: transform; }
+
+.rule {
+  width: min(18rem, 70%);
+  height: 1px;
+  background: linear-gradient(90deg, var(--accent-page), transparent);
+  transform: scaleX(1);
+  transform-origin: left center;
+}
+
+.intro { max-width: 52ch; color: var(--text-muted); font-size: var(--t-lg); font-weight: 300; }
+.introMask { display: block; overflow: hidden; }
+.introLine { display: block; }
+
+.action {
+  margin-top: var(--s-2);
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--accent-page);
+  color: var(--ivory);
+  font-size: var(--t-xs);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  transition: gap var(--dur-base) var(--ease-primary), color var(--dur-base) var(--ease-primary);
+}
+
+.action span { display: inline-block; transition: transform var(--dur-slow) var(--ease-primary); }
+.action:hover span { transform: translateX(6px); }
+
+/* The figure turns in perspective with the pointer, so the column has depth
+   rather than being a flat panel beside the type. */
+.motif {
+  justify-self: center;
+  width: min(70vw, 22rem);
+  aspect-ratio: 1;
+  perspective: 900px;
+}
+
+.motif > svg {
+  transform: rotateY(calc(var(--mx, 0) * 10deg)) rotateX(calc(var(--my, 0) * -8deg));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .field span { animation: none; }
+  .depth, .motif > svg, .copy { transform: none; }
+  /* The layers keep their order but stop travelling: the depth was the
+     design, the movement was only how it was introduced. */
+  .brow, .title, .rule, .intro, .action { transform: none; }
+  .char { transform: none !important; opacity: 1 !important; }
+}
+
+
+/* Photograph variant, same depth treatment as the motif. */
+.shot {
+  justify-self: center;
+  width: min(80vw, 26rem);
+  aspect-ratio: 4 / 5;
+  margin: 0;
+  overflow: hidden;
+  border-radius: 3px;
+  perspective: 1000px;
+  clip-path: inset(0 0 0 0);
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.5);
+}
+
+.shot img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform:
+    rotateY(calc(var(--mx, 0) * 7deg))
+    rotateX(calc(var(--my, 0) * -5deg))
+    scale(1.06);
+  animation: shotDrift 30s var(--ease-inout) infinite alternate;
+}
+
+@keyframes shotDrift {
+  from { scale: 1; translate: -1% 0; }
+  to { scale: 1.06; translate: 1% -1%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shot img { animation: none; transform: none; }
+}

@@ -1,0 +1,238 @@
+/*
+ * The frames are stacked and cross-dissolved, so the container needs a fixed
+ * box the whole sequence shares — otherwise each image would resize the layout
+ * as it arrives.
+ */
+.film {
+  position: relative;
+  width: min(86vw, 38rem);
+  aspect-ratio: 4 / 3;
+  max-height: 68vh;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #0b0b0d;
+  isolation: isolate;
+}
+
+.frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transform: scale(1.06);
+  will-change: opacity, transform;
+}
+
+/* One slow pass of light across the frame, so the plate is never completely
+   static even while the scroll is still. */
+.sweep {
+  position: absolute;
+  top: -20%;
+  bottom: -20%;
+  left: 0;
+  width: 40%;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(
+    100deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.05) 38%,
+    rgba(255, 255, 255, 0.16) 50%,
+    rgba(217, 192, 138, 0.08) 62%,
+    transparent 100%
+  );
+  filter: blur(10px);
+  mix-blend-mode: screen;
+  animation: sweep 9s var(--ease-inout) infinite;
+}
+
+@keyframes sweep {
+  0% { transform: translateX(-160%); }
+  55%, 100% { transform: translateX(260%); }
+}
+
+/* Holds the frame's edges into the dark ground instead of ending in a
+   rectangle, matching how the WebGL scene is treated. */
+.vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background: radial-gradient(
+    78% 78% at 50% 50%,
+    transparent 52%,
+    rgba(11, 11, 13, 0.55) 88%,
+    rgba(11, 11, 13, 0.92) 100%
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sweep { display: none; }
+  .frame { transform: none !important; }
+}
+
+/* Real media is the primary visual now, so the frame is large. */
+.film { width: min(92vw, 46rem); max-height: 74vh; }
+
+.grain {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.credits {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 5;
+  display: grid;
+  padding: 0.6rem 0.85rem;
+  background: linear-gradient(transparent, rgba(8, 8, 10, 0.9) 55%);
+}
+
+.credits span {
+  grid-area: 1 / 1;
+  display: grid;
+  gap: 0.1rem;
+  opacity: 0;
+  transition: opacity var(--dur-base) var(--ease-primary);
+}
+
+.credits b {
+  font-size: 0.5625rem;
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ivory);
+}
+
+.credits i {
+  font-style: normal;
+  font-size: 0.5rem;
+  letter-spacing: 0.1em;
+  color: var(--slate);
+}
+
+/* The caption for the stage currently on screen. */
+:global([data-section='lead']) .credits span[data-cap='0'],
+:global([data-section='s1']) .credits span[data-cap='0'],
+:global([data-section='s2']) .credits span[data-cap='1'],
+:global([data-section='s3']) .credits span[data-cap='2'],
+:global([data-section='s4']) .credits span[data-cap='3'],
+:global([data-section='s5']) .credits span[data-cap='4'],
+:global([data-section='s6']) .credits span[data-cap='5'],
+:global([data-section='s7']) .credits span[data-cap='6'],
+:global([data-section='s8']) .credits span[data-cap='7'] { opacity: 1; }
+
+/* ==================================================================
+   PLATE FRAMING
+
+   Portrait, not landscape. A vertical plate holds a single subject at
+   its full height instead of cropping it to fit a horizontal box, and
+   it is the format this footage is actually shot in.
+   ================================================================== */
+.film {
+  width: min(86vw, 30rem);
+  aspect-ratio: 4 / 5;
+  max-height: 78vh;
+}
+
+.blueprint {
+  z-index: 4;
+  /* Starts hidden: the script raises it only over frames that show a cut
+     stone. A static 0.85 would print crown angles across the furnace. */
+  opacity: 0;
+  /* The plate clips, so the callouts have to be pulled inside its edges —
+     at full size the pavilion and girdle labels run past the crop. */
+  transform: scale(0.8);
+  transition: opacity var(--dur-slow) var(--ease-primary);
+}
+
+/* The frame sits inside the crop, so the picture continues past it. */
+.innerFrame {
+  position: absolute;
+  inset: 0.85rem;
+  z-index: 5;
+  pointer-events: none;
+  border: 1px solid rgba(238, 236, 231, 0.28);
+}
+
+/*
+ * The caption panel is TRANSLUCENT, and that is the whole idea: the subject
+ * carries on behind the words instead of being cut off by them. A solid bar
+ * across the foot of a picture ends it; a panel you can see the stone through
+ * keeps the plate a single object with type laid into it.
+ */
+.credits {
+  padding: 1.15rem 1.25rem 1.25rem;
+  background: linear-gradient(
+    180deg,
+    rgba(12, 12, 14, 0) 0%,
+    rgba(12, 12, 14, 0.30) 42%,
+    rgba(12, 12, 14, 0.52) 100%
+  );
+  backdrop-filter: blur(15px) saturate(1.15);
+  -webkit-backdrop-filter: blur(15px) saturate(1.15);
+  border-top: 1px solid rgba(238, 236, 231, 0.16);
+}
+
+/* The stage name has to carry at plate scale, not sit in it as fine print. */
+.credits b {
+  font-family: var(--font-display);
+  font-size: clamp(1.05rem, 0.85rem + 0.7vw, 1.5rem);
+  font-weight: 300;
+  letter-spacing: 0.005em;
+  text-transform: none;
+  line-height: 1.1;
+}
+
+.credits i { font-size: 0.5625rem; letter-spacing: 0.2em; text-transform: uppercase; }
+
+/* Captions travel in from below rather than fading, so a stage change reads
+   as a cut to the next card. */
+.credits span {
+  translate: 0 0.7rem;
+  transition:
+    opacity var(--dur-base) var(--ease-primary),
+    translate var(--dur-slow) var(--ease-primary);
+}
+
+:global([data-section='s1']) .credits span[data-cap='0'],
+:global([data-section='s2']) .credits span[data-cap='1'],
+:global([data-section='s3']) .credits span[data-cap='2'],
+:global([data-section='s4']) .credits span[data-cap='3'],
+:global([data-section='s5']) .credits span[data-cap='4'],
+:global([data-section='s6']) .credits span[data-cap='5'],
+:global([data-section='s7']) .credits span[data-cap='6'],
+:global([data-section='s8']) .credits span[data-cap='7'] { translate: 0 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .credits span { translate: 0 0; }
+  .credits span:last-child { opacity: 1; }
+}
+
+
+/*
+ * Undersized sources are contained, not covered — see SMALL_SOURCES in
+ * StageFilm.jsx. Shown near their own resolution on the plate ground rather
+ * than stretched to its edges, with a hairline to say the border is a choice.
+ */
+.frame[data-small] {
+  object-fit: contain;
+  padding: 12%;
+  background:
+    radial-gradient(58% 50% at 50% 44%, rgba(238, 236, 231, 0.05), transparent 72%),
+    linear-gradient(160deg, #1a1d22, #0e1013);
+}
+
+/* The tightest tier, for sources under ~250px. Held near native size so the
+   pixels are honest, with the plate ground carrying the rest of the frame. */
+.frame[data-small='tiny'] {
+  padding: 30%;
+}

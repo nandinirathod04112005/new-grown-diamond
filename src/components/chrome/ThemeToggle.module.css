@@ -1,0 +1,96 @@
+.root {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.7rem 0.4rem 0.5rem;
+  border: 1px solid var(--ink-line);
+  border-radius: 999px;
+  background: transparent;
+  /* Inside the header's difference blend, so it uses the fixed chrome ink
+     like everything else there rather than a token that flips. */
+  color: var(--chrome);
+  opacity: 0.72;
+  font: inherit;
+  font-size: 0.5625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    opacity var(--dur-base) var(--ease-primary),
+    border-color var(--dur-base) var(--ease-primary);
+}
+
+.root:hover,
+.root:focus-visible { opacity: 1; border-color: currentColor; }
+
+.dial {
+  display: grid;
+  place-items: center;
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+.icon {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.sun circle {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+}
+
+.sun line {
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+}
+
+.sun,
+.moon {
+  transform-origin: 12px 12px;
+  transition:
+    opacity var(--dur-slow) var(--ease-primary),
+    rotate var(--dur-slow) var(--ease-primary),
+    scale var(--dur-slow) var(--ease-primary);
+}
+
+.moon {
+  fill: currentColor;
+  opacity: 0;
+  rotate: -70deg;
+  scale: 0.6;
+}
+
+/* Dark on screen: the sun turns away and the crescent turns in. */
+.root[data-mode='dark'] .sun { opacity: 0; rotate: 70deg; scale: 0.6; }
+.root[data-mode='dark'] .moon { opacity: 1; rotate: 0deg; scale: 1; }
+
+.label {
+  position: relative;
+  padding-right: 0.4rem;
+}
+
+/* Marks that the machine is deciding, not the visitor. */
+.auto {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* On a phone the word is dropped and the dial alone carries it. */
+@media (max-width: 720px) {
+  .root { padding: 0.4rem; gap: 0; }
+  .label { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sun,
+  .moon { transition: none; }
+}

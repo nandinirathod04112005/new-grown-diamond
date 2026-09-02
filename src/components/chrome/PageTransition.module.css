@@ -1,0 +1,148 @@
+/*
+ * Above everything, including the fixed header, because a cover with a hole in
+ * it does not cover anything.
+ */
+.root {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  pointer-events: none;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  align-items: end;
+  overflow: hidden;
+}
+
+/* Takes the pointer only while the cover is closing, so a second click cannot
+   land on a page that is halfway out. */
+.root[data-phase='out'] { pointer-events: auto; }
+
+/*
+ * One column of the colonnade.
+ *
+ * The arch is made with an elliptical border-radius on the top corners only —
+ * 50% horizontally against 30% vertically gives a doorway rather than the
+ * half-circle a single value produces, which is the difference between an arch
+ * and a tombstone.
+ *
+ * They are anchored to the BOTTOM and scaled vertically, so they rise out of
+ * the floor and keep rising. Animating height would relayout five elements
+ * every frame; scaleY is composited.
+ */
+.arch {
+  position: relative;
+  height: 118%;
+  transform-origin: 50% 100%;
+  scale: 1 0;
+  border-radius: 50% 50% 0 0 / 30% 30% 0 0;
+  /*
+   * Lighter than the page it covers, not darker.
+   *
+   * First attempt painted these in the site's own near-black and the
+   * colonnade was invisible — five black arches over a black page is a shape
+   * you can only infer, which is worse than no shape at all. The reference
+   * solves it with white; a full white screen between two dark pages is a
+   * strobe, so these are raised to a lit charcoal with a bright arch line
+   * instead. The doorway reads, and nothing flashes.
+   */
+  background:
+    radial-gradient(76% 46% at 50% 8%, rgba(0, 206, 201, 0.22), transparent 70%),
+    linear-gradient(180deg, #2b313a 0%, #161a20 46%, #0b0d11 100%);
+  /* The columns are drawn a hair wide so the seams between them never show as
+     light lines when the sheet is fully closed. */
+  /* A real gap between columns, so the colonnade reads as separate doorways
+     rather than one lumpy sheet. */
+  margin-inline: 2px;
+}
+
+/* The drafting grid the rest of the site is built on, so even the cover is
+   recognisably this house rather than five black shapes. */
+.grid {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: 0.5;
+  background-image:
+    linear-gradient(rgba(238, 236, 231, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(238, 236, 231, 0.06) 1px, transparent 1px);
+  background-size: 84px 84px;
+  mask-image: radial-gradient(75% 60% at 50% 40%, #000 20%, transparent 82%);
+  -webkit-mask-image: radial-gradient(75% 60% at 50% 40%, #000 20%, transparent 82%);
+}
+
+/* A hairline on the leading edge. Without it five near-black arches against a
+   near-black page are a shape you can only infer; this is what makes the
+   doorway legible without resorting to the reference's white. */
+.edge {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border-top: 1px solid rgba(120, 245, 240, 0.75);
+  box-shadow:
+    0 -2px 22px rgba(0, 206, 201, 0.4),
+    inset 0 12px 34px rgba(0, 206, 201, 0.12);
+}
+
+.mark {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  font-family: var(--font-display);
+  font-size: var(--t-sm);
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--ivory);
+  opacity: 0;
+}
+
+/*
+ * Leaving: the arches rise from the floor and close, centre column first.
+ * Arriving: they keep rising and leave past the top, centre column first again.
+ *
+ * Continuing in ONE direction is what the reference does and it matters: a
+ * cover that comes up and then sinks back reads as a door opened and shut on
+ * the same room. One that passes through reads as having gone somewhere.
+ */
+.root[data-phase='out'] .arch {
+  animation: archUp 360ms var(--ease-strong) forwards;
+  animation-delay: calc(var(--i) * 42ms);
+}
+
+.root[data-phase='in'] .arch {
+  animation: archAway 520ms var(--ease-primary) forwards;
+  animation-delay: calc(var(--i) * 46ms);
+}
+
+@keyframes archUp {
+  from { scale: 1 0; }
+  to   { scale: 1 1; }
+}
+
+@keyframes archAway {
+  from { scale: 1 1; translate: 0 0; }
+  /* Scaled from the foot, so translating up by its own height clears the
+     frame completely while the arch keeps its shape on the way out. */
+  to   { scale: 1 1; translate: 0 -118%; }
+}
+
+.root[data-phase='out'] .mark { animation: markIn 360ms var(--ease-primary) forwards; }
+.root[data-phase='in'] .mark { animation: markOut 220ms var(--ease-primary) forwards; }
+
+@keyframes markIn { from { opacity: 0; transform: translateY(0.6rem); } to { opacity: 0.85; transform: none; } }
+@keyframes markOut { to { opacity: 0; transform: translateY(-0.6rem); } }
+
+/*
+ * Never rendered under reduced motion — the router skips the covered handover
+ * entirely and swaps the page outright. This is belt and braces in case the
+ * setting changes after mount.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .root { display: none; }
+}
+
+/* On a phone five columns make each arch a slot; three keeps them doorways. */
+@media (max-width: 720px) {
+  .root { grid-template-columns: repeat(3, 1fr); }
+  .arch:nth-child(n + 4) { display: none; }
+}

@@ -1,0 +1,129 @@
+/*
+ * Held at the foot of the frame, and only present once the visitor has
+ * actually reached the end of the page. Showing it earlier would be a
+ * permanent "leave this page" button sitting over content they are still
+ * reading.
+ */
+.root {
+  position: fixed;
+  right: var(--gutter);
+  bottom: var(--s-4);
+  z-index: 60;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem 0.5rem 0.5rem;
+  border: 1px solid var(--ink-line);
+  border-radius: 999px;
+  background: rgb(var(--scrim) / 0.72);
+  backdrop-filter: blur(14px) saturate(1.1);
+  -webkit-backdrop-filter: blur(14px) saturate(1.1);
+  color: var(--text-muted);
+  text-decoration: none;
+  opacity: 0;
+  translate: 0 1rem;
+  pointer-events: none;
+  transition:
+    opacity var(--dur-slow) var(--ease-primary),
+    translate var(--dur-slow) var(--ease-primary),
+    border-color var(--dur-base) var(--ease-primary);
+}
+
+.root[data-on] {
+  opacity: 1;
+  translate: 0 0;
+  pointer-events: auto;
+}
+
+.root:hover,
+.root:focus-visible { border-color: var(--accent); }
+
+.ring {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 2.1rem;
+  height: 2.1rem;
+}
+
+.ring svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  /* Starts the sweep at twelve o'clock rather than three. */
+  rotate: -90deg;
+}
+
+.track {
+  fill: none;
+  stroke: var(--ink-line);
+  stroke-width: 2;
+}
+
+/*
+ * `pathLength="1"` normalises the circle so the dash pair is a plain 0..1
+ * fraction — no circumference arithmetic, and it stays correct if the radius
+ * ever changes.
+ */
+.fill {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: calc(1 - var(--fill, 0));
+}
+
+.arrow {
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 6px solid var(--ivory);
+  translate: 0 1px;
+  animation: nudge 2.4s var(--ease-inout) infinite;
+}
+
+@keyframes nudge {
+  0%, 100% { translate: 0 1px; }
+  50% { translate: 0 4px; }
+}
+
+.text {
+  display: grid;
+  gap: 0.1rem;
+  line-height: 1.2;
+}
+
+.text b {
+  font-size: 0.5rem;
+  font-weight: 400;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.text em {
+  font-family: var(--font-display);
+  font-style: normal;
+  font-size: var(--t-sm);
+  color: var(--ivory);
+}
+
+/* On a phone it sits centred above the thumb rather than in a corner. */
+@media (max-width: 720px) {
+  .root {
+    right: auto;
+    left: 50%;
+    translate: -50% 1rem;
+    bottom: var(--s-3);
+  }
+  .root[data-on] { translate: -50% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arrow { animation: none; }
+  .root { transition: opacity var(--dur-base) linear; translate: none; }
+  .root[data-on] { translate: none; }
+}

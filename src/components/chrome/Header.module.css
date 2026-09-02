@@ -1,0 +1,186 @@
+.root {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--s-4) var(--gutter);
+  mix-blend-mode: difference;
+}
+
+/* Keep the transformed close control above the full-screen sheet. */
+.root[data-open] { z-index: 90; }
+
+.mark {
+  font-family: var(--font-display);
+  font-size: var(--t-sm);
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--chrome);
+}
+
+.theme { display: none; }
+
+.nav {
+  display: flex;
+  gap: var(--s-5);
+}
+.link { display: none; }
+
+@media (min-width: 900px) {
+  .link { display:block; }
+  .theme { display: block; }
+}
+
+/* Underline grows from the left, retreats to the right — the reference site's
+   link treatment, and the reason the two halves use different curves. */
+.link {
+  position: relative;
+  font-size: var(--t-sm);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--chrome);
+  padding-block: var(--s-1);
+}
+
+.link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: right center;
+  transition: transform var(--dur-slow) var(--ease-primary);
+}
+
+.link:hover::after,
+.link:focus-visible::after {
+  transform: scaleX(1);
+  transform-origin: left center;
+}
+
+/* ---------------- mobile menu ---------------- */
+
+/* The toggle. `mix-blend-mode: difference` on the header keeps it legible over
+   both the ink pages and the ivory vitrine without a second colour scheme. */
+.burger {
+  position: relative;
+  width: 2.75rem;
+  height: 2.75rem;
+  display: grid;
+  place-content: center;
+  gap: 6px;
+}
+
+@media (min-width: 900px) { .burger { display: none; } }
+
+.burger span {
+  display: block;
+  width: 22px;
+  height: 1px;
+  background: var(--chrome);
+  transition: transform var(--dur-slow) var(--ease-primary), opacity var(--dur-base) var(--ease-primary);
+}
+
+/* Two bars, not three: they cross into an X rather than one vanishing, which
+   reads as the same object changing state. */
+.root[data-open] .burger span:first-child { transform: translateY(3.5px) rotate(45deg); }
+.root[data-open] .burger span:last-child { transform: translateY(-3.5px) rotate(-45deg); }
+
+.sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  align-content: center;
+  gap: var(--s-6);
+  padding: var(--s-7) var(--gutter);
+  background: rgb(var(--scrim) / 0.97);
+  backdrop-filter: blur(14px);
+  /* Wipes down from the top rather than fading — a fade reads as a loading
+     state, a wipe reads as a panel arriving. */
+  clip-path: inset(0 0 100% 0);
+  transition: clip-path var(--dur-slow) var(--ease-primary);
+}
+
+.sheet[data-open] { clip-path: inset(0 0 0 0); }
+
+.sheetNav { display: grid; }
+
+.sheetLink {
+  display: grid;
+  grid-template-columns: 3rem 1fr;
+  align-items: baseline;
+  gap: var(--s-3);
+  padding: var(--s-3) 0;
+  border-bottom: 1px solid var(--ink-line);
+  opacity: 0;
+  transform: translateY(1.2rem);
+  transition: opacity var(--dur-slow) var(--ease-primary),
+    transform var(--dur-slow) var(--ease-primary);
+}
+
+.sheet[data-open] .sheetLink {
+  opacity: 1;
+  transform: none;
+  transition-delay: calc(180ms + var(--i) * 55ms);
+}
+
+.sheetIndex { font-size: 0.625rem; letter-spacing: 0.2em; color: var(--gold); }
+
+.sheetLabel {
+  font-family: var(--font-display);
+  font-size: clamp(1.9rem, 1rem + 6vw, 3rem);
+  font-weight: 300;
+  color: var(--ivory);
+  line-height: 1;
+}
+
+.sheetLink:hover .sheetLabel,
+.sheetLink:focus-visible .sheetLabel { color: var(--gold-lift); }
+
+.sheetFoot {
+  display: grid;
+  gap: var(--s-2);
+  font-size: var(--t-xs);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.sheetFoot a { color: var(--gold-lift); }
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet, .sheetLink, .burger span { transition: none; }
+}
+
+/*
+ * The account link. Sized and coloured like the theme control rather than like
+ * a nav link, because it belongs to the same family of personal settings — and
+ * it inherits the fixed chrome ink, since the header blends with difference
+ * and nothing inside it may use a token that flips with the theme.
+ */
+.account {
+  display: none;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--ink-line);
+  border-radius: 999px;
+  color: var(--chrome);
+  opacity: 0.72;
+  font-size: 0.5625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  transition:
+    opacity var(--dur-base) var(--ease-primary),
+    border-color var(--dur-base) var(--ease-primary);
+}
+
+.account:hover,
+.account:focus-visible { opacity: 1; border-color: currentColor; }
+
+/* Below this the full-screen sheet carries it, so the bar stays uncrowded. */
+@media (min-width: 900px) { .account { display: inline-block; } }

@@ -1,0 +1,307 @@
+/*
+ * One lattice, six states.
+ *
+ * Driven entirely by `data-section` and `--p`, like the manufacturing film on
+ * the diamonds page — no timelines, so scrubbing back runs the history in
+ * reverse exactly.
+ */
+.stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(120% 90% at 62% 45%, #15171c 0%, var(--ink) 72%);
+  overflow: hidden;
+}
+
+.inner {
+  position: relative;
+  height: 100%;
+  display: grid;
+  align-items: center;
+  gap: var(--s-5);
+  padding: clamp(1.25rem, 6vh, 3.5rem) var(--gutter);
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 900px) {
+  .inner { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--s-7); }
+}
+
+.viz { position: relative; display: grid; place-items: center; order: 2; }
+@media (min-width: 900px) { .viz { order: 2; } }
+
+.svg { width: min(76vw, 29rem); aspect-ratio: 320 / 300; overflow: visible; }
+
+/* ---- lattice ---- */
+.bonds line {
+  stroke: rgba(217, 192, 138, 0.5);
+  stroke-width: 1.1;
+  stroke-dasharray: 120;
+  stroke-dashoffset: 120;
+  transition: stroke-dashoffset 1s var(--ease-primary);
+  transition-delay: calc(var(--i) * 30ms);
+}
+
+.atoms circle {
+  fill: var(--ivory);
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scale(0);
+  transition: opacity var(--dur-slow) var(--ease-primary), transform var(--dur-slow) var(--ease-primary);
+  transition-delay: calc(var(--i) * 45ms);
+}
+
+/* Stage one: only the origin cluster exists. */
+:global([data-section='b1']) .atoms circle:nth-child(-n + 4),
+:global([data-section='b1']) .bonds line:nth-child(-n + 3) { opacity: 1; transform: scale(1); stroke-dashoffset: 0; }
+
+/* From stage two the lattice is complete and stays complete. */
+:global([data-section='b2']) .atoms circle,
+:global([data-section='b3']) .atoms circle,
+:global([data-section='b4']) .atoms circle,
+:global([data-section='b5']) .atoms circle,
+:global([data-section='b6']) .atoms circle { opacity: 1; transform: scale(1); }
+
+:global([data-section='b2']) .bonds line,
+:global([data-section='b3']) .bonds line,
+:global([data-section='b4']) .bonds line,
+:global([data-section='b5']) .bonds line,
+:global([data-section='b6']) .bonds line { stroke-dashoffset: 0; }
+
+/* It recedes once it has done its work, rather than competing with what
+   follows — the history is still there, just no longer the subject. */
+.bonds, .atoms { transition: opacity var(--dur-slow) var(--ease-primary); }
+:global([data-section='b4']) .bonds,
+:global([data-section='b5']) .bonds { opacity: 0.28; }
+:global([data-section='b4']) .atoms,
+:global([data-section='b5']) .atoms { opacity: 0.35; }
+:global([data-section='b6']) .bonds,
+:global([data-section='b6']) .atoms { opacity: 0.12; }
+
+/* ---- reactor ring ---- */
+.ring {
+  fill: none;
+  stroke: var(--ink-line);
+  stroke-width: 1.2;
+  stroke-dasharray: 660;
+  stroke-dashoffset: 660;
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: stroke-dashoffset 1.6s var(--ease-primary), opacity var(--dur-slow) var(--ease-primary);
+}
+
+.glow { opacity: 0; transition: opacity 1s var(--ease-primary); }
+
+:global([data-section='b3']) .ring,
+:global([data-section='b4']) .ring,
+:global([data-section='b5']) .ring,
+:global([data-section='b6']) .ring { stroke-dashoffset: 0; }
+
+:global([data-section='b3']) .glow { opacity: 1; animation: breathe 3s var(--ease-inout) infinite alternate; }
+:global([data-section='b4']) .glow { opacity: 0.45; }
+
+@keyframes breathe { from { opacity: 0.55; } to { opacity: 1; } }
+
+/* ---- the range ---- */
+.cuts > * {
+  fill: none;
+  stroke: rgba(226, 236, 250, 0.8);
+  stroke-width: 1.2;
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* The cuts fan outwards from the centre as the stage progresses. */
+:global([data-section='b4']) .cuts > * {
+  --seen: clamp(0, (var(--p, 0) * 5) - var(--i), 1);
+  opacity: calc(var(--seen) * 0.9);
+  transform: translateX(calc((var(--i) - 2) * 44px * var(--seen))) scale(calc(0.6 + 0.4 * var(--seen)));
+}
+
+/* ---- the reach ---- */
+.world { opacity: 0; transition: opacity var(--dur-slow) var(--ease-primary); }
+:global([data-section='b5']) .world { opacity: 1; }
+
+.arc {
+  fill: none;
+  stroke: rgba(217, 192, 138, 0.5);
+  stroke-width: 1.2;
+  stroke-dasharray: 300;
+  stroke-dashoffset: 300;
+}
+
+:global([data-section='b5']) .arc {
+  stroke-dashoffset: calc(300px * (1 - clamp(0, var(--p, 0) * 1.5, 1)));
+}
+
+.world circle {
+  fill: var(--gold-lift);
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+:global([data-section='b5']) .world circle {
+  --seen: clamp(0, (var(--p, 0) * 5) - var(--i) - 0.4, 1);
+  opacity: var(--seen);
+  transform: scale(var(--seen));
+}
+
+/* ---- the standard ---- */
+.final { opacity: 0; transition: opacity 0.9s var(--ease-primary); }
+:global([data-section='b6']) .final { opacity: 1; }
+
+.finalBody {
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scale(0.82);
+  transition: transform 1.4s var(--ease-primary);
+}
+
+:global([data-section='b6']) .finalBody { transform: scale(1); }
+
+.finalFacets path {
+  fill: none;
+  stroke: rgba(12, 12, 14, 0.5);
+  stroke-width: 1.1;
+  stroke-dasharray: 240;
+  stroke-dashoffset: 240;
+}
+
+:global([data-section='b6']) .finalFacets path {
+  stroke-dashoffset: calc(240px * (1 - clamp(0, var(--p, 0) * 1.8, 1)));
+}
+
+.seal circle { fill: none; stroke: var(--gold-lift); stroke-width: 1.2; }
+.seal path { fill: none; stroke: var(--gold-lift); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 30; stroke-dashoffset: 30; }
+
+:global([data-section='b6']) .seal path {
+  stroke-dashoffset: calc(30px * (1 - clamp(0, (var(--p, 0) - 0.45) * 3, 1)));
+}
+
+/* ---- copy ---- */
+.copy { position: relative; order: 1; min-height: 18rem; display: grid; align-content: center; }
+@media (min-width: 900px) { .copy { order: 1; } }
+
+.eyebrow {
+  position: absolute;
+  top: 0;
+  font-size: var(--t-xs);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--gold-lift);
+}
+
+.step {
+  grid-area: 1 / 1;
+  opacity: 0;
+  transform: translateY(1.6rem);
+  transition: opacity var(--dur-slow) var(--ease-primary), transform var(--dur-slow) var(--ease-primary);
+  pointer-events: none;
+}
+
+:global([data-section='b1']) .step[data-step='b1'],
+:global([data-section='b2']) .step[data-step='b2'],
+:global([data-section='b3']) .step[data-step='b3'],
+:global([data-section='b4']) .step[data-step='b4'],
+:global([data-section='b5']) .step[data-step='b5'],
+:global([data-section='b6']) .step[data-step='b6'] {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+.marker {
+  font-size: var(--t-xs);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: var(--s-2);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 1rem + 3vw, 3.4rem);
+  font-weight: 300;
+  line-height: 1;
+  color: var(--ivory);
+  margin-bottom: var(--s-3);
+}
+
+.body { max-width: 40ch; color: var(--text-muted); font-size: var(--t-lg); font-weight: 300; }
+
+/* ---- rail ---- */
+.rail {
+  position: absolute;
+  left: var(--gutter);
+  bottom: var(--s-4);
+  display: flex;
+  gap: var(--s-3);
+  align-items: center;
+}
+
+@media (min-width: 900px) {
+  /* The copy column is on the left here, so the rail sits on the right edge
+     or it lands on top of the paragraph. */
+  .rail { left: auto; right: calc(var(--gutter) / 2); top: 50%; bottom: auto; translate: 0 -50%; flex-direction: column; gap: var(--s-2); }
+}
+
+.rail li { display: flex; align-items: center; gap: 0.5rem; }
+
+.railDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ink-line);
+  transition: background var(--dur-base) var(--ease-primary), transform var(--dur-base) var(--ease-primary);
+}
+
+.railN { font-size: 0.5625rem; letter-spacing: 0.16em; color: var(--slate); opacity: 0; transition: opacity var(--dur-base) var(--ease-primary); }
+
+:global([data-section='b1']) .rail li[data-step='b1'] .railDot,
+:global([data-section='b2']) .rail li[data-step='b2'] .railDot,
+:global([data-section='b3']) .rail li[data-step='b3'] .railDot,
+:global([data-section='b4']) .rail li[data-step='b4'] .railDot,
+:global([data-section='b5']) .rail li[data-step='b5'] .railDot,
+:global([data-section='b6']) .rail li[data-step='b6'] .railDot { background: var(--gold-lift); transform: scale(1.6); }
+
+:global([data-section='b1']) .rail li[data-step='b1'] .railN,
+:global([data-section='b2']) .rail li[data-step='b2'] .railN,
+:global([data-section='b3']) .rail li[data-step='b3'] .railN,
+:global([data-section='b4']) .rail li[data-step='b4'] .railN,
+:global([data-section='b5']) .rail li[data-step='b5'] .railN,
+:global([data-section='b6']) .rail li[data-step='b6'] .railN { opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  .glow { animation: none; }
+  .step { transition: none; }
+}
+
+/* ------------------------------------------------------------------
+   With the mural present the drawn lattice steps aside entirely — showing
+   both would be two illustrations of the same history competing in one frame.
+   The copy and rail lift above the artwork.
+   ------------------------------------------------------------------ */
+.stage[data-mural] { background: #08080a; }
+.stage[data-mural] .viz { display: none; }
+
+.stage[data-mural] .inner {
+  position: relative;
+  z-index: 1;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 900px) {
+  /* The copy keeps the left half; the right half is left clear so the camera
+     move stays visible rather than being covered by text. */
+  .stage[data-mural] .inner { grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr); }
+}
+
+.stage[data-mural] .copy { order: 1; }
+
+/* Text over artwork needs its own ground, not just the vignette. */
+.stage[data-mural] .title,
+.stage[data-mural] .marker { text-shadow: 0 2px 26px rgba(8, 8, 10, 0.85); }
+.stage[data-mural] .body { text-shadow: 0 1px 16px rgba(8, 8, 10, 0.9); }

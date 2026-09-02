@@ -1,0 +1,36 @@
+.scene {
+  position: relative;
+}
+
+.sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+}
+
+/* Pulled up over the sticky block so the scene's total height is exactly the
+   sum of the markers. The markers are empty on purpose: they are scroll
+   distance, nothing more. */
+.spacer {
+  margin-top: -100vh;
+  pointer-events: none;
+}
+
+/* Long pinned narratives become ordinary reading flow on phones and for
+   visitors who request reduced motion. A story may opt into this behaviour
+   without changing the desktop scroll-timeline contract. */
+@media (max-width: 760px), (prefers-reduced-motion: reduce) {
+  .scene[data-mobile-stack] .sticky {
+    position: relative;
+    top: auto;
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+  }
+
+  .scene[data-mobile-stack] .spacer { display: none; }
+}

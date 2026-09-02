@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>NGD Project Work Report</title>
+  <style>
+    @page { size: A4; margin: 16mm 15mm 18mm; }
+    :root { --ink:#15171b; --muted:#626873; --gold:#a77b32; --line:#ddd6c8; --paper:#fff; --soft:#f6f3ed; }
+    * { box-sizing: border-box; }
+    body { margin:0; color:var(--ink); background:var(--paper); font-family:Arial,Helvetica,sans-serif; font-size:10.2pt; line-height:1.48; }
+    h1,h2,h3,p { margin-top:0; }
+    h1 { max-width:620px; margin-bottom:10px; font-family:Georgia,serif; font-size:35pt; font-weight:400; line-height:1.04; }
+    h2 { margin:24px 0 10px; padding-bottom:5px; border-bottom:1px solid var(--line); font-family:Georgia,serif; font-size:19pt; font-weight:400; color:#2b2c30; break-after:avoid; }
+    h3 { margin:15px 0 5px; font-size:11.5pt; color:#322b20; break-after:avoid; }
+    p { margin-bottom:8px; }
+    ul,ol { margin:5px 0 10px; padding-left:20px; }
+    li { margin:3px 0; }
+    table { width:100%; border-collapse:collapse; margin:10px 0 16px; break-inside:avoid; }
+    th,td { padding:7px 8px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
+    th { background:var(--soft); color:#463a28; font-size:8.5pt; letter-spacing:.06em; text-transform:uppercase; }
+    .cover { min-height:258mm; display:flex; flex-direction:column; justify-content:space-between; padding:12mm 7mm 5mm; border:1px solid var(--line); background:linear-gradient(145deg,#fff 0%,#f5f1e8 100%); page-break-after:always; }
+    .brand { color:var(--gold); font-size:9pt; letter-spacing:.24em; text-transform:uppercase; }
+    .subtitle { max-width:570px; color:var(--muted); font-size:15pt; }
+    .cover-rule { width:74px; height:2px; margin:18px 0; background:var(--gold); }
+    .meta { color:var(--muted); font-size:9pt; }
+    .summary { margin:12px 0 18px; padding:13px 15px; border-left:3px solid var(--gold); background:var(--soft); font-size:11pt; }
+    .score { color:#285d45; font-weight:700; }
+    .warn { color:#8b5524; font-weight:700; }
+    .critical { color:#943f3f; font-weight:700; }
+    .pill { display:inline-block; margin:2px 3px 2px 0; padding:3px 7px; border:1px solid var(--line); border-radius:99px; color:#4d463b; background:#faf8f3; font-size:8.5pt; }
+    .two { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .card { padding:11px 12px; border:1px solid var(--line); background:#fff; break-inside:avoid; }
+    .card h3 { margin-top:0; }
+    .footer-note { margin-top:22px; padding-top:8px; border-top:1px solid var(--line); color:var(--muted); font-size:8.5pt; }
+    .page-break { page-break-before:always; }
+    a { color:inherit; text-decoration:none; }
+  </style>
+</head>
+<body>
+  <section class="cover">
+    <div><div class="brand">New Grown Diamond</div></div>
+    <div>
+      <div class="cover-rule"></div>
+      <h1>NGD Project<br>Work Report</h1>
+      <p class="subtitle">Technical, design and production-readiness review of the animated B2B lab-grown diamond platform.</p>
+    </div>
+    <div class="meta">Prepared 2 September 2026 &nbsp;•&nbsp; Project: ngd &nbsp;•&nbsp; React + Vite + Supabase</div>
+  </section>
+
+  <h2>Executive summary</h2>
+  <div class="summary">NGD has developed from a basic Vite starter into a polished, responsive diamond inventory and lead-generation platform. Its strongest qualities are premium art direction, purposeful animation, accessibility work and real business workflows. The main work remaining is technical SEO, route-level performance optimization, blog article routing, documentation and stronger US wholesale positioning.</div>
+  <table>
+    <thead><tr><th>Area</th><th>Assessment</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td>Visual design</td><td>Premium, distinctive luxury presentation</td><td class="score">Excellent</td></tr>
+      <tr><td>Animation</td><td>Scroll, parallax, transitions, canvas and reduced-motion support</td><td class="score">Very good</td></tr>
+      <tr><td>Responsive design</td><td>Validated across five viewport sizes</td><td class="score">Very good</td></tr>
+      <tr><td>B2B functionality</td><td>Inventory, enquiries, offices, certificates and admin workflow</td><td class="score">Strong foundation</td></tr>
+      <tr><td>Accessibility</td><td>Semantic structure, keyboard support and ARIA coverage</td><td class="score">Good</td></tr>
+      <tr><td>SEO</td><td>Core metadata, structured data and prerendering are incomplete</td><td class="critical">Needs work</td></tr>
+      <tr><td>Production readiness</td><td>Main features built; optimization and deployment validation remain</td><td class="warn">Approximately 70%</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Technology and architecture</h2>
+  <p>
+    <span class="pill">React 19</span><span class="pill">Vite 8</span><span class="pill">CSS Modules</span>
+    <span class="pill">GSAP</span><span class="pill">Framer Motion</span><span class="pill">Lenis</span>
+    <span class="pill">Three.js</span><span class="pill">Supabase</span><span class="pill">Vercel / Netlify</span>
+  </p>
+  <p>The application uses a custom client-side router and reusable page, motion, media, chrome and product components. The codebase currently contains 25 page files, 55 component files, 25 section files, 6 hooks and 17 library files.</p>
+
+  <h2>Completed work</h2>
+  <div class="two">
+    <div class="card"><h3>Premium frontend</h3><p>Animated homepage, smooth scrolling, pointer parallax, page transitions, custom diamond cursor, preloader, dynamic backgrounds, video storytelling and dark/light themes.</p></div>
+    <div class="card"><h3>Public website</h3><p>Home, diamonds, jewellery, about, education, shapes, why lab-grown, FAQ, contact, blogs and custom not-found experiences.</p></div>
+    <div class="card"><h3>Inventory</h3><p>Live Supabase stock, dynamic shape filters, diamond cards, specifications, photography, certificates, video/360 viewing and linked product enquiries.</p></div>
+    <div class="card"><h3>Accounts and admin</h3><p>Registration, login, password recovery, profiles, protected admin routes, diamond administration and configuration-aware states.</p></div>
+    <div class="card"><h3>Lead generation</h3><p>Structured B2B enquiry form with company, country, product reference, enquiry type and detailed diamond requirements, plus spam protection.</p></div>
+    <div class="card"><h3>International positioning</h3><p>Manufacturing and certification content plus office information for Surat, Mumbai, New York and Hong Kong.</p></div>
+  </div>
+
+  <h2>Accessibility and responsive work</h2>
+  <ul>
+    <li>Semantic heading hierarchy and descriptive image alternatives.</li>
+    <li>ARIA labels, live regions, loading states and button state attributes.</li>
+    <li>Keyboard-accessible mobile navigation with focus trapping, Escape handling and focus restoration.</li>
+    <li>Reduced-motion alternatives across the animation system.</li>
+    <li>Responsive screenshots for 320×568, 375×812, 768×1024, 1440×900 and 1920×1080.</li>
+  </ul>
+
+  <h2>Quality verification</h2>
+  <table>
+    <thead><tr><th>Check</th><th>Result</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>Production build</td><td class="score">Passed</td><td>194 modules transformed successfully.</td></tr>
+      <tr><td>Lint</td><td class="warn">Passed with one warning</td><td>State update inside an effect in ContinueNext.jsx.</td></tr>
+      <tr><td>Main JavaScript</td><td>121 KB gzip</td><td>Route splitting can reduce initial delivery.</td></tr>
+      <tr><td>Supabase bundle</td><td>54 KB gzip</td><td>Currently included in the production output.</td></tr>
+      <tr><td>GSAP bundle</td><td>30 KB gzip</td><td>Reasonable for the animation-heavy experience.</td></tr>
+      <tr><td>CSS</td><td>31 KB gzip</td><td>Single large stylesheet output.</td></tr>
+      <tr><td>Largest video</td><td>1.33 MB</td><td>Requires careful preload and mobile delivery strategy.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="page-break"></div>
+  <h2>Outstanding risks</h2>
+  <h3>1. Blog article routes</h3>
+  <p>The journal creates links in the form <strong>/blogs/post-slug</strong>, but the application currently handles only the exact <strong>/blogs</strong> route. A blog detail page and dynamic slug route are required.</p>
+
+  <h3>2. Technical SEO</h3>
+  <p>Route-specific descriptions, canonical URLs, Open Graph metadata, Twitter cards, robots.txt, sitemap.xml, structured data and prerendered public pages are not yet implemented. Admin and account routes also need noindex rules.</p>
+
+  <h3>3. Performance</h3>
+  <p>Public, authentication and admin pages are imported eagerly. React lazy loading and route-based code splitting should keep Supabase, admin, blog and inventory code out of the initial homepage download.</p>
+
+  <h3>4. US B2B positioning</h3>
+  <p>A dedicated US wholesale landing page should explain USD quotations, minimum orders, insured shipping, lead times, inspection/return terms, matching pairs, calibrated parcels, private-label services and New York appointments.</p>
+
+  <h3>5. Documentation and source control</h3>
+  <p>The README is still the default Vite document. Most implementation files are currently uncommitted or untracked, while the repository contains only the initial project commit. Documentation and a reviewed checkpoint commit are needed.</p>
+
+  <h2>Recommended priority plan</h2>
+  <ol>
+    <li>Implement individual blog detail pages and slug routing.</li>
+    <li>Add route-specific SEO metadata, canonical URLs and social previews.</li>
+    <li>Create robots.txt, sitemap.xml and schema.org structured data.</li>
+    <li>Prerender public marketing routes and provide correct HTTP 404 behavior.</li>
+    <li>Add route-level lazy loading and optimize heavy media delivery.</li>
+    <li>Create a dedicated USA wholesale landing page and stronger US CTAs.</li>
+    <li>Test live inventory, authentication and enquiry workflows end to end.</li>
+    <li>Replace the starter README with complete setup and deployment documentation.</li>
+    <li>Review environment files and create a clean source-control checkpoint.</li>
+  </ol>
+
+  <h2>Conclusion</h2>
+  <p>NGD is no longer simply an animated landing page. It is a substantial luxury B2B web platform with a real inventory, customer account, enquiry and administration foundation. The design work is the project’s clearest advantage. Completing SEO, performance optimization, content routing and operational documentation will move it from a strong showcase toward a production-ready international sales platform.</p>
+  <p class="footer-note">This report is based on a read-only review of the ngd workspace, production build output, lint results and stored responsive screenshots. No application source files were changed during the audit.</p>
+</body>
+</html>

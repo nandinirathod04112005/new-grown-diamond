@@ -1,0 +1,229 @@
+@import './tokens.css';
+@import './fonts.css';
+@import './reset.css';
+
+body {
+  background: var(--ink);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: var(--t-base);
+  font-weight: 300;
+  letter-spacing: 0.01em;
+}
+
+/* Lenis owns the scroll; these are the library's required host styles. */
+html.lenis,
+html.lenis body { height: auto; }
+
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-stopped { overflow: hidden; }
+
+.u-gutter { padding-inline: var(--gutter); }
+
+/* The film is fixed at z-index 0; everything readable sits above it. */
+.u-above-film {
+  position: relative;
+  z-index: 1;
+}
+
+.u-eyebrow {
+  font-size: var(--t-xs);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--gold-lift);
+  font-weight: 400;
+}
+
+.u-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+
+/* ------------------------------------------------------------------
+   Scrollbar
+
+   The default bar is a bright system chrome slab on a near-black page and
+   it breaks the frame every time. This is the same hairline-and-gold
+   language as the rest of the site. Width is kept at 10px rather than made
+   ultra-thin: a scrollbar is a control, and a 4px target is hostile.
+   ------------------------------------------------------------------ */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--accent) 55%, transparent) transparent;
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+
+::-webkit-scrollbar-track {
+  background: var(--ink);
+  border-left: 1px solid var(--ink-line);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--accent-lift), var(--accent));
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  transition: background var(--dur-base) var(--ease-primary);
+}
+
+::-webkit-scrollbar-thumb:hover { background: var(--gold-lift); }
+
+::-webkit-scrollbar-corner { background: var(--ink); }
+
+/* The ivory vitrine sections invert it, or the bar reads as a dark gash. */
+.u-vitrine ::-webkit-scrollbar-track { background: #e7e5e0; border-left-color: rgba(0, 0, 0, 0.1); }
+.u-vitrine ::-webkit-scrollbar-thumb { border-color: #e7e5e0; }
+
+::selection { background: var(--gold); color: var(--text-invert); }
+
+/*
+ * ==================================================================
+ * DARKENED STAGES
+ * ==================================================================
+ *
+ * Some sections are not "the page in dark colours" — they are darkened rooms,
+ * the way a gallery drops the lights around a lit vitrine. The hero atelier,
+ * the manufacturing film, the cutting wheel and the exhibit are all lit
+ * objects on black, and their glows, blooms and spotlights only exist against
+ * it. There is no light-mode version of them that is the same design.
+ *
+ * So they stay dark in both themes and re-declare the palette for their own
+ * subtree. Because every module reads these tokens rather than hard colours,
+ * one block here keeps all of that text legible — without it, `--ivory` flips
+ * to near-black in light mode and the headline vanishes into its own stage.
+ */
+.u-stage-dark {
+  color-scheme: dark;
+
+  --accent: #00cec9;
+  --accent-lift: #5cf0ec;
+  --accent-deep: #00918d;
+
+  --ink: #0c0c0e;
+  --ink-raised: #131317;
+  --ink-line: rgba(255, 255, 255, 0.14);
+  --ivory: #faf9f7;
+  --pearl: #f3f1ec;
+  --slate: #8b8b93;
+
+  --text: #f4f2ee;
+  --text-muted: #9b9ba3;
+  --text-invert: #17171b;
+
+  --scrim: 12 12 14;
+  --glow: 92 240 236;
+
+  /*
+   * Re-applied, not just re-declared.
+   *
+   * `body` sets `color: var(--text)`, which COMPUTES there to the light-mode
+   * ink and is then inherited by everything as a plain colour. Redefining
+   * --text inside this subtree does not retroactively change that computed
+   * value, so anything relying on inherited colour — the outline button in the
+   * hero, for one — stayed dark on a dark stage.
+   */
+  color: var(--text);
+}
+
+/*
+ * The outgoing page, while the colonnade closes over it.
+ *
+ * The reference does not simply hide the old page — its headline scales up and
+ * runs past the frame edge, so the page you are leaving is visibly pushed away
+ * rather than switched off. Scaling the whole content plane is the general
+ * form of that: it works on every route without each page needing to nominate
+ * an element to fly out, and it reads as the camera pushing in as the doors
+ * close.
+ *
+ * Composited properties only — transform and opacity. Anything that triggers
+ * layout here would stutter against five simultaneously animating arches.
+ */
+.u-above-film {
+  transform-origin: 50% 42%;
+  transition:
+    transform 360ms var(--ease-strong),
+    opacity 360ms var(--ease-strong),
+    filter 360ms var(--ease-strong);
+}
+
+.u-above-film[data-leaving] {
+  transform: scale(1.06);
+  opacity: 0.55;
+  filter: brightness(0.7);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .u-above-film,
+  .u-above-film[data-leaving] {
+    transform: none;
+    opacity: 1;
+    filter: none;
+    transition: none;
+  }
+}
+
+/*
+ * ==================================================================
+ * VELOCITY
+ * ==================================================================
+ *
+ * `--vel` (-1..1) and `--speed` (0..1) are written to :root by
+ * useScrollVelocity, and every effect below is pure CSS reading them.
+ *
+ * The values are deliberately tiny. Velocity motion is a thing you feel
+ * and do not see; the moment a visitor can point at the skew, it has
+ * stopped reading as weight and started reading as a gimmick. Anything
+ * here that looks obvious in a screenshot is too strong.
+ */
+
+/*
+ * The page leans into the movement.
+ *
+ * Two degrees at full tilt, on the content plane only. Skewing the whole
+ * document would take the fixed header with it, and a header that leans is
+ * a bug rather than an effect.
+ */
+.u-above-film {
+  transform-origin: 50% 50%;
+}
+
+/* Composed with the page-transition scale, so both live on one property. */
+.u-above-film:not([data-leaving]) {
+  transform:
+    skewY(calc(var(--vel, 0) * 0.55deg))
+    scaleY(calc(1 + var(--speed, 0) * 0.006));
+}
+
+/*
+ * Stretch on the images as they pass.
+ *
+ * A real camera smears a moving subject; a page cannot, but scaling very
+ * slightly along the axis of travel produces the same read at a fraction of
+ * the cost of an actual blur — and blur on a full-page image is the fastest
+ * way to drop a scroll to 30fps.
+ */
+.u-vel-stretch {
+  transform: scaleY(calc(1 + var(--speed, 0) * 0.045)) scaleX(calc(1 - var(--speed, 0) * 0.012));
+  transform-origin: 50% 50%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .u-above-film:not([data-leaving]),
+  .u-vel-stretch { transform: none; }
+}

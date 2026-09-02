@@ -1,0 +1,101 @@
+/*
+ * Every figure loops slowly and quietly. The accent comes from the page, so
+ * one stylesheet serves six visually distinct motifs.
+ */
+.svg { width: 100%; height: 100%; overflow: visible; }
+
+.spinSlow { transform-origin: 120px 120px; animation: spin 48s linear infinite; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* lattice */
+.bond { stroke: color-mix(in srgb, var(--accent-page) 55%, transparent); stroke-width: 1.1; }
+.atom {
+  fill: var(--ivory);
+  animation: breathe 4.5s var(--ease-inout) infinite alternate;
+  animation-delay: calc(var(--i) * -0.4s);
+}
+@keyframes breathe { from { opacity: 0.45; } to { opacity: 1; } }
+
+.halo {
+  fill: none;
+  stroke: var(--ink-line);
+  stroke-width: 1;
+  animation: haloPulse 7s var(--ease-inout) infinite alternate;
+}
+@keyframes haloPulse { from { opacity: 0.35; transform: scale(0.97); } to { opacity: 0.8; transform: scale(1.02); } }
+.halo { transform-origin: 120px 120px; }
+
+/* facets */
+.face {
+  fill: color-mix(in srgb, var(--accent-page) 12%, transparent);
+  stroke: color-mix(in srgb, var(--accent-page) 70%, transparent);
+  stroke-width: 1.2;
+}
+.spoke { stroke: rgba(255, 255, 255, 0.35); stroke-width: 1; }
+
+/* arcs */
+.arcA, .arcB {
+  fill: none;
+  stroke-width: 1.3;
+  transform-origin: 120px 120px;
+}
+.arcA { stroke: color-mix(in srgb, var(--accent-page) 75%, transparent); animation: spin 26s linear infinite; }
+.arcB { stroke: rgba(255, 255, 255, 0.3); animation: spin 34s linear infinite reverse; }
+.arcA, .arcB { animation-delay: calc(var(--i) * -3s); }
+
+.core { fill: var(--accent-page); }
+
+/* rings */
+.orbitA, .orbitB { transform-origin: 120px 120px; }
+.orbitA { animation: spin 30s linear infinite; }
+.orbitB { animation: spin 42s linear infinite reverse; }
+.orbitA, .orbitB { animation-delay: calc(var(--i) * -4s); }
+.ring { fill: none; stroke: var(--ink-line); stroke-width: 1; }
+.bead { fill: var(--accent-page); }
+
+/* waves */
+.wave {
+  fill: none;
+  stroke: color-mix(in srgb, var(--accent-page) 60%, transparent);
+  stroke-width: 1.2;
+  animation: drift 9s var(--ease-inout) infinite alternate;
+  animation-delay: calc(var(--i) * -1.1s);
+}
+@keyframes drift {
+  from { transform: translateX(-14px); opacity: 0.35; }
+  to { transform: translateX(14px); opacity: 0.9; }
+}
+
+/* pulse */
+.ripple {
+  fill: none;
+  stroke: color-mix(in srgb, var(--accent-page) 70%, transparent);
+  stroke-width: 1.2;
+  transform-origin: 120px 120px;
+  animation: ripple 6s var(--ease-inout) infinite;
+  animation-delay: calc(var(--i) * -1.5s);
+}
+@keyframes ripple {
+  from { transform: scale(0.3); opacity: 0; }
+  15% { opacity: 0.9; }
+  to { transform: scale(3.2); opacity: 0; }
+}
+
+/* orbit */
+.band, .band2 {
+  fill: none;
+  stroke: color-mix(in srgb, var(--accent-page) 55%, transparent);
+  stroke-width: 1.2;
+  transform-origin: 120px 120px;
+}
+.band { animation: tiltA 18s var(--ease-inout) infinite alternate; }
+.band2 { animation: tiltB 22s var(--ease-inout) infinite alternate; }
+@keyframes tiltA { from { transform: rotate(-24deg); } to { transform: rotate(24deg); } }
+@keyframes tiltB { from { transform: rotate(64deg); } to { transform: rotate(116deg); } }
+.gem { fill: color-mix(in srgb, var(--accent-page) 22%, transparent); stroke: var(--ivory); stroke-width: 1.2; }
+
+@media (prefers-reduced-motion: reduce) {
+  .spinSlow, .atom, .halo, .arcA, .arcB, .orbitA, .orbitB,
+  .wave, .ripple, .band, .band2 { animation: none; }
+}

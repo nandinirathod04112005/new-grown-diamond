@@ -1,0 +1,281 @@
+.page { background: var(--ink); }
+
+/* ---------------- opening ---------------- */
+.hero {
+  position: relative;
+  display: grid;
+  align-items: end;
+  min-height: 58vh;
+  padding: calc(var(--s-8) + 1rem) var(--gutter) var(--s-7);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* Built ground, matching the account pages and the home hero: a key pool, a
+   drafting grid masked away from the edges, and a vignette closing the frame. */
+.field {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(48% 60% at 74% 30%, rgba(0, 206, 201, 0.12), transparent 72%),
+    radial-gradient(52% 44% at 12% 84%, rgba(96, 124, 176, 0.1), transparent 74%),
+    linear-gradient(160deg, #101319 0%, #0a0b0e 52%, #060608 100%);
+}
+
+.field::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(238, 236, 231, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(238, 236, 231, 0.045) 1px, transparent 1px);
+  background-size: 88px 88px;
+  mask-image: radial-gradient(72% 70% at 60% 40%, #000 20%, transparent 82%);
+  -webkit-mask-image: radial-gradient(72% 70% at 60% 40%, #000 20%, transparent 82%);
+}
+
+.heroCopy { display: grid; gap: var(--s-3); max-width: 46rem; }
+
+.eyebrow {
+  font-size: 0.5625rem;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--accent-lift);
+  animation: rise 0.7s var(--ease-primary) 0.1s both;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-weight: 300;
+  line-height: 0.94;
+  letter-spacing: -0.02em;
+  color: var(--ivory);
+  font-size: var(--t-3xl);
+  animation: rise 0.9s var(--ease-primary) 0.18s both;
+}
+
+.intro {
+  max-width: 46ch;
+  color: var(--text-muted);
+  font-size: var(--t-lg);
+  font-weight: 300;
+  animation: rise 0.9s var(--ease-primary) 0.28s both;
+}
+
+.rule {
+  width: 4rem;
+  height: 1px;
+  background: linear-gradient(90deg, var(--accent), transparent);
+  transform-origin: left center;
+  animation: ruleIn 1s var(--ease-primary) 0.4s both;
+}
+
+@keyframes rise { from { opacity: 0; transform: translateY(0.9rem); } }
+@keyframes ruleIn { from { transform: scaleX(0); } }
+
+/* ---------------- listing ---------------- */
+.body { padding: var(--s-7) var(--gutter) var(--s-8); }
+
+.grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--s-5);
+}
+
+@media (min-width: 760px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1180px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+.cell { animation: rise 0.8s var(--ease-primary) both; animation-delay: calc(var(--i) * 0.07s); }
+
+/*
+ * The camera. Perspective lives here and clipping does not: an element that
+ * both clips and declares preserve-3d is forced flat, and the layers below
+ * would collapse into the face with no error to show for it.
+ */
+.card { perspective: 1000px; perspective-origin: 50% 42%; }
+
+.plane {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  height: 100%;
+  background: rgba(19, 19, 23, 0.6);
+  border: 1px solid var(--ink-line);
+  transform-style: preserve-3d;
+  transform:
+    rotateY(calc(var(--mx, 0) * 4deg))
+    rotateX(calc(var(--my, 0) * -3deg));
+  transition:
+    transform var(--dur-slow) var(--ease-primary),
+    border-color var(--dur-slow) var(--ease-primary),
+    box-shadow var(--dur-slow) var(--ease-primary);
+}
+
+.card:hover .plane {
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  box-shadow: 0 26px 60px rgba(0, 0, 0, 0.45);
+}
+
+/* Overflow lives here and nowhere above it. */
+.shot {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: linear-gradient(150deg, #23262c, #14161a);
+}
+
+.shot img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 1.2s var(--ease-primary);
+}
+
+.card:hover .shot img { transform: scale(1.05); }
+
+/* A post with no cover gets a plate, not a broken frame. */
+.noShot {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(60% 60% at 50% 45%, rgba(0, 206, 201, 0.14), transparent 72%),
+    linear-gradient(150deg, #23262c, #14161a);
+}
+
+/* Held in front of the print, so turning the card slides it across. */
+.gloss {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  transform: translateZ(26px);
+  pointer-events: none;
+  opacity: 0;
+  mix-blend-mode: screen;
+  background: linear-gradient(
+    calc(112deg + var(--mx, 0) * 24deg),
+    transparent 36%,
+    rgba(255, 255, 255, 0.16) 50%,
+    transparent 66%
+  );
+  transition: opacity var(--dur-slow) var(--ease-primary);
+}
+
+.card:hover .gloss { opacity: 0.5; }
+
+/* Forward of the border below it, so the two part visibly as the card turns. */
+.rim {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  transform: translateZ(14px);
+  pointer-events: none;
+  border: 1px solid transparent;
+  transition: border-color var(--dur-slow) var(--ease-primary);
+}
+
+.card:hover .rim { border-color: color-mix(in srgb, var(--accent) 26%, transparent); }
+
+.text {
+  display: grid;
+  gap: var(--s-2);
+  align-content: start;
+  padding: var(--s-4);
+  transform: translateZ(10px);
+}
+
+.meta {
+  font-size: 0.5625rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.cardTitle {
+  font-family: var(--font-display);
+  font-weight: 300;
+  line-height: 1.08;
+  letter-spacing: -0.01em;
+  font-size: var(--t-xl);
+  color: var(--ivory);
+}
+
+/* The link covers the whole card so the target is generous, but its
+   accessible name stays the headline rather than "read more". */
+.link { color: inherit; }
+
+.link::after { content: ''; position: absolute; inset: 0; z-index: 5; }
+
+.link:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+
+.excerpt { color: var(--text-muted); font-size: var(--t-sm); line-height: 1.7; }
+
+/* ---------------- states ---------------- */
+.notice {
+  display: grid;
+  gap: var(--s-2);
+  justify-items: start;
+  max-width: 44rem;
+  padding: var(--s-5);
+  border: 1px solid var(--ink-line);
+  border-left: 2px solid var(--accent);
+  background: rgba(19, 19, 23, 0.5);
+  animation: rise 0.7s var(--ease-primary) both;
+}
+
+.notice[data-tone='error'] { border-left-color: #e06c6c; }
+
+.notice h2 {
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: var(--t-xl);
+  color: var(--ivory);
+}
+
+.notice p { color: var(--text-muted); line-height: 1.7; max-width: 52ch; }
+
+.noticeLink {
+  margin-top: var(--s-2);
+  color: var(--accent-lift);
+  font-size: var(--t-xs);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  border-bottom: 1px solid currentColor;
+  padding-bottom: 2px;
+}
+
+/* Placeholders while the request is in flight — shaped like the cards they
+   will become, so the grid does not jump when the posts land. */
+.skeletons { display: grid; gap: var(--s-5); }
+
+@media (min-width: 760px) { .skeletons { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1180px) { .skeletons { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+.skeleton {
+  height: 20rem;
+  border: 1px solid var(--ink-line);
+  background: linear-gradient(100deg, rgba(255,255,255,0.02) 30%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.02) 70%);
+  background-size: 220% 100%;
+  animation: sweep 1.5s var(--ease-inout) infinite;
+  animation-delay: calc(var(--i) * 0.12s);
+}
+
+@keyframes sweep { from { background-position: 120% 0; } to { background-position: -120% 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .eyebrow, .title, .intro, .rule, .cell, .notice { animation: none; }
+  .skeleton { animation: none; }
+  .plane { transform: none; }
+  .gloss, .rim, .text { transform: none; }
+}
+
+@media (max-width: 899px) {
+  .card { perspective: none; }
+  .plane, .gloss, .rim, .text { transform: none; }
+}
+
+/* The same thrown light as the hero, behind the same built ground. */
+.caustics { z-index: -1; opacity: 0.85; }

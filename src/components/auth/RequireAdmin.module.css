@@ -1,0 +1,44 @@
+.gate {
+  min-height: 70vh;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: var(--s-3);
+  text-align: center;
+  padding: var(--s-7) var(--gutter);
+}
+
+.gate h1 {
+  font-family: var(--font-display);
+  font-size: var(--t-xl);
+  color: var(--ivory);
+}
+
+.gate p { color: var(--text-muted); max-width: 44ch; }
+
+.action {
+  margin-top: var(--s-2);
+  padding: 0.9rem 1.4rem;
+  border: 1px solid var(--ink-line);
+  font-size: var(--t-xs);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  transition: background var(--dur-slow) var(--ease-primary), color var(--dur-slow) var(--ease-primary);
+}
+
+.action:hover { background: var(--ivory); color: var(--text-invert); }
+
+.spinner {
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--ink-line);
+  border-top-color: var(--gold-lift);
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner { animation-duration: 2.4s; }
+}

@@ -1,0 +1,414 @@
+.wrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  align-content: center;
+  gap: var(--s-5);
+  /* The block must FIT the sticky frame. Fixed 6rem padding made the content
+     942px tall inside a 900px frame, so the last line was silently clipped —
+     and on a laptop at 720px it would have lost a third of the paragraph.
+     Vertical padding is now proportional to the viewport, not absolute. */
+  padding: clamp(1.25rem, 7vh, 4rem) var(--gutter);
+  overflow: hidden;
+}
+
+@media (min-width: 1024px) {
+  .wrap {
+    grid-template-columns: 1fr 1fr;
+    min-height: 0;
+    align-items: center;
+    gap: var(--s-7);
+  }
+
+  /* Grid children default to min-height:auto, which refuses to shrink below
+     their content and is what let the plate push past the frame. */
+  .wrap > * { min-height: 0; }
+}
+
+/*
+ * The chapter as a whole answers the phase, not the progress. `in` is its
+ * approach, `view` its held state, `out` its departure — three CSS states and
+ * one transition, which is the entire reason the reference site needs no
+ * scrubbed timeline.
+ */
+.wrap {
+  transition:
+    opacity var(--dur-slow) var(--ease-primary),
+    transform var(--dur-slow) var(--ease-primary);
+}
+
+:global([data-section='in']) .wrap {
+  opacity: 0.72;
+  transform: translateY(1.5rem);
+}
+
+:global([data-section='view']) .wrap {
+  opacity: 1;
+  transform: none;
+}
+
+:global([data-section='out']) .wrap {
+  opacity: 0.72;
+  transform: translateY(-1.25rem);
+}
+
+/* ---------------- the reading side ---------------- */
+.text {
+  display: grid;
+  gap: var(--s-4);
+  align-content: center;
+  /* Drifts against the plate. Opposite sign and a fraction of the distance, so
+     the two sides separate as the pointer moves without the type ever
+     appearing to slide. */
+  transform: translate3d(calc(var(--mx, 0) * -0.5%), calc(var(--my, 0) * -0.35%), 0);
+}
+
+.index {
+  font-family: var(--font-body);
+  font-size: var(--t-xs);
+  letter-spacing: 0.3em;
+  color: var(--gold);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: var(--t-2xl);
+  font-weight: 300;
+  line-height: 1;
+  letter-spacing: -0.015em;
+  color: var(--ivory);
+}
+
+.body {
+  --line-progress: clamp(0.34, var(--sp, 1) * 2.8, 1);
+  max-width: var(--measure);
+  color: var(--text-muted);
+  font-size: var(--t-lg);
+  font-weight: 300;
+}
+
+.rule {
+  height: 1px;
+  background: var(--ink-line);
+  transform: scaleX(clamp(0.3, var(--sp, 1) * 2.4, 1));
+  transform-origin: left center;
+}
+
+/* ==================================================================
+   THE PLATE, IN SPACE
+
+   `figure` is the camera, `card` is the scroll-driven pose, `tilt` is
+   the pointer, and everything inside `tilt` sits at its own depth.
+   Splitting pose from pointer is deliberate: they run on different
+   clocks and must not share a transition.
+   ================================================================== */
+.figure {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  /*
+   * Bounded by the FRAME, not by the viewport.
+   *
+   * `min(72vh, 100%)` let the plate reach 72% of the window height while the
+   * row it sits in was already inset by the wrap's padding — so on a short,
+   * wide screen (1920x944) it ran 287px past the bottom of the sticky block
+   * and the image was simply cut off. Sizing it against the row it occupies
+   * means it can never outgrow the frame, whatever the aspect ratio.
+   */
+  max-height: 100%;
+  min-height: 0;
+  width: 100%;
+  justify-self: center;
+  margin: 0;
+  /* The camera. A shorter focal length exaggerates the turn; 1500px is about
+     the most a rectangle tolerates before the near edge starts to look
+     stretched rather than near. */
+  perspective: 1500px;
+  perspective-origin: 50% 46%;
+}
+
+.card {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transition: transform 1.1s var(--ease-primary);
+}
+
+.tilt {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  /* NOT transitioned. The pointer value is already damped by the hook; a
+     transition on top of that damping is what makes a card feel like it is
+     being dragged through treacle. */
+  transform:
+    rotateY(calc(var(--mx, 0) * 7deg))
+    rotateX(calc(var(--my, 0) * -5deg));
+}
+
+/*
+ * The pose, per phase. Approaching, the plate is turned away and set back;
+ * held, it is square and forward; leaving, it turns off the other way. The
+ * flipped chapters turn the opposite direction so the two layouts mirror
+ * rather than repeat.
+ */
+:global([data-section='in']) .card {
+  transform: translateZ(-190px) rotateY(15deg) rotateX(4deg);
+}
+
+:global([data-section='view']) .card {
+  transform: translateZ(0) rotateY(0deg) rotateX(0deg);
+}
+
+:global([data-section='out']) .card {
+  transform: translateZ(-130px) rotateY(-11deg) rotateX(-3deg);
+}
+
+/* `data-section` lives on the sticky ancestor, so the phase always comes
+   BEFORE .wrap in the selector, never inside it. */
+:global([data-section='in']) .wrap[data-flip] .card {
+  transform: translateZ(-190px) rotateY(-15deg) rotateX(4deg);
+}
+
+:global([data-section='out']) .wrap[data-flip] .card {
+  transform: translateZ(-130px) rotateY(11deg) rotateX(-3deg);
+}
+
+/*
+ * The print. Overflow lives HERE and nowhere above it — `overflow` on an
+ * element that also carries preserve-3d forces it flat, which would collapse
+ * the whole card into a picture again.
+ */
+.frame {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: var(--ink-raised);
+  /* The reference site's left-to-right uncover, kept: it is the one place a
+     continuous value is used, and the reason --p exists at all. */
+  clip-path: inset(0 calc(100% - clamp(0.42, var(--sp, 1) * 2.8, 1) * 100%) 0 0);
+}
+
+.frame > div { width: 100%; height: 100%; }
+
+.frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(calc(1.08 - 0.08 * clamp(0.42, var(--sp, 1) * 2.8, 1)));
+}
+
+.mediaLabel {
+  position: absolute;
+  z-index: 2;
+  left: 0.9rem;
+  bottom: 0.85rem;
+  padding: 0.4rem 0.55rem;
+  background: rgba(8, 9, 11, 0.78);
+  border: 1px solid rgba(238, 236, 231, 0.18);
+  color: rgba(244, 242, 238, 0.78);
+  font-size: 0.52rem;
+  letter-spacing: 0.16em;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+/* Glass over the print, set forward so it slides across as the card turns. */
+.sheen {
+  position: absolute;
+  inset: 0;
+  transform: translateZ(24px);
+  pointer-events: none;
+  mix-blend-mode: screen;
+  opacity: 0.5;
+  background: linear-gradient(
+    calc(115deg + var(--mx, 0) * 26deg),
+    transparent 34%,
+    rgba(255, 255, 255, 0.16) 48%,
+    rgba(214, 226, 255, 0.06) 56%,
+    transparent 70%
+  );
+}
+
+/* The rim, further forward still. At this depth it visibly parts from the
+   print, which is the cue that says "these are separate planes". */
+.edge {
+  position: absolute;
+  inset: 0;
+  transform: translateZ(38px);
+  pointer-events: none;
+  border: 1px solid rgba(238, 236, 231, 0.18);
+}
+
+/* Furthest forward, so it floats clear of the plate entirely. */
+.badge {
+  position: absolute;
+  left: 0;
+  bottom: -0.4rem;
+  transform: translateZ(72px) translateX(-8%);
+  padding: 0.45rem 0.8rem;
+  background: rgb(var(--scrim) / 0.72);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--ink-line);
+  font-size: 0.5rem;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/*
+ * The cast shadow, behind the card and moved by the same angles. A card that
+ * turns while its shadow stays put reads as a sticker on glass.
+ */
+.cast {
+  position: absolute;
+  inset: 6% -6% -10% 6%;
+  transform: translateZ(-60px);
+  background: radial-gradient(60% 55% at 50% 60%, rgba(0, 0, 0, 0.62), transparent 72%);
+  filter: blur(26px);
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .frame { clip-path: none; }
+  .frame img { transform: none; }
+  .rule { transform: none; }
+  .text { transform: none; }
+  :global([data-section]) .wrap { opacity: 1; transform: none; }
+  /* The plate stops travelling but keeps its depth — the layers are the
+     design, the movement was only how they were introduced. */
+  :global([data-section]) .card { transform: none; transition: none; }
+  .tilt { transform: none; }
+  .sheen { opacity: 0.28; }
+}
+
+/* On a phone the plate faces the reader: there is no pointer to drive the
+   parallax, and a turned card only costs legible width. */
+@media (max-width: 1023px) {
+  .figure { perspective: none; }
+  :global([data-section]) .card { transform: none; }
+  .tilt { transform: none; }
+  .badge { transform: none; left: auto; right: 0; bottom: 0; }
+  .sheen, .edge, .cast { transform: none; }
+  .cast { display: none; }
+}
+
+/* ==================================================================
+   VELOCITY
+
+   The plate has WEIGHT. It trails the scroll and catches up when the
+   page settles, which is the difference between an object being carried
+   and a picture painted on the page.
+
+   This rides on `.tilt` rather than `.card` because `.card` is
+   transitioned over 1.1s for its scroll pose — putting velocity there
+   would delay it by a second and destroy the entire point of it.
+   `.tilt` is untransitioned, so velocity lands on the same frame the
+   scroll does.
+   ================================================================== */
+.tilt {
+  transform:
+    translateY(calc(var(--vel, 0) * -1.4rem))
+    rotateY(calc(var(--mx, 0) * 7deg))
+    rotateX(calc(var(--my, 0) * -5deg + var(--vel, 0) * 1.2deg));
+}
+
+/*
+ * The text side trails LESS than the plate, so the two separate slightly
+ * under speed and close again at rest. Equal lag would move them as one
+ * block, which is just a slower scroll.
+ */
+.text {
+  transform:
+    translate3d(calc(var(--mx, 0) * -0.5%), calc(var(--my, 0) * -0.35%), 0)
+    translateY(calc(var(--vel, 0) * -0.45rem));
+}
+
+/* The print stretches along the axis of travel, like a long exposure. */
+.frame img {
+  transform:
+    scale(calc(1.08 - 0.08 * clamp(0.42, var(--sp, 1) * 2.8, 1)))
+    scaleY(calc(1 + var(--speed, 0) * 0.05));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tilt,
+  .text { transform: none; }
+  .frame img { transform: none; }
+}
+
+/* ==================================================================
+   THE TITLE, WRITTEN BY THE SCROLL
+
+   Each character has an index, and reveals once the scene's own
+   progress passes a threshold derived from that index. No keyframes and
+   no timer: the headline advances at the rate the page is scrolled,
+   stops where the visitor stops, and runs backwards if they scroll up.
+   ================================================================== */
+.titleSplit { display: block; }
+
+.word {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+/* Splitting on the space threw it away, so it has to be restored. */
+.word:not(:last-child) { margin-right: 0.26em; }
+
+.char {
+  display: inline-block;
+  /*
+   * The reveal for character `i`. The scene progress is remapped so the whole
+   * title has resolved by roughly a third of the way in — the headline should
+   * be readable while the chapter is still arriving, not still assembling once
+   * the visitor has started on the body copy.
+   *
+   * clamp() does the per-character gating: each one only begins once progress
+   * has passed its own offset, which is what produces the sweep.
+   */
+  /*
+   * `--i` is 0..1 across the title. Character i begins at scene progress
+   * 0.04 + i*0.26 and takes 0.11 to arrive — so the first letter starts almost
+   * immediately, the last has begun by a third of the way in, and the whole
+   * headline is readable long before the body copy is being read.
+   */
+  --reveal: clamp(0, calc((var(--sp, 1) - 0.04 - var(--i) * 0.26) / 0.11), 1);
+  opacity: var(--reveal);
+  translate: 0 calc((1 - var(--reveal)) * 0.5em);
+  rotate: calc((1 - var(--reveal)) * 3deg);
+  will-change: opacity, translate;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .char { opacity: 1; translate: none; rotate: none; }
+}
+
+/*
+ * A landscape plate, for images that are landscape.
+ *
+ * The default 4/5 frame is right for a stone shot upright; a 16:9 render in it
+ * is cropped to a vertical strip. Marked `wide`, the plate takes the image's
+ * own proportions and is allowed more width in the row, because a wide picture
+ * squeezed into half a column is a wide picture nobody can read.
+ */
+.figure[data-wide] {
+  aspect-ratio: 16 / 9;
+  width: 100%;
+}
+
+@media (min-width: 1024px) {
+  /* The wide plate earns a little extra of the row, taken from the gutter
+     rather than from the text column. */
+  .wrap:has(.figure[data-wide]) { grid-template-columns: 0.85fr 1.15fr; }
+
+  /*
+   * Flipped chapters swap the two children with `order`, which moves the
+   * figure into the FIRST track — the narrow one. Left alone, a flipped wide
+   * plate rendered 510px against an unflipped 690px: the same treatment at two
+   * different sizes, two chapters apart, which reads as a mistake. Reversing
+   * the tracks keeps the wide side wide whichever way the row faces.
+   */
+  .wrap[data-flip]:has(.figure[data-wide]) { grid-template-columns: 1.15fr 0.85fr; }
+}
