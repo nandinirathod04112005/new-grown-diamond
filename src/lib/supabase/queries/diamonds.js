@@ -15,7 +15,7 @@ import { DIAMOND_BUCKET, diamondImageKey, diamondImageUrl } from '../storage.js'
  * pages.
  */
 
-/** @typedef {{publicId:string,stockNumber:string,shape:string,carat:number,colour:string,clarity:string,cut:string,lab:string,growth:string,availability:string,imageUrl:string,featured:boolean}} DiamondCard */
+/** @typedef {{publicId:string,stockNumber:string,shape:string,carat:number,colour:string,clarity:string,cut:string,polish:string,symmetry:string,fluorescence:string,lab:string,growth:string,availability:string,imageUrl:string,featured:boolean}} DiamondCard */
 
 function toCard(row) {
   return {
@@ -26,6 +26,9 @@ function toCard(row) {
     colour: row.color || '—',
     clarity: row.clarity || '—',
     cut: row.cut || '—',
+    polish: row.polish || '—',
+    symmetry: row.symmetry || '—',
+    fluorescence: row.fluorescence || '—',
     lab: row.laboratory || '—',
     growth: row.growth_method || '—',
     availability: row.availability || 'On Request',

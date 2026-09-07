@@ -10,6 +10,11 @@ const SHAPES = {
   Princess: 'M14 14h72v72H14z',
   Cushion: 'M30 10h40c11 0 20 9 20 20v40c0 11-9 20-20 20H30c-11 0-20-9-20-20V30c0-11 9-20 20-20Z',
   Radiant: 'M30 10h40l20 20v40L70 90H30L10 70V30L30 10Z',
+  /* Asscher is a square step cut: the same cut corners as the radiant but
+     deeper, on a true square. Without its own path it fell through to Round,
+     which labels an octagon as a brilliant — the one thing a shape picker
+     must never do. */
+  Asscher: 'M36 10h28l26 26v28L64 90H36L10 64V36L36 10Z',
   Marquise: 'M50 5c16 14 26 30 26 45S66 81 50 95C34 81 24 65 24 50S34 19 50 5Z',
   Heart: 'M50 92C28 76 12 62 12 42a22 22 0 0 1 38-15 22 22 0 0 1 38 15c0 20-16 34-38 50Z',
 };

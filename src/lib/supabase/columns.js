@@ -6,9 +6,16 @@
  * columns are never on the wire in the first place — and keeping the list in
  * one place makes that auditable in a single read.
  */
+/*
+ * Polish, symmetry and fluorescence are on the card list because the stock
+ * finder filters on them, and filtering happens against the rows already in
+ * hand. Fetching them per-card is three more short strings on a list the page
+ * loads once; fetching them on demand would be a request per stone.
+ */
 export const DIAMOND_CARD_COLUMNS =
-  'public_id,stock_number,shape,carat,color,clarity,cut,laboratory,' +
-  'growth_method,availability,image_path,featured,certificate_url,created_at';
+  'public_id,stock_number,shape,carat,color,clarity,cut,polish,symmetry,' +
+  'fluorescence,laboratory,growth_method,availability,image_path,featured,' +
+  'certificate_url,created_at';
 
 export const DIAMOND_DETAIL_COLUMNS =
   'public_id,stock_number,shape,carat,color,clarity,cut,polish,symmetry,' +

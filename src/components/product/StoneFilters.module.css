@@ -1,0 +1,315 @@
+/*
+ * The stock finder, on the ink ground the inventory section sets.
+ *
+ * The sheet this answers to is a grey utility panel, and copying it here would
+ * drop a piece of admin software into the middle of the site. What carries over
+ * is its density — every option visible, nothing behind a menu — expressed in
+ * the type, rules and ink this page already uses everywhere else.
+ */
+
+.panel {
+  /*
+   * Named against the page's ground, not against one theme's colour.
+   *
+   * The finder used to be an inverted vitrine — cream while the site was dark —
+   * and this panel was written for that cream with hard-coded black borders and
+   * white chip fills. It now sits on the page's own ink, so every value comes
+   * from the ordinary ink tokens and follows the theme the way the rest of the
+   * site does. Naming them once here is what keeps the twenty rules below from
+   * each having to know which ground they are on.
+   */
+  --f-ink: var(--text);
+  --f-line: var(--ink-line);
+  --f-line-firm: color-mix(in srgb, var(--f-ink) 30%, transparent);
+  --f-muted: var(--text-muted);
+  --f-faint: color-mix(in srgb, var(--f-ink) 45%, transparent);
+  --f-chip: color-mix(in srgb, var(--ink-raised) 88%, var(--f-ink) 6%);
+  --f-field: var(--ink-raised);
+
+  display: grid;
+  gap: var(--s-5);
+  margin-bottom: var(--s-6);
+  padding-bottom: var(--s-5);
+  border-bottom: 1px solid var(--f-line);
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--s-2) var(--s-4);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: var(--t-xl);
+  line-height: 1;
+  color: var(--f-ink);
+  margin-right: auto;
+}
+
+.tally {
+  font-size: var(--t-xs);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--f-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.clear {
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--f-line-firm);
+  border-radius: 2px;
+  font-size: var(--t-xs);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--f-ink);
+  transition:
+    background var(--dur-base) var(--ease-primary),
+    color var(--dur-base) var(--ease-primary);
+}
+
+.clear:hover:not(:disabled) { background: var(--f-ink); color: var(--ink); }
+.clear:disabled { opacity: 0.34; cursor: default; }
+
+/*
+ * The collapse is a phone control and says so by not existing above the
+ * breakpoint — where the panel is always open, a Hide button would offer to
+ * take away something the layout has room for.
+ */
+.disclose {
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--f-ink);
+  border-radius: 2px;
+  font-size: var(--t-xs);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  background: var(--f-ink);
+  color: var(--ink);
+}
+
+/* Hiding the groups rather than not rendering them keeps the filters mounted,
+   so a collapsed panel still holds its selections and the tally beside the
+   button still counts them. */
+.shut > fieldset,
+.shut > .pair { display: none; }
+
+@media (min-width: 720px) {
+  .disclose { display: none; }
+  .shut > fieldset,
+  .shut > .pair { display: revert; }
+  .shut > .pair { display: grid; }
+}
+
+/* ---------------- groups ---------------- */
+
+.group {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+
+.group legend {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  padding: 0 0 var(--s-2);
+  font-size: 0.5625rem;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--f-muted);
+}
+
+/*
+ * Two groups per row from tablet up.
+ *
+ * Colour beside clarity, polish beside symmetry: these are read as pairs when
+ * a buyer specifies a stone, and pairing them halves the panel's height without
+ * hiding anything.
+ */
+.pair {
+  display: grid;
+  gap: var(--s-5);
+}
+
+@media (min-width: 720px) {
+  .pair { grid-template-columns: 1fr 1fr; gap: var(--s-4) var(--s-6); }
+}
+
+/* ---------------- option buttons ---------------- */
+
+.chips,
+.shapes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chips button,
+.shapes button {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--f-line);
+  border-radius: 2px;
+  font-size: var(--t-xs);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--f-ink);
+  background: var(--f-chip);
+  transition:
+    background var(--dur-base) var(--ease-primary),
+    border-color var(--dur-base) var(--ease-primary),
+    color var(--dur-base) var(--ease-primary);
+}
+
+.chips button:hover:not(:disabled),
+.shapes button:hover:not(:disabled) {
+  border-color: var(--accent-deep);
+}
+
+/*
+ * The count travels with the label rather than sitting in a column of its own.
+ *
+ * It is the second thing read, never the first, so it is smaller, lighter and
+ * tabular — a buyer scanning for "VS1" should not have to step over the number
+ * to find it.
+ */
+.chips em,
+.shapes em {
+  font-style: normal;
+  font-size: 0.5625rem;
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
+  color: var(--f-faint);
+}
+
+/*
+ * A selected option inverts against the ground.
+ *
+ * `--ivory` and `--ink` flip together with the theme, so the pair is a solid
+ * light chip with dark type on the dark page and the exact reverse on the
+ * light one — without either rule naming a colour.
+ */
+.on {
+  background: var(--ivory) !important;
+  border-color: var(--ivory) !important;
+  color: var(--ink) !important;
+}
+
+.on em { color: color-mix(in srgb, var(--ink) 62%, transparent); }
+
+/*
+ * An option with nothing behind it is dimmed, not removed.
+ *
+ * Removing it would make the rows reflow under the cursor on every click, and
+ * would hide the most useful thing the panel knows: that the house holds no
+ * FL at all this week.
+ */
+.chips button:disabled,
+.shapes button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+/* ---------------- shape row ---------------- */
+
+.shapes button {
+  flex-direction: column;
+  gap: 0.3rem;
+  width: 5.25rem;
+  padding: 0.65rem 0.35rem 0.55rem;
+  text-align: center;
+  letter-spacing: 0.06em;
+}
+
+.glyph {
+  width: 1.75rem;
+  height: 1.75rem;
+  color: var(--accent);
+}
+
+.on .glyph { color: var(--ink); }
+
+/* ---------------- weight ---------------- */
+
+.range {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.55rem;
+}
+
+.range label { display: block; }
+
+.range input {
+  width: 7rem;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--f-line);
+  border-radius: 2px;
+  background: var(--f-field);
+  color: var(--f-ink);
+  font-size: var(--t-xs);
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
+}
+
+.range input:focus-visible { outline: 2px solid var(--accent-deep); outline-offset: 1px; }
+.range span { color: var(--f-muted); }
+
+/* ---------------- cut shortcuts ---------------- */
+
+/*
+ * The shortcuts sit against their label, not at the far edge of the column.
+ *
+ * Pushed right with `margin-left: auto` they landed mid-row with white space on
+ * both sides and read as belonging to nothing — they act on cut, polish and
+ * symmetry together, and have to look attached to the grades to say so.
+ */
+.quick {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.quick button {
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--f-line-firm);
+  border-radius: 2px;
+  font-size: 0.5625rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--f-ink);
+  transition: background var(--dur-base) var(--ease-primary), color var(--dur-base) var(--ease-primary);
+}
+
+.quick button:hover { background: var(--f-ink); color: var(--ink); }
+
+/* ---------------- stone stage ---------------- */
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  width: max-content;
+  font-size: var(--t-xs);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--f-ink);
+  cursor: pointer;
+}
+
+.check input { width: 1rem; height: 1rem; accent-color: var(--accent); }
+
+@media (prefers-reduced-motion: reduce) {
+  .chips button,
+  .shapes button,
+  .quick button,
+  .clear { transition: none; }
+}

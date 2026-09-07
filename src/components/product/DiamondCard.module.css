@@ -1,8 +1,13 @@
 /*
- * The inventory section is a deliberate ivory "vitrine" — the one place on a
- * dark-first site where reading beats atmosphere. These cards are built for
- * that ground, not for the dark one, so the accent uses the AA-safe deep gold
- * rather than the lifted gold used on ink.
+ * The card is the vitrine, not the section around it.
+ *
+ * The inventory band was once ivory and these cards were built to sit on it;
+ * the band is now the page's own ink, and the cards stayed white. That is the
+ * point rather than an oversight — a lit white plate on a dark ground reads as
+ * a case in a shop window, and the specification inside it is still the one
+ * place on this site where reading beats atmosphere. Because the card interior
+ * is unchanged, the accent here is still the AA-safe deep gold that clears
+ * contrast on white, not the lifted gold used against ink.
  */
 /*
  * The card is now only the CAMERA. It holds the perspective and nothing else:
@@ -12,10 +17,21 @@
  * with no error to show for it.
  */
 .card {
+  /*
+   * The card's ink does not follow the theme, because its plate does not.
+   *
+   * `.plane` is painted `var(--white, #fff)` and `--white` is not a token, so
+   * the face is white in every theme — while `--text-invert` flips, and in
+   * light mode resolved to near-white and put white type on a white card. The
+   * plate is fixed, so the ink on it has to be fixed too; the section behind
+   * can change ground freely without reaching inside the case.
+   */
+  --card-ink: #17171b;
+
   display: grid;
   perspective: 950px;
   perspective-origin: 50% 44%;
-  color: var(--text-invert);
+  color: var(--card-ink);
 }
 
 .plane {
@@ -155,7 +171,7 @@
   font-family: var(--font-display);
   font-size: 1.6rem;
   font-weight: 300;
-  color: var(--text-invert);
+  color: var(--card-ink);
   font-variant-numeric: tabular-nums;
 }
 
@@ -180,7 +196,7 @@
 .specs dd {
   margin: 0.15rem 0 0;
   font-size: 0.875rem;
-  color: var(--text-invert);
+  color: var(--card-ink);
   font-variant-numeric: tabular-nums;
 }
 

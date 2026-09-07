@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import DiamondCard from '@/components/product/DiamondCard.jsx';
+import StoneFilters from '@/components/product/StoneFilters.jsx';
+import { EMPTY, isActive, matches } from '@/components/product/stoneFilter.js';
 import CvdCodex from '@/sections/diamonds/CvdCodex.jsx';
 import Process from '@/sections/diamonds/Process.jsx';
 import StoneViewer from '@/components/product/StoneViewer.jsx';
@@ -22,7 +24,7 @@ export default function InventoryPage() {
   // Initialised, not corrected in an effect: with no project configured the
   // first render is already the settled state.
   const [stage, setStage] = useState(() => (isConfigured ? 'loading' : 'unconfigured'));
-  const [shape, setShape] = useState('All');
+  const [filters, setFilters] = useState(EMPTY);
   const [viewing, setViewing] = useState(null);
 
   // The fetch never sets state synchronously: the effect's first write happens
@@ -51,16 +53,9 @@ export default function InventoryPage() {
     fetchStones();
   }, [fetchStones]);
 
-  // Shapes come from the stock actually held, not from a fixed list that can
-  // drift out of step with the table.
-  const shapes = useMemo(
-    () => ['All', ...[...new Set(stones.map((s) => s.shape))].filter(Boolean).sort()],
-    [stones],
-  );
-
   const rows = useMemo(
-    () => (shape === 'All' ? stones : stones.filter((s) => s.shape === shape)),
-    [stones, shape],
+    () => stones.filter((s) => matches(s, filters)),
+    [stones, filters],
   );
 
   return (
@@ -89,26 +84,16 @@ export default function InventoryPage() {
       <Process />
 
       <section className={styles.finder}>
-        <div className={styles.bar}>
-          <div className={styles.filters} role="group" aria-label="Filter by shape">
-            {shapes.map((item) => (
-              <button
-                key={item}
-                type="button"
-                className={shape === item ? styles.on : ''}
-                aria-pressed={shape === item}
-                onClick={() => setShape(item)}
-              >
-                {item}
-              </button>
-            ))}
-          </div>
-          <p className={styles.count} role="status">
-            {stage === 'ready'
-              ? `${rows.length} ${rows.length === 1 ? 'stone' : 'stones'}`
-              : ''}
-          </p>
-        </div>
+        {/* The finder needs stock to describe, so it waits for the load
+            rather than rendering a panel whose every count reads zero. */}
+        {stage === 'ready' && stones.length > 0 && (
+          <StoneFilters
+            stones={stones}
+            value={filters}
+            onChange={setFilters}
+            shown={rows.length}
+          />
+        )}
 
         {stage === 'loading' && (
           <div className={styles.grid} aria-hidden="true">
@@ -133,14 +118,14 @@ export default function InventoryPage() {
 
         {stage === 'ready' && rows.length === 0 && (
           <div className={styles.state}>
-            <h2>{stones.length === 0 ? 'No stones published yet' : 'No stones in this shape'}</h2>
+            <h2>{stones.length === 0 ? 'No stones published yet' : 'No stones match these filters'}</h2>
             <p>
               {stones.length === 0
                 ? 'Stock added in the admin appears here immediately.'
-                : 'Try another shape, or ask the desk what is arriving.'}
+                : 'Widen the search, or ask the desk what is arriving.'}
             </p>
-            {stones.length > 0 && (
-              <button type="button" onClick={() => setShape('All')}>Show all shapes</button>
+            {isActive(filters) && (
+              <button type="button" onClick={() => setFilters(EMPTY)}>Clear all filters</button>
             )}
           </div>
         )}
