@@ -12,6 +12,8 @@ import Chapter from '@/sections/home/Chapter.jsx';
 import Atelier from '@/sections/home/Atelier.jsx';
 import Reel from '@/sections/home/Reel.jsx';
 import SceneSwitch from '@/sections/home/SceneSwitch.jsx';
+import Reasons from '@/sections/home/Reasons.jsx';
+import Credentials from '@/sections/home/Credentials.jsx';
 import stone from '@/assets/diamonds/ngd-brilliant-macro.webp';
 import seedToStone from '@/assets/process/seed-to-stone.webp';
 import gradingBench from '@/assets/process/grading-bench.webp';
@@ -145,6 +147,14 @@ export default function Home() {
       <Reel />
 
       <SceneSwitch />
+
+      {/* The argument, then the proof. Reasons makes the case for lab-grown at
+          all; Credentials answers "and who says so" with named bodies. In that
+          order, because the second is only worth reading once the first has
+          raised the question. */}
+      <Reasons />
+
+      <Credentials />
     </main>
   );
 }
