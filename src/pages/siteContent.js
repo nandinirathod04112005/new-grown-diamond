@@ -21,6 +21,24 @@ export const PAGES = {
       ['Longevity', 'A laboratory-grown diamond does not cloud or change colour simply because it was grown above ground. Its care requirements are the same as those of a mined diamond.'],
     ],
   },
+  /*
+   * The comparison the old site put in its Education menu, written to be
+   * defensible rather than promotional: what is genuinely identical, what
+   * genuinely differs, and who can actually tell — a trade buyer is asked this
+   * by their own customers and needs an answer that survives the follow-up.
+   */
+  '/cvd-vs-natural': {
+    eyebrow: 'Education / Origin compared',
+    title: 'One material. Two origins.',
+    intro: 'A laboratory-grown diamond and a mined diamond are the same substance. What separates them is where the crystal formed, how long it took, and what a grading laboratory can read in its growth structure.',
+    sections: [
+      ['Composition', 'Both are crystallized carbon in the same cubic lattice. A laboratory-grown diamond is not a simulant — cubic zirconia and moissanite are different materials with different chemical and optical behaviour.'],
+      ['Formation', 'A natural diamond crystallizes in the Earth’s mantle over geological time and is carried upward in volcanic rock. A CVD diamond grows in a reactor over weeks, as a hydrogen-rich plasma carrying a small carbon source deposits carbon layer by layer onto a diamond seed.'],
+      ['Properties', 'Hardness, refractive index, dispersion and thermal conductivity are those of diamond in both cases. A thermal probe reads both as diamond, and neither a loupe nor the unaided eye separates them reliably.'],
+      ['Telling them apart', 'Separation is a laboratory task. Graders read growth structure, fluorescence and phosphorescence, and trace defects: mined stones commonly show octahedral growth zoning, while CVD material shows layered growth running out from its seed.'],
+      ['On the report', 'Both are graded on the same cut, colour, clarity and carat scales, and a report from a laboratory such as IGI or GIA states the origin explicitly. A laboratory-grown diamond is identified as one on its own certificate.'],
+    ],
+  },
   '/shapes': {
     eyebrow: 'Education / Shape guide',
     title: 'The outline changes everything.',

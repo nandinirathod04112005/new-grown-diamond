@@ -2,14 +2,19 @@ import PageHero from '@/components/layout/PageHero.jsx';
 import Reveal from '@/components/motion/Reveal.jsx';
 import styles from './EditorialPage.module.css';
 /**
- * Editorial template. `children` is an optional full-bleed slot between the
- * hero and the numbered sections, used by Our Story for its scroll film.
+ * Editorial template.
+ *
+ * `children` is an optional full-bleed slot between the hero and the numbered
+ * sections, used by Our Story for its scroll film. `after` is the same slot on
+ * the far side of them, for anything that only makes sense once the page has
+ * been read — Education puts its contents list there, because "read next" above
+ * the thing you have not read yet is an instruction out of order.
  *
  * A page may carry no sections at all — Shapes states its content beside its
  * turning wheel instead — so the list and its rules are skipped entirely
  * rather than rendering an empty bordered block.
  */
-export default function EditorialPage({ page, children, motif, accent }) {
+export default function EditorialPage({ page, children, after, motif, accent }) {
   return (
     <main className={styles.page}>
       <PageHero
@@ -34,6 +39,8 @@ export default function EditorialPage({ page, children, motif, accent }) {
           ))}
         </div>
       )}
+
+      {after}
 
       <a className={styles.cta} href="/contact"><span>Discuss your requirement</span><strong>→</strong></a>
     </main>

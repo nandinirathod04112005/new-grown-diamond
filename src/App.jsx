@@ -28,6 +28,7 @@ import AdminDiamondForm from '@/pages/admin/AdminDiamondForm.jsx';
 import Story from '@/sections/about/Story.jsx';
 import Exhibit from '@/sections/about/Exhibit.jsx';
 import ShapeWheel from '@/sections/shapes/ShapeWheel.jsx';
+import EducationIndex from '@/sections/education/EducationIndex.jsx';
 import { PAGES } from '@/pages/siteContent.js';
 /**
  * A motif and accent per editorial page. Four pages share one template, so
@@ -37,6 +38,9 @@ import { PAGES } from '@/pages/siteContent.js';
 const PAGE_MOTIF = {
   '/about': { motif: 'lattice', accent: '#b48c47' },
   '/education': { motif: 'facets', accent: '#6d8fc4' },
+  /* The comparison sits under Education and reads as part of it, so it
+     carries Education's motif rather than introducing a fifth one. */
+  '/cvd-vs-natural': { motif: 'facets', accent: '#6d8fc4' },
   '/shapes': { motif: 'arcs', accent: '#9c8ab8' },
   '/why-lab-grown': { motif: 'rings', accent: '#6fb392' },
 };
@@ -172,6 +176,7 @@ export default function App() {
             page={path === '/shapes' ? { ...content, sections: [] } : content}
             motif={PAGE_MOTIF[path]?.motif}
             accent={PAGE_MOTIF[path]?.accent}
+            after={path === '/education' ? <EducationIndex /> : null}
           >
             {path === '/about' ? <><Exhibit /><Story /></> : null}
             {path === '/shapes' ? <ShapeWheel /> : null}
