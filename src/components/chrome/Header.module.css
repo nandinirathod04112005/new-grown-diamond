@@ -96,9 +96,23 @@
   inset: 0;
   z-index: 80;
   display: grid;
-  align-content: center;
+  /*
+   * `safe` is doing real work here, not decoration.
+   *
+   * Plain `center` on a grid whose content is taller than the box centres the
+   * overflow too, pushing the first item up past the top edge where no amount
+   * of scrolling reaches it — which is exactly what happened once Education
+   * gained four nested pages. `safe` falls back to start alignment the moment
+   * the content stops fitting, so a short menu still sits centred and a long
+   * one simply begins at the top and scrolls.
+   */
+  align-content: safe center;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   gap: var(--s-6);
-  padding: var(--s-7) var(--gutter);
+  /* Top padding clears the fixed header, whose close control sits above this
+     sheet and must not land on the first link. */
+  padding: calc(var(--s-7) + 4.5rem) var(--gutter) var(--s-7);
   background: rgb(var(--scrim) / 0.97);
   backdrop-filter: blur(14px);
   /* Wipes down from the top rather than fading — a fade reads as a loading
@@ -143,6 +157,40 @@
 .sheetLink:hover .sheetLabel,
 .sheetLink:focus-visible .sheetLabel { color: var(--gold-lift); }
 
+/*
+ * The pages nested under a sheet link.
+ *
+ * Indented to the label's own column — 3rem of index plus the row gap — so the
+ * hierarchy is read from the alignment instead of from a bullet or a rule. They
+ * fade in after the last parent link has finished arriving, so the menu reads
+ * top-level first and detail second rather than everything at once.
+ */
+.subList {
+  display: grid;
+  margin: 0 0 var(--s-4);
+  padding: var(--s-2) 0 0 calc(3rem + var(--s-3));
+  list-style: none;
+  opacity: 0;
+  transition: opacity var(--dur-slow) var(--ease-primary);
+}
+
+.sheet[data-open] .subList { opacity: 1; transition-delay: 520ms; }
+
+.subList a {
+  display: block;
+  padding: 0.55rem 0;
+  font-size: var(--t-sm);
+  line-height: 1.4;
+  color: var(--text-muted);
+  text-wrap: pretty;
+  border-bottom: 1px solid color-mix(in srgb, var(--ink-line) 55%, transparent);
+}
+
+.subList li:last-child a { border-bottom: 0; }
+
+.subList a:hover,
+.subList a:focus-visible { color: var(--gold-lift); }
+
 .sheetFoot {
   display: grid;
   gap: var(--s-2);
@@ -155,7 +203,7 @@
 .sheetFoot a { color: var(--gold-lift); }
 
 @media (prefers-reduced-motion: reduce) {
-  .sheet, .sheetLink, .burger span { transition: none; }
+  .sheet, .sheetLink, .subList, .burger span { transition: none; }
 }
 
 /*

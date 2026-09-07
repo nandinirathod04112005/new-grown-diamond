@@ -65,6 +65,37 @@ export const PAGES = {
   },
 };
 
+/**
+ * What sits under Education.
+ *
+ * Declared once because two places render it — the header dropdown and the
+ * contents list on the Education page itself — and a nav that has drifted from
+ * the page it describes is worse than either alone. The blurb is ignored by
+ * the nav, which has no room for it.
+ */
+export const EDUCATION_TOPICS = [
+  {
+    href: '/cvd-vs-natural',
+    label: 'Comparison between CVD & natural diamond',
+    blurb: 'The same crystal from two origins — what is identical, what differs, and who can actually tell.',
+  },
+  {
+    href: '/why-lab-grown',
+    label: 'Why choose a lab-grown diamond?',
+    blurb: 'Quality you can inspect and an origin you can explain, set against what it costs.',
+  },
+  {
+    href: '/shapes',
+    label: 'Shapes',
+    blurb: 'How an outline changes the face-up size, the light return and the setting.',
+  },
+  {
+    href: '/faq',
+    label: 'FAQ',
+    blurb: 'Short answers on growth, certification, durability and verifying origin.',
+  },
+];
+
 export const FAQS = [
   ['What does CVD mean?', 'CVD stands for Chemical Vapour Deposition, a process that grows diamond crystal from activated carbon-containing gas.'],
   ['Which gases are commonly used?', 'CVD growth commonly uses a mixture dominated by hydrogen with a smaller quantity of methane.'],

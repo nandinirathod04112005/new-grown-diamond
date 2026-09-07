@@ -1,14 +1,22 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import ThemeToggle from './ThemeToggle.jsx';
+import NavMenu from './NavMenu.jsx';
+import { EDUCATION_TOPICS } from '@/pages/siteContent.js';
 
 import styles from './Header.module.css';
 
+/*
+ * Shapes is no longer its own top-level entry.
+ *
+ * It sits under Education, where it belongs and where the dropdown now lists
+ * it, and leaving it in both places gave the same page two ranks in the same
+ * row. The route is untouched; only the nav stopped saying it twice.
+ */
 const NAV = [
   { label: 'Diamonds', href: '/diamonds' },
   { label: 'Jewellery', href: '/jewellery' },
   { label: 'Our story', href: '/about' },
-  { label: 'Shapes', href: '/shapes' },
-  { label: 'Education', href: '/education' },
+  { label: 'Education', href: '/education', items: EDUCATION_TOPICS },
   { label: 'Blogs', href: '/blogs' },
   { label: 'Contact', href: '/contact' },
 ];
@@ -83,11 +91,19 @@ export default function Header() {
         <a className={styles.mark} href="/">New Grown Diamond</a>
 
         <nav className={styles.nav} aria-label="Primary">
-          {NAV.map((item) => (
+          {NAV.map((item) => (item.items ? (
+            <NavMenu
+              key={item.href}
+              label={item.label}
+              href={item.href}
+              items={item.items}
+              linkClassName={styles.link}
+            />
+          ) : (
             <a key={item.href} className={styles.link} href={item.href}>
               {item.label}
             </a>
-          ))}
+          )))}
         </nav>
 
         <a className={styles.account} href={ACCOUNT.href}>{ACCOUNT.label}</a>
@@ -121,16 +137,30 @@ export default function Header() {
       >
         <nav className={styles.sheetNav}>
           {NAV.map((item, i) => (
-            <a
-              key={item.href}
-              href={item.href}
-              className={styles.sheetLink}
-              style={{ '--i': i }}
-              onClick={close}
-            >
-              <span className={styles.sheetIndex}>{String(i + 1).padStart(2, '0')}</span>
-              <span className={styles.sheetLabel}>{item.label}</span>
-            </a>
+            <div key={item.href} className={styles.sheetItem}>
+              <a
+                href={item.href}
+                className={styles.sheetLink}
+                style={{ '--i': i }}
+                onClick={close}
+              >
+                <span className={styles.sheetIndex}>{String(i + 1).padStart(2, '0')}</span>
+                <span className={styles.sheetLabel}>{item.label}</span>
+              </a>
+
+              {/* Nested rather than a second sheet: a phone menu that opens
+                  another phone menu is a place to get lost in, and four links
+                  cost less room than the control that would hide them. */}
+              {item.items && (
+                <ul className={styles.subList}>
+                  {item.items.map((sub) => (
+                    <li key={sub.href}>
+                      <a href={sub.href} onClick={close}>{sub.label}</a>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           ))}
         </nav>
 

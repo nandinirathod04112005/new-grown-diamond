@@ -1,0 +1,98 @@
+.group {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.chevron {
+  display: grid;
+  place-items: center;
+  width: 1rem;
+  height: 1rem;
+  color: var(--chrome);
+  /* Follows the label's own reveal rather than announcing itself: the item is
+     a link first and a menu second. */
+  opacity: 0.6;
+  transition: opacity var(--dur-base) var(--ease-primary), transform var(--dur-base) var(--ease-primary);
+}
+
+.chevron svg { width: 0.625rem; height: 0.375rem; }
+
+.group:hover .chevron,
+.chevron:focus-visible { opacity: 1; }
+.chevron[aria-expanded='true'] { opacity: 1; transform: rotate(180deg); }
+.chevron:focus-visible { outline: 2px solid var(--accent-lift); outline-offset: 3px; }
+
+/*
+ * The panel is a child of <body>, not of the header, so it sets its own ground
+ * from scratch — it inherits nothing from the chrome it appears to belong to.
+ * `--x` and `--y` are the measured corner of the nav item it hangs from.
+ */
+.panel {
+  position: fixed;
+  left: var(--x);
+  top: var(--y);
+  z-index: 95;
+  min-width: 17rem;
+  max-width: min(24rem, calc(100vw - 2rem));
+  margin-top: 0.75rem;
+  padding: var(--s-3) 0;
+  background: var(--ink-raised);
+  border: 1px solid var(--ink-line);
+  border-radius: 3px;
+  box-shadow: 0 1.5rem 3rem rgb(0 0 0 / 0.45);
+  animation: drop 0.22s var(--ease-primary) both;
+}
+
+/*
+ * The gap between label and panel is padding on the panel, not margin outside
+ * it, so the pointer never crosses dead space on the way down. A real gap here
+ * would close the menu under anyone moving at a normal speed.
+ */
+.panel::before {
+  content: '';
+  position: absolute;
+  inset: -0.75rem 0 100% 0;
+}
+
+.panel ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.panel a {
+  display: block;
+  padding: 0.7rem var(--s-4);
+  font-size: var(--t-sm);
+  line-height: 1.35;
+  color: var(--text);
+  text-wrap: pretty;
+  transition: background var(--dur-base) var(--ease-primary), color var(--dur-base) var(--ease-primary);
+}
+
+.panel a:hover,
+.panel a:focus-visible {
+  background: color-mix(in srgb, var(--text) 7%, transparent);
+  color: var(--accent-lift);
+}
+
+.panel a:focus-visible { outline: 2px solid var(--accent-lift); outline-offset: -2px; }
+
+@keyframes drop {
+  from { opacity: 0; transform: translateY(-0.4rem); }
+  to { opacity: 1; transform: none; }
+}
+
+/* The dropdown is a pointer affordance. Below the nav breakpoint the header
+   has no links at all — the full-screen sheet carries them, nested. */
+@media (max-width: 899px) {
+  .group { display: none; }
+  .panel { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel { animation: none; }
+  .chevron { transition: none; }
+}
