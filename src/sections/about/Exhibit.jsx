@@ -97,7 +97,15 @@ const PHASES = [
 
 export default function Exhibit() {
   return (
-    <ScrollScene phases={PHASES} id="the-exhibit" label="Four decades of diamond excellence">
+    <ScrollScene
+      phases={PHASES}
+      id="the-exhibit"
+      label="Four decades of diamond excellence"
+      /* The worst offender at phone width: nearly 400px of this exhibit's copy
+         sat below the pinned pane and was never visible at any scroll position.
+         Stacked, the whole case is readable. */
+      mobileStack
+    >
       <div className={`${styles.stage} u-stage-dark`}>
         <header className={styles.head}>
           <p className={styles.brand}>New Grown Diamond</p>

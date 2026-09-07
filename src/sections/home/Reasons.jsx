@@ -151,7 +151,15 @@ const PHASES = [
 
 export default function Reasons() {
   return (
-    <ScrollScene phases={PHASES} id="why-lab-grown" label="Why lab-grown diamonds">
+    <ScrollScene
+      phases={PHASES}
+      id="why-lab-grown"
+      label="Why lab-grown diamonds"
+      /* Six claims with their figures do not fit one phone viewport: the last
+         card's copy was cut mid-sentence by the pinned pane. Stacked, the six
+         are read rather than glimpsed. */
+      mobileStack
+    >
       <div className={styles.stage}>
         <header className={styles.head}>
           <p className={styles.kicker}>The case</p>

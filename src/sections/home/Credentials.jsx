@@ -103,7 +103,20 @@ function Marks({ items, label, id }) {
 
 export default function Credentials() {
   return (
-    <ScrollScene phases={PHASES} id="recognition" label="Awards and recognition">
+    <ScrollScene
+      phases={PHASES}
+      id="recognition"
+      label="Awards and recognition"
+      /*
+       * Pinned on a desk, ordinary reading flow on a phone.
+       *
+       * This scene is two award citations and eleven marks — more copy than a
+       * 100dvh pin can hold at phone width. Compressed into one, the citations
+       * ran past their own box and "Connected with" printed straight through
+       * the last paragraph. Process and CvdCodex stack for the same reason.
+       */
+      mobileStack
+    >
       <div className={styles.stage}>
         <div className={styles.inner}>
           <div className={styles.awards}>

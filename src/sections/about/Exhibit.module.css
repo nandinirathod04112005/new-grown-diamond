@@ -428,6 +428,25 @@
   background: var(--ink-line);
 }
 
+/* Stacked, the four rows size to their content rather than to a viewport the
+   copy has already outgrown. */
+@media (max-width: 760px), (prefers-reduced-motion: reduce) {
+  .stage {
+    height: auto;
+    min-height: 0;
+    grid-template-rows: auto auto auto auto;
+    overflow: visible;
+     /*
+     * Unpinned, the scroll progress that drives every reveal in this scene
+     * never advances, so its content would sit for ever at the opacity of its
+     * own entrance. Completing the progress is one declaration and reaches
+     * every value derived from it, rather than overriding each opacity in turn.
+     */
+    --p: 1;
+    --sp: 1;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .benchWheel,
   .benchLamp,
