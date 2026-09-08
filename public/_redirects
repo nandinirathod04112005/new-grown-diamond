@@ -7,4 +7,5 @@
 #
 # 200 (rewrite), not 301/302: the browser must keep the URL it asked for, or
 # the router has nothing to read.
-/*    /index.html   200
+/admin/*       /admin/index.html   200
+/*             /404.html           404
