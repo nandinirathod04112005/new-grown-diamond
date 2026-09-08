@@ -1,4 +1,6 @@
 import ScrollScene from '@/components/scroll/ScrollScene.jsx';
+import Reveal from '@/components/motion/Reveal.jsx';
+import SplitHeading from '@/components/motion/SplitHeading.jsx';
 import styles from './Credentials.module.css';
 
 /**
@@ -27,23 +29,36 @@ const LOGOS = Object.fromEntries(
 );
 
 /*
- * The award photograph, same mechanism. Drop
- * `src/assets/company/award-carats-2025.jpg` in and the plate fills itself;
- * without it the citations still stand on their own, which is the part that
- * carries the information.
+ * The award photographs, discovered and matched by name.
+ *
+ * `award-carats-2025.webp` keys itself to the award whose `id` is
+ * `carats-2025`, so a photograph belongs to a citation rather than to a
+ * position — the section used to take whichever file the glob happened to
+ * return first and show it once, above both awards, which made a picture of
+ * the Surat plate stand in for the Pune plaque as well. An award with no
+ * photograph still reads: the citation is the part that carries the
+ * information, and the plate is simply absent.
  */
-const AWARD = Object.values(
-  import.meta.glob('@/assets/company/award-*.{webp,png,jpg,jpeg}', {
-    eager: true,
-    import: 'default',
-  }),
-)[0];
+const PHOTOS = Object.fromEntries(
+  Object.entries(
+    import.meta.glob('@/assets/company/award-*.{webp,png,jpg,jpeg}', {
+      eager: true,
+      import: 'default',
+    }),
+  ).map(([path, url]) => [
+    path.split('/').pop().replace(/^award-/, '').replace(/\.\w+$/, '').toLowerCase(),
+    url,
+  ]),
+);
 
 const AWARDS = [
   {
     id: 'carats-2025',
     event: 'CARATS 2025 Diamond Expo',
     place: 'Surat',
+    photoAlt:
+      'The CARATS 2025 award: a hinged wooden frame holding a gold handshake relief beside a '
+      + 'brass plate presented to New Grown Diamond by the Surat Diamond Association.',
     body:
       'An appreciation award received at CARATS 2025 Diamond Expo (Surat), organised by the ' +
       'Surat Diamond Association, for our participation and contribution to the evolving ' +
@@ -53,6 +68,9 @@ const AWARDS = [
     id: 'ugjis-2024',
     event: 'Unique Gems & Jewellery International Show',
     place: 'Pune · 2024',
+    photoAlt:
+      'The UGJIS 2024 award: a hexagonal wooden plaque reading "Heartfelt Appreciation", '
+      + 'presented to New Grown Diamond in Pune.',
     body:
       'An appreciation award received at UGJIS 2024, Pune, for our participation and ' +
       'contribution to the lab-grown diamond industry — recognising our work on quality ' +
@@ -83,11 +101,13 @@ const PHASES = [
 
 function Marks({ items, label, id }) {
   return (
-    <section className={styles.marks} aria-labelledby={id}>
+    <Reveal as="section" className={styles.marks} aria-labelledby={id}>
       <h3 className={styles.markTitle} id={id}>{label}</h3>
       <ul className={styles.markRow}>
-        {items.map((m) => (
-          <li key={m.slug} className={styles.mark}>
+        {items.map((m, i) => (
+          /* The cell index drives the stagger, so the row fills in reading
+             order rather than arriving as one block. */
+          <li key={m.slug} className={styles.mark} style={{ '--i': i }}>
             {LOGOS[m.slug] ? (
               <img src={LOGOS[m.slug]} alt={m.name} loading="lazy" decoding="async" />
             ) : (
@@ -97,7 +117,7 @@ function Marks({ items, label, id }) {
           </li>
         ))}
       </ul>
-    </section>
+    </Reveal>
   );
 }
 
@@ -113,36 +133,41 @@ export default function Credentials() {
        * This scene is two award citations and eleven marks — more copy than a
        * 100dvh pin can hold at phone width. Compressed into one, the citations
        * ran past their own box and "Connected with" printed straight through
-       * the last paragraph. Process and CvdCodex stack for the same reason.
+       * the last paragraph. Reasons and Exhibit stack for the same reason.
        */
       mobileStack
     >
       <div className={styles.stage}>
         <div className={styles.inner}>
           <div className={styles.awards}>
-            <header className={styles.head}>
+            <Reveal as="header" className={styles.head}>
               <p className={styles.kicker}>Recognition</p>
-              <h2 className={styles.title}>Awards &amp; recognition</h2>
-            </header>
-
-            {AWARD ? (
-              <figure className={styles.plate}>
-                <img
-                  src={AWARD}
-                  alt="An appreciation award presented to New Grown Diamond, shown in its presentation case."
-                  loading="lazy"
-                  decoding="async"
-                />
-              </figure>
-            ) : null}
+              <SplitHeading as="h2" className={styles.title} text="Awards & recognition" />
+            </Reveal>
 
             <ol className={styles.list}>
-              {AWARDS.map((a) => (
-                <li key={a.id} className={styles.award}>
-                  <p className={styles.event}>{a.event}</p>
-                  <p className={styles.place}>{a.place}</p>
-                  <p className={styles.body}>{a.body}</p>
-                </li>
+              {AWARDS.map((a, i) => (
+                /* Each award arrives on its own, a beat after the one above —
+                   two plaques landing together reads as a banner. */
+                <Reveal as="li" key={a.id} className={styles.award} delay={i * 140}>
+                  {PHOTOS[a.id] ? (
+                    <figure className={styles.plate}>
+                      <img
+                        src={PHOTOS[a.id]}
+                        alt={a.photoAlt}
+                        loading="lazy"
+                        decoding="async"
+                        width="900"
+                        height="506"
+                      />
+                    </figure>
+                  ) : null}
+                  <div className={styles.citation}>
+                    <p className={styles.event}>{a.event}</p>
+                    <p className={styles.place}>{a.place}</p>
+                    <p className={styles.body}>{a.body}</p>
+                  </div>
+                </Reveal>
               ))}
             </ol>
           </div>

@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react';
 
-import { prefersReducedMotion } from '@/lib/motion/media.js';
 import styles from './DiamondCursor.module.css';
 
 /*
@@ -33,9 +32,6 @@ const GEM_SRC = '/assets/brand/ngd-cursor-diamond.png';
 const GEM_EASE = 0.34;
 const RING_EASE = 0.13;
 
-/** Below this width the pointer is probably a stylus or a small hybrid. */
-const MIN_WIDTH = 900;
-
 /** Clickable things the gem should react to. */
 const INTERACTIVE = 'a[href], button, [role="button"], input, textarea, select, summary, label[for], [tabindex]:not([tabindex="-1"])';
 
@@ -63,27 +59,33 @@ export default function DiamondCursor() {
     if (!wrap || !dot || !ring) return undefined;
 
     /*
-     * Three refusals, all deliberate:
-     *   coarse pointer  — a finger has no cursor to replace
-     *   small screen    — hiding the system cursor on a hybrid device can
-     *                     leave someone with no pointer at all
-     *   reduced motion  — a trailing, easing, sparking cursor is exactly the
-     *                     unrequested movement that setting asks us to drop
-     * In every case the native cursor is left completely alone.
+     * Two refusals, both asked as capability questions rather than size ones.
+     *
+     * There used to be a third: anything under 900px wide was refused, on the
+     * grounds that it was probably a small hybrid where hiding the system
+     * cursor could leave someone with no pointer at all. That guard was
+     * measuring the wrong thing. A desktop browser window dragged to half a 1366px
+     * screen reports 683px with `hover: hover`, `pointer: fine` and
+     * `pointer: coarse` false — an ordinary mouse, refused for being narrow.
+     *
+     * `(hover: hover) and (pointer: fine)` answers the actual question. A
+     * tablet in tablet mode reports coarse and is excluded; the same tablet
+     * with a mouse attached reports fine, and there the gem is correct. Width
+     * never entered into it.
      */
-    const coarse = window.matchMedia?.('(pointer: coarse)').matches;
-    const narrow = window.innerWidth < MIN_WIDTH;
-    if (coarse || narrow || prefersReducedMotion()) return undefined;
+    const fine = window.matchMedia('(hover: hover) and (pointer: fine)');
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)');
 
-    document.documentElement.dataset.customCursor = 'on';
+    const start = () => {
+      document.documentElement.dataset.customCursor = 'on';
 
-    let tx = window.innerWidth / 2;
-    let ty = window.innerHeight / 2;
-    let gx = tx, gy = ty, rx = tx, ry = ty;
-    let raf = 0;
-    let seen = false;
+      let tx = window.innerWidth / 2;
+      let ty = window.innerHeight / 2;
+      let gx = tx, gy = ty, rx = tx, ry = ty;
+      let raf = 0;
+      let seen = false;
 
-    const frame = () => {
+      const frame = () => {
       gx += (tx - gx) * GEM_EASE;
       gy += (ty - gy) * GEM_EASE;
       rx += (tx - rx) * RING_EASE;
@@ -93,9 +95,9 @@ export default function DiamondCursor() {
       dot.style.transform = `translate3d(${gx.toFixed(2)}px, ${gy.toFixed(2)}px, 0)`;
       ring.style.transform = `translate3d(${rx.toFixed(2)}px, ${ry.toFixed(2)}px, 0)`;
       raf = requestAnimationFrame(frame);
-    };
+      };
 
-    const onMove = (e) => {
+      const onMove = (e) => {
       tx = e.clientX;
       ty = e.clientY;
       if (!seen) {
@@ -104,9 +106,9 @@ export default function DiamondCursor() {
         // at the centre of the screen on load.
         wrap.dataset.ready = '';
       }
-    };
+      };
 
-    const onOver = (e) => {
+      const onOver = (e) => {
       const hit = e.target.closest?.(INTERACTIVE);
       wrap.dataset.active = hit ? '' : undefined;
       if (!hit) {
@@ -122,10 +124,10 @@ export default function DiamondCursor() {
       } else {
         delete wrap.dataset.label;
       }
-    };
+      };
 
-    /* A short burst of chips thrown off the point of contact. */
-    const onDown = () => {
+      /* A short burst of chips thrown off the point of contact. */
+      const onDown = () => {
       wrap.dataset.press = '';
       const burst = document.createElement('span');
       burst.className = styles.burst;
@@ -145,29 +147,61 @@ export default function DiamondCursor() {
       // Self-removing, so a long session cannot accumulate dead nodes.
       burst.addEventListener('animationend', () => burst.remove(), { once: true });
       window.setTimeout(() => burst.remove(), 900);
+      };
+
+      const onUp = () => { delete wrap.dataset.press; };
+      const onLeave = () => { delete wrap.dataset.ready; };
+      const onEnter = () => { wrap.dataset.ready = ''; };
+
+      window.addEventListener('pointermove', onMove, { passive: true });
+      window.addEventListener('pointerover', onOver, { passive: true });
+      window.addEventListener('pointerdown', onDown, { passive: true });
+      window.addEventListener('pointerup', onUp, { passive: true });
+      document.addEventListener('pointerleave', onLeave);
+      document.addEventListener('pointerenter', onEnter);
+      raf = requestAnimationFrame(frame);
+
+      return () => {
+        cancelAnimationFrame(raf);
+        window.removeEventListener('pointermove', onMove);
+        window.removeEventListener('pointerover', onOver);
+        window.removeEventListener('pointerdown', onDown);
+        window.removeEventListener('pointerup', onUp);
+        document.removeEventListener('pointerleave', onLeave);
+        document.removeEventListener('pointerenter', onEnter);
+        delete document.documentElement.dataset.customCursor;
+        /* Clear the visual state too, or a gem frozen mid-screen outlives the
+           cursor that was drawing it. */
+        delete wrap.dataset.ready;
+        delete wrap.dataset.active;
+        delete wrap.dataset.label;
+        delete wrap.dataset.press;
+      };
+      };
+
+      /*
+       * Re-asked whenever the answer can change, not once at mount.
+       *
+       * Deciding this a single time meant a window opened narrow and then
+       * widened never got the cursor, and one that gained a mouse mid-session
+       * never noticed. Plugging in a mouse, unplugging it, or switching
+       * reduced-motion on all flip these queries, and the cursor now follows.
+       */
+    let stop = null;
+    const sync = () => {
+      const wanted = fine.matches && !still.matches;
+      if (wanted && !stop) stop = start();
+      else if (!wanted && stop) { stop(); stop = null; }
     };
 
-    const onUp = () => { delete wrap.dataset.press; };
-    const onLeave = () => { delete wrap.dataset.ready; };
-    const onEnter = () => { wrap.dataset.ready = ''; };
-
-    window.addEventListener('pointermove', onMove, { passive: true });
-    window.addEventListener('pointerover', onOver, { passive: true });
-    window.addEventListener('pointerdown', onDown, { passive: true });
-    window.addEventListener('pointerup', onUp, { passive: true });
-    document.addEventListener('pointerleave', onLeave);
-    document.addEventListener('pointerenter', onEnter);
-    raf = requestAnimationFrame(frame);
+    sync();
+    fine.addEventListener('change', sync);
+    still.addEventListener('change', sync);
 
     return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener('pointermove', onMove);
-      window.removeEventListener('pointerover', onOver);
-      window.removeEventListener('pointerdown', onDown);
-      window.removeEventListener('pointerup', onUp);
-      document.removeEventListener('pointerleave', onLeave);
-      document.removeEventListener('pointerenter', onEnter);
-      delete document.documentElement.dataset.customCursor;
+      fine.removeEventListener('change', sync);
+      still.removeEventListener('change', sync);
+      stop?.();
     };
   }, []);
 

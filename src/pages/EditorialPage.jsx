@@ -14,7 +14,7 @@ import styles from './EditorialPage.module.css';
  * turning wheel instead — so the list and its rules are skipped entirely
  * rather than rendering an empty bordered block.
  */
-export default function EditorialPage({ page, children, after, motif, accent }) {
+export default function EditorialPage({ page, children, after, motif, accent, image, imageAlt }) {
   return (
     <main className={styles.page}>
       <PageHero
@@ -23,6 +23,8 @@ export default function EditorialPage({ page, children, after, motif, accent }) 
         intro={page.intro}
         motif={motif}
         accent={accent}
+        image={image}
+        imageAlt={imageAlt}
       />
 
       {children}

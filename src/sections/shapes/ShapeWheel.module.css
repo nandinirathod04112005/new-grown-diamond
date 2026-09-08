@@ -288,6 +288,15 @@
  * subject differs, so a wheel that is half real and half drawn still reads as
  * one set rather than two.
  */
+/*
+ * No blend mode, because the artwork carries its own alpha.
+ *
+ * An earlier revision screened these to knock out a black background; the cut
+ * files have since been replaced with cut-out PNGs, so there is no background
+ * to remove and screening only washed the stone against the plate. The shadow
+ * comes back with it — a real one under a real cut-out reads as the stone
+ * sitting on the tray.
+ */
 .shot {
   position: relative;
   z-index: 2;

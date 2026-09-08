@@ -51,6 +51,30 @@ export const PAGES = {
       ['Asscher, Heart & Trillion', 'Asscher is a square step cut with cropped corners. Heart demands precise symmetry. Trillion uses a three-sided mixed brilliant form.'],
     ],
   },
+  /*
+   * Price and size, written without a single price on it.
+   *
+   * The page a buyer actually wants is "what does this cost", and the honest
+   * answer is that it depends on four grades, a shape and the day — lab-grown
+   * per-carat rates move faster than a static page can follow. So this explains
+   * the MECHANICS a quote is built from, and states measurable millimetre sizes
+   * that do not move at all, then sends the reader to the desk for a number.
+   * Publishing an invented figure would be the easy version and would be wrong
+   * within a month.
+   */
+  '/price-and-size': {
+    eyebrow: 'Education / Price and size',
+    title: 'What a carat costs, and what it looks like.',
+    intro: 'Carat is a weight, not a width. This is how weight, millimetre size and price relate to one another, and what actually moves a quote up or down.',
+    sections: [
+      ['Carat is weight', 'One carat is exactly 0.2 grams. It says nothing directly about how wide a stone looks face-up: two one-carat diamonds of different shapes, or of the same shape cut to different depths, can differ noticeably in diameter.'],
+      ['Price is quoted per carat', 'The trade prices in dollars per carat, not per stone, and multiplies by weight at the end. That is why a quote changes when the weight changes even if nothing else has.'],
+      ['The scale is not linear', 'Rate per carat rises as size rises, so a two-carat stone costs more than twice a one-carat of matching quality. Larger crystals take longer to grow, fail more often, and yield less finished weight from the rough.'],
+      ['Rates step at round weights', 'Per-carat rates jump at 0.30, 0.50, 0.90, 1.00, 1.50 and 2.00 carats, because demand concentrates there. A stone just under a step often costs meaningfully less than one just over it while looking almost identical.'],
+      ['The other three Cs move the rate', 'Colour, clarity and cut each shift the per-carat rate independently of weight. Cut is the one that also changes how large the stone looks: a well-proportioned stone returns more light and spreads wider than a deep one of the same weight.'],
+      ['Shape changes the size you see', 'Elongated shapes — oval, marquise, pear, emerald — present more surface face-up than a round of the same weight, so they read larger on the hand. Round brilliants lose more weight in cutting than any other shape, which is reflected in their rate.'],
+    ],
+  },
   '/why-lab-grown': {
     eyebrow: 'Why New Grown Diamond',
     title: 'Quality you can inspect. Origin you can explain.',
@@ -74,6 +98,11 @@ export const PAGES = {
  * the nav, which has no room for it.
  */
 export const EDUCATION_TOPICS = [
+  {
+    href: '/price-and-size',
+    label: 'Diamond price and size',
+    blurb: 'How carat weight, millimetre size and the per-carat rate relate — and what moves a quote.',
+  },
   {
     href: '/cvd-vs-natural',
     label: 'Comparison between CVD & natural diamond',

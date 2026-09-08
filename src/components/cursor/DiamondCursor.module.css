@@ -180,11 +180,15 @@
 :global(html[data-custom-cursor='on'] :disabled),
 :global(html[data-custom-cursor='on'] [aria-disabled='true']) { cursor: not-allowed; }
 
-/* Belt and braces — the component already refuses to mount in these cases. */
-@media (pointer: coarse), (max-width: 899px) {
-  .root { display: none; }
-}
-
-@media (prefers-reduced-motion: reduce) {
+/*
+ * Belt and braces — the same two conditions the component itself refuses on.
+ *
+ * These MUST mirror the script exactly. The `max-width: 899px` that used to sit
+ * here did not: the script hides the native cursor by setting
+ * `data-custom-cursor`, and this rule hid the replacement, so any viewport that
+ * satisfied one gate and not the other had no pointer of any kind. Width is not
+ * one of the conditions — a narrow window on a desktop is still a mouse.
+ */
+@media (hover: none), (pointer: coarse), (prefers-reduced-motion: reduce) {
   .root { display: none; }
 }

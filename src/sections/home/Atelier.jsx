@@ -97,7 +97,16 @@ export default function Atelier() {
             {/* Three states of one stone, clipped by one travelling seam. */}
             <RoughPlan className={styles.rough} />
             <CutPlan className={styles.wire} />
-            <img className={styles.polished} src={polished} alt="" />
+            <img
+              className={styles.polished}
+              src={polished}
+              alt=""
+              width="754"
+              height="541"
+              loading="eager"
+              fetchPriority="high"
+              decoding="async"
+            />
           </div>
 
           {/* The lit top of the pedestal, then the drape falling from it. */}

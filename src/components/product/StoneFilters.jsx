@@ -34,7 +34,7 @@ const band = (n) => n.toFixed(2);
  * Pressing a shape and a colour in the same tick kept only the colour. Reading
  * `prev` takes each write from the state as it actually stands.
  */
-export default function StoneFilters({ stones, value, onChange, shown }) {
+export default function StoneFilters({ stones, value, onChange, shown, loading = false }) {
   const set = useCallback(
     (patch) => onChange((prev) => ({ ...prev, ...patch })),
     [onChange],
@@ -132,12 +132,14 @@ export default function StoneFilters({ stones, value, onChange, shown }) {
               className={on ? styles.on : ''}
               aria-pressed={on}
               /* A dead end stays visible and legible — it is information about
-                 the stock — but it cannot be walked into. */
-              disabled={n === 0 && !on}
+                 the stock — but it cannot be walked into. While the stock is
+                 still arriving nothing is a dead end yet, and greying the whole
+                 panel would read as broken rather than as loading. */
+              disabled={!loading && n === 0 && !on}
               onClick={() => toggle(key, item)}
             >
               <span>{item}</span>
-              <em aria-hidden="true">{n}</em>
+              <em aria-hidden="true">{loading ? '' : n}</em>
             </button>
           </li>
         );
@@ -148,13 +150,18 @@ export default function StoneFilters({ stones, value, onChange, shown }) {
     <form
       className={open ? styles.panel : `${styles.panel} ${styles.shut}`}
       onSubmit={(e) => e.preventDefault()}
+      aria-busy={loading || undefined}
     >
       <div className={styles.head}>
         <h2 className={styles.title}>Find a stone</h2>
         <p className={styles.tally} role="status">
-          {shown} of {stones.length} {stones.length === 1 ? 'stone' : 'stones'}
-          {activeCount > 0 && (
-            <span> · {activeCount} filter{activeCount === 1 ? '' : 's'}</span>
+          {loading ? 'Loading stock' : (
+            <>
+              {shown} of {stones.length} {stones.length === 1 ? 'stone' : 'stones'}
+              {activeCount > 0 && (
+                <span> · {activeCount} filter{activeCount === 1 ? '' : 's'}</span>
+              )}
+            </>
           )}
         </p>
         <button
@@ -187,12 +194,12 @@ export default function StoneFilters({ stones, value, onChange, shown }) {
                   type="button"
                   className={on ? styles.on : ''}
                   aria-pressed={on}
-                  disabled={n === 0 && !on}
+                  disabled={!loading && n === 0 && !on}
                   onClick={() => toggle('shape', item)}
                 >
                   <ShapeGlyph shape={item} className={styles.glyph} />
                   <span>{item}</span>
-                  <em aria-hidden="true">{n}</em>
+                  <em aria-hidden="true">{loading ? '' : n}</em>
                 </button>
               </li>
             );
@@ -239,7 +246,7 @@ export default function StoneFilters({ stones, value, onChange, shown }) {
                   type="button"
                   className={on ? styles.on : ''}
                   aria-pressed={on}
-                  disabled={n === 0 && !on}
+                  disabled={!loading && n === 0 && !on}
                   /* Pressing the band already chosen clears it, so the row
                      behaves as switches rather than a one-way trip. */
                   onClick={() => set(on
@@ -247,7 +254,7 @@ export default function StoneFilters({ stones, value, onChange, shown }) {
                     : { caratMin: band(lo), caratMax: band(hi) })}
                 >
                   <span>{band(lo)} – {band(hi)}</span>
-                  <em aria-hidden="true">{n}</em>
+                  <em aria-hidden="true">{loading ? '' : n}</em>
                 </button>
               </li>
             );

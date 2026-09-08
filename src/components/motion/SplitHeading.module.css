@@ -1,0 +1,27 @@
+/*
+ * The same two rules PageHero uses, because the two must animate identically.
+ *
+ * `inline-block` on both is what makes a character transformable at all —
+ * `transform` has no effect on an inline box. The word keeps `nowrap` so a
+ * split heading still breaks between words and never inside one.
+ *
+ * No margin between words here, unlike PageHero: the space is a real text node,
+ * so the browser sets it and the extracted text keeps it.
+ */
+.word {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.char {
+  display: inline-block;
+  will-change: transform;
+}
+
+/*
+ * The settled state is the default, and the throw is applied by script.
+ *
+ * Written this way round so that no-JS, a failed chunk and reduced motion all
+ * land on a finished heading. Nothing here needs a reduced-motion block: the
+ * component refuses to run and these two rules are already the arrived state.
+ */

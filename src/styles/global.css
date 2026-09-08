@@ -34,6 +34,23 @@ html.lenis body { height: auto; }
   font-weight: 400;
 }
 
+/*
+ * Holds a route's space open while its chunk is still arriving.
+ *
+ * Page components are lazy but the footer is not, and it renders OUTSIDE the
+ * Suspense boundary. With a null fallback the first paint was header, nothing,
+ * footer — footer sitting at the top of the viewport — and the moment the chunk
+ * resolved it was pushed thousands of pixels down. Measured CLS 1.0059 on every
+ * route except the home page, whose component is imported statically.
+ *
+ * One viewport is the right reservation because every page here opens on a
+ * full-height hero, so the footer is never above the fold once content lands.
+ */
+.u-route-hold {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
 .u-visually-hidden {
   position: absolute;
   width: 1px;

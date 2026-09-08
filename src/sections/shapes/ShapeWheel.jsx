@@ -37,18 +37,38 @@ const CUTS = [
 ];
 
 /*
- * Show photographs of real stock on the wheel instead of drawn outlines.
+ * The house photographs of each cut — the same nine the homepage collection
+ * strip shows, discovered from the same folder.
  *
- * OFF, and the reason is data, not code. The two stones currently carrying an
- * image_path are a company LOGO and a PORTRAIT of a person in a showroom —
- * neither is a diamond. Switching this on would put the logo on a plate
- * captioned "a 0.23 ct round in current stock", which is a mislabelled picture
- * on the one page whose entire job is telling cuts apart.
+ * This page's whole job is telling nine cuts apart, and it was doing it with
+ * line drawings while real photographs of exactly those nine cuts sat in the
+ * bundle. A photograph belongs to a cut by FILENAME: `round.webp` is the round,
+ * and a cut with no file keeps its outline rather than borrowing another
+ * shape's picture.
+ */
+const SHOTS = Object.fromEntries(
+  Object.entries(
+    import.meta.glob('@/assets/diamonds/cuts/*.{webp,png,jpg,jpeg}', {
+      eager: true,
+      import: 'default',
+    }),
+  ).map(([path, url]) => [path.split('/').pop().replace(/\.\w+$/, '').toLowerCase(), url]),
+);
+
+/*
+ * Live stock photographs, which would OUTRANK the house shot for any cut
+ * actually held — a real stone with its carat weight on the plate beats a
+ * library picture of the same cut.
+ *
+ * Still off, and the reason is data, not code. The two stones currently
+ * carrying an image_path are a company LOGO and a PORTRAIT of a person in a
+ * showroom — neither is a diamond. Switching this on would put the logo on a
+ * plate captioned "a 0.23 ct round in current stock", which is a mislabelled
+ * picture on the one page that cannot afford one.
  *
  * Everything behind it is built and tested. Upload real photographs of real
- * stones to the diamonds table and flip this to true: each cut with stock
- * becomes a genuine photograph, each cut without keeps its outline, and the
- * caption names the actual carat weight on the plate.
+ * stones and flip this to true: each cut with stock shows its own stone and
+ * names the carat weight, and every other cut keeps the house photograph.
  */
 const USE_STOCK_PHOTOS = false;
 
@@ -198,18 +218,25 @@ export default function ShapeWheel() {
               >
                 <span className={styles.pool} />
 
-                {photos[cut] ? (
+                {/* Live stock first, the house photograph next, the drawn
+                    outline only if neither exists. */}
+                {(photos[cut]?.url ?? SHOTS[cut.toLowerCase()]) ? (
                   <>
                     <img
                       className={styles.shot}
-                      src={photos[cut].url}
+                      src={photos[cut]?.url ?? SHOTS[cut.toLowerCase()]}
                       alt=""
                       loading="lazy"
                       decoding="async"
                     />
                     {/* The same photograph, mirrored and crushed — a stone on a
                         polished tray throws a dark compressed double. */}
-                    <img className={styles.shotEcho} src={photos[cut].url} alt="" aria-hidden="true" />
+                    <img
+                      className={styles.shotEcho}
+                      src={photos[cut]?.url ?? SHOTS[cut.toLowerCase()]}
+                      alt=""
+                      aria-hidden="true"
+                    />
                   </>
                 ) : (
                   <>
