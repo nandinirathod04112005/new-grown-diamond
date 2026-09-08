@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import stoneInHand from '@/assets/company/custom-jewellery-optimized.jpg';
 import PageHero from '@/components/layout/PageHero.jsx';
 import { isConfigured } from '@/lib/supabase/client.js';
 import { createEnquiry, productRequestFromSearch } from '@/lib/supabase/queries/enquiries.js';
@@ -77,6 +78,8 @@ export default function ContactPage() {
         intro="Share a shape, carat range, colour, clarity and quantity. Our team will respond with available options and supporting certificates."
         motif="pulse"
         accent="#d09268"
+        image={stoneInHand}
+        imageAlt="A loose polished diamond held in tweezers above an open hand." 
         action={{ href: '#enquiry', label: 'Start an enquiry' }}
       />
       <div className={styles.offices}>

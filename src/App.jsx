@@ -1,48 +1,85 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import Header from '@/components/chrome/Header.jsx';
+import DiamondComparison from '@/sections/education/DiamondComparison.jsx';
+import SizeGuide from '@/sections/education/SizeGuide.jsx';
+import seedToStone from '@/assets/process/seed-to-stone.webp';
+import latticeCut from '@/assets/process/lattice-cut.webp';
+import gradingBench from '@/assets/process/grading-bench.webp';
+import suratToWorld from '@/assets/process/surat-to-world.webp';
+import cutStone from '@/assets/process/cut-stone.webp';
 import Footer from '@/components/chrome/Footer.jsx';
 import Preloader from '@/components/chrome/Preloader.jsx';
 import SiteExperience from '@/components/chrome/SiteExperience.jsx';
 import SmoothScrollProvider from '@/providers/SmoothScrollProvider.jsx';
-import Home from '@/pages/Home.jsx';
-import EditorialPage from '@/pages/EditorialPage.jsx';
-import FaqPage from '@/pages/FaqPage.jsx';
-import ContactPage from '@/pages/ContactPage.jsx';
-import InventoryPage from '@/pages/InventoryPage.jsx';
-import JewelleryPage from '@/pages/JewelleryPage.jsx';
-import SignInPage from '@/pages/auth/SignInPage.jsx';
-import RegisterPage from '@/pages/auth/RegisterPage.jsx';
-import ProfilePage from '@/pages/auth/ProfilePage.jsx';
-import BlogsPage from '@/pages/BlogsPage.jsx';
-import ForgotPasswordPage from '@/pages/auth/ForgotPasswordPage.jsx';
-import ResetPasswordPage from '@/pages/auth/ResetPasswordPage.jsx';
-import NotFoundPage from '@/pages/NotFoundPage.jsx';
-import RequireAdmin from '@/components/auth/RequireAdmin.jsx';
 import PageTransition from '@/components/chrome/PageTransition.jsx';
 import DiamondCursor from '@/components/cursor/DiamondCursor.jsx';
 import ContinueNext from '@/components/chrome/ContinueNext.jsx';
 import { useRouter } from '@/lib/router.js';
 import { useScrollVelocity } from '@/hooks/useScrollVelocity.js';
-import AdminDiamonds from '@/pages/admin/AdminDiamonds.jsx';
-import AdminDiamondForm from '@/pages/admin/AdminDiamondForm.jsx';
-import Story from '@/sections/about/Story.jsx';
-import Exhibit from '@/sections/about/Exhibit.jsx';
-import ShapeWheel from '@/sections/shapes/ShapeWheel.jsx';
-import EducationIndex from '@/sections/education/EducationIndex.jsx';
 import { PAGES } from '@/pages/siteContent.js';
+import SeoHead from '@/components/seo/SeoHead.jsx';
+import Home from '@/pages/Home.jsx';
+
+const EditorialPage = lazy(() => import('@/pages/EditorialPage.jsx'));
+const FaqPage = lazy(() => import('@/pages/FaqPage.jsx'));
+const ContactPage = lazy(() => import('@/pages/ContactPage.jsx'));
+const InventoryPage = lazy(() => import('@/pages/InventoryPage.jsx'));
+const JewelleryPage = lazy(() => import('@/pages/JewelleryPage.jsx'));
+const BlogsPage = lazy(() => import('@/pages/BlogsPage.jsx'));
+const NotFoundPage = lazy(() => import('@/pages/NotFoundPage.jsx'));
+const SignInPage = lazy(() => import('@/pages/auth/SignInPage.jsx'));
+const RegisterPage = lazy(() => import('@/pages/auth/RegisterPage.jsx'));
+const ProfilePage = lazy(() => import('@/pages/auth/ProfilePage.jsx'));
+const ForgotPasswordPage = lazy(() => import('@/pages/auth/ForgotPasswordPage.jsx'));
+const ResetPasswordPage = lazy(() => import('@/pages/auth/ResetPasswordPage.jsx'));
+const RequireAdmin = lazy(() => import('@/components/auth/RequireAdmin.jsx'));
+const AdminDiamonds = lazy(() => import('@/pages/admin/AdminDiamonds.jsx'));
+const AdminDiamondForm = lazy(() => import('@/pages/admin/AdminDiamondForm.jsx'));
+const Story = lazy(() => import('@/sections/about/Story.jsx'));
+const Exhibit = lazy(() => import('@/sections/about/Exhibit.jsx'));
+const ShapeWheel = lazy(() => import('@/sections/shapes/ShapeWheel.jsx'));
+const EducationIndex = lazy(() => import('@/sections/education/EducationIndex.jsx'));
+
 /**
  * A motif and accent per editorial page. Four pages share one template, so
  * without this they are literally the same hero four times over — which is
  * exactly how the site read before.
  */
 const PAGE_MOTIF = {
-  '/about': { motif: 'lattice', accent: '#b48c47' },
-  '/education': { motif: 'facets', accent: '#6d8fc4' },
+  '/about': {
+    motif: 'lattice', accent: '#b48c47',
+    image: suratToWorld,
+    imageAlt: 'A globe traced with the supply routes along which New Grown Diamond ships from Surat.',
+  },
+  '/education': {
+    motif: 'facets', accent: '#6d8fc4',
+    image: seedToStone,
+    imageAlt: 'A carbon lattice resolving into a finished round brilliant diamond.',
+  },
   /* The comparison sits under Education and reads as part of it, so it
      carries Education's motif rather than introducing a fifth one. */
-  '/cvd-vs-natural': { motif: 'facets', accent: '#6d8fc4' },
-  '/shapes': { motif: 'arcs', accent: '#9c8ab8' },
-  '/why-lab-grown': { motif: 'rings', accent: '#6fb392' },
+  '/cvd-vs-natural': {
+    motif: 'facets', accent: '#6d8fc4',
+    image: latticeCut,
+    imageAlt: 'A diamond crystal held in a laboratory growth chamber.',
+  },
+  '/price-and-size': {
+    /* Shares the shape guide's motif and accent: both pages are about what a
+       stone looks like rather than how it was made. */
+    motif: 'arcs', accent: '#9c8ab8',
+    image: cutStone,
+    imageAlt: 'A cut diamond photographed from above beside a scale, showing its face-up size.',
+  },
+  '/shapes': {
+    motif: 'arcs', accent: '#9c8ab8',
+    image: cutStone,
+    imageAlt: 'A cut diamond photographed from above, showing its facet pattern and outline.',
+  },
+  '/why-lab-grown': {
+    motif: 'rings', accent: '#6fb392',
+    image: gradingBench,
+    imageAlt: 'A diamond under a grading microscope beside a laboratory report and loose stones.',
+  },
 };
 
 /**
@@ -85,8 +122,6 @@ export default function App() {
   const content = PAGES[path];
 
   useEffect(() => {
-    const label = path === '/' ? 'Lab-Grown Diamonds' : (content?.title || path.slice(1).replaceAll('-', ' '));
-    document.title = `${label} | New Grown Diamond`;
     const frame = requestAnimationFrame(() => {
       const hash = window.location.hash;
       if (hash) {
@@ -110,8 +145,9 @@ export default function App() {
    */
   const bare = (node) => (
     <>
+      <SeoHead path={path} />
       <PageTransition phase={phase} />
-      {node}
+      <Suspense fallback={<div className="u-route-hold" aria-hidden="true" />}>{node}</Suspense>
     </>
   );
 
@@ -142,6 +178,7 @@ export default function App() {
 
   return (
     <SmoothScrollProvider>
+      <SeoHead path={path} />
       <PageTransition phase={phase} />
       {/* Where you ARRIVED, announced once. A screen reader gets the
           destination; the cover itself is decoration and stays hidden. */}
@@ -168,6 +205,7 @@ export default function App() {
         data-ready={ready ? '' : undefined}
         data-leaving={phase === 'out' ? '' : undefined}
       >
+        <Suspense fallback={<div className="u-route-hold" aria-hidden="true" />}>
         {path === '/' && <Home />}
         {content && (
           <EditorialPage
@@ -176,10 +214,36 @@ export default function App() {
             page={path === '/shapes' ? { ...content, sections: [] } : content}
             motif={PAGE_MOTIF[path]?.motif}
             accent={PAGE_MOTIF[path]?.accent}
+            /*
+             * A photograph where one genuinely belongs to the page.
+             *
+             * PageHero has always supported an image and no caller ever passed
+             * one, so every editorial page opened on the drawn motif — the
+             * fallback for pages with no photography, standing in for pages
+             * that had some all along. The motif stays as the fallback for any
+             * route not listed above.
+             */
+            image={PAGE_MOTIF[path]?.image}
+            imageAlt={PAGE_MOTIF[path]?.imageAlt}
             after={path === '/education' ? <EducationIndex /> : null}
           >
             {path === '/about' ? <><Exhibit /><Story /></> : null}
             {path === '/shapes' ? <ShapeWheel /> : null}
+            {/*
+              * Tables before the numbered prose: a reader who came to compare
+              * wants the rows first, and the prose underneath adds the nuance a
+              * table cannot hold.
+              *
+              * Imported statically, unlike its neighbours in this file. Behind
+              * `lazy` with a null Suspense fallback it rendered nothing on the
+              * first paint, and on this page the hero is short enough that the
+              * footer is already on screen — so the section mounted a moment
+              * later and shoved the footer down the page. Measured CLS 1.0,
+              * four times the "poor" threshold, to save 3.5 kB gzipped. This is
+              * the page's primary content and it has to be in the first paint.
+              */}
+            {path === '/cvd-vs-natural' ? <DiamondComparison /> : null}
+            {path === '/price-and-size' ? <SizeGuide /> : null}
           </EditorialPage>
         )}
         {path === '/faq' && <FaqPage />}
@@ -191,6 +255,7 @@ export default function App() {
           && !content
           && !['/faq', '/contact', '/diamonds', '/jewellery', '/blogs'].includes(path)
           && <NotFoundPage />}
+        </Suspense>
         <Footer />
       </div>
 

@@ -1,4 +1,5 @@
 import diamond from '@/assets/diamonds/ngd-brilliant-macro.webp';
+import ringAssembly from '@/assets/process/ring-assembly.webp';
 import PageHero from '@/components/layout/PageHero.jsx';
 import Reveal from '@/components/motion/Reveal.jsx';
 import styles from './JewelleryPage.module.css';
@@ -16,9 +17,11 @@ export default function JewelleryPage() {
       <PageHero
         eyebrow="Custom jewellery / Made around the stone"
         title="The diamond leads. The setting follows."
-        intro="Every mount is built around its stone, never the reverse. Real jewellery photography will appear only when an approved NGD asset is supplied."
+        intro="Every mount is built around its stone, never the reverse — the setting is drawn to the diamond that has already been chosen."
         accent="#c9a24a"
         motif="rings"
+        image={ringAssembly}
+        imageAlt="Diamond rings and loose stones on a jeweller's bench during setting." 
         action={{ href: '/contact', label: 'Begin a custom enquiry' }}
       />
 

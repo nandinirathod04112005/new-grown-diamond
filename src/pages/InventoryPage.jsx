@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
+import CvdProcess from '@/sections/diamonds/CvdProcess.jsx';
 import DiamondCard from '@/components/product/DiamondCard.jsx';
 import StoneFilters from '@/components/product/StoneFilters.jsx';
 import { EMPTY, isActive, matches } from '@/components/product/stoneFilter.js';
-import CvdCodex from '@/sections/diamonds/CvdCodex.jsx';
-import Process from '@/sections/diamonds/Process.jsx';
 import StoneViewer from '@/components/product/StoneViewer.jsx';
 import { listDiamonds } from '@/lib/supabase/queries/diamonds.js';
 import { isConfigured } from '@/lib/supabase/client.js';
@@ -66,7 +65,9 @@ export default function InventoryPage() {
         <div className={styles.field} aria-hidden="true"><span /><span /></div>
         <div>
           <p className="u-eyebrow">Diamond inventory / Trade &amp; retail</p>
-          <h1>Find the stone.<br /><em>See the proof.</em></h1>
+          {/* The space is explicit: a <br> yields nothing in textContent, so
+              without it the extracted heading reads "stone.See the proof." */}
+          <h1>Find the stone.{' '}<br /><em>See the proof.</em></h1>
           <p>
             Live stock with grading, growth method and photography. Request
             availability, videos and certificates from the desk.
@@ -79,19 +80,28 @@ export default function InventoryPage() {
         </figure>
       </header>
 
-      <CvdCodex />
-
-      <Process />
+      {/* Straight after the hero: how the stock on this page is made,
+          before the stock itself. */}
+      <CvdProcess />
 
       <section className={styles.finder}>
-        {/* The finder needs stock to describe, so it waits for the load
-            rather than rendering a panel whose every count reads zero. */}
-        {stage === 'ready' && stones.length > 0 && (
+        {/*
+          * Mounted while the stock is still loading, not after it arrives.
+          *
+          * Waiting for `ready` looked tidier and cost a Cumulative Layout Shift
+          * of 1.0 — four times the "poor" threshold. The panel is roughly
+          * 1200px tall, so dropping it in after the fetch pushed every card and
+          * the whole footer down the page in one jump. It is the same height
+          * before and after the rows arrive, so rendering it from the start
+          * reserves exactly the right space and the page never moves.
+          */}
+        {(stage === 'loading' || (stage === 'ready' && stones.length > 0)) && (
           <StoneFilters
             stones={stones}
             value={filters}
             onChange={setFilters}
             shown={rows.length}
+            loading={stage === 'loading'}
           />
         )}
 

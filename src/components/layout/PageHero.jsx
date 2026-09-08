@@ -87,21 +87,47 @@ export default function PageHero({
 
       <div ref={depth} className={styles.depth}>
         <div className={styles.copy}>
-          <p className={`u-eyebrow ${styles.brow}`}>
-            <span className="u-visually-hidden">{eyebrow}</span>
-            {String(eyebrow).split(' ').map((word, i) => (
-              <span key={`${word}-${i}`} aria-hidden="true">{word}</span>
-            ))}
+          {/*
+            * Split for the eye, whole for everything else.
+            *
+            * These three blocks used to render their text TWICE — once visually
+            * hidden for assistive technology, once split into animated pieces —
+            * which left the h1's own textContent reading "One material. Two
+            * origins.Onematerial.Twoorigins." Screen readers coped; crawlers,
+            * copy-paste and anything summarising the page saw the title twice,
+            * the second time with the spaces eaten by the split.
+            *
+            * Labelling the elements gets assistive technology the same clean
+            * string with the text present exactly once, and keeping the spaces
+            * as real text nodes means what is extracted is a sentence.
+            */}
+          <p className={`u-eyebrow ${styles.brow}`} aria-label={eyebrow}>
+            {/*
+              * The space is a SIBLING of the word, not inside it.
+              *
+              * Each word is `inline-block` so it can be lifted independently,
+              * and an inline-block trims whitespace at its own edges — a space
+              * kept inside the span simply vanishes, which collapsed the line
+              * to "EDUCATION/ORIGINCOMPARED". As a text node between the spans
+              * it renders normally, and the GSAP selector still matches only
+              * the words.
+              */}
+            {String(eyebrow).split(' ').flatMap((word, i, all) => [
+              <span key={`w-${word}-${i}`} aria-hidden="true">{word}</span>,
+              i < all.length - 1 ? ' ' : null,
+            ])}
           </p>
 
-          <h1 className={styles.title}>
-            <span className="u-visually-hidden">{title}</span>
+          <h1 className={styles.title} aria-label={title}>
             <span aria-hidden="true">
-              {toWords(title).map(({ word, chars }, wi) => (
-                <span key={`${word}-${wi}`} className={styles.word}>
-                  {chars.map((ch, ci) => (
-                    <span key={`${ch}-${ci}`} className={styles.char}>{ch}</span>
-                  ))}
+              {toWords(title).map(({ word, chars }, wi, all) => (
+                <span key={`${word}-${wi}`}>
+                  <span className={styles.word}>
+                    {chars.map((ch, ci) => (
+                      <span key={`${ch}-${ci}`} className={styles.char}>{ch}</span>
+                    ))}
+                  </span>
+                  {wi < all.length - 1 ? ' ' : null}
                 </span>
               ))}
             </span>
@@ -111,8 +137,9 @@ export default function PageHero({
 
           {intro && (
             <p className={styles.intro}>
-              <span className="u-visually-hidden">{intro}</span>
-              <span className={styles.introMask} aria-hidden="true">
+              {/* The mask is purely visual — it clips the line while it rises —
+                  so the text inside it is the real one and is read normally. */}
+              <span className={styles.introMask}>
                 <span className={styles.introLine}>{intro}</span>
               </span>
             </p>
@@ -129,7 +156,23 @@ export default function PageHero({
           /* Pages with real photography keep it — a drawn motif is the
              fallback for pages that have none, not a replacement for one. */
           <figure className={styles.shot}>
-            <img src={image} alt={imageAlt} loading="lazy" />
+            {/*
+              * Eager and high priority, because this is the LCP element.
+              *
+              * It was `loading="lazy"`, which on an image that is above the fold
+              * by definition is self-defeating: the browser defers the request
+              * until layout has run, and that deferral is precisely the delay
+              * Largest Contentful Paint measures. Nine routes render this hero.
+              * Everything BELOW the fold should still be lazy — this is the one
+              * image on the page that must not be.
+              */}
+            <img
+              src={image}
+              alt={imageAlt}
+              loading="eager"
+              fetchPriority="high"
+              decoding="async"
+            />
           </figure>
         ) : (
           <div className={styles.motif} aria-hidden="true">

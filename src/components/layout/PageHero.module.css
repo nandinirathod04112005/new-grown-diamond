@@ -103,7 +103,9 @@
 .intro { transform: translateZ(16px); }
 .action { transform: translateZ(58px); }
 
-.brow { display: flex; flex-wrap: wrap; gap: 0.5em; overflow: hidden; }
+/* Block rather than flex: the words now carry real spaces, and a flex gap
+   on top of them would space the line twice. */
+.brow { display: block; overflow: hidden; }
 .brow span { display: inline-block; }
 
 .title {
@@ -117,7 +119,6 @@
 }
 
 .word { display: inline-block; white-space: nowrap; }
-.word:not(:last-child) { margin-right: 0.26em; }
 .char { display: inline-block; will-change: transform; }
 
 .rule {
