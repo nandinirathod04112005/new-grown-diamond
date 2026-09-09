@@ -32,9 +32,12 @@ export default function AuthBackendNotice() {
     fetch(`${SUPABASE_URL}/auth/v1/settings`, {
       headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
     })
-      .then((r) => r.json())
+      /* A 401 for a wrong key also comes back as JSON, and read as settings
+         it would say "sign-up is disabled" — exactly the misdiagnosis this
+         notice exists to prevent. Non-2xx is a failed read, and says so. */
+      .then((r) => { if (!r.ok) throw new Error(String(r.status)); return r.json(); })
       .then((cfg) => { if (alive) setState({ ok: true, confirmOn: cfg.mailer_autoconfirm === false, signupOn: cfg.disable_signup === false }); })
-      .catch(() => { if (alive) setState({ ok: false }); });
+      .catch((e) => { if (alive) setState({ ok: false, status: /^\d{3}$/.test(e?.message) ? e.message : '' }); });
     return () => { alive = false; };
   }, []);
 
@@ -43,7 +46,7 @@ export default function AuthBackendNotice() {
   if (!state.ok) {
     return (
       <p className={styles.note} data-tone="error" role="status">
-        <strong>DEV: could not read the auth settings.</strong>
+        <strong>DEV: could not read the auth settings{state.status ? ` (HTTP ${state.status})` : ''}.</strong>
         The Supabase URL or key in .env.local may be wrong.
       </p>
     );

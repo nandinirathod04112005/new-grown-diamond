@@ -60,8 +60,15 @@ export function authErrorMessage(error, fallback) {
   if (code === 'email_address_not_authorized' || /email address not authorized/i.test(message)) {
     return 'Email address not authorized: the email service cannot send to this address. Contact support to configure email delivery.';
   }
+  /*
+   * Plain words only. An earlier version said "SMTP/email delivery failed
+   * (HTTP 500). Supabase could not send the email" — a sentence for the
+   * developer, shown to the customer. The status code and vendor are already
+   * in the console (every caller logs the raw error before mapping it), so
+   * nothing is lost by leaving them out here.
+   */
   if (/smtp|error sending (confirmation|recovery|email)|failed to send.*email/i.test(message)) {
-    return `SMTP/email delivery failed${error?.status ? ` (HTTP ${error.status})` : ''}. Supabase could not send the email. Please contact support to check the server email configuration.`;
+    return 'The email could not be sent right now. Please try again later, or contact the desk.';
   }
   if (code === 'over_email_send_rate_limit') {
     return 'Email rate limit exceeded. The email service cannot send another link yet. Please wait before trying again.';

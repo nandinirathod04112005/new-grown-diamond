@@ -59,6 +59,9 @@ export default function RegisterPage() {
   const [handError, setHandError] = useState('');
   const [resent, setResent] = useState('');
   const [resendError, setResendError] = useState('');
+  /* True only once the staff-request note has actually reached the queue,
+     so the confirm screen can say "the desk has been notified" and be right. */
+  const [noted, setNoted] = useState(false);
   /* Declared individually rather than gathered into one object: reading
      `refs.email` during render is indistinguishable, to a linter, from reading
      `.current`, and a rule that fires on correct code stops being useful. */
@@ -239,7 +242,9 @@ export default function RegisterPage() {
           country: '',
           subject: 'Staff access request',
           message: 'This person signed up with the staff access code and asked for administrator access. Verify who they are, then set profiles.role to admin for their account.',
-        }, null).catch((e) => console.error('[NGD register] staff request note failed:', e));
+        }, null)
+          .then(() => setNoted(true))
+          .catch((e) => console.error('[NGD register] staff request note failed:', e));
       }
 
       // A session means confirmation is off and they are already in. No session
@@ -316,10 +321,12 @@ export default function RegisterPage() {
           </>
         ) : (
           <>
+            {/* The intro above already carries `error`; this states the one
+                fact it does not — that nothing was created. */}
             <p className={styles.note} data-tone="error" role="alert">
-              {error}{' '}
-              <strong>The confirmation email could not be sent.</strong>
-              We could not verify whether an account already exists for this address.
+              <strong>No account was created.</strong>
+              The confirmation email could not be sent, and we could not verify
+              whether an account already exists for this address.
             </p>
             <p className={styles.hint}>
               We can pass your details to the desk instead — they will set the
@@ -401,8 +408,8 @@ export default function RegisterPage() {
             <p className={styles.note}>
               <strong>Staff access has been requested, not granted.</strong>
               Confirm your email first. The account then works as a customer
-              account until an existing administrator enables the staff role —
-              the desk has been notified.
+              account until an existing administrator enables the staff role.
+              {noted && ' The desk has been notified.'}
             </p>
           )}
         </div>
