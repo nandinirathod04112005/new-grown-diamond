@@ -15,6 +15,8 @@ import PageTransition from '@/components/chrome/PageTransition.jsx';
 import DiamondCursor from '@/components/cursor/DiamondCursor.jsx';
 import ContinueNext from '@/components/chrome/ContinueNext.jsx';
 import { useRouter } from '@/lib/router.js';
+import { LocaleProvider } from '@/i18n/LocaleProvider.jsx';
+import { splitLocale } from '@/i18n/locales.js';
 import { useScrollVelocity } from '@/hooks/useScrollVelocity.js';
 import usePageAnimations from '@/hooks/usePageAnimations.js';
 import { PAGES } from '@/pages/siteContent.js';
@@ -154,7 +156,14 @@ export default function App() {
    * into a covered handover — the header, the smoother, the theme and the
    * WebGL context all survive it.
    */
-  const { path, phase } = useRouter();
+  /*
+   * The URL carries the language; everything below works in terms of the
+   * route WITHOUT it. So /gu/diamonds and /diamonds resolve to the same page
+   * component, the same SEO entry and the same animation key — the language is
+   * a property of the request, not a different site.
+   */
+  const { path: rawPath, phase } = useRouter();
+  const { locale, path } = splitLocale(rawPath);
   usePageAnimations(path);
 
   /*
@@ -187,12 +196,19 @@ export default function App() {
    * play the cover and navigating out of one would not — the seam would move
    * rather than disappear.
    */
+  /*
+   * Wrapped here as well as around the browsing shell below, because every
+   * early return on this component — admin, sign-in, register, account —
+   * goes through `bare`. Two wrappers cover all of them; missing one would
+   * give a page that renders in English inside an otherwise Gujarati session,
+   * and the miss would only show on the one route nobody clicked.
+   */
   const bare = (node) => (
-    <>
-      <SeoHead path={path} />
+    <LocaleProvider locale={locale} path={path}>
+      <SeoHead path={path} locale={locale} />
       <PageTransition phase={phase} />
       <Suspense fallback={<div className="u-route-hold" aria-hidden="true" />}>{node}</Suspense>
-    </>
+    </LocaleProvider>
   );
 
   const admin = adminRoute(path);
@@ -230,8 +246,13 @@ export default function App() {
   }
 
   return (
+    <LocaleProvider locale={locale} path={path}>
     <SmoothScrollProvider>
-      <SeoHead path={path} />
+      {/* The locale is not optional here. Without it every Hindi and Gujarati
+          page declares the ENGLISH url as its canonical, which tells a search
+          engine those pages are duplicates not worth indexing — throwing away
+          the whole point of translating them. */}
+      <SeoHead path={path} locale={locale} />
       <PageTransition phase={phase} />
       {/* Where you ARRIVED, announced once. A screen reader gets the
           destination; the cover itself is decoration and stays hidden. */}
@@ -319,5 +340,6 @@ export default function App() {
       */}
       <ContinueNext path={path} />
     </SmoothScrollProvider>
+    </LocaleProvider>
   );
 }

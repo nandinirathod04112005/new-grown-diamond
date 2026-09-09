@@ -232,3 +232,13 @@
 
 /* Below this the full-screen sheet carries it, so the bar stays uncrowded. */
 @media (min-width: 900px) { .account { display: inline-block; } }
+
+/*
+ * The two presentation controls share a row. `gap` rather than a margin on the
+ * switcher so the pair stays centred as a unit when the header compresses.
+ */
+.theme { display: flex; align-items: center; gap: 0.5rem; }
+
+/* In the sheet the switcher sits above the contact block, within thumb reach
+   at the bottom of a phone rather than up beside the close button. */
+.sheetLang { padding: var(--s-3) 0 0; }

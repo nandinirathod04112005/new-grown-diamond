@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import ThemeToggle from './ThemeToggle.jsx';
+import LanguageSwitch from './LanguageSwitch.jsx';
+import { useT } from '@/i18n/LocaleProvider.jsx';
 import NavMenu from './NavMenu.jsx';
 import { EDUCATION_TOPICS } from '@/pages/siteContent.js';
 
@@ -12,13 +14,23 @@ import styles from './Header.module.css';
  * it, and leaving it in both places gave the same page two ranks in the same
  * row. The route is untouched; only the nav stopped saying it twice.
  */
+/*
+ * The nav carries a translation KEY rather than a finished label. The English
+ * word now lives in one place — the dictionary — instead of being duplicated
+ * here and in the footer and the sitemap, which is how a menu ends up saying
+ * "Our story" in one place and "Our Story" in another.
+ *
+ * `items` (the education submenu) still carries its own labels: those come
+ * from siteContent and are part of the editorial copy, which is out of scope
+ * for this first translation pass and falls back to English by design.
+ */
 const NAV = [
-  { label: 'Diamonds', href: '/diamonds' },
-  { label: 'Jewellery', href: '/jewellery' },
-  { label: 'Our story', href: '/about' },
-  { label: 'Education', href: '/education', items: EDUCATION_TOPICS },
-  { label: 'Blogs', href: '/blogs' },
-  { label: 'Contact', href: '/contact' },
+  { key: 'nav.diamonds', href: '/diamonds' },
+  { key: 'nav.jewellery', href: '/jewellery' },
+  { key: 'nav.ourStory', href: '/about' },
+  { key: 'nav.education', href: '/education', items: EDUCATION_TOPICS },
+  { key: 'nav.blogs', href: '/blogs' },
+  { key: 'nav.contact', href: '/contact' },
 ];
 
 /*
@@ -30,7 +42,7 @@ const NAV = [
  * a trade site. It sits beside the theme control instead, where the other
  * personal settings live.
  */
-const ACCOUNT = { label: 'Account', href: '/account' };
+const ACCOUNT = { key: 'nav.account', href: '/account' };
 
 /**
  * Site header.
@@ -44,6 +56,7 @@ const ACCOUNT = { label: 'Account', href: '/account' };
  * together are what separate a menu from a trap.
  */
 export default function Header() {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const panel = useRef(null);
   const toggle = useRef(null);
@@ -94,21 +107,24 @@ export default function Header() {
           {NAV.map((item) => (item.items ? (
             <NavMenu
               key={item.href}
-              label={item.label}
+              label={t(item.key)}
               href={item.href}
               items={item.items}
               linkClassName={styles.link}
             />
           ) : (
             <a key={item.href} className={styles.link} href={item.href}>
-              {item.label}
+              {t(item.key)}
             </a>
           )))}
         </nav>
 
-        <a className={styles.account} href={ACCOUNT.href}>{ACCOUNT.label}</a>
+        <a className={styles.account} href={ACCOUNT.href}>{t(ACCOUNT.key)}</a>
 
         <div className={styles.theme}>
+          {/* Beside the theme control rather than in the nav: both are settings
+              for how the site is presented, not places to go. */}
+          <LanguageSwitch />
           <ThemeToggle />
         </div>
 
@@ -145,7 +161,7 @@ export default function Header() {
                 onClick={close}
               >
                 <span className={styles.sheetIndex}>{String(i + 1).padStart(2, '0')}</span>
-                <span className={styles.sheetLabel}>{item.label}</span>
+                <span className={styles.sheetLabel}>{t(item.key)}</span>
               </a>
 
               {/* Nested rather than a second sheet: a phone menu that opens
@@ -170,8 +186,12 @@ export default function Header() {
           onClick={() => setOpen(false)}
         >
           <span className={styles.sheetIndex}>{String(NAV.length + 1).padStart(2, '0')}</span>
-          <span className={styles.sheetLabel}>{ACCOUNT.label}</span>
+          <span className={styles.sheetLabel}>{t(ACCOUNT.key)}</span>
         </a>
+
+        <div className={styles.sheetLang}>
+          <LanguageSwitch />
+        </div>
 
         <div className={styles.sheetFoot}>
           <a href="mailto:newgrowndiamonds@gmail.com">newgrowndiamonds@gmail.com</a>

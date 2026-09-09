@@ -7,6 +7,7 @@ import PasswordField from './PasswordField.jsx';
 import TextField from './TextField.jsx';
 import { confirmError, emailError, firstError, passwordError, requiredError, toMap } from './validation.js';
 import styles from './Auth.module.css';
+import { authErrorMessage } from './authErrors.js';
 
 const MIN_PASSWORD = 8;
 
@@ -50,7 +51,7 @@ export default function RegisterPage() {
   async function onSubmit(event) {
     event.preventDefault();
     setTried(true);
-    if (!isConfigured) return;
+    if (!isConfigured || busy) return;
 
     /*
      * Every field, checked in the order they appear on screen.
@@ -90,46 +91,52 @@ export default function RegisterPage() {
 
     setBusy(true);
     setError('');
-    const { data, error: err } = await supabase.auth.signUp({
-      email,
-      password,
-      /*
-       * `requested_role`, deliberately NOT `role`.
-       *
-       * Sign-up metadata is written by the browser, so anything a database
-       * trigger copies straight out of it is effectively writable by whoever
-       * is filling in this form. If this said `role: 'admin'` and any trigger
-       * trusted it, the staff code below — which is readable in the bundle —
-       * would become a way for anyone at all to make themselves an
-       * administrator. So this records an ASKING, under a name nothing grants
-       * on, and an existing admin still has to set profiles.role themselves.
-       */
-      options: {
-        data: {
-          full_name: fullName.trim(),
-          ...(kind === 'admin' ? { requested_role: 'admin' } : null),
+    try {
+      const { data, error: err } = await supabase.auth.signUp({
+        email: email.trim(),
+        password,
+        /*
+         * `requested_role`, deliberately NOT `role`.
+         *
+         * Sign-up metadata is written by the browser, so anything a database
+         * trigger copies straight out of it is effectively writable by whoever
+         * is filling in this form. If this said `role: 'admin'` and any trigger
+         * trusted it, the staff code below — which is readable in the bundle —
+         * would become a way for anyone at all to make themselves an
+         * administrator. So this records an ASKING, under a name nothing grants
+         * on, and an existing admin still has to set profiles.role themselves.
+         */
+        options: {
+          emailRedirectTo: `${window.location.origin}/account`,
+          data: {
+            full_name: fullName.trim(),
+            ...(kind === 'admin' ? { requested_role: 'admin' } : null),
+          },
         },
-      },
-    });
-    setBusy(false);
+      });
 
-    if (err) {
-      console.error('[NGD register]', err);
-      // Supabase's own message is surfaced because it covers real, actionable
-      // cases — a weak password, a malformed address, rate limiting. It is not
-      // extended with any check of our own for whether the email exists.
-      setError(err.message || 'That account could not be created.');
-      return;
+      if (err) {
+        console.error('[NGD register]', err);
+        // Supabase's own message is surfaced because it covers real, actionable
+        // cases — a weak password, a malformed address, rate limiting. It is not
+        // extended with any check of our own for whether the email exists.
+        setError(authErrorMessage(err, err.message || 'That account could not be created.'));
+        return;
+      }
+
+      // They have just proved they hold the code, so the desk gate does not ask
+      // for it again this session. It still checks the profile role, so this
+      // saves a keystroke and grants nothing.
+      if (kind === 'admin') unlockAdmin();
+
+      // A session means confirmation is off and they are already in. No session
+      // means an email is on its way and nothing has happened yet.
+      setDone(data.session ? 'session' : 'confirm');
+    } catch (err) {
+      setError(authErrorMessage(err, 'That account could not be created. Please try again.'));
+    } finally {
+      setBusy(false);
     }
-
-    // They have just proved they hold the code, so the desk gate does not ask
-    // for it again this session. It still checks the profile role, so this
-    // saves a keystroke and grants nothing.
-    if (kind === 'admin') unlockAdmin();
-
-    // A session means confirmation is off and they are already in. No session
-    // means an email is on its way and nothing has happened yet.
-    setDone(data.session ? 'session' : 'confirm');
   }
 
   if (done === 'session') {

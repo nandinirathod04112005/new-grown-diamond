@@ -19,3 +19,84 @@
   font-style: normal;
   font-display: swap;
 }
+
+/* ---------------------------------------------------------------------------
+ * Devanagari (Hindi) and Gujarati.
+ *
+ * Neither Cormorant Garamond nor Jost contains a single glyph of either
+ * script, and the fallback chain behind them — Georgia, Times New Roman,
+ * Segoe UI, Arial — contains none either. Without these faces the Hindi and
+ * Gujarati pages render in whatever the visitor's operating system happens to
+ * supply: different weight, different metrics, a different feel per device,
+ * and on a machine with no Indic support, empty boxes.
+ *
+ * The families are named to MATCH their Latin counterparts in role — a serif
+ * for display, a sans for body — so the two scripts read as the same brand
+ * rather than as two websites. Noto is the practical choice: it is the one
+ * family with genuinely complete, well-hinted coverage of both scripts.
+ *
+ * Only the Indic subsets are downloaded. Latin glyphs still come from
+ * Cormorant and Jost, which is why the stack lists them FIRST — a Gujarati
+ * page still contains "IGI", "CVD" and stock numbers, and those should look
+ * like the rest of the site.
+ * ------------------------------------------------------------------------- */
+
+@font-face {
+  font-family: 'Noto Serif Devanagari';
+  src: url('../assets/fonts/noto-serif-devanagari-400.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+  /* Declared so the browser never downloads a Devanagari face to render Latin
+     text — the range is the only thing it is wanted for. */
+  unicode-range: U+0900-097F, U+1CD0-1CF9, U+200C-200D, U+20A8, U+20B9, U+20F0, U+25CC, U+A830-A839, U+A8E0-A8FF;
+}
+@font-face {
+  font-family: 'Noto Serif Devanagari';
+  src: url('../assets/fonts/noto-serif-devanagari-600.woff2') format('woff2');
+  font-weight: 600;
+  font-display: swap;
+  unicode-range: U+0900-097F, U+1CD0-1CF9, U+200C-200D, U+20A8, U+20B9, U+20F0, U+25CC, U+A830-A839, U+A8E0-A8FF;
+}
+@font-face {
+  font-family: 'Noto Sans Devanagari';
+  src: url('../assets/fonts/noto-sans-devanagari-300.woff2') format('woff2');
+  font-weight: 300;
+  font-display: swap;
+  unicode-range: U+0900-097F, U+1CD0-1CF9, U+200C-200D, U+20A8, U+20B9, U+20F0, U+25CC, U+A830-A839, U+A8E0-A8FF;
+}
+@font-face {
+  font-family: 'Noto Sans Devanagari';
+  src: url('../assets/fonts/noto-sans-devanagari-500.woff2') format('woff2');
+  font-weight: 500;
+  font-display: swap;
+  unicode-range: U+0900-097F, U+1CD0-1CF9, U+200C-200D, U+20A8, U+20B9, U+20F0, U+25CC, U+A830-A839, U+A8E0-A8FF;
+}
+
+@font-face {
+  font-family: 'Noto Serif Gujarati';
+  src: url('../assets/fonts/noto-serif-gujarati-400.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+  unicode-range: U+0A80-0AFF, U+200C-200D, U+20B9, U+25CC, U+A830-A839;
+}
+@font-face {
+  font-family: 'Noto Serif Gujarati';
+  src: url('../assets/fonts/noto-serif-gujarati-600.woff2') format('woff2');
+  font-weight: 600;
+  font-display: swap;
+  unicode-range: U+0A80-0AFF, U+200C-200D, U+20B9, U+25CC, U+A830-A839;
+}
+@font-face {
+  font-family: 'Noto Sans Gujarati';
+  src: url('../assets/fonts/noto-sans-gujarati-300.woff2') format('woff2');
+  font-weight: 300;
+  font-display: swap;
+  unicode-range: U+0A80-0AFF, U+200C-200D, U+20B9, U+25CC, U+A830-A839;
+}
+@font-face {
+  font-family: 'Noto Sans Gujarati';
+  src: url('../assets/fonts/noto-sans-gujarati-500.woff2') format('woff2');
+  font-weight: 500;
+  font-display: swap;
+  unicode-range: U+0A80-0AFF, U+200C-200D, U+20B9, U+25CC, U+A830-A839;
+}

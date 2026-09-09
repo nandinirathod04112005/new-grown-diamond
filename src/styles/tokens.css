@@ -81,8 +81,17 @@
   --line-scroll-lead: 40vh;
 
   /* ---- type ---- */
-  --font-display: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
-  --font-body: 'Jost', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+  /*
+   * The Latin faces lead, and the Indic faces sit behind them in the SAME
+   * stack rather than replacing it. Both are needed on one page at once: a
+   * Gujarati page still says "IGI", "CVD" and "NGD-0077", and those should
+   * look like the rest of the site rather than switching typeface mid-line.
+   * Each Noto face declares a unicode-range, so the browser downloads one only
+   * when a character in that range is actually on the page — an English
+   * visitor never fetches a byte of either.
+   */
+  --font-display: 'Cormorant Garamond', 'Noto Serif Devanagari', 'Noto Serif Gujarati', Georgia, 'Times New Roman', serif;
+  --font-body: 'Jost', 'Noto Sans Devanagari', 'Noto Sans Gujarati', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
 
   --t-xs: 0.75rem;
   --t-sm: 0.8125rem;

@@ -1,7 +1,8 @@
 import { useLayoutEffect } from 'react';
 import {
-  OG_IMAGE_ALT, OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH, pageSchemas, seoForPath, SITE_NAME,
+  OG_IMAGE_ALT, OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH, pageSchemas, seoForPath, SITE_NAME, SITE_URL,
 } from '@/config/seo.js';
+import { DEFAULT_LOCALE, LOCALES, LOCALE_CODES, localePath } from '@/i18n/locales.js';
 
 function upsertMeta(selector, attributes) {
   let node = document.head.querySelector(selector);
@@ -9,7 +10,7 @@ function upsertMeta(selector, attributes) {
   Object.entries(attributes).forEach(([key, value]) => node.setAttribute(key, value));
 }
 
-export default function SeoHead({ path }) {
+export default function SeoHead({ path, locale = DEFAULT_LOCALE }) {
   useLayoutEffect(() => {
     const seo = seoForPath(path);
     document.title = seo.title;
@@ -36,12 +37,51 @@ export default function SeoHead({ path }) {
     upsertMeta('meta[name="twitter:image:alt"]', { name: 'twitter:image:alt', content: OG_IMAGE_ALT });
     upsertMeta('meta[name="twitter:title"]', { name: 'twitter:title', content: seo.title });
     upsertMeta('meta[name="twitter:description"]', { name: 'twitter:description', content: seo.description });
+    /*
+     * The canonical names THIS language's URL, not English's.
+     *
+     * seoForPath works on the unprefixed route, so its canonical is always the
+     * English address. Left as-is, every Hindi and Gujarati page would declare
+     * the English page as its canonical — which tells Google those pages are
+     * duplicates that should not be indexed at all, and quietly throws away
+     * the entire reason for translating them.
+     */
+    const selfUrl = `${SITE_URL}${localePath(path === '/' ? '/' : path, locale)}`;
     let canonical = document.head.querySelector('link[rel="canonical"]');
     if (seo.canonical) {
       if (!canonical) { canonical = document.createElement('link'); canonical.rel = 'canonical'; document.head.appendChild(canonical); }
-      canonical.href = seo.canonical;
-      upsertMeta('meta[property="og:url"]', { property: 'og:url', content: seo.canonical });
+      canonical.href = selfUrl;
+      upsertMeta('meta[property="og:url"]', { property: 'og:url', content: selfUrl });
+      upsertMeta('meta[property="og:locale"]', { property: 'og:locale', content: (LOCALES[locale] ?? LOCALES[DEFAULT_LOCALE]).hreflang.replace('-', '_') });
     } else { canonical?.remove(); document.head.querySelector('meta[property="og:url"]')?.remove(); }
+
+    /*
+     * hreflang — how the three versions declare each other.
+     *
+     * Every language links to every language INCLUDING itself; a set of
+     * alternates that omits the current page is treated as incomplete and
+     * commonly ignored outright. x-default points at English, which is what a
+     * search engine should offer someone whose language is none of the three.
+     *
+     * Only emitted for indexable pages: seo.robots starting with noindex means
+     * account and admin routes, and declaring translations of a page nobody
+     * may index is noise at best.
+     */
+    document.head.querySelectorAll('link[rel="alternate"][data-ngd-lang]').forEach((n) => n.remove());
+    if (seo.canonical) {
+      const add = (hreflang, href) => {
+        const link = document.createElement('link');
+        link.rel = 'alternate';
+        link.hreflang = hreflang;
+        link.href = href;
+        link.setAttribute('data-ngd-lang', '');
+        document.head.appendChild(link);
+      };
+      LOCALE_CODES.forEach((code) => {
+        add(LOCALES[code].hreflang, `${SITE_URL}${localePath(path === '/' ? '/' : path, code)}`);
+      });
+      add('x-default', `${SITE_URL}${path === '/' ? '/' : path}`);
+    }
     document.head.querySelectorAll('script[data-ngd-schema]').forEach((node) => node.remove());
     pageSchemas(path).forEach((schema) => {
       const script = document.createElement('script');
@@ -49,6 +89,6 @@ export default function SeoHead({ path }) {
       script.textContent = JSON.stringify(schema).replace(/</g, '\\u003c');
       document.head.appendChild(script);
     });
-  }, [path]);
+  }, [path, locale]);
   return null;
 }

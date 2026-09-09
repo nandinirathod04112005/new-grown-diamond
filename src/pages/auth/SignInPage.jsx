@@ -7,6 +7,7 @@ import PasswordField from './PasswordField.jsx';
 import TextField from './TextField.jsx';
 import { emailError, firstError, passwordError, toMap } from './validation.js';
 import styles from './Auth.module.css';
+import { authErrorMessage } from './authErrors.js';
 
 /**
  * Sign in.
@@ -54,17 +55,25 @@ export default function SignInPage() {
    * they could not learn by trying it.
    */
   async function resend() {
-    if (!isConfigured || !email) return;
+    if (!isConfigured || emailError(email) || resent === 'sending') return;
     setResent('sending');
-    const { error: err } = await supabase.auth.resend({ type: 'signup', email });
-    setResent(err ? 'failed' : 'sent');
-    if (err) console.error('[NGD resend]', err);
+    try {
+      const { error: err } = await supabase.auth.resend({
+        type: 'signup', email: email.trim(),
+        options: { emailRedirectTo: `${window.location.origin}/account` },
+      });
+      setResent(err ? 'failed' : 'sent');
+    } catch {
+      setResent('failed');
+    }
   }
 
   async function onSubmit(event) {
     event.preventDefault();
     setTried(true);
-    if (!isConfigured) return;
+    if (!isConfigured || busy) return;
+    setUnconfirmed(false);
+    setResent('');
 
     /*
      * Validate BEFORE the network, not after it.
@@ -99,28 +108,35 @@ export default function SignInPage() {
     setBusy(true);
     setError('');
     setFieldErrors({});
-    const { data, error: err } = await supabase.auth.signInWithPassword({ email, password });
-    setBusy(false);
+    try {
+      const { data, error: err } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
 
-    if (err) {
-      // Logged for us, generic for them — except the one case that is not a
-      // credentials problem at all.
-      console.error('[NGD sign-in]', err);
-      if (err.code === 'email_not_confirmed' || /email not confirmed/i.test(err.message ?? '')) {
-        setUnconfirmed(true);
-        setError('');
+      if (err) {
+        // Logged for us, generic for them — except the one case that is not a
+        // credentials problem at all.
+        console.error('[NGD sign-in]', err);
+        if (err.code === 'email_not_confirmed' || /email not confirmed/i.test(err.message ?? '')) {
+          setUnconfirmed(true);
+          setError('');
+          return;
+        }
+        setUnconfirmed(false);
+        setError(authErrorMessage(err, err.code === 'invalid_credentials'
+          ? 'That email and password do not match an account.'
+          : 'Sign-in could not be completed. Please try again.'));
         return;
       }
-      setUnconfirmed(false);
-      setError('That email and password do not match an account.');
-      return;
-    }
 
-    // The session is live but the profile row has not been read yet, so the
-    // role is not known here. Sending everyone to /account and letting that
-    // page offer the admin link avoids guessing wrong and bouncing an admin
-    // through a page they did not want.
-    window.location.assign(data.session ? '/account' : '/login');
+      // The session is live but the profile row has not been read yet, so the
+      // role is not known here. Sending everyone to /account and letting that
+      // page offer the admin link avoids guessing wrong and bouncing an admin
+      // through a page they did not want.
+      window.location.assign(data.session ? '/account' : '/login');
+    } catch (err) {
+      setError(authErrorMessage(err, 'Sign-in could not be completed. Please try again.'));
+    } finally {
+      setBusy(false);
+    }
   }
 
   if (status === 'ready') {
@@ -195,7 +211,7 @@ export default function SignInPage() {
              message that appears while someone is still halfway through
              typing their address is noise, and it moves the layout under
              their cursor. */
-          onChange={(e) => { setEmail(e.target.value); setFieldErrors((f) => ({ ...f, email: null })); }}
+          onChange={(e) => { setEmail(e.target.value); setUnconfirmed(false); setResent(''); setFieldErrors((f) => ({ ...f, email: null })); }}
         />
 
         <PasswordField

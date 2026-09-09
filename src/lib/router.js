@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { getLenis } from '@/lib/motion/lenis.js';
+import { PREFIXES, localePath, splitLocale } from '@/i18n/locales.js';
 import { prefersReducedMotion } from '@/lib/motion/media.js';
 
 /**
@@ -105,6 +106,29 @@ export function useRouter() {
     async (next, push) => {
       if (busy.current) return;
       const target = new URL(next, window.location.href);
+
+      /*
+       * Carry the current language across the navigation.
+       *
+       * Almost every href in this codebase is written as a plain "/diamonds",
+       * because they were all written before there was more than one language.
+       * Rewriting them here rather than in eighty-seven files means a Gujarati
+       * visitor stays in Gujarati on their second click, and a missed anchor
+       * cannot silently drop someone back into English — which is exactly the
+       * class of bug this delegated listener exists to prevent in the first
+       * place.
+       *
+       * A link that ALREADY names a language wins: that is the switcher, and
+       * an explicit choice must never be overridden by the page it was made
+       * on.
+       */
+      const here = splitLocale(window.location.pathname);
+      const there = splitLocale(target.pathname);
+      const namesLocale = PREFIXES.includes(target.pathname.split('/')[1]);
+      if (here.locale !== 'en' && !namesLocale) {
+        target.pathname = localePath(there.path, here.locale);
+      }
+
       const clean = target.pathname.replace(/\/+$/, '') || '/';
       if (clean === currentPath() && push) return;
 

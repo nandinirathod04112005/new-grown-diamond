@@ -1,0 +1,81 @@
+.wrap { position: relative; }
+
+.trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--ink-line);
+  border-radius: 2px;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: var(--t-xs);
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: color var(--dur-base) var(--ease-primary),
+    border-color var(--dur-base) var(--ease-primary);
+}
+
+.trigger:hover { color: var(--text); border-color: var(--gold); }
+.trigger:focus-visible { outline: 2px solid var(--gold-lift); outline-offset: 2px; }
+
+/*
+ * Devanagari and Gujarati sit lower and taller than Latin at the same
+ * font-size, so a nav item set to match Jost visually ends up bigger and
+ * pushes the row. A slightly smaller size and a fixed line-height keep the
+ * three options the same height whichever is current.
+ */
+.current { line-height: 1.35; white-space: nowrap; }
+
+.menu {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  right: 0;
+  z-index: 40;
+  display: grid;
+  gap: 1px;
+  min-width: 11rem;
+  padding: 0.35rem;
+  background: var(--ink-raised);
+  border: 1px solid var(--ink-line);
+  border-radius: 3px;
+  box-shadow: 0 20px 44px -20px #000;
+}
+
+.option {
+  display: grid;
+  grid-template-columns: 1rem 1fr auto;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.5rem;
+  border-radius: 2px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: var(--t-sm);
+}
+
+.option:hover { background: var(--ink); color: var(--text); }
+.option[data-on] { color: var(--gold-lift); }
+.option:focus-visible { outline: 2px solid var(--gold-lift); outline-offset: -2px; }
+
+.tick { display: grid; place-items: center; }
+.endonym { line-height: 1.4; }
+
+/* The Latin name is a gloss, not a label — quieter than the endonym it
+   explains. */
+.latin {
+  font-size: 0.625rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--slate);
+}
+
+.compact .trigger { padding: 0.3rem 0.45rem; }
+.compact .current { display: none; }
+
+@media (max-width: 60rem) {
+  /* In the mobile drawer the menu opens downward in flow rather than
+     floating, so it cannot be clipped by the panel it sits in. */
+  .menu { position: static; margin-top: 0.4rem; box-shadow: none; }
+}
