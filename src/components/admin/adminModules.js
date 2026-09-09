@@ -49,12 +49,13 @@ export const MODULES = [
     label: 'Jewellery',
     href: '/admin/jewellery',
     icon: 'ring',
-    state: 'partial',
+    state: 'ready',
     tables: ['jewellery'],
+    /* Listed so the gap is visible from the module registry too, not only
+       from the screen: this table has no image column of any kind. */
     note:
-      'The table exists with sku, price, currency, category, metal, featured, '
-      + 'active and archived_at. No client code reads it yet — management '
-      + 'arrives in phase 2.',
+      'Publish, feature and archive are live. The table has no image column, '
+      + 'so jewellery has no photography until a migration adds one.',
   },
   {
     key: 'catalogue',

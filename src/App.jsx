@@ -38,6 +38,7 @@ const AdminLayout = lazy(() => import('@/components/admin/AdminLayout.jsx'));
 const AdminOverview = lazy(() => import('@/pages/admin/AdminOverview.jsx'));
 const AdminModulePage = lazy(() => import('@/pages/admin/AdminModulePage.jsx'));
 const AdminDiamonds = lazy(() => import('@/pages/admin/AdminDiamonds.jsx'));
+const AdminJewellery = lazy(() => import('@/pages/admin/AdminJewellery.jsx'));
 const AdminDiamondForm = lazy(() => import('@/pages/admin/AdminDiamondForm.jsx'));
 const Story = lazy(() => import('@/sections/about/Story.jsx'));
 const Exhibit = lazy(() => import('@/sections/about/Exhibit.jsx'));
@@ -104,6 +105,7 @@ function adminRoute(path) {
    */
   if (path === '/admin') return <AdminOverview />;
   if (path === '/admin/diamonds') return <AdminDiamonds />;
+  if (path === '/admin/jewellery') return <AdminJewellery />;
   if (path === '/admin/diamonds/new') return <AdminDiamondForm />;
 
   const edit = path.match(/^\/admin\/diamonds\/([^/]+)\/edit$/);

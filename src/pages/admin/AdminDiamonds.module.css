@@ -1,0 +1,150 @@
+.page { display: grid; gap: 1rem; align-content: start; min-width: 0; }
+
+.head { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+
+.eyebrow { font-size: 0.5625rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--faint); }
+.head h1 { font-size: 1.45rem; letter-spacing: -0.02em; color: var(--white); }
+.sub { font-size: 0.8125rem; color: var(--faint); }
+
+.primary {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.85rem;
+  border: 1px solid var(--accent-dim);
+  border-radius: 3px;
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  transition: background 160ms ease, color 160ms ease;
+}
+
+.primary:hover { background: var(--accent); color: #08201f; }
+.primary:active { transform: translateY(1px); }
+
+.tabs { display: flex; border: 1px solid var(--line); border-radius: 3px; overflow: hidden; }
+
+.tab {
+  padding: 0.35rem 0.65rem;
+  border: 0;
+  background: transparent;
+  color: var(--faint);
+  font: inherit;
+  font-size: 0.75rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tab + .tab { border-left: 1px solid var(--line); }
+.tab:hover { color: var(--white); }
+.tab[data-on] { background: var(--panel-2); color: var(--accent); }
+.tab:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+.toolBtn, .toolBtnDanger {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--dim);
+  font: inherit;
+  font-size: 0.75rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.toolBtn:hover:not(:disabled) { color: var(--white); border-color: var(--accent-dim); }
+.toolBtnDanger { border-color: rgba(224, 141, 122, 0.4); color: var(--bad); }
+.toolBtnDanger:hover:not(:disabled) { background: rgba(224, 141, 122, 0.12); }
+.toolBtn:disabled, .toolBtnDanger:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* ---- cells ---- */
+
+.idCell { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 0.55rem; min-width: 0; }
+
+.thumb {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  flex: none;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--panel-2);
+  color: var(--faint);
+  overflow: hidden;
+}
+
+.thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+.dupe {
+  margin-left: 0.35rem;
+  padding: 0.05rem 0.28rem;
+  border: 1px solid rgba(224, 177, 103, 0.4);
+  border-radius: 2px;
+  color: var(--warn);
+  font-size: 0.5625rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.blank { color: var(--faint); }
+
+.pill {
+  padding: 0.1rem 0.4rem;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  font-size: 0.5625rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.pill[data-tone='on'] { color: var(--accent); border-color: var(--accent-dim); }
+.pill[data-tone='hidden'] { color: var(--warn); border-color: rgba(224, 177, 103, 0.3); }
+.pill[data-tone='off'] { color: var(--faint); }
+
+.rowActions { display: flex; gap: 0.2rem; }
+
+.act {
+  display: grid;
+  place-items: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--faint);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.act:hover:not(:disabled) { color: var(--white); border-color: var(--line); }
+.act[data-danger]:hover:not(:disabled) { color: var(--bad); border-color: rgba(224, 141, 122, 0.4); }
+.act:disabled { opacity: 0.3; cursor: not-allowed; }
+.act:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+@media (max-width: 52rem) {
+  /* In card mode the action cluster sits on its own row rather than being
+     squeezed into a 1fr column beside its label. */
+  .rowActions { justify-content: flex-start; flex-wrap: wrap; }
+}
+
+/*
+ * A standing caveat about the data itself, not a transient error — so it is
+ * amber and it stays. Used where a screen can do most of its job but one part
+ * is not supported by the schema at all.
+ */
+.note {
+  max-width: 62ch;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid rgba(224, 177, 103, 0.28);
+  border-radius: 3px;
+  font-size: 0.75rem;
+  line-height: 1.55;
+  color: var(--warn);
+}
