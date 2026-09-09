@@ -1,0 +1,64 @@
+# Sign-up को अभी चालू करने के लिए — सिर्फ़ एक setting
+
+## क्या हो रहा है
+
+आपके Supabase project पर मैंने अभी test किया:
+
+```
+signup  →  500  "Error sending confirmation email"
+```
+
+Supabase confirmation email भेजने की कोशिश करता है, **fail हो जाता है, और पूरा
+signup cancel कर देता है।** इसलिए:
+
+- `auth.users` में कुछ नहीं आता
+- `profiles` में कुछ नहीं आता
+- कोई link नहीं आता (email गया ही नहीं)
+- Login नहीं होता (account बना ही नहीं)
+
+**ये चारों एक ही problem हैं।** Code में कोई गलती नहीं है — यह Supabase की
+email setting है, जो सिर्फ़ आपके dashboard से बदल सकती है।
+
+---
+
+## ठीक करने का तरीका — 30 सेकंड
+
+1. Browser में खोलें: **https://supabase.com/dashboard**
+2. Project **`lkokikjyiohpodhcmjzw`** चुनें
+3. बाईं ओर menu में **Authentication** पर click करें
+4. Authentication के अंदर **Providers** पर click करें
+5. List में **Email** पर click करें (वो expand होगा)
+6. **"Confirm email"** नाम का toggle ढूंढें — वो अभी **ON** है
+7. उसे **OFF** करें
+8. नीचे **Save** दबाएँ
+
+बस। अब website पर register करके देखें — तुरंत account बनेगा और login हो जाएगा।
+
+---
+
+## अगर आपने SMTP settings डाली थीं
+
+500 error का मतलब आमतौर पर यह होता है कि custom SMTP डाला गया है लेकिन
+username / password / host गलत है। ऊपर वाला toggle OFF करने से यह भी bypass
+हो जाएगा — email की ज़रूरत ही नहीं रहेगी।
+
+बाद में जब चाहें, `SUPABASE-EMAIL-SETUP.md` में सही SMTP लगाने के steps हैं।
+वो आज का काम नहीं है।
+
+---
+
+## Toggle OFF करने के बाद अगर "No access" दिखे
+
+तो `profiles` table में row नहीं बन रही — इसके लिए एक trigger चाहिए।
+वो तैयार है: `supabase/migrations/0003_profiles_on_signup.sql`
+
+Dashboard → **SQL Editor** → उस file का पूरा content paste करें → **Run**।
+यह safe है — अगर trigger पहले से है तो कुछ नहीं बिगड़ेगा।
+
+---
+
+## जो customer अभी अटके हैं
+
+Dashboard → **Authentication** → **Users** → उनका नाम ढूंढें → **⋮** → **Confirm email**
+
+फिर वो अपने पासवर्ड से login कर पाएँगे।

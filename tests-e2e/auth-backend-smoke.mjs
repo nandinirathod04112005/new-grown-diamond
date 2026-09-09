@@ -66,11 +66,14 @@ try {
   for (const [status, code, message, expected] of [
     [400, 'user_already_exists', 'User already registered', 'This email is already registered'],
     [400, 'email_address_not_authorized', 'Email address not authorized', 'Email address not authorized'],
+    [429, 'over_email_send_rate_limit', 'Email rate limit exceeded', 'Email rate limit exceeded'],
     [500, 'unexpected_failure', 'Error sending confirmation email', 'Email delivery failed'],
   ]) {
     response = { status, body: { code, message } };
     await page.getByRole('button', { name: 'Create account', exact: true }).click();
     await page.getByRole('alert').filter({ hasText: expected }).waitFor();
+    const retry = page.getByRole('button', { name: 'Try again', exact: true });
+    if (await retry.count()) await retry.click();
   }
   response = { status: 200, body: { id: '11111111-1111-4111-8111-111111111111', identities: [], email: 'customer@example.com' } };
   await page.getByRole('button', { name: 'Create account', exact: true }).click();

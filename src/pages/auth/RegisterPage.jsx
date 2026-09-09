@@ -236,7 +236,7 @@ export default function RegisterPage() {
         title={handed ? 'The desk has your request' : 'We could not finish just now'}
         intro={handed
           ? 'Someone will set your account up and email you directly.'
-          : 'Email rate limit exceeded. Please wait before requesting another confirmation link.'}
+          : error}
         aside={<>Already registered? <a href="/login">Sign in</a>.</>}
       >
         {handed ? (
@@ -254,6 +254,7 @@ export default function RegisterPage() {
         ) : (
           <>
             <p className={styles.note} data-tone="error" role="alert">
+              {error}{' '}
               <strong>The confirmation email could not be sent.</strong>
               We could not verify whether an account already exists for this address.
             </p>

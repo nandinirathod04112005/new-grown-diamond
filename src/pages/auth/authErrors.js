@@ -21,7 +21,6 @@ export function isEmailDeliveryFailure(error) {
   const code = error?.code ?? error?.error_code ?? '';
   const msg = String(error?.msg ?? error?.message ?? '');
   if (code === 'over_email_send_rate_limit') return true;
-  if (error?.status === 429) return true;
   /* Supabase reports the mailer's own failure as a generic unexpected_failure,
      so the message is the only thing that distinguishes it from an unrelated
      server error — and sending someone to the desk for an unrelated one would
