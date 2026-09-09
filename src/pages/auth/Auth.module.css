@@ -28,6 +28,26 @@
     linear-gradient(158deg, #101319 0%, #0a0b0e 48%, #060608 100%);
 }
 
+/*
+ * The pool the card sits in.
+ *
+ * Above the caustics in the stack and below the card, so whatever the light is
+ * doing behind it, the area the eye reads settles onto a near-solid ground.
+ * This is what makes the form legible without relying on backdrop-filter,
+ * which is not guaranteed — it computes to `none` in several environments,
+ * including the one this was measured in, and a design that only works where
+ * blur is supported is a design that fails silently.
+ */
+.pool {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background:
+    radial-gradient(42% 46% at 50% 48%, rgba(4, 5, 7, 0.94), rgba(4, 5, 7, 0.55) 55%, transparent 78%),
+    radial-gradient(120% 100% at 50% 50%, transparent 40%, rgba(3, 4, 6, 0.72) 100%);
+}
+
 .field::before {
   content: '';
   position: absolute;
@@ -120,7 +140,9 @@
   display: grid;
   gap: var(--s-4);
   padding: clamp(1.75rem, 5vw, 2.75rem);
-  background: rgba(19, 19, 23, 0.72);
+  /* Near-opaque. The blur below is an enhancement where it is supported, not
+     the thing legibility depends on. */
+  background: rgba(14, 15, 19, 0.94);
   backdrop-filter: blur(22px) saturate(1.1);
   -webkit-backdrop-filter: blur(22px) saturate(1.1);
   border: 1px solid var(--ink-line);
@@ -223,7 +245,9 @@
 .input {
   width: 100%;
   padding: 0.85rem 0.9rem;
-  background: rgba(8, 8, 10, 0.5);
+  /* Opaque. At 0.5 the caustics were visible THROUGH the characters someone
+     was typing, which is the worst place on the page for a moving pattern. */
+  background: #08080a;
   border: 1px solid var(--ink-line);
   color: var(--ivory);
   font: inherit;
@@ -403,7 +427,26 @@
 }
 
 /* The same thrown light as the hero, behind the same built ground. */
-.caustics { z-index: -2; opacity: 0.85; }
+/*
+ * The caustics, turned down and pushed to the edges.
+ *
+ * They ran at 0.85 across the whole viewport, and the card in front of them
+ * is only 72% opaque — so a high-contrast pattern of bright teal read straight
+ * through the form, and through the input fields inside it. On a page whose
+ * entire job is being typed into, the background was the loudest thing on
+ * screen and the password field was the quietest.
+ *
+ * The mask is the substance of the fix rather than the opacity alone: a
+ * radial hole keeps the middle third genuinely calm where the card sits, so
+ * the light still moves at the edges and the reading area stays still. Water
+ * light belongs on the walls of the room, not on the page.
+ */
+.caustics {
+  z-index: -2;
+  opacity: 0.3;
+  -webkit-mask-image: radial-gradient(64% 58% at 50% 46%, transparent 22%, #000 78%);
+  mask-image: radial-gradient(64% 58% at 50% 46%, transparent 22%, #000 78%);
+}
 
 /* ---------------- account type ---------------- */
 
@@ -493,4 +536,85 @@
   font-size: var(--t-xs);
   line-height: 1.5;
   color: var(--text-muted);
+}
+
+/* ---------------- password reveal ---------------- */
+
+/*
+ * The label is its own element rather than wrapping the input, because the
+ * toggle sits over the field and a button nested inside a <label> inherits
+ * the label's click target — which moves focus to the input and can fire the
+ * toggle twice from a single press.
+ */
+.pwLabel { display: block; }
+
+.pwWrap { position: relative; display: grid; }
+
+/*
+ * Room for the button, and it must be reserved rather than overlapped: a long
+ * password scrolling under a floating icon is unreadable exactly when someone
+ * has revealed it to check it.
+ */
+.pwInput { padding-right: 3rem; }
+
+.pwToggle {
+  position: absolute;
+  top: 50%;
+  right: 0.3rem;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  /* 2.5rem square: a comfortable touch target that still fits a 0.85rem-tall
+     field without stretching it. */
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  background: transparent;
+  color: var(--slate);
+  cursor: pointer;
+  transition: color var(--dur-base) var(--ease-primary),
+    border-color var(--dur-base) var(--ease-primary);
+}
+
+.pwToggle:hover { color: var(--ivory); }
+.pwToggle[aria-pressed='true'] { color: var(--gold-lift); }
+
+.pwToggle:focus-visible {
+  outline: 2px solid var(--gold-lift);
+  outline-offset: -1px;
+}
+
+/* The icon swap should read as a state change, not as a flicker. */
+.pwToggle svg { transition: opacity var(--dur-base) var(--ease-primary); }
+
+@media (prefers-reduced-motion: reduce) {
+  .pwToggle, .pwToggle svg { transition: none; }
+}
+
+/*
+ * A field's own error message.
+ *
+ * Sits under the input it belongs to and is linked to it by aria-describedby,
+ * so it is reachable from the field rather than only visible near it. Colour
+ * is not the only signal — the text says what is wrong, and aria-invalid
+ * marks the input itself.
+ */
+.fieldError {
+  display: block;
+  font-size: 0.6875rem;
+  line-height: 1.5;
+  color: #f0a08c;
+}
+
+/* The field a message belongs to, marked on the input as well as beneath it. */
+.input[aria-invalid='true'],
+.pwInput[aria-invalid='true'] {
+  border-color: rgba(240, 160, 140, 0.55);
+}
+
+.input[aria-invalid='true']:focus-visible,
+.pwInput[aria-invalid='true']:focus-visible {
+  outline: 2px solid #f0a08c;
+  outline-offset: -1px;
 }

@@ -32,6 +32,9 @@ export default function AuthShell({ eyebrow, title, intro, children, aside, wide
           a drafting grid that dies before it reaches an edge, a vignette. */}
       <div className={styles.field} aria-hidden="true" />
       <CausticField className={styles.caustics} />
+      {/* Sits between the moving light and the card, so the area that gets
+          read settles onto a near-solid ground however busy the room is. */}
+      <div className={styles.pool} aria-hidden="true" />
       <span className={styles.beam} aria-hidden="true" />
       <div className={styles.grain} aria-hidden="true" />
 

@@ -1,8 +1,11 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 import { supabase, isConfigured } from '@/lib/supabase/client.js';
 import { useAuth } from '@/hooks/useAuth.js';
 import AuthShell from './AuthShell.jsx';
+import PasswordField from './PasswordField.jsx';
+import TextField from './TextField.jsx';
+import { emailError, firstError, passwordError, toMap } from './validation.js';
 import styles from './Auth.module.css';
 
 /**
@@ -27,6 +30,16 @@ export default function SignInPage() {
   const [unconfirmed, setUnconfirmed] = useState(false);
   const [resent, setResent] = useState('');
   const [tried, setTried] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
+  /* Refs so the first bad field can be focused. Without this a keyboard or
+     screen-reader user is told something is wrong and left at the submit
+     button with no route back to the field that is wrong.
+
+     Declared individually rather than gathered into one object: reading
+     `refs.email` during render is indistinguishable, to a linter, from reading
+     `.current`, and a rule that fires on correct code stops being useful. */
+  const emailRef = useRef(null);
+  const passwordRef = useRef(null);
 
   /*
    * This project has email confirmation switched on, so an account exists in a
@@ -53,8 +66,39 @@ export default function SignInPage() {
     setTried(true);
     if (!isConfigured) return;
 
+    /*
+     * Validate BEFORE the network, not after it.
+     *
+     * The form carries noValidate, which switches off the browser's own
+     * constraint checking along with its unstyleable bubbles — so `required`
+     * on these inputs is a label for assistive technology and nothing else.
+     * Until this existed, an empty form posted '' / '' to Supabase, which
+     * answered invalid_credentials, which this page reported as "That email
+     * and password do not match an account" — a message that is not merely
+     * unhelpful but wrong, because nothing had been typed to not match.
+     *
+     * The existing password is checked for PRESENCE only. Applying the current
+     * minimum length at the sign-in screen would lock out anyone whose account
+     * predates it, and would do so with a message telling them their correct
+     * password is too short.
+     */
+    const checks = [
+      ['email', emailError(email)],
+      ['password', passwordError(password, { existing: true })],
+    ];
+    const bad = firstError(checks);
+    setFieldErrors(toMap(checks));
+    if (bad) {
+      setError('');
+      setUnconfirmed(false);
+      /* Built inside the handler, where touching a ref is legitimate. */
+      ({ email: emailRef, password: passwordRef })[bad]?.current?.focus();
+      return;
+    }
+
     setBusy(true);
     setError('');
+    setFieldErrors({});
     const { data, error: err } = await supabase.auth.signInWithPassword({ email, password });
     setBusy(false);
 
@@ -137,30 +181,33 @@ export default function SignInPage() {
           </div>
         )}
 
-        <label className={styles.field2} style={{ '--i': 0 }}>
-          <span className={styles.label}>Email</span>
-          <input
-            className={styles.input}
-            type="email"
-            value={email}
-            autoComplete="email"
-            required
-            placeholder="you@company.com"
-            onChange={(e) => setEmail(e.target.value)}
-          />
-        </label>
+        <TextField
+          label="Email"
+          type="email"
+          value={email}
+          index={0}
+          required
+          autoComplete="email"
+          placeholder="you@company.com"
+          inputRef={emailRef}
+          error={fieldErrors.email}
+          /* Clearing on edit rather than re-validating on every keystroke: a
+             message that appears while someone is still halfway through
+             typing their address is noise, and it moves the layout under
+             their cursor. */
+          onChange={(e) => { setEmail(e.target.value); setFieldErrors((f) => ({ ...f, email: null })); }}
+        />
 
-        <label className={styles.field2} style={{ '--i': 1 }}>
-          <span className={styles.label}>Password</span>
-          <input
-            className={styles.input}
-            type="password"
-            value={password}
-            autoComplete="current-password"
-            required
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </label>
+        <PasswordField
+          label="Password"
+          value={password}
+          index={1}
+          required
+          autoComplete="current-password"
+          inputRef={passwordRef}
+          error={fieldErrors.password}
+          onChange={(e) => { setPassword(e.target.value); setFieldErrors((f) => ({ ...f, password: null })); }}
+        />
 
         <button className={styles.submit} type="submit" disabled={busy || !isConfigured}>
           {busy ? <><span className={styles.spinner} aria-hidden="true" />Signing in…</> : 'Sign in'}

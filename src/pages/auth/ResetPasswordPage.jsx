@@ -2,6 +2,7 @@ import { useState } from 'react';
 
 import { supabase, isConfigured } from '@/lib/supabase/client.js';
 import AuthShell from './AuthShell.jsx';
+import PasswordField from './PasswordField.jsx';
 import styles from './Auth.module.css';
 
 const MIN_PASSWORD = 8;
@@ -69,30 +70,24 @@ export default function ResetPasswordPage() {
           </p>
         )}
         {error && <p className={styles.note} data-tone="error" role="alert">{error}</p>}
-        <label className={styles.field2} style={{ '--i': 0 }}>
-          <span className={styles.label}>New password</span>
-          <input
-            className={styles.input}
-            type="password"
-            value={password}
-            autoComplete="new-password"
-            minLength={MIN_PASSWORD}
-            required
-            onChange={(event) => setPassword(event.target.value)}
-          />
-          <span className={styles.hint}>At least {MIN_PASSWORD} characters.</span>
-        </label>
-        <label className={styles.field2} style={{ '--i': 1 }}>
-          <span className={styles.label}>Confirm password</span>
-          <input
-            className={styles.input}
-            type="password"
-            value={confirm}
-            autoComplete="new-password"
-            required
-            onChange={(event) => setConfirm(event.target.value)}
-          />
-        </label>
+        <PasswordField
+          label="New password"
+          value={password}
+          index={0}
+          required
+          minLength={MIN_PASSWORD}
+          autoComplete="new-password"
+          hint={`At least ${MIN_PASSWORD} characters.`}
+          onChange={(event) => setPassword(event.target.value)}
+        />
+        <PasswordField
+          label="Confirm password"
+          value={confirm}
+          index={1}
+          required
+          autoComplete="new-password"
+          onChange={(event) => setConfirm(event.target.value)}
+        />
         <button className={styles.submit} type="submit" disabled={busy || !isConfigured}>
           {busy ? <><span className={styles.spinner} aria-hidden="true" />Updating…</> : 'Update password'}
         </button>

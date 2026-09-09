@@ -1,8 +1,11 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 import { supabase, isConfigured } from '@/lib/supabase/client.js';
 import { isAdminCode, unlockAdmin } from '@/lib/adminCode.js';
 import AuthShell from './AuthShell.jsx';
+import PasswordField from './PasswordField.jsx';
+import TextField from './TextField.jsx';
+import { confirmError, emailError, firstError, passwordError, requiredError, toMap } from './validation.js';
 import styles from './Auth.module.css';
 
 const MIN_PASSWORD = 8;
@@ -33,22 +36,55 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
   const [done, setDone] = useState(null); // 'session' | 'confirm'
   const [tried, setTried] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
+  /* Declared individually rather than gathered into one object: reading
+     `refs.email` during render is indistinguishable, to a linter, from reading
+     `.current`, and a rule that fires on correct code stops being useful. */
+  const codeRef = useRef(null);
+  const fullNameRef = useRef(null);
+  const emailRef = useRef(null);
+  const passwordRef = useRef(null);
+  const confirmRef = useRef(null);
+  const clear = (k) => setFieldErrors((f) => ({ ...f, [k]: null }));
 
   async function onSubmit(event) {
     event.preventDefault();
     setTried(true);
     if (!isConfigured) return;
 
-    if (password.length < MIN_PASSWORD) {
-      setError(`Use at least ${MIN_PASSWORD} characters for your password.`);
-      return;
-    }
-    if (password !== confirm) {
-      setError('The two passwords do not match.');
-      return;
-    }
-    if (kind === 'admin' && !isAdminCode(code)) {
-      setError('That staff code is not correct.');
+    /*
+     * Every field, checked in the order they appear on screen.
+     *
+     * This replaces three ad-hoc checks that covered the password rules and
+     * the staff code but not the name or the address — so a blank or
+     * malformed email went to Supabase and came back as a raw API error, and
+     * a blank name created an account with no name on it. The form carries
+     * noValidate, so `required` on the inputs enforces nothing; this is the
+     * enforcement.
+     *
+     * Order matters twice: the message list is rendered field by field, and
+     * the first failing field is the one that receives focus.
+     */
+    const checks = [
+      ...(kind === 'admin'
+        ? [['code', code.trim() ? (isAdminCode(code) ? null : 'That staff code is not correct.') : 'Enter the staff access code.']]
+        : []),
+      ['fullName', requiredError(fullName, 'full name')],
+      ['email', emailError(email)],
+      ['password', passwordError(password, { min: MIN_PASSWORD })],
+      ['confirm', confirmError(password, confirm)],
+    ];
+    const bad = firstError(checks);
+    setFieldErrors(toMap(checks));
+    if (bad) {
+      /* The banner is cleared: a stale server error above a fresh set of field
+         errors reads as two separate failures when there is one. */
+      setError('');
+      /* Built inside the handler, where touching a ref is legitimate. */
+      ({
+        code: codeRef, fullName: fullNameRef, email: emailRef,
+        password: passwordRef, confirm: confirmRef,
+      })[bad]?.current?.focus();
       return;
     }
 
@@ -185,78 +221,76 @@ export default function RegisterPage() {
         </fieldset>
 
         {kind === 'admin' && (
-          <label className={styles.field2} style={{ '--i': 1 }}>
-            <span className={styles.label}>Staff access code</span>
-            <input
-              className={styles.input}
-              type="password"
-              value={code}
-              /* Not `one-time-code`: that invites the browser to offer an SMS
-                 passcode, which this is not. `off` keeps managers out of it. */
-              autoComplete="off"
-              inputMode="numeric"
-              required
-              placeholder="••••••"
-              onChange={(e) => { setCode(e.target.value); setError(''); }}
-            />
-            <span className={styles.hint}>
-              Ask an existing administrator. Staff access is confirmed in the
-              database afterwards — this code only opens the request.
-            </span>
-          </label>
+          /* The code is usually read off a message on another device and typed
+             in one character at a time, which is exactly when a reveal earns
+             its place — so it gets one, worded for what it is. */
+          <PasswordField
+            label="Staff access code"
+            revealLabel="code"
+            value={code}
+            index={1}
+            required
+            inputRef={codeRef}
+            error={fieldErrors.code}
+            /* Not `one-time-code`: that invites the browser to offer an SMS
+               passcode, which this is not. `off` keeps managers out of it. */
+            autoComplete="off"
+            inputMode="numeric"
+            placeholder="••••••"
+            hint="Ask an existing administrator. Staff access is confirmed in the database afterwards — this code only opens the request."
+            onChange={(e) => { setCode(e.target.value); setError(''); clear('code'); }}
+          />
         )}
 
-        <label className={styles.field2} style={{ '--i': 0 }}>
-          <span className={styles.label}>Full name</span>
-          <input
-            className={styles.input}
-            type="text"
-            value={fullName}
-            autoComplete="name"
-            required
-            placeholder="Your name"
-            onChange={(e) => setFullName(e.target.value)}
-          />
-        </label>
+        <TextField
+          label="Full name"
+          value={fullName}
+          index={0}
+          required
+          maxLength={160}
+          autoComplete="name"
+          placeholder="Your name"
+          inputRef={fullNameRef}
+          error={fieldErrors.fullName}
+          onChange={(e) => { setFullName(e.target.value); clear('fullName'); }}
+        />
 
-        <label className={styles.field2} style={{ '--i': 1 }}>
-          <span className={styles.label}>Email</span>
-          <input
-            className={styles.input}
-            type="email"
-            value={email}
-            autoComplete="email"
-            required
-            placeholder="you@company.com"
-            onChange={(e) => setEmail(e.target.value)}
-          />
-        </label>
+        <TextField
+          label="Email"
+          type="email"
+          value={email}
+          index={1}
+          required
+          autoComplete="email"
+          placeholder="you@company.com"
+          inputRef={emailRef}
+          error={fieldErrors.email}
+          onChange={(e) => { setEmail(e.target.value); clear('email'); }}
+        />
 
-        <label className={styles.field2} style={{ '--i': 2 }}>
-          <span className={styles.label}>Password</span>
-          <input
-            className={styles.input}
-            type="password"
-            value={password}
-            autoComplete="new-password"
-            required
-            minLength={MIN_PASSWORD}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <span className={styles.hint}>At least {MIN_PASSWORD} characters.</span>
-        </label>
+        <PasswordField
+          label="Password"
+          value={password}
+          index={2}
+          required
+          minLength={MIN_PASSWORD}
+          autoComplete="new-password"
+          hint={`At least ${MIN_PASSWORD} characters.`}
+          inputRef={passwordRef}
+          error={fieldErrors.password}
+          onChange={(e) => { setPassword(e.target.value); clear('password'); }}
+        />
 
-        <label className={styles.field2} style={{ '--i': 3 }}>
-          <span className={styles.label}>Confirm password</span>
-          <input
-            className={styles.input}
-            type="password"
-            value={confirm}
-            autoComplete="new-password"
-            required
-            onChange={(e) => setConfirm(e.target.value)}
-          />
-        </label>
+        <PasswordField
+          label="Confirm password"
+          value={confirm}
+          index={3}
+          required
+          autoComplete="new-password"
+          inputRef={confirmRef}
+          error={fieldErrors.confirm}
+          onChange={(e) => { setConfirm(e.target.value); clear('confirm'); }}
+        />
 
         <button className={styles.submit} type="submit" disabled={busy || !isConfigured}>
           {busy ? <><span className={styles.spinner} aria-hidden="true" />Creating…</> : 'Create account'}
