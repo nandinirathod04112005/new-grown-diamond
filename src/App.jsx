@@ -39,6 +39,8 @@ const AdminOverview = lazy(() => import('@/pages/admin/AdminOverview.jsx'));
 const AdminModulePage = lazy(() => import('@/pages/admin/AdminModulePage.jsx'));
 const AdminDiamonds = lazy(() => import('@/pages/admin/AdminDiamonds.jsx'));
 const AdminJewellery = lazy(() => import('@/pages/admin/AdminJewellery.jsx'));
+const AdminCustomers = lazy(() => import('@/pages/admin/AdminCustomers.jsx'));
+const AdminQueue = lazy(() => import('@/pages/admin/AdminQueue.jsx'));
 const AdminDiamondForm = lazy(() => import('@/pages/admin/AdminDiamondForm.jsx'));
 const Story = lazy(() => import('@/sections/about/Story.jsx'));
 const Exhibit = lazy(() => import('@/sections/about/Exhibit.jsx'));
@@ -87,6 +89,12 @@ const PAGE_MOTIF = {
   },
 };
 
+/*
+ * The four queue routes. A Set rather than a regex: the names are data, and a
+ * regex here would be one more place to escape a slash wrongly for no gain.
+ */
+const QUEUE_PATHS = new Set(['enquiries', 'quotes', 'holds', 'inspections']);
+
 /**
  * Admin lives outside the storefront chrome and outside the smooth scroller:
  * a console is operated, not read, and a data table fighting inertial
@@ -106,6 +114,20 @@ function adminRoute(path) {
   if (path === '/admin') return <AdminOverview />;
   if (path === '/admin/diamonds') return <AdminDiamonds />;
   if (path === '/admin/jewellery') return <AdminJewellery />;
+  if (path === '/admin/customers') return <AdminCustomers />;
+
+  /*
+   * The four work queues share one screen. They differ only in which date
+   * matters and which product they point at, and both of those are declared
+   * per queue in adminQueues.js rather than branched on in the component —
+   * so a fifth queue would be a data entry, not another page.
+   *
+   * Keyed by name so React remounts on the way between them: they hold their
+   * own filter tab and open drawer, and carrying those across from Holds into
+   * Inspections would show one queue's selection over another's rows.
+   */
+  const queue = path.slice('/admin/'.length);
+  if (QUEUE_PATHS.has(queue)) return <AdminQueue key={queue} queue={queue} />;
   if (path === '/admin/diamonds/new') return <AdminDiamondForm />;
 
   const edit = path.match(/^\/admin\/diamonds\/([^/]+)\/edit$/);
