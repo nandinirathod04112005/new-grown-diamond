@@ -41,6 +41,8 @@ const AdminDiamonds = lazy(() => import('@/pages/admin/AdminDiamonds.jsx'));
 const AdminJewellery = lazy(() => import('@/pages/admin/AdminJewellery.jsx'));
 const AdminCustomers = lazy(() => import('@/pages/admin/AdminCustomers.jsx'));
 const AdminQueue = lazy(() => import('@/pages/admin/AdminQueue.jsx'));
+const AdminMedia = lazy(() => import('@/pages/admin/AdminMedia.jsx'));
+const AdminMonitoring = lazy(() => import('@/pages/admin/AdminMonitoring.jsx'));
 const AdminDiamondForm = lazy(() => import('@/pages/admin/AdminDiamondForm.jsx'));
 const Story = lazy(() => import('@/sections/about/Story.jsx'));
 const Exhibit = lazy(() => import('@/sections/about/Exhibit.jsx'));
@@ -115,6 +117,8 @@ function adminRoute(path) {
   if (path === '/admin/diamonds') return <AdminDiamonds />;
   if (path === '/admin/jewellery') return <AdminJewellery />;
   if (path === '/admin/customers') return <AdminCustomers />;
+  if (path === '/admin/media') return <AdminMedia />;
+  if (path === '/admin/monitoring') return <AdminMonitoring />;
 
   /*
    * The four work queues share one screen. They differ only in which date

@@ -118,19 +118,19 @@ export const MODULES = [
     note:
       'Page copy currently lives in src/pages/siteContent.js and is compiled '
       + 'into the bundle. Editing it from here requires a site_content table '
-      + 'plus a read path on the public pages.',
+      + 'plus a read path on the public pages. A reviewed migration is in supabase/migrations/0001.',
   },
   {
     key: 'media',
     label: 'Media Library',
     href: '/admin/media',
     icon: 'image',
-    state: 'partial',
+    state: 'ready',
     tables: [],
     note:
-      'Storage buckets diamond-images and blog-images are real and already in '
-      + 'use. Browsing them is possible today; alt text, usage tracking and '
-      + '"where is this file used" need a media table to record it.',
+      'Browsing, upload with progress, and a live in-use check against '
+      + 'diamonds.image_path and blogs.cover_path all work today. Alt text and '
+      + 'captions need a media table — see migration 0001.',
   },
   {
     key: 'homepage',
@@ -142,7 +142,7 @@ export const MODULES = [
     note:
       'Section order and visibility are currently code. Featured stock is the '
       + 'one part that already works from data — diamonds.featured and '
-      + 'jewellery.featured — and is editable from those modules.',
+      + 'jewellery.featured — and is editable from those modules. A reviewed migration is in supabase/migrations/0001.',
   },
   {
     key: 'seo',
@@ -154,7 +154,15 @@ export const MODULES = [
     note:
       'Titles, descriptions and canonicals are generated at build time by '
       + 'src/config/seo.js and scripts/generate-seo-pages.mjs. Editing them '
-      + 'live needs a seo_settings table read at runtime.',
+      + 'live needs a seo_settings table read at runtime. A reviewed migration is in supabase/migrations/0001.',
+  },
+  {
+    key: 'monitoring',
+    label: 'Website Monitoring',
+    href: '/admin/monitoring',
+    icon: 'chart',
+    state: 'ready',
+    tables: ['diamonds', 'jewellery', 'holds', 'inspections'],
   },
   {
     key: 'analytics',
@@ -166,7 +174,7 @@ export const MODULES = [
     note:
       'No analytics table and no third-party tag. Traffic figures cannot be '
       + 'shown, and will not be simulated. A first-party, privacy-safe events '
-      + 'table is drafted as an optional migration in phase 5.',
+      + 'table is drafted as an optional migration in phase 5. A reviewed migration adding a privacy-safe events table with a 90-day retention job is in supabase/migrations/0002.',
   },
   {
     key: 'audit',
@@ -178,7 +186,7 @@ export const MODULES = [
     note:
       'Nothing records who changed what. Overview shows recently ADDED stock, '
       + 'which is derived from created_at and is labelled as such — it is not '
-      + 'an audit trail and is not presented as one.',
+      + 'an audit trail and is not presented as one. A reviewed append-only migration is in supabase/migrations/0002.',
   },
   {
     key: 'notifications',
@@ -190,7 +198,7 @@ export const MODULES = [
     note:
       'Live arrivals can be surfaced through Supabase Realtime on the existing '
       + 'queue tables without any new table. Persisting them — read state, '
-      + 'dismissal, history — needs notifications.',
+      + 'dismissal, history — needs notifications. A reviewed migration is in supabase/migrations/0002.',
   },
   {
     key: 'settings',

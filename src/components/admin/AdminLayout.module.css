@@ -8,8 +8,19 @@
  *
  * Tokens are declared locally rather than taken from the site's theme because
  * those flip with the light switch, and a data table that inverts underneath
- * an operator mid-task is worse than one that simply stays dark. Contrast is
- * checked against --ink: every text colour here clears 4.5:1 on it.
+ * an operator mid-task is worse than one that simply stays dark.
+ *
+ * CONTRAST IS MEASURED, NOT ASSERTED. An earlier version of this comment
+ * claimed every colour cleared 4.5:1; axe-core disagreed, and axe was right —
+ * --faint was #74747f, which is 4.04:1 on --panel and 4.25:1 on --ink. Both
+ * fail AA. The value below is the lightest grey that was actually needed:
+ *
+ *   --faint #8a8a96 on --panel #121216 -> 5.48:1
+ *   --faint #8a8a96 on --ink   #0b0b0d -> 5.76:1
+ *   --dim   #a0a0ad on --panel          -> 7.6:1
+ *
+ * Anything added here should be checked the same way rather than eyeballed;
+ * dark-on-dark is exactly where eyeballing fails.
  */
 .shell {
   --rail: 15.5rem;
@@ -20,7 +31,7 @@
   --line-soft: #1d1d23;
   --white: #f4f4f7;
   --dim: #a0a0ad;
-  --faint: #74747f;
+  --faint: #8a8a96;
   --accent: #7fd8d2;
   --accent-dim: #2b6b68;
   --warn: #e0b167;
