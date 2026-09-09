@@ -34,6 +34,9 @@ const ProfilePage = lazy(() => import('@/pages/auth/ProfilePage.jsx'));
 const ForgotPasswordPage = lazy(() => import('@/pages/auth/ForgotPasswordPage.jsx'));
 const ResetPasswordPage = lazy(() => import('@/pages/auth/ResetPasswordPage.jsx'));
 const RequireAdmin = lazy(() => import('@/components/auth/RequireAdmin.jsx'));
+const AdminLayout = lazy(() => import('@/components/admin/AdminLayout.jsx'));
+const AdminOverview = lazy(() => import('@/pages/admin/AdminOverview.jsx'));
+const AdminModulePage = lazy(() => import('@/pages/admin/AdminModulePage.jsx'));
 const AdminDiamonds = lazy(() => import('@/pages/admin/AdminDiamonds.jsx'));
 const AdminDiamondForm = lazy(() => import('@/pages/admin/AdminDiamondForm.jsx'));
 const Story = lazy(() => import('@/sections/about/Story.jsx'));
@@ -91,17 +94,28 @@ const PAGE_MOTIF = {
  * Returns the element for an /admin path, or null when the path is not one.
  */
 function adminRoute(path) {
-  if (path === '/admin' || path === '/admin/diamonds') {
-    return <AdminDiamonds />;
-  }
-  if (path === '/admin/diamonds/new') {
-    return <AdminDiamondForm />;
-  }
+  if (!path.startsWith('/admin')) return null;
+
+  /*
+   * /admin used to BE the diamond list. It is now the overview, and the list
+   * keeps its own address — so anyone who had /admin bookmarked lands on the
+   * dashboard, and every existing link to /admin/diamonds still resolves to
+   * exactly the page it always did.
+   */
+  if (path === '/admin') return <AdminOverview />;
+  if (path === '/admin/diamonds') return <AdminDiamonds />;
+  if (path === '/admin/diamonds/new') return <AdminDiamondForm />;
+
   const edit = path.match(/^\/admin\/diamonds\/([^/]+)\/edit$/);
-  if (edit) {
-    return <AdminDiamondForm id={edit[1]} />;
-  }
-  return null;
+  if (edit) return <AdminDiamondForm id={edit[1]} />;
+
+  /*
+   * Every other /admin path is a module the sidebar lists. Rather than 404 on
+   * a link the navigation itself offers, the page states what that module
+   * needs — which is the honest answer while the table behind it does not
+   * exist.
+   */
+  return <AdminModulePage path={path} />;
 }
 
 export default function App() {
@@ -155,7 +169,16 @@ export default function App() {
 
   const admin = adminRoute(path);
   if (admin) {
-    return bare(<RequireAdmin>{admin}</RequireAdmin>);
+    /*
+     * The guard stays OUTSIDE the shell. Rendering the sidebar around a
+     * "no access" notice would show the shape of the console — every module,
+     * every count — to someone the database has just refused.
+     */
+    return bare(
+      <RequireAdmin>
+        <AdminLayout path={path}>{admin}</AdminLayout>
+      </RequireAdmin>,
+    );
   }
 
   if (path === '/login') {
