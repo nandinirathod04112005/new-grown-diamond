@@ -38,7 +38,7 @@ export default function SplitHeading({ as: Tag = 'h2', text, className, ...rest 
   const scope = useRef(null);
 
   useGSAP(
-    () => {
+    (_context, contextSafe) => {
       if (prefersReducedMotion()) return;
       const el = scope.current;
       if (!el) return;
@@ -49,11 +49,12 @@ export default function SplitHeading({ as: Tag = 'h2', text, className, ...rest 
       // Already on screen at mount — an anchor jump or a restored scroll lands
       // here — so it is arrived, not pending. Without this the observer never
       // fires and the heading would sit hidden for ever.
-      const play = () => gsap.fromTo(
+      const play = contextSafe(() => gsap.fromTo(
         chars,
         { yPercent: 108, rotate: 2, opacity: 0 },
-        { yPercent: 0, rotate: 0, opacity: 1, ease: 'expo.out', duration: 1.1, stagger: { each: 0.018 } },
-      );
+        { yPercent: 0, rotate: 0, opacity: 1, ease: 'power3.out', duration: 0.9,
+          stagger: { amount: Math.min(0.32, chars.length * 0.012) } },
+      ));
 
       if (el.getBoundingClientRect().top < window.innerHeight * 0.92) {
         play();

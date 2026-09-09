@@ -81,3 +81,73 @@
   .formGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .formActions { grid-template-columns: auto 1fr; }
 }
+
+/*
+ * The enquiry line on the contact page.
+ *
+ * It sits above a directory of four offices and has to be findable without
+ * competing with it — so the label is set small and quiet and the number
+ * carries the weight, which is the opposite emphasis to the office cards
+ * below, where the CITY is what the eye is looking for.
+ */
+.enquiryLine {
+  display: grid;
+  gap: var(--s-1);
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 var(--gutter) var(--s-6);
+}
+
+.enquiryLine span {
+  font-size: 0.5625rem;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.enquiryLine a {
+  justify-self: start;
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: var(--t-xl);
+  line-height: 1;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--text);
+  text-decoration: none;
+  border-bottom: 1px solid var(--ink-line);
+  padding-bottom: var(--s-1);
+  transition: border-color 160ms ease, color 160ms ease;
+}
+
+.enquiryLine a:hover,
+.enquiryLine a:focus-visible {
+  color: var(--gold-lift);
+  border-bottom-color: var(--gold-lift);
+}
+
+/*
+ * The WhatsApp hand-off, shown only once an enquiry has actually been stored.
+ *
+ * It sits inside `.formActions` next to the send button and the status line,
+ * so it needs its own row rather than sitting inline with either — the status
+ * text is a live region and an anchor appearing beside mid-sentence reads as
+ * part of the sentence to a screen reader moving through it.
+ */
+.waFollow {
+  flex-basis: 100%;
+  width: max-content;
+  margin-top: var(--s-2);
+  font-size: var(--t-xs);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold-lift);
+  text-decoration: none;
+  border-bottom: 1px solid var(--gold);
+  padding-bottom: 0.35rem;
+  transition: border-color 160ms ease;
+}
+
+.waFollow:hover,
+.waFollow:focus-visible { border-bottom-color: var(--gold-lift); }

@@ -39,8 +39,8 @@ export function navigateTo(to) {
 }
 
 /** Out and in are asymmetric on purpose: leaving should be quicker than arriving. */
-export const COVER_OUT_MS = 360;
-export const COVER_IN_MS = 520;
+export const COVER_OUT_MS = 460;
+export const COVER_IN_MS = 640;
 
 export function currentPath() {
   return window.location.pathname.replace(/\/+$/, '') || '/';

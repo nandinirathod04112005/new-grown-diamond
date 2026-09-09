@@ -1,6 +1,7 @@
 import diamond from '@/assets/diamonds/ngd-brilliant-macro.webp';
 import ringAssembly from '@/assets/process/ring-assembly.webp';
 import PageHero from '@/components/layout/PageHero.jsx';
+import { ENQUIRY_DESK } from './siteContent.js';
 import Reveal from '@/components/motion/Reveal.jsx';
 import styles from './JewelleryPage.module.css';
 
@@ -48,6 +49,10 @@ export default function JewelleryPage() {
           <h2>Start with what can be verified.</h2>
           <p>Our team can help identify a diamond, provide inspection material and discuss a custom setting for it.</p>
           <a href="/diamonds">Explore diamond programmes →</a>
+          <p className={styles.callLine}>
+            <span>Or talk it through —</span>{' '}
+            <a href={`tel:${ENQUIRY_DESK.tel}`}>{ENQUIRY_DESK.phone}</a>
+          </p>
         </div>
       </Reveal>
     </main>

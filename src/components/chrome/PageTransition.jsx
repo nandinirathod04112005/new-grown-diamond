@@ -1,4 +1,5 @@
 import styles from './PageTransition.module.css';
+import { COVER_IN_MS, COVER_OUT_MS } from '@/lib/router.js';
 
 /**
  * The cover the page change happens underneath.
@@ -31,7 +32,8 @@ export default function PageTransition({ phase }) {
   if (phase === 'idle') return null;
 
   return (
-    <div className={styles.root} data-phase={phase} aria-hidden="true">
+    <div className={styles.root} data-phase={phase} aria-hidden="true"
+      style={{ '--cover-out': `${COVER_OUT_MS}ms`, '--cover-in': `${COVER_IN_MS}ms` }}>
       {ARCHES.map((i) => (
         <span
           key={i}

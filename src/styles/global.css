@@ -11,6 +11,33 @@ body {
   letter-spacing: 0.01em;
 }
 
+/* Shared section choreography: composited movement with a brief stagger. */
+@media (prefers-reduced-motion: no-preference) {
+  [data-motion-reveal][data-reveal='in'] {
+    animation: section-arrive 800ms cubic-bezier(.22, 1, .36, 1) both;
+    animation-delay: var(--reveal-delay, 0ms);
+  }
+
+  main button:not(:disabled):active,
+  main a[class]:active {
+    scale: 0.98;
+  }
+
+  main details[open] > :not(summary) {
+    animation: detail-arrive 350ms cubic-bezier(.22, 1, .36, 1) both;
+  }
+}
+
+@keyframes section-arrive {
+  from { opacity: 0.3; translate: 0 20px; }
+  to { opacity: 1; translate: 0 0; }
+}
+
+@keyframes detail-arrive {
+  from { opacity: 0; translate: 0 -6px; }
+  to { opacity: 1; translate: 0 0; }
+}
+
 /* Lenis owns the scroll; these are the library's required host styles. */
 html.lenis,
 html.lenis body { height: auto; }
@@ -222,9 +249,9 @@ html.lenis body { height: auto; }
 
 /* Composed with the page-transition scale, so both live on one property. */
 .u-above-film:not([data-leaving]) {
-  transform:
-    skewY(calc(var(--vel, 0) * 0.55deg))
-    scaleY(calc(1 + var(--speed, 0) * 0.006));
+  /* Keep the document plane stable. Scaling a long page displaces sections
+     by hundreds of pixels and moves pinned content as velocity changes. */
+  transform: none;
 }
 
 /*
@@ -236,7 +263,7 @@ html.lenis body { height: auto; }
  * way to drop a scroll to 30fps.
  */
 .u-vel-stretch {
-  transform: scaleY(calc(1 + var(--speed, 0) * 0.045)) scaleX(calc(1 - var(--speed, 0) * 0.012));
+  transform: scaleY(calc(1 + var(--speed, 0) * 0.012)) scaleX(calc(1 - var(--speed, 0) * 0.004));
   transform-origin: 50% 50%;
 }
 

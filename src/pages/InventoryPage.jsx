@@ -8,6 +8,7 @@ import StoneViewer from '@/components/product/StoneViewer.jsx';
 import { listDiamonds } from '@/lib/supabase/queries/diamonds.js';
 import { isConfigured } from '@/lib/supabase/client.js';
 import macro from '@/assets/diamonds/ngd-brilliant-macro.webp';
+import { ENQUIRY_DESK } from './siteContent.js';
 import styles from './InventoryPage.module.css';
 
 /**
@@ -73,6 +74,10 @@ export default function InventoryPage() {
             availability, videos and certificates from the desk.
           </p>
           <a href="/contact">Request current inventory →</a>
+          <p className={styles.callLine}>
+            <span>Or call the desk</span>{' '}
+            <a href={`tel:${ENQUIRY_DESK.tel}`}>{ENQUIRY_DESK.phone}</a>
+          </p>
         </div>
         <figure>
           <span className={styles.orbit} />

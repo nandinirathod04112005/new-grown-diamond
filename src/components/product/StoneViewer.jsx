@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import fallback from '@/assets/diamonds/ngd-brilliant-macro.webp';
+import { stoneEnquiryUrl } from '@/lib/whatsapp.js';
 import styles from './StoneViewer.module.css';
 
 const TABS = [
@@ -172,6 +173,26 @@ export default function StoneViewer({ stone, onClose }) {
           <div><dt>Growth</dt><dd>{stone.growth}</dd></div>
           <div><dt>Status</dt><dd>{stone.availability}</dd></div>
         </dl>
+
+        {/*
+          The modal is where someone has actually looked at the stone, so this
+          is the moment the enquiry is worth offering — and the message it
+          builds carries the same record they have just been reading, polish
+          and symmetry included, which the card's shorter summary leaves out.
+        */}
+        <div className={styles.actions}>
+          <a
+            className={styles.enquire}
+            href={stoneEnquiryUrl(stone)}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Enquire on WhatsApp →
+          </a>
+          <a className={styles.enquireAlt} href={`/contact?stone=${encodeURIComponent(stone.stockNumber)}`}>
+            Send a written enquiry
+          </a>
+        </div>
       </div>
     </div>
   );

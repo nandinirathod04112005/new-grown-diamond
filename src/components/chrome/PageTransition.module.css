@@ -52,7 +52,7 @@
      light lines when the sheet is fully closed. */
   /* A real gap between columns, so the colonnade reads as separate doorways
      rather than one lumpy sheet. */
-  margin-inline: 2px;
+  margin-inline: -1px;
 }
 
 /* The drafting grid the rest of the site is built on, so even the cover is
@@ -105,12 +105,12 @@
  * the same room. One that passes through reads as having gone somewhere.
  */
 .root[data-phase='out'] .arch {
-  animation: archUp 360ms var(--ease-strong) forwards;
+  animation: archUp calc(var(--cover-out) - 84ms) cubic-bezier(0.65, 0, 0.35, 1) both;
   animation-delay: calc(var(--i) * 42ms);
 }
 
 .root[data-phase='in'] .arch {
-  animation: archAway 520ms var(--ease-primary) forwards;
+  animation: archAway calc(var(--cover-in) - 92ms) cubic-bezier(0.22, 1, 0.36, 1) both;
   animation-delay: calc(var(--i) * 46ms);
 }
 

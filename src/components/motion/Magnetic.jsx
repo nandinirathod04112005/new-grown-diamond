@@ -19,23 +19,29 @@ export default function Magnetic({ children, radius = 110, pull = 0.32 }) {
     if (prefersReducedMotion()) return undefined;
     if (window.matchMedia?.('(pointer: coarse)').matches) return undefined;
 
-    let tx = 0, ty = 0, cx = 0, cy = 0, frame = 0;
+    let tx = 0, ty = 0, cx = 0, cy = 0, frame = 0, lastTime = 0;
 
-    const tick = () => {
-      cx += (tx - cx) * 0.16;
-      cy += (ty - cy) * 0.16;
+    const tick = (time) => {
+      const dt = lastTime ? Math.min(time - lastTime, 64) : 16.67;
+      lastTime = time;
+      const damping = 1 - Math.exp(-dt / 110);
+      cx += (tx - cx) * damping;
+      cy += (ty - cy) * damping;
       el.style.transform = `translate3d(${cx.toFixed(2)}px, ${cy.toFixed(2)}px, 0)`;
       if (Math.abs(tx - cx) > 0.05 || Math.abs(ty - cy) > 0.05) {
         frame = requestAnimationFrame(tick);
       } else {
         frame = 0;
+        lastTime = 0;
       }
     };
 
     const onMove = (e) => {
       const r = el.getBoundingClientRect();
-      const dx = e.clientX - (r.left + r.width / 2);
-      const dy = e.clientY - (r.top + r.height / 2);
+      // Measure from the resting position; moving the target must not feed
+      // back into the next pointer measurement and produce oscillation.
+      const dx = e.clientX - (r.left - cx + r.width / 2);
+      const dy = e.clientY - (r.top - cy + r.height / 2);
       const dist = Math.hypot(dx, dy);
       if (dist < radius + Math.max(r.width, r.height) / 2) {
         tx = dx * pull;

@@ -269,3 +269,27 @@
   .card { animation: none; }
   .inspect { opacity: 1; transform: none; }
 }
+
+/*
+ * The written-enquiry link.
+ *
+ * Set below `.enquire` in weight on purpose: two calls to action of equal
+ * strength on a card this size make the reader choose before they have
+ * finished reading the stone. This one is lower case and unaccented, so it
+ * reads as the alternative rather than a competitor.
+ */
+.enquireAlt {
+  margin-top: calc(var(--s-1) * -0.25);
+  font-size: var(--t-xs);
+  color: #6e6e76;
+  border-bottom: 1px solid transparent;
+  width: max-content;
+  transition: color var(--dur-base) var(--ease-primary),
+    border-color var(--dur-base) var(--ease-primary);
+}
+
+.enquireAlt:hover,
+.enquireAlt:focus-visible {
+  color: var(--gold-deep);
+  border-bottom-color: currentColor;
+}

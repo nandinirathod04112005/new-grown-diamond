@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
 import { useTilt } from '@/hooks/useTilt.js';
+import { stoneEnquiryUrl } from '@/lib/whatsapp.js';
 import fallback from '@/assets/diamonds/ngd-brilliant-macro.webp';
 import styles from './DiamondCard.module.css';
 
@@ -61,8 +62,25 @@ export default function DiamondCard({ stone, index = 0, onInspect }) {
             <div><dt>Lab</dt><dd>{stone.lab}</dd></div>
           </dl>
           <p className={styles.growth}>{stone.growth}</p>
-          <a className={styles.enquire} href={`/contact?stone=${encodeURIComponent(stone.stockNumber)}`}>
-            Enquire about this stone →
+          {/*
+            Two ways to ask, in the order people actually use them.
+
+            WhatsApp goes first because it is the one that costs the buyer
+            nothing — the message arrives already describing the stone, so
+            neither side has to retype a stock number. The form stays because
+            it is the one that leaves a record: it writes to Supabase and hands
+            back a reference, which a chat thread does not.
+          */}
+          <a
+            className={styles.enquire}
+            href={stoneEnquiryUrl(stone)}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Enquire on WhatsApp →
+          </a>
+          <a className={styles.enquireAlt} href={`/contact?stone=${encodeURIComponent(stone.stockNumber)}`}>
+            Send a written enquiry
           </a>
         </div>
       </div>

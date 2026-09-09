@@ -16,6 +16,7 @@ import DiamondCursor from '@/components/cursor/DiamondCursor.jsx';
 import ContinueNext from '@/components/chrome/ContinueNext.jsx';
 import { useRouter } from '@/lib/router.js';
 import { useScrollVelocity } from '@/hooks/useScrollVelocity.js';
+import usePageAnimations from '@/hooks/usePageAnimations.js';
 import { PAGES } from '@/pages/siteContent.js';
 import SeoHead from '@/components/seo/SeoHead.jsx';
 import Home from '@/pages/Home.jsx';
@@ -112,6 +113,7 @@ export default function App() {
    * WebGL context all survive it.
    */
   const { path, phase } = useRouter();
+  usePageAnimations(path);
 
   /*
    * One writer of scroll velocity for the whole site. Mounted here rather than

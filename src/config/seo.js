@@ -61,7 +61,12 @@ export function organizationSchema() {
     name: SITE_NAME, url: `${SITE_URL}/`, email: 'newgrowndiamonds@gmail.com', telephone: '+91-99139-99794',
     description: DEFAULT_DESCRIPTION,
     address: { '@type': 'PostalAddress', streetAddress: 'SY No. 310, 2nd Floor, Chinaiwala Complex, near Mehta Petrol Pump, Amroli Road, Katargam', addressLocality: 'Surat', addressRegion: 'Gujarat', postalCode: '395004', addressCountry: 'IN' },
-    contactPoint: { '@type': 'ContactPoint', telephone: '+91-99139-99794', email: 'newgrowndiamonds@gmail.com', contactType: 'sales', areaServed: 'Worldwide' },
+    /* Two points, because they are answered for different things. Both are
+       real published numbers; nothing here is inferred. */
+    contactPoint: [
+      { '@type': 'ContactPoint', telephone: '+91-7339220840', contactType: 'sales', areaServed: 'Worldwide', availableLanguage: ['en', 'hi', 'gu'] },
+      { '@type': 'ContactPoint', telephone: '+91-99139-99794', email: 'newgrowndiamonds@gmail.com', contactType: 'sales', areaServed: 'Worldwide' },
+    ],
   };
 }
 

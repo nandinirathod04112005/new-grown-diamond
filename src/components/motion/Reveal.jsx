@@ -53,7 +53,8 @@ export default function Reveal({ children, as: Tag = 'div', className, delay = 0
     // callback, and the content would then stay invisible for good. This rides
     // the page's existing scroll subscription rather than adding a listener per
     // section, and unsubscribes the moment it fires.
-    const stop = onPageProgress(() => {
+    let stop = () => {};
+    stop = onPageProgress(() => {
       if (el.dataset.reveal === 'in') {
         stop();
         return;
@@ -76,7 +77,7 @@ export default function Reveal({ children, as: Tag = 'div', className, delay = 0
        ARIA to the revealed element. Without this they were accepted at the
        call site and then silently dropped, which is the worst of both: no
        error, no effect. */
-    <Tag ref={ref} className={className} style={{ '--reveal-delay': `${delay}ms` }} {...rest}>
+    <Tag ref={ref} data-motion-reveal="" className={className} style={{ '--reveal-delay': `${delay}ms` }} {...rest}>
       {children}
     </Tag>
   );

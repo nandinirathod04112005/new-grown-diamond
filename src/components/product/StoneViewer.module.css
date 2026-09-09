@@ -167,3 +167,48 @@
   .scrim, .panel { animation: none; }
   .zoomStage img { transition: none; }
 }
+
+/*
+ * The enquiry row, below the specification table.
+ *
+ * A flex row that wraps rather than a grid: the two labels are different
+ * lengths in every language, and at narrow widths the second should drop
+ * under the first instead of both being squeezed into equal columns.
+ */
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-3) var(--s-5);
+  margin-top: var(--s-4);
+  padding-top: var(--s-4);
+  border-top: 1px solid var(--ink-line);
+}
+
+.actions .enquire {
+  font-size: var(--t-xs);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold-lift);
+  border-bottom: 1px solid var(--gold);
+  padding-bottom: 0.35rem;
+  transition: border-color var(--dur-base) var(--ease-primary);
+}
+
+.actions .enquire:hover,
+.actions .enquire:focus-visible { border-bottom-color: var(--gold-lift); }
+
+.actions .enquireAlt {
+  font-size: var(--t-xs);
+  color: var(--slate);
+  border-bottom: 1px solid transparent;
+  padding-bottom: 0.35rem;
+  transition: color var(--dur-base) var(--ease-primary),
+    border-color var(--dur-base) var(--ease-primary);
+}
+
+.actions .enquireAlt:hover,
+.actions .enquireAlt:focus-visible {
+  color: var(--text);
+  border-bottom-color: currentColor;
+}

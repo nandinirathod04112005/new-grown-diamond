@@ -57,3 +57,44 @@
 @media (prefers-reduced-motion: reduce) {
   .skeleton { animation: none; }
 }
+
+/*
+ * The enquiry line.
+ *
+ * Scoped this tightly on purpose. The hero already claims every paragraph it
+ * contains — `.hero>div>p:not(.u-eyebrow)` sets body size, and `.hero a` makes
+ * every link an uppercase, letter-spaced call to action. A bare `.callLine`
+ * lost to both, and the result was a phone NUMBER set smaller than the words
+ * introducing it. Matching the parent selector's shape is what puts this on
+ * equal specificity, and being later in the file settles the tie.
+ *
+ * The lead-in is muted with opacity rather than a colour, because this line
+ * appears over surfaces that swap with the theme; a hardcoded grey that reads
+ * as quiet on one becomes unreadable on the other.
+ */
+.hero > div > p.callLine {
+  max-width: none;
+  font-size: var(--t-base);
+  line-height: 1.6;
+  color: var(--text);
+}
+
+.hero > div > p.callLine span { opacity: 0.62; }
+
+.hero > div > p.callLine a {
+  width: auto;
+  padding-bottom: 0;
+  border-bottom: 1px solid transparent;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: inherit;
+  color: var(--gold-lift);
+  /* A phone number is read digit by digit; tabular figures stop the eye
+     tripping over a narrow 1 between two wide zeros. */
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  transition: border-color 160ms ease;
+}
+
+.hero > div > p.callLine a:hover,
+.hero > div > p.callLine a:focus-visible { border-bottom-color: currentColor; }

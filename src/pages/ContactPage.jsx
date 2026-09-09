@@ -3,7 +3,8 @@ import stoneInHand from '@/assets/company/custom-jewellery-optimized.jpg';
 import PageHero from '@/components/layout/PageHero.jsx';
 import { isConfigured } from '@/lib/supabase/client.js';
 import { createEnquiry, productRequestFromSearch } from '@/lib/supabase/queries/enquiries.js';
-import { OFFICES } from './siteContent.js';
+import { enquiryFollowUpUrl } from '@/lib/whatsapp.js';
+import { ENQUIRY_DESK, OFFICES } from './siteContent.js';
 import styles from './UtilityPages.module.css';
 
 const SUBJECTS = [
@@ -46,7 +47,15 @@ export default function ContactPage() {
 
     setBusy(true);
     try {
-      const publicId = await createEnquiry({
+      /*
+       * Read into a payload FIRST, and keep it.
+       *
+       * The hand-off below has to say the same thing the stored enquiry says,
+       * and `form.reset()` two lines down empties the fields — so reading them
+       * a second time to build the message would produce an empty one. Same
+       * object, both destinations.
+       */
+      const payload = {
         fullName: String(values.get('name')).trim(),
         companyName: String(values.get('company')).trim(),
         email: String(values.get('email')).trim(),
@@ -54,11 +63,21 @@ export default function ContactPage() {
         country: String(values.get('country')).trim(),
         subject: String(values.get('enquiryType')).trim(),
         message: String(values.get('brief')).trim(),
-      }, request);
+      };
+      const publicId = await createEnquiry(payload, request);
 
       form.reset();
       setTried(false);
-      setStatus({ tone: 'good', text: `Thank you — enquiry ${publicId} has been received.` });
+      setStatus({
+        tone: 'good',
+        text: `Thank you — enquiry ${publicId} has been received.`,
+        /*
+         * Offered, never opened for them. Firing a window at WhatsApp off the
+         * back of a form submit is both a popup blocker's problem and a rude
+         * surprise for someone who chose the written route on purpose.
+         */
+        whatsapp: enquiryFollowUpUrl({ ...payload, reference: publicId, product: request }),
+      });
     } catch (error) {
       console.error('[NGD enquiry]', error);
       setStatus({
@@ -82,6 +101,13 @@ export default function ContactPage() {
         imageAlt="A loose polished diamond held in tweezers above an open hand." 
         action={{ href: '#enquiry', label: 'Start an enquiry' }}
       />
+      {/* Ahead of the office directory: someone who wants to talk to a person
+          should not have to work out which of four cities to try first. */}
+      <p className={styles.enquiryLine}>
+        <span>{ENQUIRY_DESK.label}</span>
+        <a href={`tel:${ENQUIRY_DESK.tel}`}>{ENQUIRY_DESK.phone}</a>
+      </p>
+
       <div className={styles.offices}>
         {OFFICES.map((office, index) => (
           <article key={office.city} className={styles.office}>
@@ -176,6 +202,16 @@ export default function ContactPage() {
             >
               {status?.text ?? ''}
             </p>
+            {status?.whatsapp && (
+              <a
+                className={styles.waFollow}
+                href={status.whatsapp}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Continue on WhatsApp <span aria-hidden="true">→</span>
+              </a>
+            )}
           </div>
         </form>
       </section>

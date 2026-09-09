@@ -53,16 +53,32 @@ export function ParallaxMedia({ children, strength = 36, className = '' }) {
     if (reduced) return undefined;
     const node = ref.current;
     let frame = 0;
+    let offset = 0;
+    let visible = false;
     const update = () => {
-      const box = node.getBoundingClientRect();
-      const progress = (box.top + box.height / 2 - innerHeight / 2) / innerHeight;
-      node.style.setProperty('--parallax-y', `${(-progress * strength).toFixed(2)}px`);
       frame = 0;
+      if (!visible) return;
+      const box = node.getBoundingClientRect();
+      // Subtract our own translation so parallax cannot feed back into itself.
+      const progress = (box.top - offset + box.height / 2 - innerHeight / 2) / innerHeight;
+      offset = -Math.max(-1, Math.min(1, progress)) * strength;
+      node.style.setProperty('--parallax-y', `${offset.toFixed(2)}px`);
     };
-    const scroll = () => { if (!frame) frame = requestAnimationFrame(update); };
-    update();
+    const scroll = () => { if (visible && !frame) frame = requestAnimationFrame(update); };
+    const observer = new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+      scroll();
+    }, { rootMargin: '100px' });
+    observer.observe(node);
     addEventListener('scroll', scroll, { passive: true });
-    return () => { removeEventListener('scroll', scroll); cancelAnimationFrame(frame); };
+    addEventListener('resize', scroll, { passive: true });
+    return () => {
+      observer.disconnect();
+      removeEventListener('scroll', scroll);
+      removeEventListener('resize', scroll);
+      cancelAnimationFrame(frame);
+      node.style.removeProperty('--parallax-y');
+    };
   }, [reduced, strength]);
   return <div ref={ref} className={`${styles.parallax} ${className}`}>{children}</div>;
 }

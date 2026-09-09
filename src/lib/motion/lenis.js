@@ -1,6 +1,6 @@
 import Lenis from 'lenis';
 
-import { gsap } from './gsap.js';
+import { gsap, ScrollTrigger } from './gsap.js';
 import { prefersReducedMotion } from './media.js';
 
 /**
@@ -30,7 +30,7 @@ export function createSmoothScroll() {
   }
 
   const lenis = new Lenis({
-    duration: 1.05,
+    duration: 0.85,
     easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
     smoothWheel: true,
     syncTouch: false,
@@ -43,10 +43,21 @@ export function createSmoothScroll() {
   gsap.ticker.add(raf);
   gsap.ticker.lagSmoothing(0);
 
+  /*
+   * ScrollTrigger reads window.scrollY, and Lenis moves the page without the
+   * browser firing a native scroll event ScrollTrigger would notice in time.
+   * Without this line a pinned section lags the smoother by a frame or two and
+   * visibly judders. A scrollerProxy is NOT needed on top of it: Lenis is
+   * scrolling the window here, not a custom container.
+   */
+  const sync = () => ScrollTrigger.update();
+  lenis.on('scroll', sync);
+
   return {
     lenis,
     destroy() {
       if (active === lenis) active = null;
+      lenis.off('scroll', sync);
       gsap.ticker.remove(raf);
       gsap.ticker.lagSmoothing(500, 33);
       lenis.destroy();

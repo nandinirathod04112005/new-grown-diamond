@@ -134,6 +134,25 @@ export const FAQS = [
   ['Can the origin be verified?', 'A grading report identifies the diamond and records whether its origin is laboratory-grown. Certificates and videos are available for inventory inspection.'],
 ];
 
+/**
+ * The enquiry line.
+ *
+ * Separate from OFFICES on purpose: those are four PLACES, each with its own
+ * address and its own local number, and the contact page renders them as a
+ * directory. This is one line answered for two specific things — sourcing a
+ * diamond, and having a piece made around one — so it belongs wherever either
+ * of those is being asked for, not only on the contact page.
+ *
+ * `tel` is the dialable form and `phone` the readable one; they are kept as
+ * separate fields rather than derived, because stripping spaces out of a
+ * printed number is a guess about formatting and this way the href is stated.
+ */
+export const ENQUIRY_DESK = {
+  phone: '+91 733 922 0840',
+  tel: '+917339220840',
+  label: 'Diamond and custom jewellery enquiries',
+};
+
 export const OFFICES = [
   { city: 'Surat', address: 'SY No. 310, 2nd Floor, Chinaiwala Complex, near Mehta Petrol Pump, Amroli Road, Katargam, Surat 395004', phone: '+91 99139 99794', tel: '+919913999794', email: 'newgrowndiamonds@gmail.com' },
   { city: 'Mumbai', address: 'GW-2100, 2nd Floor, Bharat Diamond Bourse, BKC, Mumbai 400051', phone: '+91 87992 36510', tel: '+918799236510', email: 'newgrowndiamonds@gmail.com' },
