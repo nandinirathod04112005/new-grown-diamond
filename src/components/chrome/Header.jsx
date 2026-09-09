@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import ThemeToggle from './ThemeToggle.jsx';
 import LanguageSwitch from './LanguageSwitch.jsx';
-import { useT } from '@/i18n/LocaleProvider.jsx';
+import { useT } from '@/i18n/localeContext.js';
 import NavMenu from './NavMenu.jsx';
 import { EDUCATION_TOPICS } from '@/pages/siteContent.js';
 

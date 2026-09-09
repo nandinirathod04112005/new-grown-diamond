@@ -1,5 +1,5 @@
 import { ENQUIRY_DESK } from '@/pages/siteContent.js';
-import { useT } from '@/i18n/LocaleProvider.jsx';
+import { useT } from '@/i18n/localeContext.js';
 import styles from './Footer.module.css';
 
 export default function Footer(){const t=useT();return <footer className={styles.root}>

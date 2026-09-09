@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Check, Globe } from 'lucide-react';
 
 import { LOCALES, LOCALE_CODES } from '@/i18n/locales.js';
-import { useLocale } from '@/i18n/LocaleProvider.jsx';
+import { useLocale } from '@/i18n/localeContext.js';
 import styles from './LanguageSwitch.module.css';
 
 /**

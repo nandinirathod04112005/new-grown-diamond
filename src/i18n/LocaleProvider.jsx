@@ -1,25 +1,18 @@
-import { createContext, useContext, useEffect, useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 
 import { DEFAULT_LOCALE, LOCALES, localePath } from './locales.js';
 import en from './dictionary/en.js';
+import { LocaleContext, interpolate, lookup } from './localeContext.js';
 import hi from './dictionary/hi.js';
 import gu from './dictionary/gu.js';
 
 const DICTIONARIES = { en, hi, gu };
 
-const LocaleContext = createContext(null);
 
 /* Where the visitor's choice is remembered. Only used to decide where a link
    from outside should land, never to override a URL they actually opened. */
 export const LOCALE_KEY = 'ngd-locale';
 
-/**
- * Walks a dotted key. Returns undefined rather than throwing on a miss, so a
- * key that has not been translated yet degrades to the English one.
- */
-function lookup(dict, key) {
-  return key.split('.').reduce((node, part) => (node == null ? undefined : node[part]), dict);
-}
 
 /**
  * The language everything reads from.
@@ -56,10 +49,9 @@ export function LocaleProvider({ locale = DEFAULT_LOCALE, path = '/', children }
         if (import.meta.env.DEV) console.error(`[i18n] key not in any dictionary: ${key}`);
         return key;
       }
-      if (!vars) return str;
-      /* {name}-style placeholders. Values are inserted as TEXT by React
-         wherever this lands, so there is no markup path here. */
-      return String(str).replace(/\{(\w+)\}/g, (m, k) => (k in vars ? String(vars[k]) : m));
+      /* One implementation of placeholder filling, shared with the
+         outside-the-provider fallback in localeContext.js. */
+      return interpolate(str, vars);
     };
 
     return {
@@ -104,31 +96,3 @@ export function LocaleProvider({ locale = DEFAULT_LOCALE, path = '/', children }
   return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>;
 }
 
-/**
- * Read the language.
- *
- * Falls back to a working English translator when used outside the provider,
- * so a component rendered in isolation — a test, an error boundary, a page
- * that has not been wrapped yet — renders English rather than crashing.
- */
-export function useLocale() {
-  const ctx = useContext(LocaleContext);
-  if (ctx) return ctx;
-  return {
-    locale: DEFAULT_LOCALE,
-    meta: LOCALES[DEFAULT_LOCALE],
-    t: (key, vars) => {
-      const str = lookup(en, key);
-      if (str == null) return key;
-      return vars ? String(str).replace(/\{(\w+)\}/g, (m, k) => (k in vars ? String(vars[k]) : m)) : str;
-    },
-    has: (key) => lookup(en, key) != null,
-    href: (p) => p,
-    switchTo: () => '/',
-  };
-}
-
-/** The common case: just the translator. */
-export function useT() {
-  return useLocale().t;
-}
