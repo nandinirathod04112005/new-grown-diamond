@@ -20,10 +20,11 @@ import { registerAdmin } from '@/lib/supabase/registerAdmin.js';
  *
  *   Customer: supabase.auth.signUp() and nothing else. The name travels as
  *   `options.data.full_name`; the profiles row is written by the database's
- *   own trigger with role = 'customer', and nothing the browser sends can
- *   change that. With email confirmation on, no session comes back and the
- *   person is told to check their email; with it off, one does and they are
- *   carried into the account.
+ *   sign-up trigger (supabase/migrations/0003 if the project has none) with
+ *   role = 'customer', and nothing the browser sends can change that. With
+ *   email confirmation on, no session comes back and the person is told to
+ *   check their email; with it off, one does and they are carried into the
+ *   account.
  *
  *   Administrator: the `register-admin` Edge Function (see
  *   lib/supabase/registerAdmin.js). The staff code is checked THERE, against
@@ -177,10 +178,13 @@ export default function RegisterPage() {
      * say nothing the server does not say better, and would block a correct
      * code whenever the two were set differently.
      */
-    const name = requiredError(fullName, 'full name') ?? (fullName.trim().length < 2 ? 'Enter your full name.' : null);
+    /* Two characters is the staff function's rule; a customer's name is
+       whatever they gave, as it always was. */
+    const name = requiredError(fullName, 'full name')
+      ?? (kind === 'admin' && fullName.trim().length < 2 ? 'Enter your full name.' : null);
     const checks = kind === 'admin'
       ? [
-          ['code', requiredError(code, 'staff access code')],
+          ['code', code.trim() ? null : 'Enter the staff access code.'],
           ['fullName', name],
           ['email', emailError(email)],
           ['phone', requiredError(phone, 'phone number')],
@@ -522,6 +526,7 @@ export default function RegisterPage() {
                   name="accountKind"
                   value={value}
                   checked={kind === value}
+                  disabled={busy}
                   onChange={() => { setKind(value); setError(''); setFieldErrors({}); }}
                 />
                 <span className={styles.kindTitle}>{title}</span>
@@ -546,8 +551,6 @@ export default function RegisterPage() {
             /* Not `one-time-code`: that invites the browser to offer an SMS
                passcode, which this is not. `off` keeps managers out of it. */
             autoComplete="off"
-            inputMode="numeric"
-            placeholder="••••••"
             hint="Ask an existing administrator. The code is checked on the server before a staff account is created."
             onChange={(e) => { setCode(e.target.value); setError(''); clear('code'); }}
           />

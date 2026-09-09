@@ -94,10 +94,10 @@ export default function RequireAdmin({ children }) {
   if (!unlocked) {
     return (
       <main className={styles.gate}>
-        <h1>Staff code</h1>
-        <p>Enter the access code to open the inventory desk.</p>
+        <h1>Desk unlock code</h1>
+        <p>This is the desk's own lock, separate from the code you registered with. Ask an administrator for it.</p>
         <form className={styles.codeForm} onSubmit={submitCode}>
-          <label className="u-visually-hidden" htmlFor="admin-code">Staff access code</label>
+          <label className="u-visually-hidden" htmlFor="admin-code">Desk unlock code</label>
           <input
             id="admin-code"
             ref={codeField}

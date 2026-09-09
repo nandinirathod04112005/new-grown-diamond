@@ -12,13 +12,14 @@ import { supabase } from './client.js';
  * environment (ADMIN_SIGNUP_CODE), creates the auth user with the service
  * role — already confirmed, so no email is involved — and writes the profiles
  * row with role = 'admin'. Five wrong codes from one address block it for
- * fifteen minutes. Source: supabase/functions/register-admin.
+ * fifteen minutes (once the source in supabase/functions/register-admin is
+ * the deployed version — see its README).
  *
  * The staff code that ships in this bundle (lib/adminCode.js) is NOT what is
  * checked here. That one only opens the desk in a browser that already holds
  * an admin session; this one is the server's, and it is in no file the
- * browser can read. They can be set to the same value; they are still two
- * different checks in two different places.
+ * browser can read — and it must not be the same value, because this one is
+ * public and that one is the whole grant. Choose it long and random.
  *
  * An earlier version put staff sign-ups through signUp() and wrote a note to
  * the enquiries queue. Every staff account came out a customer and stayed one,
@@ -85,5 +86,8 @@ export async function registerAdmin({ email, password, fullName, phone, country,
     throw new RegisterAdminError('network', 'Unable to connect. Check your internet connection and try again.');
   }
   if (status === 404) throw new RegisterAdminError('not_deployed', MESSAGES.service_unavailable);
+  /* The gateway, not the function: it was deployed with JWT verification on,
+     and a sign-up has no JWT to offer. */
+  if (status === 401) throw new RegisterAdminError('gateway', 'Staff registration is not set up correctly on this deployment: the site key was refused. Ask the site owner to deploy the register-admin function with JWT verification off.');
   throw new RegisterAdminError('unknown', MESSAGES.registration_failed);
 }

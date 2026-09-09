@@ -1,9 +1,11 @@
 -- =============================================================================
 -- Rate-limit table for the register-admin Edge Function.
 --
--- STATUS: ALREADY APPLIED on the live project (the function answers
--- 403 invalid_admin_code, which requires this table). Kept here so the repo
--- carries the whole of what staff registration depends on. Re-runnable.
+-- STATUS: NOT VERIFIED on the live project. A 403 from the function proves
+-- its secrets are present, not that this table exists. Check in Dashboard >
+-- SQL Editor:  select count(*) from public.admin_signup_attempts;
+-- and run this file if that errors. Re-runnable. Without the table the
+-- function refuses every request (503) rather than skipping the limit.
 --
 -- No anon/authenticated policies on purpose: only the function's service-role
 -- client reads or writes it.

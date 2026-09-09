@@ -1,0 +1,4 @@
+[functions.register-admin]
+# Registration has no session yet. Authorization is instead enforced by the
+# server-only signup code and the durable attempt limiter in this function.
+verify_jwt = false

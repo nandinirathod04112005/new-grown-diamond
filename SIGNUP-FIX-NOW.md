@@ -98,15 +98,30 @@ note लिखता था, role कोई नहीं बदलता था�
    `profiles.role = 'admin'` लिखता है। कोई email नहीं जाता।
 3. उसी email/password से तुरंत sign-in होकर `/admin` खुल जाता है।
 
-**कौन-सा code चलेगा?** Server वाला secret `ADMIN_SIGNUP_CODE` — यह `VITE_ADMIN_CODE` (123456)
-नहीं है; वह सिर्फ़ browser में desk खोलने का lock है। अगर register पर "That staff code is not
-correct." आए, तो secret वही रखें जो आप चाहते हैं:
+**कौन-सा code चलेगा?** Server वाला secret `ADMIN_SIGNUP_CODE`। यह `VITE_ADMIN_CODE` (123456)
+**नहीं** है, और उसके बराबर भी **नहीं** होना चाहिए — 123456 हर visitor को site के JavaScript में
+दिखता है, जबकि `ADMIN_SIGNUP_CODE` admin बनाने की पूरी चाबी है। लंबा, random code रखें और उसे
+कहीं लिखें नहीं (इस file में भी नहीं)। Set करने का तरीका — prompt पर type होगा, shell history में
+नहीं जाएगा:
 
 ```sh
-supabase secrets set ADMIN_SIGNUP_CODE=123456
+read -rsp "Admin signup code: " ADMIN_SIGNUP_CODE && echo
+supabase secrets set ADMIN_SIGNUP_CODE="$ADMIN_SIGNUP_CODE"
+unset ADMIN_SIGNUP_CODE
 ```
 
-Redeploy ज़रूरी नहीं। 5 गलत कोशिशों पर 15 मिनट का block है (`admin_signup_attempts` table)।
+Secret बदलने पर redeploy ज़रूरी नहीं। **लेकिन function एक बार redeploy ज़रूर करें** — repo में
+`supabase/functions/register-admin/index.ts` का guess-limiter ठीक किया गया है (deployed पुराना
+version हर नए email पर 5 नई कोशिशें दे देता था):
+
+```sh
+supabase functions deploy register-admin
+```
+
+`supabase/config.toml` में `verify_jwt = false` रखा है — register के समय कोई session नहीं होता, इसलिए
+यह ज़रूरी है। एक IP से 5 गलत कोशिशों पर 15 मिनट का block है (`admin_signup_attempts` table —
+Dashboard → SQL Editor में `select count(*) from public.admin_signup_attempts;` से check करें; न हो
+तो `supabase/migrations/0004_admin_signup_attempts.sql` चलाएँ)।
 
 **Login:** admin से sign-in करने पर अब सीधे `/admin` खुलता है; customer `/account` पर। `/admin` पर
 desk का code एक बार माँगा जाता है — यह browser का lock है, role हमेशा database से आता है।

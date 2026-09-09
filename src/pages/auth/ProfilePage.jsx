@@ -94,11 +94,11 @@ export default function ProfilePage() {
   }
 
   /*
-   * An administrator landing here is the NORMAL case after sign-in, not a
-   * failure. It rendered as "Customer workspace unavailable" with an
-   * error-toned notice — every staff sign-in ended on a page that looked like
-   * something had gone wrong. It is the same branch, worded for who is
-   * actually standing there.
+   * An administrator can land here — from a bookmark, the account link, or a
+   * sign-in whose profile read failed and fell back to /account — and that is
+   * not a failure. It rendered as "Customer workspace unavailable" with an
+   * error-toned notice, as if something had gone wrong. It is the same
+   * branch, worded for who is actually standing there.
    */
   if (!activeCustomer && isAdmin) {
     return (

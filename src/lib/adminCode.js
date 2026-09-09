@@ -20,8 +20,8 @@
  * THE SIGN-UP FORM DOES NOT USE THIS VALUE. What is typed there goes to the
  * `register-admin` Edge Function, which checks it against its own secret
  * (ADMIN_SIGNUP_CODE, set on the server and in no file the browser can read)
- * and writes the profiles row itself. The two may be set to the same digits;
- * they are still two checks in two places, and only the server's one grants.
+ * and writes the profiles row itself. They must NOT be the same value: this
+ * one is public, and the server's one is the whole grant.
  *
  * What this one is genuinely good for: it stops the desk being opened by
  * accident on a shared machine. What it is not: a second factor. If it needs

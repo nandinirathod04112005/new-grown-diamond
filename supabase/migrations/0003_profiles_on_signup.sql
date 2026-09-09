@@ -49,9 +49,10 @@ begin
     -- The name the sign-up form put in user_metadata. Nullable: an account
     -- created by other means has no metadata and must still get a row.
     nullif(trim(coalesce(new.raw_user_meta_data ->> 'full_name', '')), ''),
-    -- ALWAYS 'customer'. Never read from metadata. The sign-up form writes
-    -- `requested_role`, deliberately not `role`, precisely so that nothing
-    -- here can be talked into granting admin by a value the browser sent.
+    -- ALWAYS 'customer'. Never read from metadata: the sign-up form sends
+    -- only full_name, and nothing here can be talked into granting admin by
+    -- a value the browser sent. Staff accounts are created by the
+    -- register-admin Edge Function, which writes its own row.
     'customer',
     'active'
   )
