@@ -133,3 +133,28 @@ Any customer who is stuck can be activated by hand:
 **Dashboard → Authentication → Users** → find them → **⋮** → *Confirm email*.
 
 They can then sign in normally with the password they chose.
+
+## Where a `/auth/v1/magiclink` request comes from
+
+Not from this app. supabase-js 2.112 has no code path to `/magiclink` (its OTP
+method posts to `/otp`), and the built app — driven through sign-up, sign-in,
+resend and forgot-password with every request logged — calls only `/signup`,
+`/token`, `/resend` (on the Resend button) and `/recover`. The word `magiclink`
+does not occur in the source, the bundle, or the git history.
+
+A `POST /auth/v1/magiclink` therefore comes from another client: the Supabase
+Dashboard's **Users → Send magic link** action, a supabase-js v1 client, or a
+hand-typed request. In Dashboard → Logs → Auth, filter path `/magiclink` and
+read the user-agent and referer on the hit. "Error sending confirmation email"
+on that request means the project's mailer failed — the same mailer this
+document is about.
+
+## Staff accounts
+
+"Administrator" on the sign-up form does not go through `signUp()`. It calls
+the `register-admin` Edge Function (`supabase/functions/register-admin`), which
+checks the staff code against the server-side secret `ADMIN_SIGNUP_CODE`,
+creates the user already confirmed — no email involved — and writes
+`profiles.role = 'admin'`. The form then signs in and opens `/admin`. Sign-in
+sends active administrators to `/admin` directly; everyone else lands on
+`/account`.

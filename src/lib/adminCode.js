@@ -12,17 +12,20 @@
  *
  * Being an administrator here means one thing only: a row in public.profiles
  * with role = 'admin' and account_status = 'active', which is protected by
- * row-level security in the database. Typing the code into the sign-up form
- * does not write that row, and typing it into the gate does not create it.
- * Someone who knows the code but has no such row still sees nothing, because
- * every admin query is refused at the database, not at the screen.
+ * row-level security in the database. Typing this code into the gate does not
+ * create that row. Someone who knows the code but has no such row still sees
+ * nothing, because every admin query is refused at the database, not at the
+ * screen.
  *
- * What it is genuinely good for: it stops the desk being opened by accident on
- * a shared machine, and it keeps the admin sign-up path out of casual reach.
- * What it is not: a second factor. If this needs to be a real one, the check
- * has to move to the server — an Edge Function that validates a secret the
- * browser never sees, or Supabase MFA — and this file should be deleted when
- * that lands.
+ * THE SIGN-UP FORM DOES NOT USE THIS VALUE. What is typed there goes to the
+ * `register-admin` Edge Function, which checks it against its own secret
+ * (ADMIN_SIGNUP_CODE, set on the server and in no file the browser can read)
+ * and writes the profiles row itself. The two may be set to the same digits;
+ * they are still two checks in two places, and only the server's one grants.
+ *
+ * What this one is genuinely good for: it stops the desk being opened by
+ * accident on a shared machine. What it is not: a second factor. If it needs
+ * to be a real one, that means Supabase MFA, and this file goes.
  *
  * The value is read from the environment so it can be rotated without a code
  * change, but note that VITE_ prefixed variables are also compiled into the

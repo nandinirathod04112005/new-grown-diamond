@@ -108,10 +108,10 @@ export default {
     customer: 'Customer',
     customerBlurb: 'Browse stock, send enquiries, keep your reports.',
     administrator: 'Administrator',
-    administratorBlurb: 'Staff only. Needs the access code.',
+    administratorBlurb: 'Staff only. Needs the staff access code.',
     staffCode: 'Staff access code',
     staffCodeHint:
-      'Ask an existing administrator. Staff access is confirmed in the database afterwards — this code only opens the request.',
+      'Ask an existing administrator. The code is checked on the server before a staff account is created.',
     minChars: 'At least {n} characters.',
     showPassword: 'Show password',
     hidePassword: 'Hide password',

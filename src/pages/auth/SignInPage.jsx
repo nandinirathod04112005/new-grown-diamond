@@ -9,6 +9,7 @@ import TextField from './TextField.jsx';
 import { emailError, firstError, normalizeEmail, passwordError, toMap } from './validation.js';
 import styles from './Auth.module.css';
 import { authErrorMessage } from './authErrors.js';
+import { loginDestination } from '@/lib/supabase/loginDestination.js';
 
 /**
  * Sign in.
@@ -18,12 +19,11 @@ import { authErrorMessage } from './authErrors.js';
  * oracle that will confirm, one guess at a time, which of a list of email
  * addresses hold accounts here.
  *
- * Everyone lands on /account afterwards. The role is not known at the moment
- * the session arrives — the profile row has not been read yet — so guessing
- * "admin" here and bouncing a customer through the desk would be worse than
- * one extra click. The account page reads the profile and offers the desk
- * link when the person turns out to be an administrator; the admin route
- * re-checks the role itself, and RLS is what actually enforces it.
+ * Where they land afterwards depends on the profile row, read once the
+ * session exists (lib/supabase/loginDestination.js): an active administrator
+ * goes straight to the desk at /admin, everyone else to /account. That is
+ * navigation only — the admin route re-checks the role, the desk asks for the
+ * staff code, and RLS is what actually enforces it.
  */
 export default function SignInPage() {
   const { status, isAdmin, profile, signOut } = useAuth();
@@ -140,11 +140,7 @@ export default function SignInPage() {
         return;
       }
 
-      // The session is live but the profile row has not been read yet, so the
-      // role is not known here. Sending everyone to /account and letting that
-      // page offer the admin link avoids guessing wrong and bouncing an admin
-      // through a page they did not want.
-      window.location.assign(data.session ? '/account' : '/login');
+      window.location.assign(await loginDestination(supabase, data.session));
     } catch (err) {
       setError(authErrorMessage(err, 'Sign-in could not be completed. Please try again.'));
     } finally {

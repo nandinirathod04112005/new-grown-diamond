@@ -86,3 +86,48 @@ Dashboard → **SQL Editor** → उस file का पूरा content paste �
 Dashboard → **Authentication** → **Users** → उनका नाम ढूंढें → **⋮** → **Confirm email**
 
 फिर वो अपने पासवर्ड से login कर पाएँगे।
+
+## Admin (staff) account कैसे बनता है — अब असली admin बनता है
+
+पहले "Administrator" चुनकर register करने पर account **customer** ही बनता था — form सिर्फ़ एक
+note लिखता था, role कोई नहीं बदलता था। अब:
+
+1. Register page पर **Administrator** चुनें; staff code, नाम, email, phone, country और password भरें।
+2. Form `register-admin` Edge Function को call करता है (आपके project पर deployed और configured है —
+   जाँच लिया)। वही code को **server पर** check करता है, account को confirmed बनाता है और
+   `profiles.role = 'admin'` लिखता है। कोई email नहीं जाता।
+3. उसी email/password से तुरंत sign-in होकर `/admin` खुल जाता है।
+
+**कौन-सा code चलेगा?** Server वाला secret `ADMIN_SIGNUP_CODE` — यह `VITE_ADMIN_CODE` (123456)
+नहीं है; वह सिर्फ़ browser में desk खोलने का lock है। अगर register पर "That staff code is not
+correct." आए, तो secret वही रखें जो आप चाहते हैं:
+
+```sh
+supabase secrets set ADMIN_SIGNUP_CODE=123456
+```
+
+Redeploy ज़रूरी नहीं। 5 गलत कोशिशों पर 15 मिनट का block है (`admin_signup_attempts` table)।
+
+**Login:** admin से sign-in करने पर अब सीधे `/admin` खुलता है; customer `/account` पर। `/admin` पर
+desk का code एक बार माँगा जाता है — यह browser का lock है, role हमेशा database से आता है।
+
+**पुराना "admin" account जो customer बन गया था:** Dashboard → SQL Editor में
+`update public.profiles set role = 'admin', account_status = 'active' where email = '...';`
+चलाएँ, या उस user को delete करके दोबारा Administrator से register करें।
+
+## `/auth/v1/magiclink` कहाँ से आ रहा है
+
+इस codebase से नहीं। supabase-js 2.112 के पास `/magiclink` endpoint है ही नहीं (OTP के लिए `/otp`
+है), और पूरे workspace, built bundle और git history में `magiclink` / `signInWithOtp` कहीं नहीं
+है — तीन अलग तरीकों से जाँचा (source, built app को browser में चलाकर हर request log करके, history)।
+App सिर्फ़ `/signup`, `/token`, `/resend` (Resend बटन पर) और `/recover` call करता है।
+
+वह request Supabase Dashboard → Authentication → Users → **Send magic link** से आती है (या किसी
+hand-typed REST call से)। Dashboard → Logs → Auth में path `/magiclink` filter करके user-agent /
+referer देखें। "Error sending confirmation email" का मतलब project का mailer fail हुआ — app का
+इससे लेना-देना नहीं।
+
+**Confirm email अभी भी ON है** (`/auth/v1/settings` → `mailer_autoconfirm: false`, आज जाँचा)।
+App `.env.local` से hosted project `lkokikjyiohpodhcmjzw` पर ही चलता है — कोई local Supabase नहीं
+है। इसलिए customer sign-up अभी भी email माँगेगा; ऊपर वाली एक setting OFF करें। जो user unconfirmed
+पड़ा है वह उसी ON setting के समय बना था।

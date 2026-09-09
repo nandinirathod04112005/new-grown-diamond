@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { supabase, isConfigured } from '@/lib/supabase/client.js';
-import { isAdminCode, unlockAdmin } from '@/lib/adminCode.js';
+import { unlockAdmin } from '@/lib/adminCode.js';
 import { useAuth } from '@/hooks/useAuth.js';
 import AuthShell from './AuthShell.jsx';
 import PasswordField from './PasswordField.jsx';
@@ -11,21 +11,31 @@ import styles from './Auth.module.css';
 import { authErrorMessage, isEmailDeliveryFailure } from './authErrors.js';
 import { authRedirectTo } from '@/lib/supabase/authRedirect.js';
 import { createEnquiry } from '@/lib/supabase/queries/enquiries.js';
+import { registerAdmin } from '@/lib/supabase/registerAdmin.js';
 
 /**
  * Create an account.
  *
- * The name is passed as `options.data.full_name`, which Supabase stores on the
- * auth user's own metadata. That needs no table and no schema change — which
- * matters here, because this project is explicitly not allowed to alter the
- * database. If a trigger populates public.profiles from that metadata it will
- * pick the name up; if not, the profile page lets them set it directly.
+ * TWO KINDS, TWO ROUTES TO THE SERVER — deliberately not the same call.
  *
- * A project may or may not require email confirmation, and the two outcomes
- * look completely different to the person who just pressed the button. Both
- * are handled explicitly, and the message says which one happened. Telling
- * someone they are signed in when a confirmation email is sitting unopened is
- * how an account page becomes a support ticket.
+ *   Customer: supabase.auth.signUp() and nothing else. The name travels as
+ *   `options.data.full_name`; the profiles row is written by the database's
+ *   own trigger with role = 'customer', and nothing the browser sends can
+ *   change that. With email confirmation on, no session comes back and the
+ *   person is told to check their email; with it off, one does and they are
+ *   carried into the account.
+ *
+ *   Administrator: the `register-admin` Edge Function (see
+ *   lib/supabase/registerAdmin.js). The staff code is checked THERE, against
+ *   a secret the browser never sees; the account is created already confirmed
+ *   and its profiles row is written with role = 'admin'. The same email and
+ *   password then sign in, and the desk opens. An earlier version sent staff
+ *   sign-ups through signUp() and only logged a request — every staff account
+ *   came out a customer, and stayed one.
+ *
+ * Telling someone they are signed in when a confirmation email is sitting
+ * unopened is how an account page becomes a support ticket, so each outcome
+ * says which one happened.
  */
 export default function RegisterPage() {
   const { status: authStatus, profile, signOut } = useAuth();
@@ -33,11 +43,15 @@ export default function RegisterPage() {
   const [code, setCode] = useState('');
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
+  /* Asked only of staff: the function that creates a staff account requires
+     both, and a desk account without a phone number is one nobody can call. */
+  const [phone, setPhone] = useState('');
+  const [country, setCountry] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const [done, setDone] = useState(null); // 'session' | 'confirm'
+  const [done, setDone] = useState(null); // 'session' | 'confirm' | 'admin'
   const [tried, setTried] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
   /*
@@ -59,15 +73,14 @@ export default function RegisterPage() {
   const [handError, setHandError] = useState('');
   const [resent, setResent] = useState('');
   const [resendError, setResendError] = useState('');
-  /* True only once the staff-request note has actually reached the queue,
-     so the confirm screen can say "the desk has been notified" and be right. */
-  const [noted, setNoted] = useState(false);
   /* Declared individually rather than gathered into one object: reading
      `refs.email` during render is indistinguishable, to a linter, from reading
      `.current`, and a rule that fires on correct code stops being useful. */
   const codeRef = useRef(null);
   const fullNameRef = useRef(null);
   const emailRef = useRef(null);
+  const phoneRef = useRef(null);
+  const countryRef = useRef(null);
   const passwordRef = useRef(null);
   const confirmRef = useRef(null);
   const clear = (k) => setFieldErrors((f) => ({ ...f, [k]: null }));
@@ -89,19 +102,62 @@ export default function RegisterPage() {
   }, [done, blocked]);
 
   /*
-   * Confirmation off: the account is live, so carry the person into it.
+   * The account is live, so carry the person into it — a customer to the
+   * account page, an administrator straight to the desk.
    *
-   * Only on the session path — with confirmation on there is no session and
+   * Only when a session exists — with confirmation on there is none and
    * nothing to enter yet. A short delay lets the confirmation be read and
    * announced first; a hard navigation, like sign-in uses, so the auth state
    * is re-read cleanly by the page that owns it rather than inherited from a
    * form that has just unmounted.
    */
   useEffect(() => {
-    if (done !== 'session') return undefined;
-    const timer = setTimeout(() => window.location.assign('/account'), 1400);
+    if (done !== 'session' && done !== 'admin') return undefined;
+    const timer = setTimeout(() => window.location.assign(done === 'admin' ? '/admin' : '/account'), 1400);
     return () => clearTimeout(timer);
   }, [done]);
+
+  /*
+   * Staff. The function checks the code and creates the account confirmed,
+   * so the same details sign in immediately — no email, no link, nothing to
+   * wait for.
+   */
+  async function createStaffAccount() {
+    try {
+      await registerAdmin({
+        email: normalizeEmail(email),
+        password,
+        fullName: fullName.trim(),
+        phone: phone.trim(),
+        country: country.trim(),
+        code: code.trim(),
+      });
+    } catch (err) {
+      console.error('[NGD register] staff registration failed:', err);
+      if (err?.code === 'invalid_admin_code') {
+        /* On the field it belongs to, kept and selected rather than wiped —
+           a masked value the person cannot see should not have to be retyped
+           blind after one slip. */
+        setFieldErrors({ code: err.message });
+        requestAnimationFrame(() => { codeRef.current?.focus(); codeRef.current?.select?.(); });
+        return;
+      }
+      setError(err?.code ? err.message : authErrorMessage(err, 'That account could not be created. Please try again.'));
+      return;
+    }
+
+    const { data, error: err } = await supabase.auth.signInWithPassword({ email: normalizeEmail(email), password });
+    if (err || !data?.session) {
+      console.error('[NGD register] sign-in after staff registration failed:', err);
+      setError('Your staff account was created, but signing in did not complete. Go to Sign in and use the same email and password.');
+      return;
+    }
+    // They have just proved they hold the code, so the desk gate does not ask
+    // for it again this session. The gate still reads the role from the
+    // database; this saves a keystroke and grants nothing.
+    unlockAdmin();
+    setDone('admin');
+  }
 
   async function onSubmit(event) {
     event.preventDefault();
@@ -111,25 +167,33 @@ export default function RegisterPage() {
     /*
      * Every field, checked in the order they appear on screen.
      *
-     * This replaces three ad-hoc checks that covered the password rules and
-     * the staff code but not the name or the address — so a blank or
-     * malformed email went to Supabase and came back as a raw API error, and
-     * a blank name created an account with no name on it. The form carries
-     * noValidate, so `required` on the inputs enforces nothing; this is the
-     * enforcement.
+     * The form carries noValidate, so `required` on the inputs enforces
+     * nothing; this is the enforcement. Order matters twice: the message list
+     * is rendered field by field, and the first failing field is the one that
+     * receives focus.
      *
-     * Order matters twice: the message list is rendered field by field, and
-     * the first failing field is the one that receives focus.
+     * The staff code is checked for PRESENCE only. Whether it is right is the
+     * server's call — comparing it here against a value in the bundle would
+     * say nothing the server does not say better, and would block a correct
+     * code whenever the two were set differently.
      */
-    const checks = [
-      ...(kind === 'admin'
-        ? [['code', code.trim() ? (isAdminCode(code) ? null : 'That staff code is not correct.') : 'Enter the staff access code.']]
-        : []),
-      ['fullName', requiredError(fullName, 'full name')],
-      ['email', emailError(email)],
-      ['password', passwordError(password, { min: MIN_PASSWORD })],
-      ['confirm', confirmError(password, confirm)],
-    ];
+    const name = requiredError(fullName, 'full name') ?? (fullName.trim().length < 2 ? 'Enter your full name.' : null);
+    const checks = kind === 'admin'
+      ? [
+          ['code', requiredError(code, 'staff access code')],
+          ['fullName', name],
+          ['email', emailError(email)],
+          ['phone', requiredError(phone, 'phone number')],
+          ['country', requiredError(country, 'country')],
+          ['password', passwordError(password, { min: MIN_PASSWORD })],
+          ['confirm', confirmError(password, confirm)],
+        ]
+      : [
+          ['fullName', name],
+          ['email', emailError(email)],
+          ['password', passwordError(password, { min: MIN_PASSWORD })],
+          ['confirm', confirmError(password, confirm)],
+        ];
     const bad = firstError(checks);
     setFieldErrors(toMap(checks));
     if (bad) {
@@ -138,8 +202,8 @@ export default function RegisterPage() {
       setError('');
       /* Built inside the handler, where touching a ref is legitimate. */
       ({
-        code: codeRef, fullName: fullNameRef, email: emailRef,
-        password: passwordRef, confirm: confirmRef,
+        code: codeRef, fullName: fullNameRef, email: emailRef, phone: phoneRef,
+        country: countryRef, password: passwordRef, confirm: confirmRef,
       })[bad]?.current?.focus();
       return;
     }
@@ -148,6 +212,11 @@ export default function RegisterPage() {
     setError('');
     setBlocked(null);
     try {
+      if (kind === 'admin') {
+        await createStaffAccount();
+        return;
+      }
+
       const { data, error: err } = await supabase.auth.signUp({
         email: normalizeEmail(email),
         password,
@@ -157,13 +226,9 @@ export default function RegisterPage() {
          *
          * Sign-up metadata is written by the browser, so any value in it is
          * effectively chosen by whoever fills in the form, and a database
-         * trigger that copied a role-like field out of it would turn the staff
-         * code — readable in the bundle — into self-service admin. An earlier
-         * version wrote `requested_role: 'admin'` here as a deliberately
-         * non-granting marker; it is gone, because a field nothing should ever
-         * trust is safer not existing than existing and being trusted by
-         * accident. The staff request reaches a person through the enquiries
-         * queue instead, below.
+         * trigger that copied a role-like field out of it would turn a value
+         * anyone can type into self-service admin. Staff accounts are created
+         * by the server-side path above, which never touches signUp().
          */
         options: {
           /*
@@ -184,12 +249,6 @@ export default function RegisterPage() {
       if (err) {
         console.error('[NGD register]', err);
         /*
-         * Distinguish "the mail service is full" from every other failure.
-         * A wrong password format is the visitor's to fix; this one is ours,
-         * and it is the only case where handing the request to the desk is the
-         * right answer rather than a confusing detour.
-         */
-        /*
          * Any failure whose cause is the confirmation email — the hourly cap
          * (429) or the mail service being broken (500 "Error sending
          * confirmation email"). Matching only the first missed the second
@@ -203,7 +262,6 @@ export default function RegisterPage() {
           setBlocked({
             fullName: fullName.trim(),
             email: normalizeEmail(email),
-            wantsAdmin: kind === 'admin',
           });
         }
         // Supabase's own message is surfaced because it covers real, actionable
@@ -222,31 +280,6 @@ export default function RegisterPage() {
         return;
       }
 
-      // They have just proved they hold the code, so the desk gate does not ask
-      // for it again this session. It still checks the profile role, so this
-      // saves a keystroke and grants nothing.
-      if (kind === 'admin') {
-        unlockAdmin();
-        /*
-         * A request has to reach a person, and user_metadata reaches none:
-         * nothing in the product reads requested_role, and the client cannot
-         * even query it. So the request is ALSO written to the enquiries
-         * queue, which the desk already works from. Best-effort — a failure
-         * here must not undo an account that was just created.
-         */
-        createEnquiry({
-          fullName: fullName.trim(),
-          companyName: '',
-          email: normalizeEmail(email),
-          mobile: '',
-          country: '',
-          subject: 'Staff access request',
-          message: 'This person signed up with the staff access code and asked for administrator access. Verify who they are, then set profiles.role to admin for their account.',
-        }, null)
-          .then(() => setNoted(true))
-          .catch((e) => console.error('[NGD register] staff request note failed:', e));
-      }
-
       // A session means confirmation is off and they are already in. No session
       // means an email is on its way and nothing has happened yet.
       setDone(data.session ? 'session' : 'confirm');
@@ -257,31 +290,29 @@ export default function RegisterPage() {
     }
   }
 
+  if (done === 'admin') {
+    return (
+      <AuthShell eyebrow="New Grown Diamond" title="Account created successfully" intro="You are signed in as an administrator. Opening the inventory desk…">
+        <div ref={outcome} tabIndex={-1} className={styles.outcome} role="status">Staff account created. You are signed in.</div>
+        <div className={styles.actions}>
+          <a className={styles.submit} href="/admin">Open the inventory desk</a>
+          <a className={styles.ghost} href="/account">Go to your account</a>
+        </div>
+      </AuthShell>
+    );
+  }
+
   if (done === 'session') {
     return (
       <AuthShell eyebrow="New Grown Diamond" title="Account created successfully" intro="You are signed in. Taking you to your account…">
         {/*
           A session came back, so confirmation is off and the account is live.
           The redirect goes to /account — the same route sign-in uses — where
-          the existing profile flow finishes and, for a real administrator, the
-          desk link appears. It is delayed a beat so the confirmation is read
-          and announced before the page changes underneath it; the links below
-          are the fallback if the redirect is blocked.
+          the existing profile flow finishes. It is delayed a beat so the
+          confirmation is read and announced before the page changes underneath
+          it; the links below are the fallback if the redirect is blocked.
         */}
         <div ref={outcome} tabIndex={-1} className={styles.outcome} role="status">Account created. You are signed in.</div>
-        {/*
-          Said plainly, because the alternative is someone typing the staff
-          code, being told "account created", and then finding the desk still
-          refuses them — with no idea why. The code opened the form; it did
-          not make them an administrator, and only the database can.
-        */}
-        {kind === 'admin' && (
-          <p className={styles.note} data-tone="good">
-            <strong>Staff access has been requested, not granted.</strong>
-            The account is active as a customer now. An existing administrator
-            has to enable the staff role before the inventory desk will open.
-          </p>
-        )}
         <div className={styles.actions}>
           <a className={styles.submit} href="/account">Go to your account</a>
           <a className={styles.ghost} href="/diamonds">Browse the inventory</a>
@@ -356,9 +387,7 @@ export default function RegisterPage() {
                       mobile: '',
                       country: '',
                       subject: 'Account setup',
-                      message: blocked.wantsAdmin
-                        ? 'Website sign-up could not complete because the email service was over its limit. This person also requested STAFF access — verify before granting it.'
-                        : 'Website sign-up could not complete because the email service was over its limit. Please create this account and confirm the address.',
+                      message: 'Website sign-up could not complete because the email service was over its limit. Please create this account and confirm the address.',
                     }, null);
                     setHanded(ref);
                   } catch (e) {
@@ -395,25 +424,11 @@ export default function RegisterPage() {
             Open it to finish creating your account. You are not signed in until
             you do. Check your spam folder if it does not appear.
           </p>
-          {/*
-            This is the branch this deployment actually takes — email
-            confirmation is on, so a session never comes back — and it said
-            nothing about the staff role. The person had typed a code, been
-            told to check their email, and would later be refused by the desk
-            with no explanation anywhere between. The same fact that was only
-            ever shown on the unreachable branch is stated here, worded for
-            the pending case.
-          */}
-          {kind === 'admin' && (
-            <p className={styles.note}>
-              <strong>Staff access has been requested, not granted.</strong>
-              Confirm your email first. The account then works as a customer
-              account until an existing administrator enables the staff role.
-              {noted && ' The desk has been notified.'}
-            </p>
-          )}
         </div>
         <div className={styles.actions}>
+          {/* The ONLY place a confirmation email is re-sent, and only on this
+              click — never on load, never on a timer, never twice while one
+              is in flight. */}
           <button
             type="button"
             className={styles.ghost}
@@ -467,6 +482,10 @@ export default function RegisterPage() {
     );
   }
 
+  /* Entrance order for the fields; staff have three more, so the positions
+     of everything after the account type shift by kind. */
+  const admin = kind === 'admin';
+
   return (
     <AuthShell
       eyebrow="New Grown Diamond"
@@ -495,7 +514,7 @@ export default function RegisterPage() {
           <div className={styles.kindRow}>
             {[
               ['customer', 'Customer', 'Browse stock, send enquiries, keep your reports.'],
-              ['admin', 'Administrator', 'Staff only. Needs the access code.'],
+              ['admin', 'Administrator', 'Staff only. Needs the staff access code.'],
             ].map(([value, title, blurb]) => (
               <label key={value} className={styles.kind} data-on={kind === value ? '' : undefined}>
                 <input
@@ -503,7 +522,7 @@ export default function RegisterPage() {
                   name="accountKind"
                   value={value}
                   checked={kind === value}
-                  onChange={() => { setKind(value); setError(''); }}
+                  onChange={() => { setKind(value); setError(''); setFieldErrors({}); }}
                 />
                 <span className={styles.kindTitle}>{title}</span>
                 <span className={styles.kindBlurb}>{blurb}</span>
@@ -512,7 +531,7 @@ export default function RegisterPage() {
           </div>
         </fieldset>
 
-        {kind === 'admin' && (
+        {admin && (
           /* The code is usually read off a message on another device and typed
              in one character at a time, which is exactly when a reveal earns
              its place — so it gets one, worded for what it is. */
@@ -529,7 +548,7 @@ export default function RegisterPage() {
             autoComplete="off"
             inputMode="numeric"
             placeholder="••••••"
-            hint="Ask an existing administrator. Staff access is confirmed in the database afterwards — this code only opens the request."
+            hint="Ask an existing administrator. The code is checked on the server before a staff account is created."
             onChange={(e) => { setCode(e.target.value); setError(''); clear('code'); }}
           />
         )}
@@ -537,7 +556,7 @@ export default function RegisterPage() {
         <TextField
           label="Full name"
           value={fullName}
-          index={kind === 'admin' ? 2 : 1}
+          index={admin ? 2 : 1}
           required
           maxLength={160}
           autoComplete="name"
@@ -551,7 +570,7 @@ export default function RegisterPage() {
           label="Email"
           type="email"
           value={email}
-          index={kind === 'admin' ? 3 : 2}
+          index={admin ? 3 : 2}
           required
           autoComplete="email"
           placeholder="you@company.com"
@@ -560,10 +579,41 @@ export default function RegisterPage() {
           onChange={(e) => { setEmail(e.target.value); clear('email'); }}
         />
 
+        {admin && (
+          <>
+            <TextField
+              label="Phone"
+              type="tel"
+              value={phone}
+              index={4}
+              required
+              maxLength={40}
+              autoComplete="tel"
+              inputMode="tel"
+              placeholder="+91 …"
+              inputRef={phoneRef}
+              error={fieldErrors.phone}
+              onChange={(e) => { setPhone(e.target.value); clear('phone'); }}
+            />
+            <TextField
+              label="Country"
+              value={country}
+              index={5}
+              required
+              maxLength={80}
+              autoComplete="country-name"
+              placeholder="India"
+              inputRef={countryRef}
+              error={fieldErrors.country}
+              onChange={(e) => { setCountry(e.target.value); clear('country'); }}
+            />
+          </>
+        )}
+
         <PasswordField
           label="Password"
           value={password}
-          index={kind === 'admin' ? 4 : 3}
+          index={admin ? 6 : 3}
           required
           minLength={MIN_PASSWORD}
           autoComplete="new-password"
@@ -576,7 +626,7 @@ export default function RegisterPage() {
         <PasswordField
           label="Confirm password"
           value={confirm}
-          index={kind === 'admin' ? 5 : 4}
+          index={admin ? 7 : 4}
           required
           autoComplete="new-password"
           inputRef={confirmRef}

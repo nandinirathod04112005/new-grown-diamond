@@ -10,10 +10,6 @@ try {
   let response = { status: 400, body: { code: 'invalid_credentials', message: 'Invalid login credentials' } };
   // Exercise the real SDK, but never create users or send email in this test.
   await page.route('https://*.supabase.co/**', async (route) => {
-    if (route.request().url().endsWith('/auth/v1/settings')) {
-      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ external: { email: true }, disable_signup: false, mailer_autoconfirm: false }) });
-      return;
-    }
     if (!route.request().url().includes('/auth/v1/')) {
       await route.fulfill({ status: 200, contentType: 'application/json', body: '[]' });
       return;
@@ -28,7 +24,7 @@ try {
   await page.getByLabel('Email', { exact: true }).fill('  customer@example.com  ');
   await page.getByLabel('Password', { exact: true }).fill(' password123 ');
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
-  await page.getByRole('alert').filter({ hasText: 'do not match' }).waitFor();
+  await page.getByRole('alert').filter({ hasText: 'Email or password is incorrect' }).waitFor();
   assert.equal(requests.at(-1).body.email, 'customer@example.com');
   assert.equal(requests.at(-1).body.password, ' password123 ');
   console.log('Passed validation and invalid credentials.');
@@ -75,7 +71,7 @@ try {
     [400, 'user_already_exists', 'User already registered', 'This email is already registered'],
     [400, 'email_address_not_authorized', 'Email address not authorized', 'Email address not authorized'],
     [429, 'over_email_send_rate_limit', 'Email rate limit exceeded', 'Email rate limit exceeded'],
-    [500, 'unexpected_failure', 'Error sending confirmation email', 'SMTP/email delivery failed'],
+    [500, 'unexpected_failure', 'Error sending confirmation email', 'could not be sent'],
   ]) {
     response = { status, body: { code, message } };
     await page.getByRole('button', { name: 'Create account', exact: true }).click();
@@ -97,7 +93,7 @@ try {
   assert.equal(new URL(signup.url).searchParams.get('redirect_to'), `${origin}/auth/callback`);
   response = { status: 500, body: { code: 'unexpected_failure', message: 'Error sending confirmation email' } };
   await page.getByRole('button', { name: 'Resend confirmation email' }).click();
-  await page.getByRole('alert').filter({ hasText: 'SMTP/email delivery failed (HTTP 500)' }).waitFor();
+  await page.getByRole('alert').filter({ hasText: 'could not be sent' }).waitFor();
   assert.equal(await page.getByRole('button', { name: 'Resend confirmation email' }).isEnabled(), true);
   response = { status: 200, body: {} };
   await page.getByRole('button', { name: 'Resend confirmation email' }).click();

@@ -120,7 +120,7 @@ try {
   const done = (after.mailer_autoconfirm === true) === want;
   console.log(done ? `\nDone. Confirm email is now ${mode === 'off' ? 'OFF' : 'ON'}.` : '\nThe change did not take — the project still reports the old value.');
   report(after);
-  if (done && mode === 'off') console.log('\nReload the site and register — the red DEV notice will be green and the account will be created immediately.');
+  if (done && mode === 'off') console.log('\nReload the site and register — the account will be created and signed in immediately, with no email involved.');
   process.exit(done ? 0 : 1);
 } catch (err) {
   console.error(`\nFailed: ${err.message}`);
