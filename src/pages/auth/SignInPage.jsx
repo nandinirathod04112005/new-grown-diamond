@@ -33,6 +33,7 @@ export default function SignInPage() {
   const [error, setError] = useState('');
   const [unconfirmed, setUnconfirmed] = useState(false);
   const [resent, setResent] = useState('');
+  const [resendError, setResendError] = useState('');
   const [tried, setTried] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
   /* Refs so the first bad field can be focused. Without this a keyboard or
@@ -60,6 +61,7 @@ export default function SignInPage() {
   async function resend() {
     if (!isConfigured || emailError(email) || resent === 'sending') return;
     setResent('sending');
+    setResendError('');
     try {
       const { error: err } = await supabase.auth.resend({
         type: 'signup', email: email.trim(),
@@ -68,8 +70,10 @@ export default function SignInPage() {
            the visitor on a signed-out account page. */
         options: { emailRedirectTo: authRedirectTo() },
       });
-      setResent(err ? 'failed' : 'sent');
-    } catch {
+      if (err) throw err;
+      setResent('sent');
+    } catch (err) {
+      setResendError(authErrorMessage(err, err.message || 'The confirmation email could not be sent.'));
       setResent('failed');
     }
   }
@@ -186,7 +190,7 @@ export default function SignInPage() {
         {unconfirmed && (
           <div className={styles.note} role="alert">
             <strong>Your email address has not been confirmed yet.</strong>
-            Your password is correct — open the confirmation link we sent to
+            Open the confirmation link sent to
             {' '}{email}{' '}to finish setting up the account.
             <span className={styles.actions}>
               <button
@@ -195,11 +199,11 @@ export default function SignInPage() {
                 onClick={resend}
                 disabled={resent === 'sending'}
               >
-                {resent === 'sending' ? 'Sending…' : 'Resend the email'}
+                {resent === 'sending' ? 'Sending…' : 'Resend confirmation email'}
               </button>
             </span>
-            {resent === 'sent' && <em>Sent. It can take a minute to arrive.</em>}
-            {resent === 'failed' && <em>That could not be sent right now. Please contact the desk.</em>}
+            {resent === 'sent' && <em role="status">Confirmation email sent. Check your inbox and spam folder.</em>}
+            {resent === 'failed' && <em>{resendError}</em>}
           </div>
         )}
 

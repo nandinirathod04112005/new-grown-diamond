@@ -10,6 +10,14 @@ try {
   let response = { status: 400, body: { code: 'invalid_credentials', message: 'Invalid login credentials' } };
   // Exercise the real SDK, but never create users or send email in this test.
   await page.route('https://*.supabase.co/**', async (route) => {
+    if (route.request().url().endsWith('/auth/v1/settings')) {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ external: { email: true }, disable_signup: false, mailer_autoconfirm: false }) });
+      return;
+    }
+    if (!route.request().url().includes('/auth/v1/')) {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: '[]' });
+      return;
+    }
     requests.push({ url: route.request().url(), body: route.request().postDataJSON() });
     await route.fulfill({ status: response.status, headers: { 'x-supabase-api-version': '2024-01-01', 'access-control-expose-headers': 'X-Supabase-Api-Version' }, contentType: 'application/json', body: JSON.stringify(response.body) });
   });
@@ -31,13 +39,13 @@ try {
 
   response = { status: 400, body: { code: 'email_not_confirmed', message: 'Email not confirmed' } };
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
-  await page.getByRole('button', { name: 'Resend the email' }).waitFor();
+  await page.getByRole('button', { name: 'Resend confirmation email' }).waitFor();
   response = { status: 200, body: {} };
-  await page.getByRole('button', { name: 'Resend the email' }).click();
-  await page.getByText('Sent. It can take a minute to arrive.').waitFor();
+  await page.getByRole('button', { name: 'Resend confirmation email' }).click();
+  await page.getByText('Confirmation email sent. Check your inbox and spam folder.').waitFor();
   assert.equal(new URL(requests.at(-1).url).searchParams.get('redirect_to'), `${origin}/auth/callback`);
   await page.getByLabel('Email', { exact: true }).fill('different@example.com');
-  assert.equal(await page.getByRole('button', { name: 'Resend the email' }).count(), 0);
+  assert.equal(await page.getByRole('button', { name: 'Resend confirmation email' }).count(), 0);
   console.log('Passed rate limits and confirmation resend.');
 
   // An unexpected rejected SDK call must release the button so users can retry.
@@ -67,7 +75,7 @@ try {
     [400, 'user_already_exists', 'User already registered', 'This email is already registered'],
     [400, 'email_address_not_authorized', 'Email address not authorized', 'Email address not authorized'],
     [429, 'over_email_send_rate_limit', 'Email rate limit exceeded', 'Email rate limit exceeded'],
-    [500, 'unexpected_failure', 'Error sending confirmation email', 'Email delivery failed'],
+    [500, 'unexpected_failure', 'Error sending confirmation email', 'SMTP/email delivery failed'],
   ]) {
     response = { status, body: { code, message } };
     await page.getByRole('button', { name: 'Create account', exact: true }).click();
@@ -87,6 +95,14 @@ try {
   assert.equal(signup.body.data.full_name, 'Test Customer');
   assert.equal(signup.body.data.role, undefined);
   assert.equal(new URL(signup.url).searchParams.get('redirect_to'), `${origin}/auth/callback`);
+  response = { status: 500, body: { code: 'unexpected_failure', message: 'Error sending confirmation email' } };
+  await page.getByRole('button', { name: 'Resend confirmation email' }).click();
+  await page.getByRole('alert').filter({ hasText: 'SMTP/email delivery failed (HTTP 500)' }).waitFor();
+  assert.equal(await page.getByRole('button', { name: 'Resend confirmation email' }).isEnabled(), true);
+  response = { status: 200, body: {} };
+  await page.getByRole('button', { name: 'Resend confirmation email' }).click();
+  await page.getByText('Confirmation email sent. Check your inbox and spam folder.', { exact: true }).waitFor();
+  assert.equal(new URL(requests.at(-1).url).searchParams.get('redirect_to'), `${origin}/auth/callback`);
   await page.goto(`${origin}/auth/callback#error=access_denied&error_code=otp_expired&error_description=Email+link+expired`);
   await page.getByRole('heading', { name: 'This link has expired' }).waitFor();
   console.log('Passed auth browser checks: validation, normalized payloads, credentials, rate limits, confirmation, resend, failed-request recovery, registration.');

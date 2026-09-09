@@ -32,5 +32,5 @@ export function authRedirectTo() {
   if (!['http:', 'https:'].includes(origin.protocol)) {
     throw new Error('Email confirmation requires an HTTP or HTTPS website address.');
   }
-  return new URL(AUTH_CALLBACK_PATH, origin).href;
+  return `${window.location.origin}${AUTH_CALLBACK_PATH}`;
 }

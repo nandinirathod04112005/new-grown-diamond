@@ -21,7 +21,31 @@ email setting है, जो सिर्फ़ आपके dashboard से �
 
 ---
 
-## ठीक करने का तरीका — 30 सेकंड
+## सबसे आसान तरीका — एक command
+
+Dashboard में toggle ढूंढने की ज़रूरत नहीं। बस एक token बनाएँ और एक command चलाएँ:
+
+1. यह link खोलें: **https://supabase.com/dashboard/account/tokens**
+2. **Generate new token** → कोई भी नाम दें → **Generate** → जो `sbp_...` दिखे उसे copy करें
+3. VS Code के terminal में (PowerShell):
+
+```powershell
+$env:SUPABASE_ACCESS_TOKEN="sbp_यहाँ_paste_करें"
+node scripts/supabase-confirm-email.mjs off
+```
+
+बस। Script खुद setting बदलेगी और फिर वापस पढ़कर confirm करेगी:
+
+```
+Done. Confirm email is now OFF.
+```
+
+Token कहीं save नहीं होता, print नहीं होता, सिर्फ़ api.supabase.com को जाता है।
+बाद में वापस चालू करना हो तो `off` की जगह `on` लिखें।
+
+---
+
+## या dashboard से — 30 सेकंड
 
 1. Browser में खोलें: **https://supabase.com/dashboard**
 2. Project **`lkokikjyiohpodhcmjzw`** चुनें

@@ -58,6 +58,7 @@ export default function RegisterPage() {
   const [handed, setHanded] = useState(null);
   const [handError, setHandError] = useState('');
   const [resent, setResent] = useState('');
+  const [resendError, setResendError] = useState('');
   /* Declared individually rather than gathered into one object: reading
      `refs.email` during render is indistinguishable, to a linter, from reading
      `.current`, and a rule that fires on correct code stops being useful. */
@@ -386,22 +387,29 @@ export default function RegisterPage() {
             className={styles.ghost}
             disabled={resent === 'sending'}
             onClick={async () => {
+              if (resent === 'sending') return;
               setResent('sending');
+              setResendError('');
+              try {
               const { error: err } = await supabase.auth.resend({
                 type: 'signup',
                 email: email.trim(),
                 options: { emailRedirectTo: authRedirectTo() },
               });
-              if (err) console.error('[NGD register resend]', err);
-              setResent(err ? 'failed' : 'sent');
+              if (err) throw err;
+              setResent('sent');
+              } catch (err) {
+                setResendError(authErrorMessage(err, err.message || 'The confirmation email could not be sent.'));
+                setResent('failed');
+              }
             }}
           >
-            {resent === 'sending' ? 'Sending…' : 'Resend the email'}
+            {resent === 'sending' ? 'Sending…' : 'Resend confirmation email'}
           </button>
           <a className={styles.ghost} href="/login">Back to sign in</a>
         </div>
-        {resent === 'sent' && <p className={styles.hint} role="status">Sent. It can take a minute to arrive.</p>}
-        {resent === 'failed' && <p className={styles.note} data-tone="error" role="alert">That could not be sent. The mail service may be unavailable — contact the desk.</p>}
+        {resent === 'sent' && <p className={styles.hint} role="status">Confirmation email sent. Check your inbox and spam folder.</p>}
+        {resent === 'failed' && <p className={styles.note} data-tone="error" role="alert">{resendError}</p>}
       </AuthShell>
     );
   }

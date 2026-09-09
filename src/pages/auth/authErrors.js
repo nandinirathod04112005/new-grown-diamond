@@ -41,6 +41,9 @@ export function authErrorMessage(error, fallback) {
    */
   const code = error?.code ?? error?.error_code ?? '';
   const message = error?.message ?? error?.msg ?? '';
+  if (code === 'invalid_credentials' || /invalid login credentials/i.test(message)) {
+    return 'Invalid login credentials. That email and password do not match an account. If signup failed, complete registration first.';
+  }
   if (['user_already_exists', 'email_exists'].includes(code) || /already registered/i.test(message)) {
     return 'This email is already registered. Sign in, or use Forgot password to recover your account.';
   }
@@ -48,7 +51,7 @@ export function authErrorMessage(error, fallback) {
     return 'Email address not authorized: the email service cannot send to this address. Contact support to configure email delivery.';
   }
   if (/smtp|error sending (confirmation|recovery|email)|failed to send.*email/i.test(message)) {
-    return 'Email delivery failed. The email service could not send the link. Please contact support or try again later.';
+    return `SMTP/email delivery failed${error?.status ? ` (HTTP ${error.status})` : ''}. Supabase could not send the email. Please contact support to check the server email configuration.`;
   }
   if (code === 'over_email_send_rate_limit') {
     return 'Email rate limit exceeded. The email service cannot send another link yet. Please wait before trying again.';
