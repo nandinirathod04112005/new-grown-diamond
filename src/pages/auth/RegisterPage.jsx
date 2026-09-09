@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/useAuth.js';
 import AuthShell from './AuthShell.jsx';
 import PasswordField from './PasswordField.jsx';
 import TextField from './TextField.jsx';
-import { MIN_PASSWORD, confirmError, emailError, firstError, passwordError, requiredError, toMap } from './validation.js';
+import { MIN_PASSWORD, confirmError, emailError, firstError, normalizeEmail, passwordError, requiredError, toMap } from './validation.js';
 import styles from './Auth.module.css';
 import { authErrorMessage, isEmailDeliveryFailure } from './authErrors.js';
 import { authRedirectTo } from '@/lib/supabase/authRedirect.js';
@@ -85,6 +85,21 @@ export default function RegisterPage() {
     if (done || blocked) outcome.current?.focus();
   }, [done, blocked]);
 
+  /*
+   * Confirmation off: the account is live, so carry the person into it.
+   *
+   * Only on the session path — with confirmation on there is no session and
+   * nothing to enter yet. A short delay lets the confirmation be read and
+   * announced first; a hard navigation, like sign-in uses, so the auth state
+   * is re-read cleanly by the page that owns it rather than inherited from a
+   * form that has just unmounted.
+   */
+  useEffect(() => {
+    if (done !== 'session') return undefined;
+    const timer = setTimeout(() => window.location.assign('/account'), 1400);
+    return () => clearTimeout(timer);
+  }, [done]);
+
   async function onSubmit(event) {
     event.preventDefault();
     setTried(true);
@@ -131,18 +146,21 @@ export default function RegisterPage() {
     setBlocked(null);
     try {
       const { data, error: err } = await supabase.auth.signUp({
-        email: email.trim(),
+        email: normalizeEmail(email),
         password,
         /*
-         * `requested_role`, deliberately NOT `role`.
+         * Metadata carries ONLY what the existing profile flow reads: the
+         * name. Nothing role-shaped goes here, not even a request.
          *
-         * Sign-up metadata is written by the browser, so anything a database
-         * trigger copies straight out of it is effectively writable by whoever
-         * is filling in this form. If this said `role: 'admin'` and any trigger
-         * trusted it, the staff code below — which is readable in the bundle —
-         * would become a way for anyone at all to make themselves an
-         * administrator. So this records an ASKING, under a name nothing grants
-         * on, and an existing admin still has to set profiles.role themselves.
+         * Sign-up metadata is written by the browser, so any value in it is
+         * effectively chosen by whoever fills in the form, and a database
+         * trigger that copied a role-like field out of it would turn the staff
+         * code — readable in the bundle — into self-service admin. An earlier
+         * version wrote `requested_role: 'admin'` here as a deliberately
+         * non-granting marker; it is gone, because a field nothing should ever
+         * trust is safer not existing than existing and being trusted by
+         * accident. The staff request reaches a person through the enquiries
+         * queue instead, below.
          */
         options: {
           /*
@@ -156,7 +174,6 @@ export default function RegisterPage() {
           emailRedirectTo: authRedirectTo(),
           data: {
             full_name: fullName.trim(),
-            ...(kind === 'admin' ? { requested_role: 'admin' } : null),
           },
         },
       });
@@ -182,7 +199,7 @@ export default function RegisterPage() {
         if (isEmailDeliveryFailure(err)) {
           setBlocked({
             fullName: fullName.trim(),
-            email: email.trim(),
+            email: normalizeEmail(email),
             wantsAdmin: kind === 'admin',
           });
         }
@@ -217,7 +234,7 @@ export default function RegisterPage() {
         createEnquiry({
           fullName: fullName.trim(),
           companyName: '',
-          email: email.trim(),
+          email: normalizeEmail(email),
           mobile: '',
           country: '',
           subject: 'Staff access request',
@@ -237,7 +254,15 @@ export default function RegisterPage() {
 
   if (done === 'session') {
     return (
-      <AuthShell eyebrow="New Grown Diamond" title="Account created" intro="You are signed in.">
+      <AuthShell eyebrow="New Grown Diamond" title="Account created successfully" intro="You are signed in. Taking you to your account…">
+        {/*
+          A session came back, so confirmation is off and the account is live.
+          The redirect goes to /account — the same route sign-in uses — where
+          the existing profile flow finishes and, for a real administrator, the
+          desk link appears. It is delayed a beat so the confirmation is read
+          and announced before the page changes underneath it; the links below
+          are the fallback if the redirect is blocked.
+        */}
         <div ref={outcome} tabIndex={-1} className={styles.outcome} role="status">Account created. You are signed in.</div>
         {/*
           Said plainly, because the alternative is someone typing the staff
@@ -359,7 +384,7 @@ export default function RegisterPage() {
       >
         <div ref={outcome} tabIndex={-1} className={styles.outcome} role="status">
           <p className={styles.note} data-tone="good">
-            <strong>Confirmation email sent to {email.trim()}.</strong>
+            <strong>Confirmation email sent to {normalizeEmail(email)}.</strong>
             Open it to finish creating your account. You are not signed in until
             you do. Check your spam folder if it does not appear.
           </p>
@@ -393,7 +418,7 @@ export default function RegisterPage() {
               try {
               const { error: err } = await supabase.auth.resend({
                 type: 'signup',
-                email: email.trim(),
+                email: normalizeEmail(email),
                 options: { emailRedirectTo: authRedirectTo() },
               });
               if (err) throw err;

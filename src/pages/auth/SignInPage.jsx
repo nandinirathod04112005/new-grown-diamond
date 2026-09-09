@@ -6,7 +6,7 @@ import { authRedirectTo } from '@/lib/supabase/authRedirect.js';
 import AuthShell from './AuthShell.jsx';
 import PasswordField from './PasswordField.jsx';
 import TextField from './TextField.jsx';
-import { emailError, firstError, passwordError, toMap } from './validation.js';
+import { emailError, firstError, normalizeEmail, passwordError, toMap } from './validation.js';
 import styles from './Auth.module.css';
 import { authErrorMessage } from './authErrors.js';
 
@@ -64,7 +64,7 @@ export default function SignInPage() {
     setResendError('');
     try {
       const { error: err } = await supabase.auth.resend({
-        type: 'signup', email: email.trim(),
+        type: 'signup', email: normalizeEmail(email),
         /* Same destination as sign-up, so a resent link behaves identically —
            and lands somewhere that reports an expired one instead of dropping
            the visitor on a signed-out account page. */
@@ -119,7 +119,10 @@ export default function SignInPage() {
     setError('');
     setFieldErrors({});
     try {
-      const { data, error: err } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+      /* Email normalised the same way sign-up normalised it; the password is
+         passed through untouched — a leading or trailing space in a password
+         is part of the password. */
+      const { data, error: err } = await supabase.auth.signInWithPassword({ email: normalizeEmail(email), password });
 
       if (err) {
         // Logged for us, generic for them — except the one case that is not a
@@ -132,7 +135,7 @@ export default function SignInPage() {
         }
         setUnconfirmed(false);
         setError(authErrorMessage(err, err.code === 'invalid_credentials'
-          ? 'That email and password do not match an account.'
+          ? 'Email or password is incorrect.'
           : 'Sign-in could not be completed. Please try again.'));
         return;
       }

@@ -41,8 +41,18 @@ export function authErrorMessage(error, fallback) {
    */
   const code = error?.code ?? error?.error_code ?? '';
   const message = error?.message ?? error?.msg ?? '';
+  /*
+   * One short sentence, and deliberately no more.
+   *
+   * Supabase returns this same code whether the address is unknown or the
+   * password is wrong, and the message must not narrow it either way — doing
+   * so turns the sign-in form into an oracle that confirms, one guess at a
+   * time, which addresses hold accounts. An earlier wording added "if signup
+   * failed, complete registration first", which both hinted at the answer and
+   * sent a person with a mistyped password off to register again.
+   */
   if (code === 'invalid_credentials' || /invalid login credentials/i.test(message)) {
-    return 'Invalid login credentials. That email and password do not match an account. If signup failed, complete registration first.';
+    return 'Email or password is incorrect.';
   }
   if (['user_already_exists', 'email_exists'].includes(code) || /already registered/i.test(message)) {
     return 'This email is already registered. Sign in, or use Forgot password to recover your account.';

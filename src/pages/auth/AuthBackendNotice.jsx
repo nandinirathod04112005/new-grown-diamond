@@ -58,16 +58,24 @@ export default function AuthBackendNotice() {
     );
   }
 
+  /*
+   * States only what was READ, and says where from. An earlier version
+   * asserted "and this project's mail service is failing" — a diagnosis this
+   * component had not made; it had only read a flag. Whether mail actually
+   * sends is learned from a sign-up's own response, and RegisterPage reports
+   * that when it happens. Nothing here sends an email to find out.
+   */
   if (state.confirmOn) {
     return (
       <div className={styles.note} data-tone="error" role="status">
-        <strong>DEV: "Confirm email" is ON, and this project's mail service is failing.</strong>
-        Every sign-up is rolled back before a row is written, so nothing reaches
-        the database and no link is ever sent.
+        <strong>DEV: Supabase reports "Confirm email" is ON for this project.</strong>
+        Sign-up will need a working mail service; if it does not have one, the
+        account is rolled back and nothing reaches the database. For local
+        development it is expected to be OFF.
         <span className={styles.devSteps}>
-          Supabase Dashboard → <b>Authentication</b> → <b>Providers</b> → <b>Email</b> → turn
-          <b> Confirm email</b> OFF → Save. Then reload this page: this notice will turn green.
-          If you entered custom SMTP settings, turn <b>Enable Custom SMTP</b> off as well.
+          <b>node scripts/supabase-confirm-email.mjs off</b> (needs a personal access token), or
+          Supabase Dashboard → <b>Authentication</b> → <b>Providers</b> → <b>Email</b> → <b>Confirm email</b> OFF → Save,
+          then reload. Read from the public <code>/auth/v1/settings</code> endpoint.
         </span>
       </div>
     );
@@ -75,8 +83,8 @@ export default function AuthBackendNotice() {
 
   return (
     <p className={styles.note} data-tone="good" role="status">
-      <strong>DEV: "Confirm email" is OFF.</strong>
-      Sign-up creates the account immediately and signs the person in — no email involved.
+      <strong>DEV: Supabase reports "Confirm email" is OFF.</strong>
+      Sign-up returns a session and enters the app directly — no email involved.
     </p>
   );
 }

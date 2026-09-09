@@ -33,6 +33,20 @@ const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export const MIN_PASSWORD = 8;
 
+/**
+ * The address as it is SENT — trimmed and lower-cased.
+ *
+ * Supabase stores addresses case-insensitively, but the value it receives is
+ * what it compares on sign-in. "Rajesh@Example.com" at sign-up and
+ * "rajesh@example.com" at sign-in are the same account only if both were
+ * normalised the same way before leaving the browser. One function, used by
+ * sign-up, sign-in, resend and the enquiry hand-off, so they cannot drift.
+ * The PASSWORD is never touched by anything here.
+ */
+export function normalizeEmail(value) {
+  return String(value ?? '').trim().toLowerCase();
+}
+
 /** Trimmed, because a trailing space in an email field is a typo, not intent. */
 export function emailError(value) {
   const v = String(value ?? '').trim();
