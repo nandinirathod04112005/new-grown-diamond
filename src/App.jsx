@@ -35,6 +35,7 @@ const RegisterPage = lazy(() => import('@/pages/auth/RegisterPage.jsx'));
 const ProfilePage = lazy(() => import('@/pages/auth/ProfilePage.jsx'));
 const ForgotPasswordPage = lazy(() => import('@/pages/auth/ForgotPasswordPage.jsx'));
 const ResetPasswordPage = lazy(() => import('@/pages/auth/ResetPasswordPage.jsx'));
+const AuthCallbackPage = lazy(() => import('@/pages/auth/AuthCallbackPage.jsx'));
 const RequireAdmin = lazy(() => import('@/components/auth/RequireAdmin.jsx'));
 const AdminLayout = lazy(() => import('@/components/admin/AdminLayout.jsx'));
 const AdminOverview = lazy(() => import('@/pages/admin/AdminOverview.jsx'));
@@ -235,6 +236,15 @@ export default function App() {
 
   if (path === '/account') {
     return bare(<ProfilePage />);
+  }
+
+  /*
+   * Where every emailed link lands. Deliberately outside the localised routes:
+   * Supabase builds the link from one fixed redirect and cannot carry a
+   * language prefix, so this single address serves all three languages.
+   */
+  if (path === '/auth/callback') {
+    return bare(<AuthCallbackPage />);
   }
 
   if (path === '/forgot-password') {

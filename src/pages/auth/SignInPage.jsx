@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 
 import { supabase, isConfigured } from '@/lib/supabase/client.js';
 import { useAuth } from '@/hooks/useAuth.js';
+import { authRedirectTo } from '@/lib/supabase/authRedirect.js';
 import AuthShell from './AuthShell.jsx';
 import PasswordField from './PasswordField.jsx';
 import TextField from './TextField.jsx';
@@ -60,7 +61,10 @@ export default function SignInPage() {
     try {
       const { error: err } = await supabase.auth.resend({
         type: 'signup', email: email.trim(),
-        options: { emailRedirectTo: `${window.location.origin}/account` },
+        /* Same destination as sign-up, so a resent link behaves identically —
+           and lands somewhere that reports an expired one instead of dropping
+           the visitor on a signed-out account page. */
+        options: { emailRedirectTo: authRedirectTo() },
       });
       setResent(err ? 'failed' : 'sent');
     } catch {

@@ -1,0 +1,135 @@
+# Sign-up emails are not sending — what to do
+
+**Diagnosed, not guessed.** A real sign-up against the live project returns:
+
+```
+POST /auth/v1/signup
+429 {"code":429,"error_code":"over_email_send_rate_limit","msg":"email rate limit exceeded"}
+```
+
+No account is created when this happens. The person fills in the form, gets an
+error, and there is no email because the request never got far enough to send
+one. That is why nobody can confirm, and therefore why nobody can sign in.
+
+Project auth settings confirm the rest of the picture:
+
+```
+mailer_autoconfirm : false    <- confirmation IS required
+disable_signup     : false    <- sign-up is open
+email provider     : enabled
+```
+
+## The cause
+
+The project is using **Supabase's built-in email service**. That service is
+meant for development only. It sends a handful of messages per hour across the
+entire project, and Supabase's own documentation says not to rely on it for
+production. Once the cap is reached — which a few test sign-ups will do — every
+further sign-up fails with the 429 above until the hour rolls over.
+
+**This cannot be fixed in the code.** No amount of retrying, and no change to
+the front end, raises that limit. It needs an SMTP provider configured on the
+project.
+
+---
+
+## Fix: connect your own SMTP (about 15 minutes)
+
+### 1. Get an SMTP sender
+
+Any of these work. All have a free tier that comfortably covers a diamond
+desk's sign-up volume:
+
+| Provider | Free tier | Note |
+|---|---|---|
+| **Resend** | 3,000/month | Simplest to set up; good choice if you have no preference |
+| **Brevo** (ex-Sendinblue) | 300/day | Popular in India, no card required |
+| **Amazon SES** | 62,000/month from EC2 | Cheapest at volume, most setup |
+| **Zoho ZeptoMail** | 10,000 one-off free | Useful if you already use Zoho Mail |
+
+You will need a **domain you control** — `newgrowndiamond.com`. Sending as
+`@gmail.com` will not work: providers reject it, and Gmail's own DMARC policy
+makes it bounce.
+
+### 2. Verify the domain
+
+The provider will give you DNS records — typically SPF, DKIM and sometimes a
+return-path CNAME. Add them wherever `newgrowndiamond.com` is managed. Wait for
+the provider to show the domain as verified before continuing; a half-verified
+domain sends mail that lands in spam, which looks identical to not sending.
+
+### 3. Enter the details in Supabase
+
+**Dashboard → Project Settings → Authentication → SMTP Settings** → enable
+*Custom SMTP*:
+
+- **Sender email** — `noreply@newgrowndiamond.com` (or `desk@`)
+- **Sender name** — `New Grown Diamond`
+- **Host / Port** — from your provider (usually port `587`)
+- **Username / Password** — the provider's SMTP credentials, **not** your
+  account password
+
+Then raise **Rate limit for sending emails** on the same page. The default is
+deliberately low for the built-in service; with your own SMTP, 30–100 per hour
+is reasonable.
+
+### 4. Set the URLs — this part matters
+
+**Dashboard → Authentication → URL Configuration**
+
+- **Site URL** — `https://newgrowndiamond.com`
+
+  If this is still `http://localhost:3000` — which is the default, and stays
+  that way in any project nobody revisited — then every confirmation link in
+  every email points at a machine the customer is not sitting at. The email
+  arrives, the link is clicked, and nothing happens.
+
+- **Redirect URLs** — add **all** of these:
+
+  ```
+  https://newgrowndiamond.com/auth/callback
+  https://www.newgrowndiamond.com/auth/callback
+  http://localhost:4173/auth/callback
+  http://localhost:5173/auth/callback
+  ```
+
+  The site now tells Supabase where to send people back to
+  (`emailRedirectTo`), but Supabase **refuses any redirect not on this
+  allow-list and silently falls back to Site URL** — with no error anywhere to
+  explain it. Missing entries here look exactly like a broken link.
+
+### 5. Test
+
+Sign up with a real address you can open. You should get the mail within a
+minute, and clicking the link should land on `/auth/callback` showing
+**"Email confirmed"**.
+
+---
+
+## What was fixed in the code
+
+These were real problems regardless of SMTP, and are done:
+
+- **`/auth/callback` now exists.** Previously nothing handled the return from a
+  confirmation link. The tokens were consumed silently and the visitor landed
+  on a page with no message — working and indistinguishable from broken. It
+  also handles the case nothing did before: an **expired or already-used
+  link**, which produces an error in the URL fragment and no session.
+
+- **`emailRedirectTo` is sent** on sign-up and on resend, so links point at the
+  site the person actually used rather than at whatever Site URL happens to
+  say. (Still needs step 4 — Supabase must be told the URL is allowed.)
+
+- **The 429 now says something true.** It was being reported as *"Too many
+  attempts. Please wait a few minutes and try again"* — which blames the
+  customer for a server-side cap they cannot influence and sends them off to
+  retry something that will fail again. It now says the mail service has hit
+  its limit and to contact the desk.
+
+## While you set SMTP up
+
+Any customer who is stuck can be activated by hand:
+
+**Dashboard → Authentication → Users** → find them → **⋮** → *Confirm email*.
+
+They can then sign in normally with the password they chose.

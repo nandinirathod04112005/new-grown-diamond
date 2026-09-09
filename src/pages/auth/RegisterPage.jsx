@@ -8,6 +8,7 @@ import TextField from './TextField.jsx';
 import { confirmError, emailError, firstError, passwordError, requiredError, toMap } from './validation.js';
 import styles from './Auth.module.css';
 import { authErrorMessage } from './authErrors.js';
+import { authRedirectTo } from '@/lib/supabase/authRedirect.js';
 
 const MIN_PASSWORD = 8;
 
@@ -107,7 +108,15 @@ export default function RegisterPage() {
          * on, and an existing admin still has to set profiles.role themselves.
          */
         options: {
-          emailRedirectTo: `${window.location.origin}/account`,
+          /*
+           * The callback route, not /account. Landing on the account page
+           * works only when the link is still valid: an expired or
+           * already-used link produces an error in the URL fragment and no
+           * session, so the visitor arrived at a signed-out account page with
+           * nothing explaining why. The callback reads that outcome and says
+           * which of the two happened.
+           */
+          emailRedirectTo: authRedirectTo(),
           data: {
             full_name: fullName.trim(),
             ...(kind === 'admin' ? { requested_role: 'admin' } : null),
