@@ -3,6 +3,7 @@ import CausticField from '@/components/media/CausticField.jsx';
 
 import { usePointerParallax } from '@/hooks/usePointerParallax.js';
 import Blueprint from '@/components/media/Blueprint.jsx';
+import AuthBackendNotice from './AuthBackendNotice.jsx';
 import styles from './Auth.module.css';
 
 /**
@@ -59,7 +60,12 @@ export default function AuthShell({ eyebrow, title, intro, children, aside, wide
             <span className={styles.rule} aria-hidden="true" />
           </header>
 
-          <div className={styles.body}>{children}</div>
+          <div className={styles.body}>
+            {/* Dev-only, compiled out of production: the live state of the
+                auth backend, on the form where its failures are seen. */}
+            <AuthBackendNotice />
+            {children}
+          </div>
 
           {aside ? <footer className={styles.aside}>{aside}</footer> : null}
 

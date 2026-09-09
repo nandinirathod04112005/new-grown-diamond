@@ -645,3 +645,16 @@
   outline: 2px solid #f0a08c;
   outline-offset: -1px;
 }
+
+/* The click path inside the dev-only backend notice: set apart from the
+   sentence above it so it reads as an instruction, not a continuation. */
+.devSteps {
+  display: block;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(240, 160, 140, 0.3);
+  font-size: 0.75rem;
+  line-height: 1.6;
+}
+
+.devSteps b { color: var(--ivory); font-weight: 500; }
