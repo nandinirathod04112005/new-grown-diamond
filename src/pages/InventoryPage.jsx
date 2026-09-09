@@ -8,6 +8,8 @@ import StoneViewer from '@/components/product/StoneViewer.jsx';
 import { listDiamonds } from '@/lib/supabase/queries/diamonds.js';
 import { isConfigured } from '@/lib/supabase/client.js';
 import macro from '@/assets/diamonds/ngd-brilliant-macro.webp';
+import cutStone from '@/assets/process/cut-stone.webp';
+import HeroBackdrop from '@/components/layout/HeroBackdrop.jsx';
 import { ENQUIRY_DESK } from './siteContent.js';
 import styles from './InventoryPage.module.css';
 
@@ -64,6 +66,9 @@ export default function InventoryPage() {
         {/* Ambient field: the stock page was the one hero with nothing moving
             in it at rest. */}
         <div className={styles.field} aria-hidden="true"><span /><span /></div>
+        {/* A cut stone under the stock page, above the ambient field and
+            below the copy and the hero stone. */}
+        <HeroBackdrop src={cutStone} focus="55% 50%" className={styles.backdrop} />
         <div>
           <p className="u-eyebrow">Diamond inventory / Trade &amp; retail</p>
           {/* The space is explicit: a <br> yields nothing in textContent, so

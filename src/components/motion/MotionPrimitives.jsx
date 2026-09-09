@@ -1,4 +1,4 @@
-import { Children, cloneElement, useEffect, useRef, useState } from 'react';
+import { Children, cloneElement, isValidElement, useEffect, useRef, useState } from 'react';
 
 import useReducedMotion from '@/hooks/useReducedMotion.js';
 import Reveal from './Reveal.jsx';
@@ -22,26 +22,29 @@ export function SplitTextReveal({ children, as: Tag = 'span', className = '' }) 
 
 export function StaggerGroup({ children, as: Tag = 'div', className = '' }) {
   return (
-    <Tag className={`${styles.stagger} ${className}`}>
-      {Children.map(children, (child, index) => child && cloneElement(child, {
+    <Reveal as={Tag} className={`${styles.stagger} ${className}`}>
+      {Children.map(children, (child, index) => isValidElement(child) ? cloneElement(child, {
         style: { ...child.props.style, '--stagger-index': index },
-      }))}
-    </Tag>
+      }) : child)}
+    </Reveal>
   );
 }
+
+export const StaggerGrid = StaggerGroup;
 
 export function ImageMaskReveal({ children, className = '' }) {
   const ref = useRef(null);
   const [visible, setVisible] = useState(false);
   const reduced = useReducedMotion();
   useEffect(() => {
-    if (reduced) return undefined;
+    if (reduced || typeof IntersectionObserver === 'undefined') return undefined;
     const node = ref.current;
+    node.dataset.pending = 'true';
     const observer = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting) { setVisible(true); observer.disconnect(); }
-    }, { threshold: 0.15 });
+      if (entry.isIntersecting || entry.boundingClientRect.bottom < 0) { setVisible(true); delete node.dataset.pending; observer.disconnect(); }
+    }, { threshold: 0 });
     if (node) observer.observe(node);
-    return () => observer.disconnect();
+    return () => { observer.disconnect(); delete node.dataset.pending; };
   }, [reduced]);
   return <div ref={ref} className={`${styles.mask} ${className}`} data-visible={visible || reduced}>{children}</div>;
 }
@@ -50,7 +53,7 @@ export function ParallaxMedia({ children, strength = 36, className = '' }) {
   const ref = useRef(null);
   const reduced = useReducedMotion();
   useEffect(() => {
-    if (reduced) return undefined;
+    if (reduced || typeof IntersectionObserver === 'undefined' || !window.matchMedia('(pointer: fine)').matches) return undefined;
     const node = ref.current;
     let frame = 0;
     let offset = 0;

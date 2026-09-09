@@ -301,16 +301,13 @@ export default function App() {
             motif={PAGE_MOTIF[path]?.motif}
             accent={PAGE_MOTIF[path]?.accent}
             /*
-             * A photograph where one genuinely belongs to the page.
+             * The page's photograph, set behind the whole banner.
              *
-             * PageHero has always supported an image and no caller ever passed
-             * one, so every editorial page opened on the drawn motif — the
-             * fallback for pages with no photography, standing in for pages
-             * that had some all along. The motif stays as the fallback for any
-             * route not listed above.
+             * It began as the figure beside the type; now it is the room the
+             * type stands in, and the drawn motif stays over it as the page's
+             * mark. A route with no photograph listed keeps the motif alone.
              */
-            image={PAGE_MOTIF[path]?.image}
-            imageAlt={PAGE_MOTIF[path]?.imageAlt}
+            backdrop={PAGE_MOTIF[path]?.image}
             after={path === '/education' ? <EducationIndex /> : null}
           >
             {path === '/about' ? <><Exhibit /><Story /></> : null}

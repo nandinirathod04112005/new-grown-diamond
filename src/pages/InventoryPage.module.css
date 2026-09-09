@@ -98,3 +98,11 @@
 
 .hero > div > p.callLine a:hover,
 .hero > div > p.callLine a:focus-visible { border-bottom-color: currentColor; }
+
+/* The banner photograph: the page's gold as its wash, one layer above the
+   blurred field (z 0) and below the copy and the stone (z 2). */
+.hero { --accent-page: #b48c47; }
+/* `div.backdrop`, not `.backdrop`: the hero's own `.hero>div:not(.field)`
+   rule above makes every div a relative, z-2 grid item, and at higher
+   specificity it was turning the photograph into an empty relative box. */
+.hero > div.backdrop { position: absolute; inset: 0; display: block; z-index: 1; }

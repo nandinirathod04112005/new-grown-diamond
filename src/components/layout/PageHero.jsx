@@ -3,6 +3,7 @@ import { useRef } from 'react';
 import { gsap, useGSAP } from '@/lib/motion/gsap.js';
 import { prefersReducedMotion } from '@/lib/motion/media.js';
 import { usePointerParallax } from '@/hooks/usePointerParallax.js';
+import HeroBackdrop from './HeroBackdrop.jsx';
 import Motif from './Motif.jsx';
 import styles from './PageHero.module.css';
 
@@ -21,6 +22,13 @@ function toWords(text) {
  *
  * Everything has its arrived state in CSS and its opening state in GSAP, so a
  * page whose script never runs is finished rather than blank.
+ *
+ * `backdrop` is the photograph the whole banner is set against — full bleed,
+ * under the tinted field, moving with pointer and scroll (HeroBackdrop). Every
+ * page now has one, so the banners read as one family of rooms rather than a
+ * shared template with a different drawing in the corner. `image` is still
+ * the page's own photograph beside the type, with its alt text, for pages
+ * that have something to show at close range.
  */
 export default function PageHero({
   eyebrow,
@@ -32,11 +40,13 @@ export default function PageHero({
   action,
   image,
   imageAlt = '',
+  backdrop,
+  /* Where the crop keeps its subject as the frame changes shape. */
+  backdropFocus = '50% 50%',
 }) {
   const scope = useRef(null);
-  const depth = useRef(null);
 
-  usePointerParallax(depth, 1);
+  usePointerParallax(scope, 1);
 
   useGSAP(
     () => {
@@ -44,7 +54,10 @@ export default function PageHero({
       const q = gsap.utils.selector(scope);
       const tl = gsap.timeline({ defaults: { ease: 'expo.out', duration: 1.3 } });
 
-      tl.fromTo(q(`.${styles.field}`), { opacity: 0 }, { opacity: 1, duration: 1.6 }, 0)
+      /* Over a photograph the field is the light on it, not a glow beside
+         it, and the motif an etched ornament rather than a second subject —
+         so both settle lower when a backdrop is present. */
+      tl.fromTo(q(`.${styles.field}`), { opacity: 0 }, { opacity: backdrop ? 0.45 : 1, duration: 1.6 }, 0)
         .fromTo(
           q(`.${styles.brow} span`),
           { yPercent: 130, opacity: 0 },
@@ -65,7 +78,7 @@ export default function PageHero({
           0.85,
         )
         .fromTo(q(`.${styles.action}`), { y: 22, opacity: 0 }, { y: 0, opacity: 1, duration: 1.1 }, 1)
-        .fromTo(q(`.${styles.motif}`), { opacity: 0, scale: 0.86 }, { opacity: 1, scale: 1, duration: 1.8 }, 0.3)
+        .fromTo(q(`.${styles.motif}`), { opacity: 0, scale: 0.86 }, { opacity: backdrop ? 0.55 : 1, scale: 1, duration: 1.8 }, 0.3)
         .fromTo(
           q(`.${styles.shot}`),
           { clipPath: 'inset(0 0 100% 0)' },
@@ -73,11 +86,17 @@ export default function PageHero({
           0.3,
         );
     },
-    { scope, dependencies: [title] },
+    { scope, dependencies: [title, backdrop] },
   );
 
   return (
-    <header ref={scope} className={styles.hero} style={{ '--accent-page': accent }}>
+    <header
+      ref={scope}
+      className={styles.hero}
+      data-backdrop={backdrop ? '' : undefined}
+      style={{ '--accent-page': accent }}
+    >
+      <HeroBackdrop src={backdrop} focus={backdropFocus} className={styles.backdrop} />
       {/* Ambient field, tinted per page — the cheapest way to make two pages
           with the same structure feel like different rooms. */}
       <div className={styles.field} aria-hidden="true">
@@ -85,7 +104,7 @@ export default function PageHero({
       </div>
       <div className={styles.grain} aria-hidden="true" />
 
-      <div ref={depth} className={styles.depth}>
+      <div className={styles.depth}>
         <div className={styles.copy}>
           {/*
             * Split for the eye, whole for everything else.

@@ -97,8 +97,8 @@ export default function ContactPage() {
         intro="Share a shape, carat range, colour, clarity and quantity. Our team will respond with available options and supporting certificates."
         motif="pulse"
         accent="#d09268"
-        image={stoneInHand}
-        imageAlt="A loose polished diamond held in tweezers above an open hand." 
+        backdrop={stoneInHand}
+        backdropFocus="74% 46%"
         action={{ href: '#enquiry', label: 'Start an enquiry' }}
       />
       {/* Ahead of the office directory: someone who wants to talk to a person

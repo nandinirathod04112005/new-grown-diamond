@@ -1,0 +1,137 @@
+/*
+ * Arrived state first, motion second — a banner whose script never runs is a
+ * finished still, not a blank.
+ *
+ * Three numbers drive everything and none of them is React state:
+ *   --mx / --my  pointer, -1..1, written by usePointerParallax on an ancestor
+ *   --hp         scroll, 0..1, written by useHeroProgress on this element
+ * The opening and the idle drift are keyframes on the INDIVIDUAL transform
+ * properties (`scale`, `translate`), so they compose with the `transform`
+ * that the pointer and scroll values drive instead of fighting it for the
+ * same property.
+ */
+.backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  --hp: 0;
+  /* The page's own colour — a photograph read through this looks like it
+     belongs to the page rather than pasted onto it. */
+  --wash: var(--accent-page, var(--accent));
+}
+
+.image {
+  position: absolute;
+  /* Bled past the edges so neither the drift nor the pointer lean ever
+     reveals a border of the box behind the photograph. */
+  inset: -7% -5%;
+  width: 110%;
+  height: 114%;
+  object-fit: cover;
+  object-position: var(--focus, 50% 50%);
+  transform-origin: var(--focus, 50% 50%);
+  transform:
+    translate3d(
+      calc(var(--mx, 0) * -1.4%),
+      calc(var(--my, 0) * -1% + var(--hp) * 18%),
+      0
+    )
+    scale(calc(1.04 + var(--hp) * 0.08));
+  /* Falls behind the page as the content arrives, rather than staying lit
+     under it. */
+  opacity: calc(1 - var(--hp) * 0.55);
+  filter: saturate(0.82) contrast(1.04);
+  animation:
+    backdropOpen 1.9s var(--ease-strong) both,
+    backdropDrift 44s var(--ease-inout) 1.9s infinite alternate;
+  will-change: transform, opacity, filter;
+}
+
+/* From soft, near and pale to sharp and settled: the photograph arrives the
+   way the eye focuses, not the way a slideshow cuts. */
+@keyframes backdropOpen {
+  from { opacity: 0; scale: 1.18; filter: blur(22px) saturate(0.55) contrast(1); }
+  to { opacity: 1; scale: 1; filter: blur(0) saturate(0.82) contrast(1.04); }
+}
+
+/* Forty-four seconds edge to edge — motion you notice only when you look for
+   it, which is the amount a photograph behind text can carry. */
+@keyframes backdropDrift {
+  from { translate: -1.2% 0.6%; }
+  to { translate: 1.2% -0.8%; }
+}
+
+/* The page's accent, laid over the highlights only. */
+.tint {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    118deg,
+    color-mix(in srgb, var(--wash) 42%, transparent) 0%,
+    color-mix(in srgb, var(--wash) 14%, transparent) 46%,
+    transparent 72%
+  );
+  mix-blend-mode: soft-light;
+}
+
+/*
+ * Legibility. Built from --ink so it is the page's ground in both themes:
+ * dark ink over the photograph on the dark theme, pale ink on the light one.
+ * Heavy where the type sits (left, and the bottom edge where the page begins),
+ * open on the right so the photograph is still a photograph.
+ */
+.scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--ink) 90%, transparent) 0%,
+      color-mix(in srgb, var(--ink) 66%, transparent) 38%,
+      color-mix(in srgb, var(--ink) 26%, transparent) 72%,
+      color-mix(in srgb, var(--ink) 14%, transparent) 100%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--ink) 58%, transparent) 0%,
+      transparent 28%,
+      transparent 58%,
+      var(--ink) 100%
+    );
+}
+
+/* A slow band of light crossing the frame every fourteen seconds — the one
+   thing that says the picture is live without ever moving the picture. */
+.shine {
+  position: absolute;
+  inset: -20%;
+  background: linear-gradient(105deg, transparent 42%, rgba(255, 255, 255, 0.075) 50%, transparent 58%);
+  mix-blend-mode: screen;
+  animation: backdropShine 14s var(--ease-inout) 2.4s infinite;
+}
+
+@keyframes backdropShine {
+  0% { transform: translate3d(-55%, 0, 0); }
+  55%, 100% { transform: translate3d(55%, 0, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .image {
+    animation: none;
+    transform: none;
+    opacity: 1;
+    scale: 1;
+    translate: 0 0;
+    filter: saturate(0.82) contrast(1.04);
+  }
+  .shine { animation: none; opacity: 0; }
+}
+
+/* On a phone the pointer is absent and the frame is tall: the crop keeps its
+   focus and the fade-out is shortened so the banner does not sit dark for a
+   whole screen of scrolling. */
+@media (max-width: 720px) {
+  .image { opacity: calc(1 - var(--hp) * 0.4); }
+}

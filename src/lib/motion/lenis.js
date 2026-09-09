@@ -26,7 +26,7 @@ export function getLenis() {
 export function createSmoothScroll() {
   if (prefersReducedMotion()) {
     document.documentElement.classList.add('no-smooth');
-    return { lenis: null, destroy: () => {} };
+    return { lenis: null, destroy: () => document.documentElement.classList.remove('no-smooth') };
   }
 
   const lenis = new Lenis({
@@ -39,7 +39,7 @@ export function createSmoothScroll() {
 
   active = lenis;
 
-  const raf = (time) => lenis.raf(time * 1000);
+  const raf = (time) => { if (!document.hidden) lenis.raf(time * 1000); };
   gsap.ticker.add(raf);
   gsap.ticker.lagSmoothing(0);
 

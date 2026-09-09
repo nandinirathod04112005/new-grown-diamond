@@ -1,13 +1,17 @@
-.split { display: inline-flex; flex-wrap: wrap; overflow: clip; }
+.split { display: inline; }
 .word { display: inline-block; animation: word-in .8s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(var(--word-index) * 55ms); }
 .stagger > * { transition-delay: calc(var(--stagger-index, 0) * 70ms); }
+.stagger[data-reveal='in'] > * { animation: grid-in .65s cubic-bezier(.22,1,.36,1) both; animation-delay: min(calc(var(--stagger-index, 0) * 55ms), 330ms); }
+@keyframes grid-in { from { opacity: 0; translate: 0 18px; } to { opacity: 1; translate: 0 0; } }
 .mask { overflow: clip; }
-.mask > * { transition: clip-path .9s cubic-bezier(.2,.8,.2,1), transform .9s cubic-bezier(.2,.8,.2,1); clip-path: inset(0 0 100%); transform: scale(1.035); }
+.mask > * { transition: clip-path .9s cubic-bezier(.2,.8,.2,1), transform .9s cubic-bezier(.2,.8,.2,1); clip-path: inset(0); transform: scale(1); }
+.mask[data-pending='true'] > * { clip-path: inset(0 0 100%); transform: scale(1.035); }
 .mask[data-visible='true'] > * { clip-path: inset(0); transform: scale(1); }
 .parallax { transform: translate3d(0, var(--parallax-y, 0), 0); will-change: transform; }
 @keyframes word-in { from { opacity: 0; transform: translateY(105%); } }
 @media (prefers-reduced-motion: reduce) {
   .word { animation: none; }
-  .mask > * { transition: none; clip-path: none; transform: none; }
+  .stagger[data-reveal='in'] > * { animation: none; }
+  .mask > *, .mask[data-pending='true'] > * { transition: none; clip-path: none; transform: none; }
   .parallax { transform: none; }
 }

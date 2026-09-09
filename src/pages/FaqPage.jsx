@@ -1,6 +1,6 @@
 import PageHero from '@/components/layout/PageHero.jsx';
 import { FAQS } from './siteContent.js';
-import hphtRough from '@/assets/process/hpht-rough.jpg';
+import schematic from '@/assets/process/cvd-technical-schematic.webp';
 import styles from './UtilityPages.module.css';
 
 export default function FaqPage() {
@@ -12,8 +12,7 @@ export default function FaqPage() {
         intro="Technical and purchasing essentials for laboratory-grown diamonds."
         motif="waves"
         accent="#7aa9d6"
-        image={hphtRough}
-        imageAlt="Rough laboratory-grown diamond crystals beside a two-millimetre scale bar."
+        backdrop={schematic}
       />
       <div className={styles.accordion}>
         {FAQS.map(([question, answer], index) => (

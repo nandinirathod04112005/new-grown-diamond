@@ -21,8 +21,8 @@ export default function JewelleryPage() {
         intro="Every mount is built around its stone, never the reverse — the setting is drawn to the diamond that has already been chosen."
         accent="#c9a24a"
         motif="rings"
-        image={ringAssembly}
-        imageAlt="Diamond rings and loose stones on a jeweller's bench during setting." 
+        backdrop={ringAssembly}
+        backdropFocus="50% 42%"
         action={{ href: '/contact', label: 'Begin a custom enquiry' }}
       />
 

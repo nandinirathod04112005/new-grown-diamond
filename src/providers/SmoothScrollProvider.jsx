@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 
 import { createSmoothScroll } from '@/lib/motion/lenis.js';
+import useReducedMotion from '@/hooks/useReducedMotion.js';
 
 /**
  * Owns the single Lenis instance for the app's lifetime.
@@ -11,6 +12,7 @@ import { createSmoothScroll } from '@/lib/motion/lenis.js';
  */
 export default function SmoothScrollProvider({ children }) {
   const handle = useRef(null);
+  const reduced = useReducedMotion();
 
   useEffect(() => {
     handle.current = createSmoothScroll();
@@ -18,7 +20,7 @@ export default function SmoothScrollProvider({ children }) {
       handle.current?.destroy();
       handle.current = null;
     };
-  }, []);
+  }, [reduced]);
 
   return children;
 }

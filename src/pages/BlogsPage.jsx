@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import CausticField from '@/components/media/CausticField.jsx';
+import HeroBackdrop from '@/components/layout/HeroBackdrop.jsx';
+import gradingBench from '@/assets/process/grading-bench.webp';
 
 import { usePointerParallax } from '@/hooks/usePointerParallax.js';
 import { listPublishedBlogs } from '@/lib/supabase/queries/blogs.js';
@@ -48,7 +49,11 @@ export default function BlogsPage() {
     <main className={styles.page}>
       <header className={styles.hero}>
         <div className={styles.field} aria-hidden="true" />
-      <CausticField className={styles.caustics} />
+        {/* The bench the notes are written from, behind the words — the same
+            layer and motion as every other banner. The caustic light that
+            stood in for a photograph is gone: screen-blended over a real one
+            it flared white and took the headline with it. */}
+        <HeroBackdrop src={gradingBench} focus="50% 42%" />
         <div className={styles.heroCopy}>
           <p className={styles.eyebrow}>New Grown Diamond</p>
           <h1 className={styles.title}>The journal</h1>

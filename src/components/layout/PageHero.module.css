@@ -202,3 +202,21 @@
 @media (prefers-reduced-motion: reduce) {
   .shot img { animation: none; transform: none; }
 }
+
+/* ---------------- the photograph ---------------- */
+
+/* Under the tinted field, so the field reads as light falling on the picture
+   rather than a glow floating beside it. */
+.backdrop { z-index: -3; }
+
+.hero[data-backdrop] { min-height: 86vh; }
+
+/* Arrived values for a page whose script never ran; the timeline lands on
+   the same numbers. */
+.hero[data-backdrop] .field { opacity: 0.45; }
+.hero[data-backdrop] .grain { opacity: 0.05; }
+.hero[data-backdrop] .motif > svg { opacity: 0.55; }
+
+/* A shade brighter over a photograph than over the plain ground, where the
+   muted grey was measured. */
+.hero[data-backdrop] .intro { color: color-mix(in srgb, var(--text) 74%, var(--text-muted)); }

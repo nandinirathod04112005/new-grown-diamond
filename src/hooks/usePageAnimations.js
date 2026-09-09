@@ -9,7 +9,7 @@ const TARGETS = 'main h1:not([aria-label]), main h2:not([aria-label]), main deta
 export default function usePageAnimations(path) {
   const reduced = useReducedMotion();
   useEffect(() => {
-    if (reduced) return undefined;
+    if (reduced || path === '/admin' || path.startsWith('/admin/') || typeof IntersectionObserver === 'undefined') return undefined;
     const seen = new WeakSet();
     const animations = new Set();
     let frame = 0;
