@@ -9,6 +9,7 @@ import { confirmError, emailError, firstError, passwordError, requiredError, toM
 import styles from './Auth.module.css';
 import { authErrorMessage } from './authErrors.js';
 import { authRedirectTo } from '@/lib/supabase/authRedirect.js';
+import { createEnquiry } from '@/lib/supabase/queries/enquiries.js';
 
 const MIN_PASSWORD = 8;
 
@@ -39,6 +40,23 @@ export default function RegisterPage() {
   const [done, setDone] = useState(null); // 'session' | 'confirm'
   const [tried, setTried] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
+  /*
+   * The dead end this exists to remove.
+   *
+   * When the mail service is over its limit, Supabase refuses the sign-up
+   * outright — no account is created and no email is sent, so the visitor gets
+   * an error and has nowhere to go. They came here to open an account; being
+   * told to come back later is not an outcome.
+   *
+   * So the request is captured through the enquiries table the contact form
+   * already writes to, which needs no email and no dashboard change, and the
+   * desk activates the account by hand. `blocked` holds the details while that
+   * is offered; `handed` is the reference once it has been sent.
+   */
+  const [blocked, setBlocked] = useState(null);
+  const [handing, setHanding] = useState(false);
+  const [handed, setHanded] = useState(null);
+  const [handError, setHandError] = useState('');
   /* Declared individually rather than gathered into one object: reading
      `refs.email` during render is indistinguishable, to a linter, from reading
      `.current`, and a rule that fires on correct code stops being useful. */
@@ -126,6 +144,23 @@ export default function RegisterPage() {
 
       if (err) {
         console.error('[NGD register]', err);
+        /*
+         * Distinguish "the mail service is full" from every other failure.
+         * A wrong password format is the visitor's to fix; this one is ours,
+         * and it is the only case where handing the request to the desk is the
+         * right answer rather than a confusing detour.
+         */
+        /* Named errCode, not code: `code` is already the staff access code in
+           this component, and shadowing it here would leave the next person to
+           edit this block reading the wrong variable. */
+        const errCode = err.code ?? err.error_code ?? '';
+        if (errCode === 'over_email_send_rate_limit' || err.status === 429) {
+          setBlocked({
+            fullName: fullName.trim(),
+            email: email.trim(),
+            wantsAdmin: kind === 'admin',
+          });
+        }
         // Supabase's own message is surfaced because it covers real, actionable
         // cases — a weak password, a malformed address, rate limiting. It is not
         // extended with any check of our own for whether the email exists.
@@ -168,6 +203,93 @@ export default function RegisterPage() {
           <a className={styles.submit} href="/account">Go to your account</a>
           <a className={styles.ghost} href="/diamonds">Browse the inventory</a>
         </div>
+      </AuthShell>
+    );
+  }
+
+  /*
+   * Shown instead of a bare error when the mail service is the thing that
+   * failed. It states plainly that no account was created — the one fact a
+   * visitor needs, because otherwise they will try again with the same address
+   * and hit "already registered" later.
+   */
+  if (blocked && !done) {
+    return (
+      <AuthShell
+        eyebrow="New Grown Diamond"
+        title={handed ? 'The desk has your request' : 'We could not finish just now'}
+        intro={handed
+          ? 'Someone will set your account up and email you directly.'
+          : 'Our email service has hit its hourly limit, so the confirmation could not be sent.'}
+        aside={<>Already registered? <a href="/login">Sign in</a>.</>}
+      >
+        {handed ? (
+          <>
+            <p className={styles.note} data-tone="good">
+              <strong>Reference {handed}.</strong>
+              We have your name and email. The desk will create your account and
+              contact you — usually the same working day.
+            </p>
+            <div className={styles.actions}>
+              <a className={styles.submit} href="/diamonds">Browse the inventory</a>
+              <a className={styles.ghost} href="/contact">Contact the desk</a>
+            </div>
+          </>
+        ) : (
+          <>
+            <p className={styles.note} data-tone="error" role="alert">
+              <strong>No account was created.</strong>
+              Nothing was saved, so your email address is still free to use.
+            </p>
+            <p className={styles.hint}>
+              We can pass your details to the desk instead — they will set the
+              account up by hand and email you. Only your name and email are
+              sent; your password is not, and never leaves this page.
+            </p>
+            {handError && <p className={styles.note} data-tone="error" role="alert">{handError}</p>}
+            <div className={styles.actions}>
+              <button
+                type="button"
+                className={styles.submit}
+                disabled={handing}
+                onClick={async () => {
+                  setHanding(true);
+                  setHandError('');
+                  try {
+                    /*
+                     * The existing enquiries table, which the contact form
+                     * already writes to as an anonymous visitor. No new table,
+                     * no new policy, and deliberately NO password — an account
+                     * request is not a place to store one.
+                     */
+                    const ref = await createEnquiry({
+                      fullName: blocked.fullName,
+                      companyName: '',
+                      email: blocked.email,
+                      mobile: '',
+                      country: '',
+                      subject: 'Account setup',
+                      message: blocked.wantsAdmin
+                        ? 'Website sign-up could not complete because the email service was over its limit. This person also requested STAFF access — verify before granting it.'
+                        : 'Website sign-up could not complete because the email service was over its limit. Please create this account and confirm the address.',
+                    }, null);
+                    setHanded(ref);
+                  } catch (e) {
+                    console.error('[NGD register handoff]', e);
+                    setHandError('That could not be sent either. Please email the desk directly.');
+                  } finally {
+                    setHanding(false);
+                  }
+                }}
+              >
+                {handing ? <><span className={styles.spinner} aria-hidden="true" />Sending…</> : 'Send my details to the desk'}
+              </button>
+              <button type="button" className={styles.ghost} onClick={() => setBlocked(null)}>
+                Try again
+              </button>
+            </div>
+          </>
+        )}
       </AuthShell>
     );
   }
