@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
 import { supabase, isConfigured } from '@/lib/supabase/client.js';
+import { isAdminCode, unlockAdmin } from '@/lib/adminCode.js';
 import AuthShell from './AuthShell.jsx';
 import styles from './Auth.module.css';
 
@@ -22,6 +23,8 @@ const MIN_PASSWORD = 8;
  * how an account page becomes a support ticket.
  */
 export default function RegisterPage() {
+  const [kind, setKind] = useState('customer'); // 'customer' | 'admin'
+  const [code, setCode] = useState('');
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -44,13 +47,33 @@ export default function RegisterPage() {
       setError('The two passwords do not match.');
       return;
     }
+    if (kind === 'admin' && !isAdminCode(code)) {
+      setError('That staff code is not correct.');
+      return;
+    }
 
     setBusy(true);
     setError('');
     const { data, error: err } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { full_name: fullName.trim() } },
+      /*
+       * `requested_role`, deliberately NOT `role`.
+       *
+       * Sign-up metadata is written by the browser, so anything a database
+       * trigger copies straight out of it is effectively writable by whoever
+       * is filling in this form. If this said `role: 'admin'` and any trigger
+       * trusted it, the staff code below — which is readable in the bundle —
+       * would become a way for anyone at all to make themselves an
+       * administrator. So this records an ASKING, under a name nothing grants
+       * on, and an existing admin still has to set profiles.role themselves.
+       */
+      options: {
+        data: {
+          full_name: fullName.trim(),
+          ...(kind === 'admin' ? { requested_role: 'admin' } : null),
+        },
+      },
     });
     setBusy(false);
 
@@ -63,6 +86,11 @@ export default function RegisterPage() {
       return;
     }
 
+    // They have just proved they hold the code, so the desk gate does not ask
+    // for it again this session. It still checks the profile role, so this
+    // saves a keystroke and grants nothing.
+    if (kind === 'admin') unlockAdmin();
+
     // A session means confirmation is off and they are already in. No session
     // means an email is on its way and nothing has happened yet.
     setDone(data.session ? 'session' : 'confirm');
@@ -71,6 +99,19 @@ export default function RegisterPage() {
   if (done === 'session') {
     return (
       <AuthShell eyebrow="New Grown Diamond" title="Account created" intro="You are signed in.">
+        {/*
+          Said plainly, because the alternative is someone typing the staff
+          code, being told "account created", and then finding the desk still
+          refuses them — with no idea why. The code opened the form; it did
+          not make them an administrator, and only the database can.
+        */}
+        {kind === 'admin' && (
+          <p className={styles.note} data-tone="good">
+            <strong>Staff access has been requested, not granted.</strong>
+            The account is active as a customer now. An existing administrator
+            has to enable the staff role before the inventory desk will open.
+          </p>
+        )}
         <div className={styles.actions}>
           <a className={styles.submit} href="/account">Go to your account</a>
           <a className={styles.ghost} href="/diamonds">Browse the inventory</a>
@@ -114,6 +155,56 @@ export default function RegisterPage() {
         )}
 
         {error && <p className={styles.note} data-tone="error" role="alert">{error}</p>}
+
+        {/*
+          First, because it decides what the rest of the form asks for. Radios
+          rather than a select: there are two options, both should be readable
+          without opening anything, and a fieldset gives the pair a name that a
+          screen reader announces once instead of twice.
+        */}
+        <fieldset className={styles.kinds} style={{ '--i': 0 }}>
+          <legend className={styles.label}>Account type</legend>
+          <div className={styles.kindRow}>
+            {[
+              ['customer', 'Customer', 'Browse stock, send enquiries, keep your reports.'],
+              ['admin', 'Administrator', 'Staff only. Needs the access code.'],
+            ].map(([value, title, blurb]) => (
+              <label key={value} className={styles.kind} data-on={kind === value ? '' : undefined}>
+                <input
+                  type="radio"
+                  name="accountKind"
+                  value={value}
+                  checked={kind === value}
+                  onChange={() => { setKind(value); setError(''); }}
+                />
+                <span className={styles.kindTitle}>{title}</span>
+                <span className={styles.kindBlurb}>{blurb}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+
+        {kind === 'admin' && (
+          <label className={styles.field2} style={{ '--i': 1 }}>
+            <span className={styles.label}>Staff access code</span>
+            <input
+              className={styles.input}
+              type="password"
+              value={code}
+              /* Not `one-time-code`: that invites the browser to offer an SMS
+                 passcode, which this is not. `off` keeps managers out of it. */
+              autoComplete="off"
+              inputMode="numeric"
+              required
+              placeholder="••••••"
+              onChange={(e) => { setCode(e.target.value); setError(''); }}
+            />
+            <span className={styles.hint}>
+              Ask an existing administrator. Staff access is confirmed in the
+              database afterwards — this code only opens the request.
+            </span>
+          </label>
+        )}
 
         <label className={styles.field2} style={{ '--i': 0 }}>
           <span className={styles.label}>Full name</span>

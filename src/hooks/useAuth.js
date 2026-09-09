@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { supabase } from '@/lib/supabase/client.js';
+import { lockAdmin } from '@/lib/adminCode.js';
 
 /**
  * Session plus the caller's own profile row.
@@ -66,6 +67,16 @@ export function useAuth() {
     state.profile?.account_status === 'active';
 
   const signOut = useCallback(async () => {
+    /*
+     * Shut the staff gate on the way out, and do it FIRST.
+     *
+     * The unlock lives in sessionStorage, which outlives a sign-out — so
+     * without this, signing out on a showroom machine and handing it over
+     * would leave the desk one login away from open for whoever came next.
+     * Before the network call, because a failed sign-out is exactly the case
+     * where you least want the gate left standing open.
+     */
+    lockAdmin();
     if (supabase) await supabase.auth.signOut();
   }, []);
 

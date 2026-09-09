@@ -404,3 +404,93 @@
 
 /* The same thrown light as the hero, behind the same built ground. */
 .caustics { z-index: -2; opacity: 0.85; }
+
+/* ---------------- account type ---------------- */
+
+/*
+ * The chooser.
+ *
+ * A fieldset carries the grouping for assistive technology, but browsers give
+ * it default borders, padding and a legend that sits inside them — none of
+ * which belong in this form. Stripped back to nothing, and the visual grouping
+ * is done by the two cards instead.
+ */
+.kinds {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--s-2);
+}
+
+.kinds > legend {
+  padding: 0;
+  /* A legend is not a grid item in every engine, so it is spaced by its own
+     margin rather than relying on the gap above. */
+  margin-bottom: var(--s-2);
+}
+
+.kindRow {
+  display: grid;
+  gap: var(--s-2);
+  grid-template-columns: 1fr 1fr;
+}
+
+@media (max-width: 30rem) {
+  .kindRow { grid-template-columns: 1fr; }
+}
+
+/*
+ * Each option is a real radio inside its own label, so the whole card is the
+ * hit target and the keyboard behaviour — arrow keys moving through the group,
+ * one tab stop for the set — is the browser's rather than something rebuilt
+ * here. The input is hidden from sight but NOT from the accessibility tree or
+ * from focus: `display: none` would take it out of both.
+ */
+.kind {
+  position: relative;
+  display: grid;
+  gap: 0.35rem;
+  padding: var(--s-3);
+  border: 1px solid var(--ink-line);
+  border-radius: 3px;
+  cursor: pointer;
+  transition: border-color var(--dur-base) var(--ease-primary),
+    background var(--dur-base) var(--ease-primary);
+}
+
+.kind input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  margin: 0;
+}
+
+.kind:hover { border-color: var(--slate); }
+
+.kind[data-on] {
+  border-color: var(--gold);
+  background: var(--ink-raised);
+}
+
+/* Focus lands on the invisible radio, so the ring has to be drawn by the card
+   around it or a keyboard user cannot see where they are. */
+.kind:has(input:focus-visible) {
+  outline: 2px solid var(--gold-lift);
+  outline-offset: 2px;
+}
+
+.kindTitle {
+  font-size: var(--t-sm);
+  letter-spacing: 0.04em;
+  color: var(--text);
+}
+
+.kind[data-on] .kindTitle { color: var(--gold-lift); }
+
+.kindBlurb {
+  font-size: var(--t-xs);
+  line-height: 1.5;
+  color: var(--text-muted);
+}

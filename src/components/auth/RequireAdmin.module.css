@@ -42,3 +42,40 @@
 @media (prefers-reduced-motion: reduce) {
   .spinner { animation-duration: 2.4s; }
 }
+
+/* ---------------- the staff code gate ---------------- */
+
+.codeForm {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--s-2);
+  margin-top: var(--s-2);
+}
+
+.codeInput {
+  width: 11rem;
+  padding: 0.9rem 1rem;
+  background: transparent;
+  border: 1px solid var(--ink-line);
+  color: var(--ivory);
+  /* Wide tracking so six dots read as six, not as a smudge. */
+  letter-spacing: 0.5em;
+  text-align: center;
+  font-size: var(--t-sm);
+}
+
+.codeInput:focus-visible {
+  outline: 2px solid var(--gold-lift);
+  outline-offset: 2px;
+}
+
+/*
+ * Reserves its own line height whether or not it is showing an error, so the
+ * Unlock button does not jump when a wrong code swaps the hint for the alert.
+ */
+.codeNote {
+  min-height: 1.4em;
+  font-size: var(--t-xs);
+  color: var(--text-muted);
+}

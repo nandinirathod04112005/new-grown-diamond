@@ -1,8 +1,25 @@
+import { useState } from 'react';
+
 import { useAuth } from '@/hooks/useAuth.js';
+import { isAdminCode, isAdminUnlocked, unlockAdmin } from '@/lib/adminCode.js';
 import styles from './RequireAdmin.module.css';
 
 /**
- * Renders its children only for an active admin.
+ * Renders its children only for an active admin who has entered the code.
+ *
+ * TWO CHECKS, AND THEY ARE NOT EQUALS.
+ *
+ * The role is the real one. It comes from public.profiles under row-level
+ * security, it is re-read on every mount, and it is what the database itself
+ * enforces on every query the desk makes. Nothing on this screen can talk it
+ * round.
+ *
+ * The code is the second, and it is a lock on the door rather than a claim
+ * about who is standing at it — see the note in lib/adminCode.js for why a
+ * value shipped in the bundle can only ever withhold and never grant. The
+ * order below matters: the role is checked FIRST, so someone who is not an
+ * administrator is turned away whether or not they know the code, and never
+ * learns whether the code they tried was right.
  *
  * Fails closed, and shows a real loading state rather than a blank screen
  * while the profile resolves — a guarded page that flashes empty reads as
@@ -10,6 +27,22 @@ import styles from './RequireAdmin.module.css';
  */
 export default function RequireAdmin({ children }) {
   const { status, isAdmin, profile } = useAuth();
+  // Read once at mount, then owned by this component: the gate should not
+  // re-open by itself because something else touched storage.
+  const [unlocked, setUnlocked] = useState(() => isAdminUnlocked());
+  const [code, setCode] = useState('');
+  const [wrong, setWrong] = useState(false);
+
+  function submitCode(event) {
+    event.preventDefault();
+    if (!isAdminCode(code)) {
+      setWrong(true);
+      setCode('');
+      return;
+    }
+    unlockAdmin();
+    setUnlocked(true);
+  }
 
   if (status === 'loading') {
     return (
@@ -40,6 +73,42 @@ export default function RequireAdmin({ children }) {
             : 'We could not load your account details. Please contact support.'}
         </p>
         <a className={styles.action} href="/">Back to the site</a>
+      </main>
+    );
+  }
+
+  /*
+   * Only reached by someone the database already accepts as an active
+   * administrator. That is why this asks for the code rather than the identity
+   * — the identity question has been answered above.
+   */
+  if (!unlocked) {
+    return (
+      <main className={styles.gate}>
+        <h1>Staff code</h1>
+        <p>Enter the access code to open the inventory desk.</p>
+        <form className={styles.codeForm} onSubmit={submitCode}>
+          <label className="u-visually-hidden" htmlFor="admin-code">Staff access code</label>
+          <input
+            id="admin-code"
+            className={styles.codeInput}
+            type="password"
+            value={code}
+            autoComplete="off"
+            inputMode="numeric"
+            /* eslint-disable-next-line jsx-a11y/no-autofocus -- this is the only
+               control on the page and the whole reason it rendered. */
+            autoFocus
+            placeholder="••••••"
+            onChange={(e) => { setCode(e.target.value); setWrong(false); }}
+          />
+          <button className={styles.action} type="submit">Unlock</button>
+        </form>
+        <p className={styles.codeNote} role={wrong ? 'alert' : undefined}>
+          {wrong
+            ? 'That code is not correct.'
+            : 'The desk locks itself again when this tab is closed.'}
+        </p>
       </main>
     );
   }
