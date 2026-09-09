@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 import { useAuth } from '@/hooks/useAuth.js';
 import { isAdminCode, isAdminUnlocked, unlockAdmin } from '@/lib/adminCode.js';
@@ -33,11 +33,20 @@ export default function RequireAdmin({ children }) {
   const [code, setCode] = useState('');
   const [wrong, setWrong] = useState(false);
 
+  const codeField = useRef(null);
+
   function submitCode(event) {
     event.preventDefault();
     if (!isAdminCode(code)) {
       setWrong(true);
-      setCode('');
+      /*
+       * The value is KEPT and selected, not wiped. Emptying a masked field
+       * after a mistake forces a blind retype of something the person cannot
+       * see; selecting it lets them either type over it or correct one
+       * character. Focus goes back to the field for the same reason — the
+       * button that was pressed is not where the next keystroke belongs.
+       */
+      requestAnimationFrame(() => { codeField.current?.focus(); codeField.current?.select(); });
       return;
     }
     unlockAdmin();
@@ -91,11 +100,14 @@ export default function RequireAdmin({ children }) {
           <label className="u-visually-hidden" htmlFor="admin-code">Staff access code</label>
           <input
             id="admin-code"
+            ref={codeField}
             className={styles.codeInput}
             type="password"
             value={code}
             autoComplete="off"
             inputMode="numeric"
+            aria-invalid={wrong ? 'true' : undefined}
+            aria-describedby="admin-code-note"
             /* eslint-disable-next-line jsx-a11y/no-autofocus -- this is the only
                control on the page and the whole reason it rendered. */
             autoFocus
@@ -104,7 +116,14 @@ export default function RequireAdmin({ children }) {
           />
           <button className={styles.action} type="submit">Unlock</button>
         </form>
-        <p className={styles.codeNote} role={wrong ? 'alert' : undefined}>
+        {/*
+          One live region, mounted from the start. A region that only appears
+          when there is an error is exactly the one assistive technology is
+          least likely to announce — the announcement is triggered by content
+          CHANGING inside a region that already exists. So the element is
+          always here and only its text swaps.
+        */}
+        <p id="admin-code-note" className={styles.codeNote} role="status" aria-live="polite">
           {wrong
             ? 'That code is not correct.'
             : 'The desk locks itself again when this tab is closed.'}

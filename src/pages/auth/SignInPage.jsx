@@ -18,10 +18,12 @@ import { authErrorMessage } from './authErrors.js';
  * oracle that will confirm, one guess at a time, which of a list of email
  * addresses hold accounts here.
  *
- * Where someone lands afterwards depends on what they are: an active
- * administrator goes to the inventory desk, everyone else to their own
- * account. The redirect is a convenience only — the admin route re-checks the
- * role itself, and RLS in the database is what actually enforces it.
+ * Everyone lands on /account afterwards. The role is not known at the moment
+ * the session arrives — the profile row has not been read yet — so guessing
+ * "admin" here and bouncing a customer through the desk would be worse than
+ * one extra click. The account page reads the profile and offers the desk
+ * link when the person turns out to be an administrator; the admin route
+ * re-checks the role itself, and RLS is what actually enforces it.
  */
 export default function SignInPage() {
   const { status, isAdmin, profile, signOut } = useAuth();

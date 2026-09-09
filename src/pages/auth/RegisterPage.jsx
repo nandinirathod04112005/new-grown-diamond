@@ -1,17 +1,16 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { supabase, isConfigured } from '@/lib/supabase/client.js';
 import { isAdminCode, unlockAdmin } from '@/lib/adminCode.js';
+import { useAuth } from '@/hooks/useAuth.js';
 import AuthShell from './AuthShell.jsx';
 import PasswordField from './PasswordField.jsx';
 import TextField from './TextField.jsx';
-import { confirmError, emailError, firstError, passwordError, requiredError, toMap } from './validation.js';
+import { MIN_PASSWORD, confirmError, emailError, firstError, passwordError, requiredError, toMap } from './validation.js';
 import styles from './Auth.module.css';
 import { authErrorMessage, isEmailDeliveryFailure } from './authErrors.js';
 import { authRedirectTo } from '@/lib/supabase/authRedirect.js';
 import { createEnquiry } from '@/lib/supabase/queries/enquiries.js';
-
-const MIN_PASSWORD = 8;
 
 /**
  * Create an account.
@@ -29,6 +28,7 @@ const MIN_PASSWORD = 8;
  * how an account page becomes a support ticket.
  */
 export default function RegisterPage() {
+  const { status: authStatus, profile, signOut } = useAuth();
   const [kind, setKind] = useState('customer'); // 'customer' | 'admin'
   const [code, setCode] = useState('');
   const [fullName, setFullName] = useState('');
@@ -57,6 +57,7 @@ export default function RegisterPage() {
   const [handing, setHanding] = useState(false);
   const [handed, setHanded] = useState(null);
   const [handError, setHandError] = useState('');
+  const [resent, setResent] = useState('');
   /* Declared individually rather than gathered into one object: reading
      `refs.email` during render is indistinguishable, to a linter, from reading
      `.current`, and a rule that fires on correct code stops being useful. */
@@ -66,6 +67,22 @@ export default function RegisterPage() {
   const passwordRef = useRef(null);
   const confirmRef = useRef(null);
   const clear = (k) => setFieldErrors((f) => ({ ...f, [k]: null }));
+
+  /*
+   * Where focus goes when the form is replaced by an outcome.
+   *
+   * Submitting swaps the entire tree. The button that had focus is destroyed,
+   * and a browser answers that by moving focus to the document — so a keyboard
+   * user's next Tab started at the site mark at the top of the page, and a
+   * screen reader heard "Creating your account" and then nothing, because the
+   * live region that would have carried the result was inside the form that
+   * had just unmounted. The outcome panel now takes focus itself, so the
+   * heading is read and the tab sequence resumes from there.
+   */
+  const outcome = useRef(null);
+  useEffect(() => {
+    if (done || blocked) outcome.current?.focus();
+  }, [done, blocked]);
 
   async function onSubmit(event) {
     event.preventDefault();
@@ -187,7 +204,25 @@ export default function RegisterPage() {
       // They have just proved they hold the code, so the desk gate does not ask
       // for it again this session. It still checks the profile role, so this
       // saves a keystroke and grants nothing.
-      if (kind === 'admin') unlockAdmin();
+      if (kind === 'admin') {
+        unlockAdmin();
+        /*
+         * A request has to reach a person, and user_metadata reaches none:
+         * nothing in the product reads requested_role, and the client cannot
+         * even query it. So the request is ALSO written to the enquiries
+         * queue, which the desk already works from. Best-effort — a failure
+         * here must not undo an account that was just created.
+         */
+        createEnquiry({
+          fullName: fullName.trim(),
+          companyName: '',
+          email: email.trim(),
+          mobile: '',
+          country: '',
+          subject: 'Staff access request',
+          message: 'This person signed up with the staff access code and asked for administrator access. Verify who they are, then set profiles.role to admin for their account.',
+        }, null).catch((e) => console.error('[NGD register] staff request note failed:', e));
+      }
 
       // A session means confirmation is off and they are already in. No session
       // means an email is on its way and nothing has happened yet.
@@ -202,6 +237,7 @@ export default function RegisterPage() {
   if (done === 'session') {
     return (
       <AuthShell eyebrow="New Grown Diamond" title="Account created" intro="You are signed in.">
+        <div ref={outcome} tabIndex={-1} className={styles.outcome} role="status">Account created. You are signed in.</div>
         {/*
           Said plainly, because the alternative is someone typing the staff
           code, being told "account created", and then finding the desk still
@@ -239,6 +275,7 @@ export default function RegisterPage() {
           : error}
         aside={<>Already registered? <a href="/login">Sign in</a>.</>}
       >
+        <div ref={outcome} tabIndex={-1} className={styles.outcome} role="status">
         {handed ? (
           <>
             <p className={styles.note} data-tone="good">
@@ -307,6 +344,7 @@ export default function RegisterPage() {
             </div>
           </>
         )}
+        </div>
       </AuthShell>
     );
   }
@@ -318,13 +356,72 @@ export default function RegisterPage() {
         title="Check your email"
         intro="Your account is not active yet."
       >
-        <p className={styles.note} data-tone="good">
-          <strong>Confirmation email sent to {email.trim()}.</strong>
-          Open it to finish creating your account. You are not signed in until
-          you do. Check your spam folder if it does not appear; a successful request does not guarantee inbox delivery.
-        </p>
+        <div ref={outcome} tabIndex={-1} className={styles.outcome} role="status">
+          <p className={styles.note} data-tone="good">
+            <strong>Confirmation email sent to {email.trim()}.</strong>
+            Open it to finish creating your account. You are not signed in until
+            you do. Check your spam folder if it does not appear.
+          </p>
+          {/*
+            This is the branch this deployment actually takes — email
+            confirmation is on, so a session never comes back — and it said
+            nothing about the staff role. The person had typed a code, been
+            told to check their email, and would later be refused by the desk
+            with no explanation anywhere between. The same fact that was only
+            ever shown on the unreachable branch is stated here, worded for
+            the pending case.
+          */}
+          {kind === 'admin' && (
+            <p className={styles.note}>
+              <strong>Staff access has been requested, not granted.</strong>
+              Confirm your email first. The account then works as a customer
+              account until an existing administrator enables the staff role —
+              the desk has been notified.
+            </p>
+          )}
+        </div>
         <div className={styles.actions}>
+          <button
+            type="button"
+            className={styles.ghost}
+            disabled={resent === 'sending'}
+            onClick={async () => {
+              setResent('sending');
+              const { error: err } = await supabase.auth.resend({
+                type: 'signup',
+                email: email.trim(),
+                options: { emailRedirectTo: authRedirectTo() },
+              });
+              if (err) console.error('[NGD register resend]', err);
+              setResent(err ? 'failed' : 'sent');
+            }}
+          >
+            {resent === 'sending' ? 'Sending…' : 'Resend the email'}
+          </button>
           <a className={styles.ghost} href="/login">Back to sign in</a>
+        </div>
+        {resent === 'sent' && <p className={styles.hint} role="status">Sent. It can take a minute to arrive.</p>}
+        {resent === 'failed' && <p className={styles.note} data-tone="error" role="alert">That could not be sent. The mail service may be unavailable — contact the desk.</p>}
+      </AuthShell>
+    );
+  }
+
+  /*
+   * Someone already signed in is not creating an account; they are creating a
+   * SECOND one underneath the first, which then shares a browser session with
+   * it in ways nothing in this app was written to handle. Say so, and offer
+   * the two things they might actually have meant.
+   */
+  if (authStatus === 'ready') {
+    return (
+      <AuthShell
+        eyebrow="New Grown Diamond"
+        title="You are already signed in"
+        intro={profile?.email || profile?.full_name || 'This browser has an active account.'}
+      >
+        <div className={styles.actions}>
+          <a className={styles.submit} href="/account">Go to your account</a>
+          <button type="button" className={styles.ghost} onClick={signOut}>Sign out to create another</button>
         </div>
       </AuthShell>
     );
@@ -400,7 +497,7 @@ export default function RegisterPage() {
         <TextField
           label="Full name"
           value={fullName}
-          index={0}
+          index={kind === 'admin' ? 2 : 1}
           required
           maxLength={160}
           autoComplete="name"
@@ -414,7 +511,7 @@ export default function RegisterPage() {
           label="Email"
           type="email"
           value={email}
-          index={1}
+          index={kind === 'admin' ? 3 : 2}
           required
           autoComplete="email"
           placeholder="you@company.com"
@@ -426,7 +523,7 @@ export default function RegisterPage() {
         <PasswordField
           label="Password"
           value={password}
-          index={2}
+          index={kind === 'admin' ? 4 : 3}
           required
           minLength={MIN_PASSWORD}
           autoComplete="new-password"
@@ -439,7 +536,7 @@ export default function RegisterPage() {
         <PasswordField
           label="Confirm password"
           value={confirm}
-          index={3}
+          index={kind === 'admin' ? 5 : 4}
           required
           autoComplete="new-password"
           inputRef={confirmRef}

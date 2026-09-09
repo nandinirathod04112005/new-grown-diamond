@@ -93,6 +93,33 @@ export default function ProfilePage() {
     );
   }
 
+  /*
+   * An administrator landing here is the NORMAL case after sign-in, not a
+   * failure. It rendered as "Customer workspace unavailable" with an
+   * error-toned notice — every staff sign-in ended on a page that looked like
+   * something had gone wrong. It is the same branch, worded for who is
+   * actually standing there.
+   */
+  if (!activeCustomer && isAdmin) {
+    return (
+      <AuthShell
+        eyebrow="Staff account"
+        title="Welcome back"
+        intro={user?.email}
+        aside={<>Looking for your own orders? <a href="/contact">Contact the desk</a>.</>}
+      >
+        <p className={styles.note} data-tone="good" role="status">
+          This is a staff account. The customer workspace does not apply to it;
+          the inventory desk is where your work is.
+        </p>
+        <div className={styles.actions}>
+          <a className={styles.submit} href="/admin">Open the inventory desk</a>
+          <button type="button" className={styles.ghost} onClick={signOut}>Sign out</button>
+        </div>
+      </AuthShell>
+    );
+  }
+
   if (!activeCustomer) {
     return (
       <AuthShell

@@ -108,7 +108,9 @@ const QUEUE_PATHS = new Set(['enquiries', 'quotes', 'holds', 'inspections']);
  * Returns the element for an /admin path, or null when the path is not one.
  */
 function adminRoute(path) {
-  if (!path.startsWith('/admin')) return null;
+  /* A segment boundary, so /administration or /admin-tips fall through to the
+     public router rather than landing a typo on the staff gate. */
+  if (path !== '/admin' && !path.startsWith('/admin/')) return null;
 
   /*
    * /admin used to BE the diamond list. It is now the overview, and the list

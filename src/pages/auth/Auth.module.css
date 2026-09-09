@@ -262,7 +262,14 @@
 .input::placeholder { color: var(--slate); }
 
 .input:focus {
-  outline: none;
+  /*
+   * Transparent, not none. Invisible in normal rendering — the box-shadow
+   * below is the visible ring — but in Windows High Contrast every outline is
+   * repainted in the system's focus colour, and `none` leaves those users
+   * with no indicator at all. The system cannot recolour what does not exist.
+   */
+  outline: 2px solid transparent;
+  outline-offset: 2px;
   border-color: var(--accent);
   background: rgba(8, 8, 10, 0.72);
   box-shadow: 0 0 0 3px rgba(0, 206, 201, 0.16);
@@ -531,6 +538,26 @@
 }
 
 .kind[data-on] .kindTitle { color: var(--gold-lift); }
+
+/*
+ * Forced colours strip every background and border colour, so the selected
+ * account type — carried only by a gold border and a raised background —
+ * became indistinguishable from the other. The radio is put back on screen
+ * there: it is the one control the system will always draw as checked.
+ */
+@media (forced-colors: active) {
+  .kind input {
+    position: static;
+    opacity: 1;
+    width: auto;
+    height: auto;
+    margin: 0 0 0.35rem;
+  }
+  .kind[data-on] { outline: 2px solid Highlight; outline-offset: 2px; }
+}
+
+/* The outcome panel is a focus target, not a control: no ring of its own. */
+.outcome { display: grid; gap: var(--s-3); outline: none; }
 
 .kindBlurb {
   font-size: var(--t-xs);

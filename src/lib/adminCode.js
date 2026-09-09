@@ -28,7 +28,14 @@
  * change, but note that VITE_ prefixed variables are also compiled into the
  * bundle. Changing it changes the code, not its visibility.
  */
-export const ADMIN_CODE = String(import.meta.env?.VITE_ADMIN_CODE ?? '123456');
+/*
+ * Falls back to the default when the variable is MISSING OR EMPTY, not only
+ * when it is missing. `??` treats '' as a real value, and a deployment that
+ * declared VITE_ADMIN_CODE= with nothing after it would have made the gate
+ * open on a blank submit — the one input every visitor tries first.
+ */
+const fromEnv = String(import.meta.env?.VITE_ADMIN_CODE ?? '').trim();
+export const ADMIN_CODE = fromEnv || '123456';
 
 const UNLOCK_KEY = 'ngd-admin-unlocked';
 

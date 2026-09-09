@@ -5,7 +5,7 @@ import AuthShell from './AuthShell.jsx';
 import PasswordField from './PasswordField.jsx';
 import styles from './Auth.module.css';
 
-const MIN_PASSWORD = 8;
+import { MIN_PASSWORD } from './validation.js';
 
 /** Finishes a recovery link using the session Supabase detects in the URL. */
 export default function ResetPasswordPage() {

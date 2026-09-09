@@ -98,7 +98,17 @@ export function useRouter() {
 
   const commit = useCallback((next, push) => {
     if (push) window.history.pushState({}, '', next);
-    setPath(next.replace(/\/+$/, '') || '/');
+    /*
+     * The PATHNAME becomes route state; the query does not.
+     *
+     * `next` arrives as pathname + search so the address bar keeps the query.
+     * Storing that whole string as the path meant "/diamonds?stone=X" was
+     * looked up as a route, matched nothing, and rendered the 404 — which is
+     * exactly what happened on Back after any tracked link. Every route match
+     * downstream compares against a bare pathname, so that is what is kept.
+     */
+    const { pathname } = new URL(next, window.location.href);
+    setPath(pathname.replace(/\/+$/, '') || '/');
     resetScroll();
   }, []);
 

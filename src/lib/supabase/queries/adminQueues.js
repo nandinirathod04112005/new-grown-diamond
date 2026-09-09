@@ -133,6 +133,30 @@ export async function setQueueStatus(name, id, status) {
   if (error) throw error;
 }
 
+/*
+ * Read a whole table in pages.
+ *
+ * PostgREST answers an unbounded select with at most max-rows — 1,000 by
+ * default — and says nothing about the rest. Below that the difference is
+ * invisible; above it, customers silently vanish from the list and every
+ * tally undercounts, with no error to say so. Ordering by id makes the pages
+ * stable while rows are being inserted underneath the read.
+ */
+async function readAll(table, columns, order = 'id') {
+  const PAGE = 1000;
+  const out = [];
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await supabase
+      .from(table)
+      .select(columns)
+      .order(order, { ascending: true })
+      .range(from, from + PAGE - 1);
+    if (error) throw error;
+    out.push(...(data ?? []));
+    if (!data || data.length < PAGE) return out;
+  }
+}
+
 /**
  * Customers, with counts of what each one has done.
  *
@@ -145,12 +169,11 @@ export async function setQueueStatus(name, id, status) {
 export async function loadCustomers() {
   if (!supabase) return { ok: false, rows: [], error: 'Not connected to the database.' };
 
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('id,full_name,company_name,email,phone,country,role,account_status,created_at,updated_at')
-    .order('created_at', { ascending: false });
-
-  if (error) {
+  let data;
+  try {
+    data = await readAll('profiles', 'id,full_name,company_name,email,phone,country,role,account_status,created_at,updated_at', 'created_at');
+    data.reverse(); // newest first for the screen; paged ascending for stability
+  } catch (error) {
     console.error('[NGD Admin] customers unavailable:', error);
     return { ok: false, rows: [], error: error.message };
   }
@@ -163,8 +186,10 @@ export async function loadCustomers() {
    */
   const tallies = await Promise.all(
     ['favourites', 'enquiries', 'quotes', 'holds', 'inspections'].map(async (t) => {
-      const { data: rows, error: err } = await supabase.from(t).select('user_id');
-      if (err) {
+      let rows;
+      try {
+        rows = await readAll(t, 'id,user_id');
+      } catch (err) {
         console.error(`[NGD Admin] ${t} tally failed:`, err);
         return [t, null];
       }
