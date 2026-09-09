@@ -28,5 +28,9 @@ export const AUTH_CALLBACK_PATH = '/auth/callback';
  */
 export function authRedirectTo() {
   if (typeof window === 'undefined') return undefined;
-  return `${window.location.origin}${AUTH_CALLBACK_PATH}`;
+  const origin = new URL(window.location.origin);
+  if (!['http:', 'https:'].includes(origin.protocol)) {
+    throw new Error('Email confirmation requires an HTTP or HTTPS website address.');
+  }
+  return new URL(AUTH_CALLBACK_PATH, origin).href;
 }

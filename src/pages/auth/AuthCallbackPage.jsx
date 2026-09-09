@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 
-import { supabase, isConfigured } from '@/lib/supabase/client.js';
+import { supabase, isConfigured, authCallbackUrl } from '@/lib/supabase/client.js';
+import { authErrorMessage } from './authErrors.js';
 import AuthShell from './AuthShell.jsx';
 import styles from './Auth.module.css';
 
@@ -26,11 +27,12 @@ import styles from './Auth.module.css';
  *   pkce     — ?code=…, exchanged for a session
  */
 export default function AuthCallbackPage() {
-  const [state, setState] = useState({ status: 'working', kind: null, message: null });
+  const [state, setState] = useState(() => isConfigured
+    ? { status: 'working', kind: null, message: null }
+    : { status: 'error', kind: null, message: 'This deployment is not connected to its account service.' });
 
   useEffect(() => {
     if (!isConfigured) {
-      setState({ status: 'error', kind: null, message: 'This deployment is not connected to its account service.' });
       return undefined;
     }
 
@@ -39,10 +41,11 @@ export default function AuthCallbackPage() {
     (async () => {
       /* The error arrives in the fragment, which never reaches a server and is
          therefore the only place to look for it. */
-      const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
-      const query = new URLSearchParams(window.location.search);
+      const callback = new URL(authCallbackUrl || window.location.href);
+      const hash = new URLSearchParams(callback.hash.replace(/^#/, ''));
+      const query = callback.searchParams;
 
-      const errCode = hash.get('error_code') ?? query.get('error_code');
+      const errCode = hash.get('error_code') ?? query.get('error_code') ?? hash.get('error') ?? query.get('error');
       const errDesc = hash.get('error_description') ?? query.get('error_description');
       if (errCode || errDesc) {
         const expired = /expired|invalid/i.test(`${errCode} ${errDesc}`);
@@ -57,11 +60,11 @@ export default function AuthCallbackPage() {
         return;
       }
 
-      /* PKCE: a code that has to be exchanged. Harmless to attempt when the
-         project is on the implicit flow — there is simply no code to find. */
-      const code = query.get('code');
-      if (code) {
-        const { error } = await supabase.auth.exchangeCodeForSession(code);
+      // Wait for SDK initialization for either implicit tokens or a PKCE code.
+      {
+        // detectSessionInUrl owns the exchange. initialize() reuses its promise,
+        // including when React StrictMode runs this effect twice.
+        const { error } = await supabase.auth.initialize();
         if (!alive) return;
         if (error) {
           console.error('[NGD auth callback]', error);
@@ -75,7 +78,8 @@ export default function AuthCallbackPage() {
        * by now. Ask it what it ended up with rather than parsing the URL a
        * second time — the client is the authority on whether a session exists.
        */
-      const { data } = await supabase.auth.getSession();
+      const { data, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) throw sessionError;
       if (!alive) return;
 
       const type = hash.get('type') ?? query.get('type');
@@ -97,7 +101,9 @@ export default function AuthCallbackPage() {
         kind: 'expired',
         message: 'That link has expired or has already been used.',
       });
-    })();
+    })().catch((error) => {
+      if (alive) setState({ status: 'error', kind: 'failed', message: authErrorMessage(error, error.message || 'Unable to check this link. Please try again.') });
+    });
 
     return () => { alive = false; };
   }, []);

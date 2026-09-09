@@ -4,7 +4,7 @@ import { chromium } from 'playwright';
 const origin = process.env.TEST_ORIGIN || 'http://127.0.0.1:4182';
 const browser = await chromium.launch({ headless: true });
 try {
-  const page = await browser.newPage();
+  const page = await browser.newPage({ reducedMotion: 'reduce' });
   page.setDefaultTimeout(10000);
   const requests = [];
   let response = { status: 400, body: { code: 'invalid_credentials', message: 'Invalid login credentials' } };
@@ -35,7 +35,7 @@ try {
   response = { status: 200, body: {} };
   await page.getByRole('button', { name: 'Resend the email' }).click();
   await page.getByText('Sent. It can take a minute to arrive.').waitFor();
-  assert.equal(new URL(requests.at(-1).url).searchParams.get('redirect_to'), `${origin}/account`);
+  assert.equal(new URL(requests.at(-1).url).searchParams.get('redirect_to'), `${origin}/auth/callback`);
   await page.getByLabel('Email', { exact: true }).fill('different@example.com');
   assert.equal(await page.getByRole('button', { name: 'Resend the email' }).count(), 0);
   console.log('Passed rate limits and confirmation resend.');
@@ -63,7 +63,19 @@ try {
   await page.getByRole('button', { name: 'Create account', exact: true }).click();
   await page.getByRole('alert').filter({ hasText: 'temporarily unavailable' }).waitFor();
   assert.equal(await page.getByRole('button', { name: 'Create account', exact: true }).isEnabled(), true);
+  for (const [status, code, message, expected] of [
+    [400, 'user_already_exists', 'User already registered', 'This email is already registered'],
+    [400, 'email_address_not_authorized', 'Email address not authorized', 'Email address not authorized'],
+    [500, 'unexpected_failure', 'Error sending confirmation email', 'Email delivery failed'],
+  ]) {
+    response = { status, body: { code, message } };
+    await page.getByRole('button', { name: 'Create account', exact: true }).click();
+    await page.getByRole('alert').filter({ hasText: expected }).waitFor();
+  }
   response = { status: 200, body: { id: '11111111-1111-4111-8111-111111111111', identities: [], email: 'customer@example.com' } };
+  await page.getByRole('button', { name: 'Create account', exact: true }).click();
+  await page.getByRole('alert').filter({ hasText: 'may already be registered' }).waitFor();
+  response = { status: 200, body: { id: '11111111-1111-4111-8111-111111111111', identities: [{ provider: 'email' }], email: 'customer@example.com' } };
   await page.getByRole('button', { name: 'Create account', exact: true }).click();
   await page.getByRole('heading', { name: 'Check your email' }).waitFor();
   const signup = requests.at(-1);
@@ -71,7 +83,9 @@ try {
   assert.equal(signup.body.password, ' password123 ');
   assert.equal(signup.body.data.full_name, 'Test Customer');
   assert.equal(signup.body.data.role, undefined);
-  assert.equal(new URL(signup.url).searchParams.get('redirect_to'), `${origin}/account`);
+  assert.equal(new URL(signup.url).searchParams.get('redirect_to'), `${origin}/auth/callback`);
+  await page.goto(`${origin}/auth/callback#error=access_denied&error_code=otp_expired&error_description=Email+link+expired`);
+  await page.getByRole('heading', { name: 'This link has expired' }).waitFor();
   console.log('Passed auth browser checks: validation, normalized payloads, credentials, rate limits, confirmation, resend, failed-request recovery, registration.');
 } finally {
   await browser.close();

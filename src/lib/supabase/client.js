@@ -12,6 +12,9 @@ import { SUPABASE_KEY, SUPABASE_URL, isConfigured } from './env.js';
  * absence — the storefront falls back to its built-in copy rather than
  * throwing on a missing environment variable.
  */
+// Capture callback details before the SDK consumes and clears URL tokens.
+export const authCallbackUrl = typeof window === 'undefined' ? null : window.location.href;
+
 export const supabase = isConfigured
   ? createClient(SUPABASE_URL, SUPABASE_KEY, {
       auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },

@@ -7,7 +7,7 @@ import PasswordField from './PasswordField.jsx';
 import TextField from './TextField.jsx';
 import { confirmError, emailError, firstError, passwordError, requiredError, toMap } from './validation.js';
 import styles from './Auth.module.css';
-import { authErrorMessage } from './authErrors.js';
+import { authErrorMessage, isEmailDeliveryFailure } from './authErrors.js';
 import { authRedirectTo } from '@/lib/supabase/authRedirect.js';
 import { createEnquiry } from '@/lib/supabase/queries/enquiries.js';
 
@@ -110,6 +110,7 @@ export default function RegisterPage() {
 
     setBusy(true);
     setError('');
+    setBlocked(null);
     try {
       const { data, error: err } = await supabase.auth.signUp({
         email: email.trim(),
@@ -150,11 +151,17 @@ export default function RegisterPage() {
          * and it is the only case where handing the request to the desk is the
          * right answer rather than a confusing detour.
          */
-        /* Named errCode, not code: `code` is already the staff access code in
-           this component, and shadowing it here would leave the next person to
-           edit this block reading the wrong variable. */
-        const errCode = err.code ?? err.error_code ?? '';
-        if (errCode === 'over_email_send_rate_limit' || err.status === 429) {
+        /*
+         * Any failure whose cause is the confirmation email — the hourly cap
+         * (429) or the mail service being broken (500 "Error sending
+         * confirmation email"). Matching only the first missed the second
+         * entirely, and the second is the one that does not fix itself by
+         * waiting.
+         *
+         * Either way Supabase has rolled the sign-up back, so there is no
+         * account and the visitor needs a route that does not depend on mail.
+         */
+        if (isEmailDeliveryFailure(err)) {
           setBlocked({
             fullName: fullName.trim(),
             email: email.trim(),
@@ -165,6 +172,15 @@ export default function RegisterPage() {
         // cases — a weak password, a malformed address, rate limiting. It is not
         // extended with any check of our own for whether the email exists.
         setError(authErrorMessage(err, err.message || 'That account could not be created.'));
+        return;
+      }
+
+      if (!data.session && Array.isArray(data.user?.identities) && data.user.identities.length === 0) {
+        setError('This email may already be registered. Try signing in or use Forgot password. No new confirmation email was verified.');
+        return;
+      }
+      if (!data.user) {
+        setError('The account service returned no account. Please try again.');
         return;
       }
 
@@ -220,7 +236,7 @@ export default function RegisterPage() {
         title={handed ? 'The desk has your request' : 'We could not finish just now'}
         intro={handed
           ? 'Someone will set your account up and email you directly.'
-          : 'Our email service has hit its hourly limit, so the confirmation could not be sent.'}
+          : 'Email rate limit exceeded. Please wait before requesting another confirmation link.'}
         aside={<>Already registered? <a href="/login">Sign in</a>.</>}
       >
         {handed ? (
@@ -238,8 +254,8 @@ export default function RegisterPage() {
         ) : (
           <>
             <p className={styles.note} data-tone="error" role="alert">
-              <strong>No account was created.</strong>
-              Nothing was saved, so your email address is still free to use.
+              <strong>The confirmation email could not be sent.</strong>
+              We could not verify whether an account already exists for this address.
             </p>
             <p className={styles.hint}>
               We can pass your details to the desk instead — they will set the
@@ -302,9 +318,9 @@ export default function RegisterPage() {
         intro="Your account is not active yet."
       >
         <p className={styles.note} data-tone="good">
-          <strong>We have sent a confirmation link to {email}.</strong>
+          <strong>Confirmation email sent to {email.trim()}.</strong>
           Open it to finish creating your account. You are not signed in until
-          you do.
+          you do. Check your spam folder if it does not appear; a successful request does not guarantee inbox delivery.
         </p>
         <div className={styles.actions}>
           <a className={styles.ghost} href="/login">Back to sign in</a>
