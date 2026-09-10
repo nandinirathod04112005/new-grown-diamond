@@ -61,6 +61,9 @@ export default function AdminDiamondForm({ id }) {
   const [form, setForm] = useState(BLANK);
   const [file, setFile] = useState(null);
   const [existingPath, setExistingPath] = useState('');
+  /* The row as it was loaded, kept so the audit entry can say what actually
+     changed rather than listing every column the form submits. */
+  const [loaded, setLoaded] = useState(null);
   const [stage, setStage] = useState(editing ? 'loading' : 'ready');
   const [error, setError] = useState('');
   const [done, setDone] = useState('');
@@ -78,6 +81,7 @@ export default function AdminDiamondForm({ id }) {
         if (row[key] !== null && row[key] !== undefined) next[key] = row[key];
       }
       setForm(next);
+      setLoaded(row);
       setExistingPath(row.image_path || '');
       setStage('ready');
     } catch (err) {
@@ -150,7 +154,11 @@ export default function AdminDiamondForm({ id }) {
       if (editing) {
         const payload = toPayload(form);
         if (file) payload.image_path = await uploadDiamondImage(form.public_id || id, file);
-        await adminUpdateDiamond(id, payload);
+        await adminUpdateDiamond(id, payload, {
+          previous: loaded,
+          publicId: loaded?.public_id || form.public_id,
+          label: form.stock_number || loaded?.stock_number,
+        });
         if (payload.image_path) setExistingPath(payload.image_path);
         setFile(null);
         setDone('Saved. The public inventory is updated.');

@@ -219,7 +219,7 @@ export default function AdminDiamonds() {
               className={styles.act}
               disabled={busyId === r.id || archived}
               title={r.active ? 'Hide from the storefront' : 'Show on the storefront'}
-              onClick={() => run(r.id, () => adminSetActive(r.id, !r.active), r.active ? 'Hidden from the site.' : 'Live on the site.')}
+              onClick={() => run(r.id, () => adminSetActive(r.id, !r.active, { previous: r, publicId: r.public_id, label: r.stock_number }), r.active ? 'Hidden from the site.' : 'Live on the site.')}
             >
               {r.active ? <EyeOff size={13} /> : <Eye size={13} />}
             </button>
@@ -229,7 +229,7 @@ export default function AdminDiamonds() {
                 className={styles.act}
                 disabled={busyId === r.id}
                 title="Restore"
-                onClick={() => run(r.id, () => adminArchiveDiamond(r.id, false), 'Restored.')}
+                onClick={() => run(r.id, () => adminArchiveDiamond(r.id, false, { previous: r, publicId: r.public_id, label: r.stock_number }), 'Restored.')}
               >
                 <Undo2 size={13} />
               </button>
@@ -312,7 +312,7 @@ export default function AdminDiamonds() {
             <button
               type="button"
               className={styles.toolBtn}
-              onClick={() => runBulk(sel.filter((r) => !r.archived_at && !r.active), (r) => adminSetActive(r.id, true), 'Published').then(clear)}
+              onClick={() => runBulk(sel.filter((r) => !r.archived_at && !r.active), (r) => adminSetActive(r.id, true, { previous: r, publicId: r.public_id, label: r.stock_number }), 'Published').then(clear)}
               disabled={working}
             >
               Publish
@@ -320,7 +320,7 @@ export default function AdminDiamonds() {
             <button
               type="button"
               className={styles.toolBtn}
-              onClick={() => runBulk(sel.filter((r) => !r.archived_at && r.active), (r) => adminSetActive(r.id, false), 'Hidden').then(clear)}
+              onClick={() => runBulk(sel.filter((r) => !r.archived_at && r.active), (r) => adminSetActive(r.id, false, { previous: r, publicId: r.public_id, label: r.stock_number }), 'Hidden').then(clear)}
               disabled={working}
             >
               Unpublish
@@ -350,7 +350,7 @@ export default function AdminDiamonds() {
         confirmLabel="Archive"
         busy={working}
         onCancel={() => setConfirm(null)}
-        onConfirm={() => runBulk([one], (r) => adminArchiveDiamond(r.id, true), 'Archived')}
+        onConfirm={() => runBulk([one], (r) => adminArchiveDiamond(r.id, true, { previous: r, publicId: r.public_id, label: r.stock_number }), 'Archived')}
         body={(
           <>
             <p>
@@ -372,7 +372,7 @@ export default function AdminDiamonds() {
         confirmLabel="Archive them"
         busy={working}
         onCancel={() => setConfirm(null)}
-        onConfirm={() => runBulk(confirm.rows, (r) => adminArchiveDiamond(r.id, true), 'Archived').then(() => confirm.clear?.())}
+        onConfirm={() => runBulk(confirm.rows, (r) => adminArchiveDiamond(r.id, true, { previous: r, publicId: r.public_id, label: r.stock_number }), 'Archived').then(() => confirm.clear?.())}
         body={(
           <>
             <p>

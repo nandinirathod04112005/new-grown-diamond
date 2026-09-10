@@ -47,6 +47,7 @@ const AdminCustomers = lazy(() => import('@/pages/admin/AdminCustomers.jsx'));
 const AdminQueue = lazy(() => import('@/pages/admin/AdminQueue.jsx'));
 const AdminMedia = lazy(() => import('@/pages/admin/AdminMedia.jsx'));
 const AdminMonitoring = lazy(() => import('@/pages/admin/AdminMonitoring.jsx'));
+const AdminAudit = lazy(() => import('@/pages/admin/AdminAudit.jsx'));
 const AdminDiamondForm = lazy(() => import('@/pages/admin/AdminDiamondForm.jsx'));
 const Story = lazy(() => import('@/sections/about/Story.jsx'));
 const Exhibit = lazy(() => import('@/sections/about/Exhibit.jsx'));
@@ -131,6 +132,7 @@ function adminRoute(path) {
    * matters and which product they point at, and both of those are declared
    * per queue in adminQueues.js rather than branched on in the component —
    * so a fifth queue would be a data entry, not another page.
+  if (path === '/admin/audit') return <AdminAudit />;
    *
    * Keyed by name so React remounts on the way between them: they hold their
    * own filter tab and open drawer, and carrying those across from Holds into

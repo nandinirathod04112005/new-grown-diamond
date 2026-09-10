@@ -1,0 +1,50 @@
+/*
+ * The audit log's own type. Page chrome (.page, .head, .eyebrow) comes from
+ * AdminOverview.module.css, which every module screen shares, so only what is
+ * particular to a log line lives here.
+ */
+.sub { font-size: 0.8125rem; color: var(--faint); max-width: 56ch; margin-top: 0.35rem; }
+
+.refresh {
+  display: flex; align-items: center; gap: 0.4rem;
+  padding: 0.4rem 0.7rem;
+  border: 1px solid var(--line); border-radius: 3px;
+  background: transparent; color: var(--dim);
+  font: inherit; font-size: 0.75rem; cursor: pointer;
+}
+.refresh:hover:not(:disabled) { color: var(--white); border-color: var(--accent-dim); }
+.refresh:disabled { opacity: 0.5; cursor: default; }
+
+/* The verb, coloured only where the colour carries meaning: something was
+   added, something was taken away. An edit is neither, and stays neutral. */
+.action {
+  display: inline-block;
+  padding: 0.12rem 0.4rem;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  font-size: 0.6875rem;
+  letter-spacing: 0.04em;
+  color: var(--dim);
+  white-space: nowrap;
+}
+.action[data-tone='good'] { color: var(--good, #6ee7a8); border-color: color-mix(in srgb, var(--good, #6ee7a8) 40%, transparent); }
+.action[data-tone='warn'] { color: var(--warn, #e8c37a); border-color: color-mix(in srgb, var(--warn, #e8c37a) 40%, transparent); }
+.action[data-tone='bad'] { color: var(--bad, #f08c8c); border-color: color-mix(in srgb, var(--bad, #f08c8c) 40%, transparent); }
+
+.what { display: flex; align-items: baseline; gap: 0.4rem; flex-wrap: wrap; min-width: 0; }
+.kind { font-size: 0.6875rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); }
+.what strong { color: var(--white); font-weight: 500; }
+.id { font-size: 0.6875rem; color: var(--faint); }
+
+.quiet { color: var(--faint); }
+
+/* One line per column that moved: the name, what it was, what it became. */
+.changes { display: grid; gap: 0.2rem; margin: 0; padding: 0; list-style: none; min-width: 0; }
+.changes li {
+  display: flex; align-items: baseline; gap: 0.35rem; flex-wrap: wrap;
+  font-size: 0.75rem; min-width: 0;
+}
+.field { color: var(--faint); font-size: 0.6875rem; letter-spacing: 0.02em; }
+.before { color: var(--faint); text-decoration: line-through; overflow-wrap: anywhere; }
+.arrow { color: var(--faint); }
+.after { color: var(--dim); overflow-wrap: anywhere; }

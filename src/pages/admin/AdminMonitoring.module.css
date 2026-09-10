@@ -58,6 +58,8 @@
   font-size: 0.75rem; color: var(--faint);
 }
 .absent svg { color: var(--warn); }
+/* A table that exists and is idle is not a warning, and must not wear one. */
+.absent li[data-ok] svg { color: var(--good, #6ee7a8); }
 
 .foot {
   padding-top: 0.5rem; border-top: 1px solid var(--line-soft);

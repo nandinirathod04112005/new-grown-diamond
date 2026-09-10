@@ -1,4 +1,5 @@
 import { supabase } from '../client.js';
+import { diffFor, recordAudit } from './adminInsights.js';
 
 /**
  * Jewellery.
@@ -49,15 +50,29 @@ export async function adminListJewellery() {
  * new reach. An admin who cannot update this row is refused by RLS exactly as
  * they would be on any other table.
  */
-export async function adminSetJewelleryActive(id, active) {
+export async function adminSetJewelleryActive(id, active, meta = {}) {
   const { error } = await supabase.from('jewellery').update({ active }).eq('id', id);
   if (error) throw error;
+  await recordAudit({
+    action: active ? 'publish' : 'unpublish',
+    entityType: 'jewellery',
+    entityId: meta.publicId ?? id,
+    entityLabel: meta.label ?? null,
+    changes: diffFor('jewellery', meta.previous, { active }),
+  });
 }
 
 /** Feature or unfeature. Drives the homepage's featured rail. */
-export async function adminSetJewelleryFeatured(id, featured) {
+export async function adminSetJewelleryFeatured(id, featured, meta = {}) {
   const { error } = await supabase.from('jewellery').update({ featured }).eq('id', id);
   if (error) throw error;
+  await recordAudit({
+    action: 'update',
+    entityType: 'jewellery',
+    entityId: meta.publicId ?? id,
+    entityLabel: meta.label ?? null,
+    changes: diffFor('jewellery', meta.previous, { featured }),
+  });
 }
 
 /**
@@ -68,10 +83,15 @@ export async function adminSetJewelleryFeatured(id, featured) {
  * exists on this table for the same reason it does on diamonds, and setting it
  * is reversible.
  */
-export async function adminArchiveJewellery(id, archived) {
-  const { error } = await supabase
-    .from('jewellery')
-    .update({ archived_at: archived ? new Date().toISOString() : null })
-    .eq('id', id);
+export async function adminArchiveJewellery(id, archived, meta = {}) {
+  const archived_at = archived ? new Date().toISOString() : null;
+  const { error } = await supabase.from('jewellery').update({ archived_at }).eq('id', id);
   if (error) throw error;
+  await recordAudit({
+    action: archived ? 'archive' : 'restore',
+    entityType: 'jewellery',
+    entityId: meta.publicId ?? id,
+    entityLabel: meta.label ?? null,
+    changes: diffFor('jewellery', meta.previous, { archived_at }),
+  });
 }

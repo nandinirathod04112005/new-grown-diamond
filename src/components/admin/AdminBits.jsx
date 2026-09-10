@@ -246,20 +246,37 @@ export function EmptyState({ children }) {
  * simply has no data in it.
  */
 export function SetupRequired({ module: m }) {
+  /*
+   * Two different sentences, because they are two different situations and an
+   * operator acts on them differently. 'setup' means the database is missing
+   * something and a migration is the next step. 'partial' means the database
+   * is ready and the SCREEN is what is missing — telling that operator to run
+   * a migration sends them to look for a problem that is not there.
+   */
+  const waiting = m.state === 'partial';
+
   return (
     <div className={styles.setup}>
-      <p className={styles.setupTag}>Setup required</p>
+      <p className={styles.setupTag}>{waiting ? 'Not built yet' : 'Setup required'}</p>
       <h2>{m.label}</h2>
       <p className={styles.setupNote}>{m.note}</p>
-      {m.missing?.length > 0 && (
-        <p className={styles.setupTables}>
-          Missing {m.missing.length === 1 ? 'table' : 'tables'}:{' '}
-          {m.missing.map((t) => <code key={t}>{t}</code>)}
-        </p>
-      )}
+      {waiting
+        ? m.tables?.length > 0 && (
+            <p className={styles.setupTables}>
+              {m.tables.length === 1 ? 'Table ready' : 'Tables ready'}:{' '}
+              {m.tables.map((t) => <code key={t}>{t}</code>)}
+            </p>
+          )
+        : m.missing?.length > 0 && (
+            <p className={styles.setupTables}>
+              Missing {m.missing.length === 1 ? 'table' : 'tables'}:{' '}
+              {m.missing.map((t) => <code key={t}>{t}</code>)}
+            </p>
+          )}
       <p className={styles.setupFoot}>
-        No migration has been applied. Nothing on this screen is simulated —
-        the module stays disabled until the table exists.
+        {waiting
+          ? 'The table exists and the policies are in place. What is missing is this screen, so nothing is shown rather than a dashboard of zeros.'
+          : 'No migration has been applied. Nothing on this screen is simulated — the module stays disabled until the table exists.'}
       </p>
     </div>
   );

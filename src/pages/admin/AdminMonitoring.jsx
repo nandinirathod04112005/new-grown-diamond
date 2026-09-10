@@ -5,14 +5,22 @@ import { overviewStats } from '@/lib/supabase/queries/adminStats.js';
 import { ErrorState, Panel, Skeleton } from '@/components/admin/AdminBits.jsx';
 import styles from './AdminMonitoring.module.css';
 
-/* Probed against the live project and confirmed absent. Listed so the page can
-   say what is missing by name rather than "analytics unavailable". */
+/*
+ * Re-probed against the live project on 10 September 2026. Migrations 0001 and
+ * 0002 have been applied since this list was written, so audit_log,
+ * notifications and analytics_events now exist and have left it. What remains
+ * is genuinely absent — and the distinction matters, because a page that keeps
+ * naming a table the operator has already added reads as broken.
+ */
 const ABSENT = [
-  ['analytics_events', 'page views, referrers, traffic trends'],
-  ['page_views', 'the same, under the other common name'],
-  ['audit_log', 'who changed what, and when'],
+  ['page_views', 'a per-page rollup; analytics_events holds the raw events instead'],
   ['error_events', 'front-end errors reported from the browser'],
-  ['notifications', 'durable alerts with a read state'],
+];
+
+/* Exists, and empty for a reason worth stating rather than listing as a gap. */
+const IDLE = [
+  ['analytics_events', 'ready for page views; nothing sends them, so there is no traffic to read'],
+  ['notifications', 'ready for durable alerts; arrivals are read live from the queues instead'],
 ];
 
 const when = (iso) => {
@@ -136,9 +144,8 @@ export default function AdminMonitoring() {
             than a shrug.
           */}
           <p className={styles.lead}>
-            These need tables this database has not got. Two reviewed migrations
-            that would add them, with RLS and retention, are in{' '}
-            <code>supabase/migrations/</code> — written, deliberately not applied.
+            These need tables this database has not got. Each row names the
+            table, so the gap is actionable rather than a shrug.
           </p>
           <ul className={styles.absent}>
             {ABSENT.map(([table, what]) => (
@@ -149,9 +156,24 @@ export default function AdminMonitoring() {
               </li>
             ))}
           </ul>
+          <p className={styles.lead}>
+            These exist and are empty, which is a different thing and is not a
+            fault to fix in the database:
+          </p>
+          <ul className={styles.absent}>
+            {IDLE.map(([table, what]) => (
+              <li key={table} data-ok="">
+                <CircleCheck size={13} aria-hidden="true" />
+                <code>{table}</code>
+                <span>{what}</span>
+              </li>
+            ))}
+          </ul>
           <p className={styles.foot}>
-            No third-party analytics tag is installed either, so there is nothing
-            to read traffic from. Nothing on this page is estimated or sampled.
+            No third-party analytics tag is installed, so there is nothing to
+            read traffic from. Nothing on this page is estimated or sampled.
+            Who changed what is recorded now, and is on the Activity &amp; Audit
+            Log.
           </p>
         </Panel>
       </div>

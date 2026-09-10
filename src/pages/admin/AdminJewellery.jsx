@@ -181,7 +181,7 @@ export default function AdminJewellery() {
               className={styles.act}
               disabled={busyId === r.id || archived}
               title={r.active ? 'Hide from the storefront' : 'Show on the storefront'}
-              onClick={() => run(r.id, () => adminSetJewelleryActive(r.id, !r.active), r.active ? 'Hidden from the site.' : 'Live on the site.')}
+              onClick={() => run(r.id, () => adminSetJewelleryActive(r.id, !r.active, { previous: r, publicId: r.public_id, label: r.product_name }), r.active ? 'Hidden from the site.' : 'Live on the site.')}
             >
               {r.active ? <EyeOff size={13} /> : <Eye size={13} />}
             </button>
@@ -190,7 +190,7 @@ export default function AdminJewellery() {
               className={styles.act}
               disabled={busyId === r.id || archived}
               title={r.featured ? 'Remove from featured' : 'Feature on the homepage'}
-              onClick={() => run(r.id, () => adminSetJewelleryFeatured(r.id, !r.featured), r.featured ? 'No longer featured.' : 'Featured.')}
+              onClick={() => run(r.id, () => adminSetJewelleryFeatured(r.id, !r.featured, { previous: r, publicId: r.public_id, label: r.product_name }), r.featured ? 'No longer featured.' : 'Featured.')}
             >
               <Star size={13} fill={r.featured ? 'currentColor' : 'none'} />
             </button>
@@ -200,7 +200,7 @@ export default function AdminJewellery() {
                 className={styles.act}
                 disabled={busyId === r.id}
                 title="Restore"
-                onClick={() => run(r.id, () => adminArchiveJewellery(r.id, false), 'Restored.')}
+                onClick={() => run(r.id, () => adminArchiveJewellery(r.id, false, { previous: r, publicId: r.public_id, label: r.product_name }), 'Restored.')}
               >
                 <Undo2 size={13} />
               </button>
@@ -290,7 +290,7 @@ export default function AdminJewellery() {
               type="button"
               className={styles.toolBtn}
               disabled={working}
-              onClick={() => runBulk(sel.filter((r) => !r.archived_at && !r.active), (r) => adminSetJewelleryActive(r.id, true), 'Published').then(clear)}
+              onClick={() => runBulk(sel.filter((r) => !r.archived_at && !r.active), (r) => adminSetJewelleryActive(r.id, true, { previous: r, publicId: r.public_id, label: r.product_name }), 'Published').then(clear)}
             >
               Publish
             </button>
@@ -298,7 +298,7 @@ export default function AdminJewellery() {
               type="button"
               className={styles.toolBtn}
               disabled={working}
-              onClick={() => runBulk(sel.filter((r) => !r.archived_at && r.active), (r) => adminSetJewelleryActive(r.id, false), 'Hidden').then(clear)}
+              onClick={() => runBulk(sel.filter((r) => !r.archived_at && r.active), (r) => adminSetJewelleryActive(r.id, false, { previous: r, publicId: r.public_id, label: r.product_name }), 'Hidden').then(clear)}
             >
               Unpublish
             </button>
@@ -321,7 +321,7 @@ export default function AdminJewellery() {
         confirmLabel="Archive"
         busy={working}
         onCancel={() => setConfirm(null)}
-        onConfirm={() => runBulk([one], (r) => adminArchiveJewellery(r.id, true), 'Archived')}
+        onConfirm={() => runBulk([one], (r) => adminArchiveJewellery(r.id, true, { previous: r, publicId: r.public_id, label: r.product_name }), 'Archived')}
         body={(
           <>
             <p><strong>{one?.product_name || nameOf(one)}</strong>{one?.category ? ` — ${one.category}` : ''}.</p>
@@ -341,7 +341,7 @@ export default function AdminJewellery() {
         confirmLabel="Archive them"
         busy={working}
         onCancel={() => setConfirm(null)}
-        onConfirm={() => runBulk(confirm.rows, (r) => adminArchiveJewellery(r.id, true), 'Archived').then(() => confirm.clear?.())}
+        onConfirm={() => runBulk(confirm.rows, (r) => adminArchiveJewellery(r.id, true, { previous: r, publicId: r.public_id, label: r.product_name }), 'Archived').then(() => confirm.clear?.())}
         body={(
           <>
             <p>

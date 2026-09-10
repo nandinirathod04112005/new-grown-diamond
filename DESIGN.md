@@ -171,6 +171,12 @@ Form conventions established on the sign-up and sign-in pages:
 - `components/three`: optional WebGL enhancement and fallback.
 - `sections`: page-specific narrative compositions.
 
+The console states what the database can actually do, and the statement has to stay true. Each module in `adminModules.js` carries a state â€” `ready` (the tables exist and a screen reads them), `partial` (the tables exist, the screen does not), `setup` (the table is absent, and the module names it). The sidebar marks `partial` as "Soon" and keeps the link live; `setup` is disabled. Re-verified against the live project on 10 September 2026, after migrations 0001 and 0002 were applied: `media`, `audit_log`, `notifications`, `site_content`, `homepage_sections`, `seo_settings` and `analytics_events` exist and moved out of `setup`; `orders`, `categories`, `collections`, `activity_log`, `page_views` and `settings` are still absent. A stale claim here is worse than none, because "no migration has been applied" about a table the operator already added reads as the backend being broken.
+
+Activity & Audit Log is live. Every publish, edit, archive and restore the console makes writes one `audit_log` row naming who made it and which columns moved, as `{column: [before, after]}` over an allow-list that excludes internal notes and anything a customer wrote. The table is append-only by policy â€” no update, no delete, for anyone â€” so the screen is a reading surface with no actions on it. The audit write happens after the operation and can never fail it: a refused entry warns to the console and the save still succeeds, which is verified in the console harness alongside the refusal cases.
+
+Analytics and Notifications stay `partial` on purpose. Both tables exist and are empty because nothing writes to them, and both would need a decision rather than a screen: analytics means turning on visitor collection, notifications means writing rows the queues already answer live. Neither is switched on by a screen that happens to exist.
+
 General components should not own page-specific copy. Pages and sections assemble primitives and content.
 
 ## Content rules
@@ -246,3 +252,5 @@ Public marketing routes should be prerendered or server-rendered. Authentication
 ## Governance
 
 Treat `tokens.css`, this document, and established reusable components as the default system. Make one-off exceptions only for clear narrative or functional needs. When an exception repeats, promote it into a token or reusable component and update this document.
+- Give Website Content, Homepage Manager and SEO Manager a screen, or a storefront read path; their tables exist and nothing reads them.
+- Record media upload and delete in the audit log; the actions exist and the log already allows them.

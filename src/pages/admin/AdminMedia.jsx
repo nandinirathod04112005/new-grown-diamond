@@ -132,9 +132,9 @@ export default function AdminMedia() {
       </header>
 
       <p className={styles.note}>
-        There is no <code>media</code> table, so alt text, captions and upload
-        attribution have nowhere to be stored — those need a migration. Usage
-        below is checked live against{' '}
+        The <code>media</code> table exists now, so alt text, captions and
+        upload attribution have somewhere to live — this screen does not write
+        them yet. Usage below is checked live against{' '}
         <code>{bucket.usedBy.table}.{bucket.usedBy.column}</code> each time this
         page loads, so it is always current.
       </p>

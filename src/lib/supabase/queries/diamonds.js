@@ -5,6 +5,7 @@ import {
   DIAMOND_DETAIL_COLUMNS,
 } from '../columns.js';
 import { DIAMOND_BUCKET, diamondImageKey, diamondImageUrl } from '../storage.js';
+import { diffFor, recordAudit } from './adminInsights.js';
 
 /**
  * Every read and write against public.diamonds lives here.
@@ -128,13 +129,34 @@ export async function adminCreateDiamond(values) {
   if (!supabase) throw new Error('Supabase is not configured');
   const { data, error } = await supabase.from('diamonds').insert(values).select('id,public_id').single();
   if (error) throw error;
+  /* After the write, and never in its way: see queries/adminInsights.js. */
+  await recordAudit({
+    action: 'create',
+    entityType: 'diamond',
+    entityId: data?.public_id ?? data?.id,
+    entityLabel: values?.stock_number ?? null,
+    changes: diffFor('diamond', null, values),
+  });
   return data;
 }
 
-export async function adminUpdateDiamond(id, values) {
+/**
+ * `meta` is what the audit entry is written from, and it is optional
+ * everywhere: a caller that knows the row it is changing passes it, and a
+ * caller that does not still gets the write it asked for. Nothing about the
+ * update itself depends on it.
+ */
+export async function adminUpdateDiamond(id, values, meta = {}) {
   if (!supabase) throw new Error('Supabase is not configured');
   const { error } = await supabase.from('diamonds').update(values).eq('id', id);
   if (error) throw error;
+  await recordAudit({
+    action: meta.action ?? 'update',
+    entityType: 'diamond',
+    entityId: meta.publicId ?? id,
+    entityLabel: meta.label ?? null,
+    changes: diffFor('diamond', meta.previous, values),
+  });
 }
 
 /**
@@ -142,12 +164,16 @@ export async function adminUpdateDiamond(id, values) {
  * archived rows, and the history stays intact for the enquiries that
  * reference it.
  */
-export async function adminArchiveDiamond(id, archived) {
-  return adminUpdateDiamond(id, { archived_at: archived ? new Date().toISOString() : null });
+export async function adminArchiveDiamond(id, archived, meta = {}) {
+  return adminUpdateDiamond(
+    id,
+    { archived_at: archived ? new Date().toISOString() : null },
+    { ...meta, action: archived ? 'archive' : 'restore' },
+  );
 }
 
-export async function adminSetActive(id, active) {
-  return adminUpdateDiamond(id, { active });
+export async function adminSetActive(id, active, meta = {}) {
+  return adminUpdateDiamond(id, { active }, { ...meta, action: active ? 'publish' : 'unpublish' });
 }
 
 /**
