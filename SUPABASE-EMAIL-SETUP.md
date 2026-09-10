@@ -1,23 +1,52 @@
-# Sign-up emails are not sending — what to do
+# Emailed links do not arrive, or do not work
 
-**Diagnosed, not guessed.** A real sign-up against the live project returns:
+**Re-measured against the live project on 10 September 2026.** Two separate
+faults produce the same complaint, and they need different fixes:
 
-```
-POST /auth/v1/signup
-429 {"code":429,"error_code":"over_email_send_rate_limit","msg":"email rate limit exceeded"}
-```
+## Fault 1: every link points at a machine nobody is running
 
-No account is created when this happens. The person fills in the form, gets an
-error, and there is no email because the request never got far enough to send
-one. That is why nobody can confirm, and therefore why nobody can sign in.
-
-Project auth settings confirm the rest of the picture:
+Measured, not assumed. Asking the project where it would send a recovery link
+answers:
 
 ```
-mailer_autoconfirm : false    <- confirmation IS required
-disable_signup     : false    <- sign-up is open
-email provider     : enabled
+Site URL                                        http://localhost:3000
+http://localhost:5173/auth/callback             allowed
+http://localhost:4173/auth/callback             allowed
+https://newgrowndiamond.com/auth/callback       NOT allowed -> falls back to http://localhost:3000
 ```
+
+`http://localhost:3000` is the Supabase default that a project keeps until
+somebody changes it. Supabase refuses any redirect that is not on the
+allow-list and silently falls back to Site URL, with no error anywhere. So a
+link opened from the real domain, or from a shared tunnel address, arrives in
+the inbox and then opens a dead address on a machine the customer is not
+sitting at. Nothing in the code can override this; the allow-list is checked on
+the server.
+
+Reproduce it yourself at any time:
+
+```
+npm run check:backend -- --origin https://newgrowndiamond.com
+```
+
+## Fault 2: the message itself may never be sent
+
+The project uses **Supabase's built-in email service** unless custom SMTP has
+been configured. That service is for development: a few messages an hour across
+the whole project, and Supabase only guarantees delivery to addresses belonging
+to the project's own team. A customer's address gets nothing, with no bounce
+and no error on the site. Sign-up is no longer affected — email confirmation is
+now OFF (`mailer_autoconfirm: true`), so a new account works immediately and
+waits for no link — but **password recovery still depends entirely on this**.
+
+To test delivery for one address you can open:
+
+```
+npm run check:backend -- --recovery you@example.com
+```
+
+A `429 over_email_send_rate_limit` in that output is the service's cap and
+cannot be fixed in the code. Anything else that is not 200 is printed verbatim.
 
 ## The cause
 
@@ -92,6 +121,12 @@ is reasonable.
   http://localhost:4173/auth/callback
   http://localhost:5173/auth/callback
   ```
+
+  Add the address of any other place the site is opened from — a preview
+  deployment, or a shared tunnel URL — with the same `/auth/callback` path.
+  That one path is now the only return address the site uses: password
+  recovery was changed to use it too, so there is one entry to get right per
+  origin rather than two.
 
   The site now tells Supabase where to send people back to
   (`emailRedirectTo`), but Supabase **refuses any redirect not on this

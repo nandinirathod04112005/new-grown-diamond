@@ -217,6 +217,96 @@ if (fn.status === 404) {
   say(WARN, 'register-admin function', 'unexpected HTTP ' + fn.status);
 }
 
+/* ---------------------------------------------------------- email links */
+
+heading('Email links: where they would land');
+
+/*
+ * "No link arrives" and "the link goes nowhere" are different faults that look
+ * identical to the person waiting for the email, and only one of them is
+ * visible from here — so this section is careful to say which is which.
+ *
+ * GoTrue decides a link's destination before it checks the token. Verifying a
+ * deliberately invalid token therefore reveals that decision without creating
+ * anything, sending anything, or consuming a real link: with no redirect it
+ * answers with the project's Site URL, and with one it answers with that URL
+ * if it is on the allow-list and falls back to Site URL if it is not.
+ */
+async function landsAt(target) {
+  const url = `${URL_}/auth/v1/verify?token=invalid-probe-token&type=recovery${target ? `&redirect_to=${encodeURIComponent(target)}` : ''}`;
+  try {
+    const res = await fetch(url, { redirect: 'manual', headers: { apikey: KEY }, signal: AbortSignal.timeout(20000) });
+    const location = res.headers.get('location');
+    return location ? location.split('#')[0] : null;
+  } catch {
+    return null;
+  }
+}
+
+const siteUrl = await landsAt(null);
+if (!siteUrl) {
+  say(WARN, 'Site URL', 'could not be read from the project.');
+} else if (/^https?:\/\/localhost(:\d+)?/.test(siteUrl) || siteUrl.startsWith('http://127.0.0.1')) {
+  say(FAIL, 'Site URL', `${siteUrl}\nThis is the Supabase default. Every emailed link that has nowhere else to go points at this address, which is a machine the customer is not sitting at: the mail arrives, the link is clicked, and nothing happens. Set it in Dashboard > Authentication > URL Configuration > Site URL.`);
+} else {
+  say(PASS, 'Site URL', siteUrl);
+}
+
+/*
+ * The app sends its own return address (authRedirect.js), always
+ * <origin>/auth/callback. Any origin the site is opened on therefore needs
+ * that one path allow-listed. Pass --origin https://example.com to test the
+ * address you are actually deploying to.
+ */
+const extraOrigins = [];
+for (let i = 0; i < process.argv.length; i += 1) {
+  if (process.argv[i] === '--origin' && process.argv[i + 1]) extraOrigins.push(process.argv[i + 1].replace(/\/+$/, ''));
+}
+const origins = ['http://localhost:5173', 'http://localhost:4173', ...extraOrigins];
+
+for (const origin of origins) {
+  const target = `${origin}/auth/callback`;
+  const landing = await landsAt(target);
+  const allowed = landing && landing.startsWith(origin);
+  say(
+    allowed ? PASS : FAIL,
+    `redirect allowed: ${target}`,
+    allowed
+      ? 'on the allow-list'
+      : `NOT on the allow-list. A link opened from ${origin} would be sent to ${landing || 'Site URL'} instead. Add it in Dashboard > Authentication > URL Configuration > Redirect URLs.`,
+  );
+}
+
+say(
+  WARN,
+  'Whether the email is delivered at all',
+  'cannot be checked from here without sending a real message. If links never arrive, the usual cause is the built-in email service, which sends only a few messages an hour and only to addresses on the Supabase project. Connect your own SMTP: see SUPABASE-EMAIL-SETUP.md. To test delivery for one address, add --recovery you@example.com .',
+);
+
+const recoveryFlag = process.argv.indexOf('--recovery');
+if (recoveryFlag !== -1 && process.argv[recoveryFlag + 1]) {
+  const address = process.argv[recoveryFlag + 1];
+  heading(`Sending one real recovery email to ${address}`);
+  try {
+    const res = await fetch(`${URL_}/auth/v1/recover`, {
+      method: 'POST',
+      headers: { ...headers, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: address, gotrue_meta_security: {} }),
+    });
+    const body = await res.text();
+    if (res.ok) {
+      say(PASS, 'Recovery request accepted', 'The API accepted it (HTTP 200). Supabase answers 200 whether or not an account exists, so this proves the request was not refused — not that mail was delivered. Check the inbox, and the spam folder.');
+    } else {
+      const parsed = (() => { try { return JSON.parse(body); } catch { return {}; } })();
+      say(FAIL, 'Recovery request refused', `HTTP ${res.status} ${parsed.error_code || parsed.code || ''}: ${parsed.msg || parsed.message || body.slice(0, 200)}${
+        /rate/i.test(body) ? '\nThat is the mail service cap, not anything the site did. Connecting your own SMTP raises it: see SUPABASE-EMAIL-SETUP.md.' : ''
+      }`);
+    }
+  } catch (error) {
+    say(FAIL, 'Recovery request failed', String(error).slice(0, 200));
+  }
+}
+
 /* -------------------------------------------------------------- account */
 
 async function ask(question, hidden) {
