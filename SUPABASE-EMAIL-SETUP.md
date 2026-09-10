@@ -29,6 +29,34 @@ Reproduce it yourself at any time:
 npm run check:backend -- --origin https://newgrowndiamond.com
 ```
 
+### Fixing it without the dashboard
+
+Site URL and the allow-list are project settings rather than database rows, so
+no key the site holds can reach them. Supabase's Management API can, with a
+**personal access token** from
+<https://supabase.com/dashboard/account/tokens> — not the publishable key and
+not the service role key.
+
+```
+SUPABASE_ACCESS_TOKEN=sbp_... node scripts/fix-auth-config.mjs
+```
+
+That prints what is set now and changes nothing. To repair it:
+
+```
+SUPABASE_ACCESS_TOKEN=sbp_... node scripts/fix-auth-config.mjs   --site https://newgrowndiamond.com   --add https://newgrowndiamond.com/auth/callback   --add https://www.newgrowndiamond.com/auth/callback   --add http://localhost:5173/auth/callback   --apply
+```
+
+Nothing is written without `--apply`; without it the script shows each change
+with the old value beside the new one. The same script sets SMTP, taking the
+password from an environment variable rather than the command line:
+
+```
+SUPABASE_ACCESS_TOKEN=sbp_... SMTP_PASS=abcd... node scripts/fix-auth-config.mjs   --smtp-host smtp.gmail.com --smtp-port 587   --smtp-user you@gmail.com --smtp-sender you@gmail.com   --smtp-name "New Grown Diamond" --smtp-pass-env SMTP_PASS   --apply
+```
+
+Revoke the token on that page when you are done.
+
 ## Fault 2: the message itself may never be sent
 
 The project uses **Supabase's built-in email service** unless custom SMTP has
@@ -117,9 +145,41 @@ desk's sign-up volume:
 | **Amazon SES** | 62,000/month from EC2 | Cheapest at volume, most setup |
 | **Zoho ZeptoMail** | 10,000 one-off free | Useful if you already use Zoho Mail |
 
-You will need a **domain you control** — `newgrowndiamond.com`. Sending as
-`@gmail.com` will not work: providers reject it, and Gmail's own DMARC policy
-makes it bounce.
+These all send **as your own domain** — `newgrowndiamond.com` — which is what
+you want long term, and they need DNS records to prove you own it.
+
+### The fastest route if you have no domain set up yet
+
+**Gmail's own SMTP.** It needs no domain, no DNS and no new account, and it
+sends as the Gmail address itself, so nothing rejects it for a mismatch. Good
+for a few hundred messages a day, which is far more than password recovery
+needs. Use it to get recovery working today, and move to a domain sender later
+for customer-facing mail.
+
+1. The Google account must have **2-Step Verification on**. App passwords do
+   not exist without it.
+2. Go to the Google account's **App passwords** page, create one, and copy the
+   16 characters. That is not the account password, and it can be revoked on
+   its own.
+3. In Supabase, under **Project Settings → Authentication → SMTP Settings**,
+   enable *Custom SMTP*:
+
+   ```
+   Host      smtp.gmail.com
+   Port      587
+   Username  the full Gmail address
+   Password  the 16-character app password, no spaces
+   Sender    the same Gmail address
+   ```
+
+4. Save, then confirm it end to end:
+
+   ```
+   npm run check:backend -- --recovery you@example.com
+   ```
+
+The sender address must match the account the app password belongs to. Gmail
+rewrites a mismatched sender, and Supabase reads that as a failure.
 
 ### 2. Verify the domain
 
