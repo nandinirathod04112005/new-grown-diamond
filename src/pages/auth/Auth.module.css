@@ -1,21 +1,175 @@
 /*
- * The account stage. A darkened room with one lit object in it — the same
- * language as the hero, so signing in does not feel like leaving the site.
+ * The account stage: two halves.
+ *
+ * On the left a photograph carries the atmosphere — the same banner
+ * treatment as every page (HeroBackdrop) — with the mark and three lines of
+ * what an account is for. On the right the card, on a still built ground.
+ * Splitting them is what lets the side that is typed into be quiet.
  */
 .stage {
   position: relative;
   min-height: 100vh;
   min-height: 100dvh;
   display: grid;
-  place-items: center;
-  padding: calc(var(--s-8) + 1rem) var(--gutter) var(--s-7);
-  overflow: hidden;
-  isolation: isolate;
+  grid-template-rows: auto 1fr;
   background: var(--ink);
 }
 
+@media (min-width: 900px) {
+  .stage {
+    grid-template-rows: none;
+    grid-template-columns: minmax(20rem, 42%) minmax(0, 1fr);
+  }
+  /* The account workspace needs the width: the photograph becomes a band. */
+  .stage[data-wide] {
+    grid-template-columns: none;
+    grid-template-rows: auto 1fr;
+  }
+}
+
+/* ---------------- the photograph ---------------- */
+
+.panel {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: var(--s-5);
+  min-height: 38vh;
+  padding: calc(var(--s-7) + 0.5rem) var(--gutter) var(--s-5);
+  /* The photograph's wash, read through HeroBackdrop's tint. */
+  --accent-page: var(--accent);
+}
+
+@media (min-width: 900px) {
+  /* Sticky, one screen tall: a long form (register, with its account type
+     and five fields) scrolls beside a panel that keeps its title in view. */
+  .panel {
+    position: sticky;
+    top: 0;
+    align-self: start;
+    height: 100vh;
+    height: 100dvh;
+    min-height: 0;
+    padding: var(--s-5) var(--gutter) var(--s-6);
+  }
+  .stage[data-wide] .panel { position: relative; height: auto; min-height: 14rem; }
+}
+
+/* Above the photograph and its scrim. Named, not `.panel > *`: that also
+   caught the backdrop's own root and un-positioned it, and the photograph
+   collapsed to nothing. */
+.mark,
+.panelCopy,
+.panelFoot { position: relative; z-index: 1; }
+
+/*
+ * The banner scrim is weighted to the left, where a page's headline sits —
+ * and this panel IS the left, so the whole photograph fell under its
+ * heaviest part. Here the weight goes to the bottom, under the title and
+ * the three lines, and the picture is open above them.
+ */
+.panel [class*="_scrim_"] {
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--ink) 66%, transparent) 0%,
+      color-mix(in srgb, var(--ink) 18%, transparent) 26%,
+      color-mix(in srgb, var(--ink) 24%, transparent) 52%,
+      color-mix(in srgb, var(--ink) 94%, transparent) 100%
+    );
+}
+
+.panelCopy {
+  align-self: end;
+  display: grid;
+  gap: var(--s-3);
+  max-width: 26rem;
+}
+
+.panelEyebrow {
+  font-size: var(--t-xs);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--accent-lift);
+  animation: rise 0.7s var(--ease-primary) 0.1s both;
+}
+
+.panelTitle {
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: clamp(1.8rem, 1.1rem + 2.4vw, 3.1rem);
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  color: var(--ivory);
+  text-wrap: balance;
+  animation: rise 0.8s var(--ease-primary) 0.16s both;
+}
+
+/* Three lines, ruled with the accent, each one a thing the desk keeps. */
+.points {
+  display: grid;
+  gap: 0.55rem;
+  margin: var(--s-2) 0 0;
+  padding: 0;
+  list-style: none;
+  animation: rise 0.8s var(--ease-primary) 0.24s both;
+}
+
+.points li {
+  position: relative;
+  padding-left: 1.4rem;
+  color: color-mix(in srgb, var(--text) 84%, var(--text-muted));
+  font-size: var(--t-sm);
+  line-height: 1.55;
+}
+
+.points li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.75em;
+  width: 0.8rem;
+  height: 1px;
+  background: var(--accent);
+}
+
+.panelFoot {
+  font-size: var(--t-xs);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* In a hand and on the wide workspace the band is short: the mark and the
+   title, and the three lines wait for a screen with room for them. */
+@media (max-width: 899px) {
+  .panel { gap: var(--s-4); }
+  .points, .panelFoot { display: none; }
+  .panelTitle { font-size: clamp(1.5rem, 1rem + 2.6vw, 2.2rem); }
+}
+
+.stage[data-wide] .points,
+.stage[data-wide] .panelFoot { display: none; }
+
+/* ---------------- the form side ---------------- */
+
+.side {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  padding: var(--s-6) var(--gutter) var(--s-7);
+}
+
+@media (min-width: 900px) {
+  .side { padding: calc(var(--s-8) + 1rem) var(--gutter) var(--s-7); }
+}
+
 /* Built, not photographed — a key pool where the card sits, a warm bounce
-   low, a cool rim high, and a drafting grid masked away from the edges. */
+   low, a cool rim high. */
 .field {
   position: absolute;
   inset: 0;
@@ -72,23 +226,6 @@
   );
 }
 
-/* One very soft beam on a long period, so the ground is never twice the same
-   without ever being caught animating. */
-.beam {
-  position: absolute;
-  inset: -30% -20%;
-  z-index: -2;
-  pointer-events: none;
-  background: radial-gradient(32% 58% at 50% 50%, rgba(0, 206, 201, 0.1), transparent 70%);
-  filter: blur(50px);
-  animation: beam 46s var(--ease-inout) infinite alternate;
-}
-
-@keyframes beam {
-  from { transform: translate3d(-12%, -6%, 0) scale(1); }
-  to   { transform: translate3d(12%, 8%, 0) scale(1.2); }
-}
-
 .grain {
   position: absolute;
   inset: 0;
@@ -98,19 +235,9 @@
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-/* Held back and dimmed: the drafting layer is texture here, not the subject.
-   At hero strength it would sit on top of the very words being typed. */
-.plan {
-  z-index: -1;
-  opacity: 0.16;
-}
-
-/* The brand mark, doubling as the route home. */
+/* The brand mark, doubling as the route home, at the head of the panel. */
 .mark {
-  position: absolute;
-  top: var(--s-4);
-  left: var(--gutter);
-  z-index: 2;
+  justify-self: start;
   font-family: var(--font-display);
   font-size: var(--t-sm);
   letter-spacing: 0.3em;
@@ -134,6 +261,8 @@
   perspective: 1400px;
   perspective-origin: 50% 44%;
 }
+
+.frameWide { width: min(100%, 64rem); }
 
 .card {
   position: relative;
@@ -413,7 +542,9 @@
 .actions { display: flex; flex-wrap: wrap; gap: var(--s-2); transform: translateZ(22px); }
 
 @media (prefers-reduced-motion: reduce) {
-  .beam { animation: none; }
+  .panelEyebrow,
+  .panelTitle,
+  .points,
   .card,
   .eyebrow,
   .title,
@@ -431,28 +562,6 @@
   .frame { perspective: none; }
   .card { transform: none; }
   .head, .body, .rows, .actions, .submit, .rim { transform: none; }
-}
-
-/* The same thrown light as the hero, behind the same built ground. */
-/*
- * The caustics, turned down and pushed to the edges.
- *
- * They ran at 0.85 across the whole viewport, and the card in front of them
- * is only 72% opaque — so a high-contrast pattern of bright teal read straight
- * through the form, and through the input fields inside it. On a page whose
- * entire job is being typed into, the background was the loudest thing on
- * screen and the password field was the quietest.
- *
- * The mask is the substance of the fix rather than the opacity alone: a
- * radial hole keeps the middle third genuinely calm where the card sits, so
- * the light still moves at the edges and the reading area stays still. Water
- * light belongs on the walls of the room, not on the page.
- */
-.caustics {
-  z-index: -2;
-  opacity: 0.3;
-  -webkit-mask-image: radial-gradient(64% 58% at 50% 46%, transparent 22%, #000 78%);
-  mask-image: radial-gradient(64% 58% at 50% 46%, transparent 22%, #000 78%);
 }
 
 /* ---------------- account type ---------------- */
@@ -645,8 +754,3 @@
   outline: 2px solid #f0a08c;
   outline-offset: -1px;
 }
-
-/* Wins over the canvas's own opacity rule, which shares its specificity and
-   otherwise lands later in the bundle. The task is the form; the light is
-   the room it sits in. */
-.stage .caustics { opacity: 0.18; }

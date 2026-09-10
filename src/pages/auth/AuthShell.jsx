@@ -1,76 +1,106 @@
 import { useRef } from 'react';
-import CausticField from '@/components/media/CausticField.jsx';
 
 import { usePointerParallax } from '@/hooks/usePointerParallax.js';
-import Blueprint from '@/components/media/Blueprint.jsx';
+import HeroBackdrop from '@/components/layout/HeroBackdrop.jsx';
+import stoneInHand from '@/assets/company/custom-jewellery-optimized.jpg';
 import styles from './Auth.module.css';
+
+/*
+ * What the panel says, and why every line of it is true.
+ *
+ * The account page's activity widgets are favourites, quotes, holds,
+ * inspections and enquiries (queries/account.js), enquiries carry a public
+ * reference the desk works from, and the inventory promises certificates and
+ * inspection media on request. Nothing here promises anything the site does
+ * not already do.
+ */
+const PANEL = {
+  eyebrow: 'Trade desk',
+  title: 'The stones you asked about, in one place.',
+  points: [
+    'Enquiries with a reference you can quote to the desk',
+    'Quotes, holds and inspections you have requested',
+    'Grading reports and inspection media, on request',
+  ],
+};
 
 /**
  * The frame every account page is set in.
  *
- * Sign in, register and profile are the three places a visitor stops looking
- * and starts typing, so they get one identical stage: the same drafting layer
- * as the hero, the same darkened room, the same card in perspective. Three
- * pages that each invented their own furniture would read as three different
- * websites bolted together, which is exactly how most sites' account pages
- * feel.
+ * Two halves. On the left, the reason to have an account: a photograph of a
+ * stone in the tweezers — the same treatment every page banner uses
+ * (HeroBackdrop) — with the mark, three lines of what the desk keeps for a
+ * trade buyer, and the four cities. On the right, the task: one card, on a
+ * quiet built ground, that turns a few degrees toward the pointer.
  *
- * The card is a real object in space — perspective on the stage, preserve-3d
- * on the card, and the heading, the fields and the rim at their own depths —
- * so it turns toward the pointer and its layers part from each other. Nothing
- * here moves on its own: this is a page someone is trying to read and type
- * into, and unrequested motion under a cursor that is aiming at a text field
- * is hostile, however impressive it looks.
+ * It used to be one card in the middle of a room lit by moving water-light
+ * and a drafting drawing. The light out-shouted the form and the drawing's
+ * labels — Table, Crown, Girdle, Pavilion — showed through beside the fields.
+ * A photograph carries the atmosphere now, on its own side, and the side that
+ * is typed into is still.
+ *
+ * Nothing on the page moves on its own except the photograph's slow drift:
+ * this is a page someone is trying to read and type into, and unrequested
+ * motion under a cursor that is aiming at a text field is hostile, however
+ * impressive it looks.
+ *
+ * In a hand the photograph becomes a short band above the card, keeping the
+ * mark and the title; the three lines return when there is room for them. On
+ * the wide account workspace the band stays short so the work has the width.
  */
-export default function AuthShell({ eyebrow, title, intro, children, aside, wide = false }) {
+export default function AuthShell({ eyebrow, title, intro, children, aside, wide = false, panel = PANEL }) {
   const stage = useRef(null);
   usePointerParallax(stage, 1);
 
   return (
-    <main ref={stage} className={`${styles.stage} u-stage-dark`}>
-      {/* The built ground, matching the home hero: a key pool behind the card,
-          a drafting grid that dies before it reaches an edge, a vignette. */}
-      <div className={styles.field} aria-hidden="true" />
-      {/* Dim, and a deeper tint: at the component's own strength the light
-          read as a bright teal cloud behind the form and out-shouted it. */}
-      <CausticField className={styles.caustics} tint={[0.08, 0.46, 0.45]} />
-      {/* Sits between the moving light and the card, so the area that gets
-          read settles onto a near-solid ground however busy the room is. */}
-      <div className={styles.pool} aria-hidden="true" />
-      <span className={styles.beam} aria-hidden="true" />
-      <div className={styles.grain} aria-hidden="true" />
+    <main ref={stage} className={`${styles.stage} u-stage-dark`} data-wide={wide ? '' : undefined}>
+      <aside className={styles.panel} aria-label="About your account">
+        <HeroBackdrop src={stoneInHand} focus="62% 46%" mobileFocus="58% 42%" />
 
-      {/* The same measured layer the hero uses, held well back so it is
-          texture behind the form rather than something competing with it. */}
-      <Blueprint className={styles.plan} tone="gold" />
+        {/* The way back. These pages render outside the site shell, so
+            without this there is no route home except the browser's back
+            button — and someone who arrived at /register from a link has no
+            back button worth pressing. */}
+        <a className={styles.mark} href="/">New Grown Diamond</a>
 
-      {/*
-        The way back. These pages render outside the site shell, so without
-        this there is no route home except the browser's back button — and
-        someone who arrived at /register from a link has no back button worth
-        pressing. The mark is the standard place people look for it.
-      */}
-      <a className={styles.mark} href="/">New Grown Diamond</a>
-
-      <div className={`${styles.frame} ${wide ? styles.frameWide : ''}`}>
-        <div className={styles.card}>
-          <header className={styles.head}>
-            <p className={styles.eyebrow}>{eyebrow}</p>
-            <h1 className={styles.title}>{title}</h1>
-            {intro ? <p className={styles.intro}>{intro}</p> : null}
-            <span className={styles.rule} aria-hidden="true" />
-          </header>
-
-          <div className={styles.body}>
-            {children}
-          </div>
-
-          {aside ? <footer className={styles.aside}>{aside}</footer> : null}
-
-          {/* Forward of the surface, so it parts from the card as it turns. */}
-          <span className={styles.rim} aria-hidden="true" />
+        <div className={styles.panelCopy}>
+          <p className={styles.panelEyebrow}>{panel.eyebrow}</p>
+          <p className={styles.panelTitle}>{panel.title}</p>
+          <ul className={styles.points}>
+            {panel.points.map((point) => <li key={point}>{point}</li>)}
+          </ul>
         </div>
-      </div>
+
+        <p className={styles.panelFoot}>Surat · Mumbai · New York · Hong Kong</p>
+      </aside>
+
+      <section className={styles.side}>
+        {/* The built ground the card sits on: a key pool, a vignette, grain.
+            Still — the photograph on the other side is the thing that moves. */}
+        <div className={styles.field} aria-hidden="true" />
+        <div className={styles.pool} aria-hidden="true" />
+        <div className={styles.grain} aria-hidden="true" />
+
+        <div className={`${styles.frame} ${wide ? styles.frameWide : ''}`}>
+          <div className={styles.card}>
+            <header className={styles.head}>
+              <p className={styles.eyebrow}>{eyebrow}</p>
+              <h1 className={styles.title}>{title}</h1>
+              {intro ? <p className={styles.intro}>{intro}</p> : null}
+              <span className={styles.rule} aria-hidden="true" />
+            </header>
+
+            <div className={styles.body}>
+              {children}
+            </div>
+
+            {aside ? <footer className={styles.aside}>{aside}</footer> : null}
+
+            {/* Forward of the surface, so it parts from the card as it turns. */}
+            <span className={styles.rim} aria-hidden="true" />
+          </div>
+        </div>
+      </section>
     </main>
   );
 }

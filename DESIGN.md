@@ -20,6 +20,8 @@ The central idea is transformation: carbon becomes crystal, rough becomes planne
 
 ### Colour
 
+The house accent is muted gold: `#bda06a` on ink, with darker gold text in light mode. Technical process sections retain blue route accents. Shared controls have a 44px minimum target token. The footer, journal cards, and journal notices use theme surfaces instead of fixed dark backgrounds.
+
 `src/styles/tokens.css` is the source of truth. Components should use shared custom properties instead of introducing near-duplicate values.
 
 - Dark ink grounds create a controlled showroom atmosphere.
@@ -95,6 +97,8 @@ Every animation feature needs a `prefers-reduced-motion: reduce` path. Reduced m
 
 ### Header
 
+The closed mobile sheet uses `display: none` so its links leave the tab order. Its focus loop includes the header close button, Escape restores focus and body overflow, and resizing to desktop closes the sheet. Mobile language selection remains in the menu; the header retains a 44px theme control.
+
 Fixed, blending with `difference`, and never changing height. Once the page has scrolled 40px a gradient of the page's own scrim colour fades in beneath it (outside the blend) so the nav keeps its contrast over passing photographs and headlines. The current page carries `aria-current="page"`: a held underline on desktop, the accent colour in the phone sheet; Education counts as current on every page it lists. The path comes from the router's `subscribePath` store, not from a prop.
 
 ### Home
@@ -105,6 +109,8 @@ The atelier is a darkened stage in both themes (`u-stage-dark`). Chapter heading
 
 ### Editorial pages
 
+Photographic shared headers extend to the page edges and own their top spacing; their parent page does not add a second top gutter. Below 900px, decorative banner motifs are hidden and the banner uses a 36rem minimum height. Existing About story composition is preserved. Section prose uses an explicit paragraph selector so its decorative trailing rule cannot disable the reading styles.
+
 `EditorialPage.jsx` is the shared structure for About, Education, Shapes, and Why Lab-Grown. `PageHero` receives an eyebrow, title, introduction, motif, accent, and a `backdrop` photograph (see Page banners); `PAGE_MOTIF` in `App.jsx` holds the per-route choice. Numbered sections should not duplicate content already explained by an interactive experience.
 
 ### Page banners
@@ -113,14 +119,14 @@ Every page opening except the homepage stands in front of a full-bleed photograp
 
 **Layers, back to front:** photograph → accent wash (`soft-light`, from the page accent) → legibility scrim built from `--ink`, heavy on the left and at the bottom edge, open on the right → the page's tinted field and grain, settled lower over a photograph → the drawn motif as an etched ornament (`opacity .55`) → copy. Building the scrim from `--ink` is what makes one treatment hold in both themes; do not introduce a hard-coded dark overlay.
 
-**Motion, all in CSS:** the photograph opens from soft, near, and pale to sharp and settled (1.9 s); drifts across 44 s; leans away from the pointer (`--mx/--my`); and falls behind the page as it scrolls (`--hp`, 0–1, written by `hooks/useHeroProgress.js` from an IntersectionObserver-gated frame loop). A faint band of light crosses every 14 s. The hooks write numbers; no ScrollTrigger scrub or pin is involved, and a banner whose script never runs is a finished still.
+**Motion:** the photograph is visible immediately and settles with a small 0.8-second scale change. Continuous drift, blur opening, and the light sweep are disabled. Pointer/scroll transforms remain on the photograph; copy in photographic PageHero banners stays on a steady reading plane with brief, fully opaque entrance offsets. `useHeroProgress` schedules a frame on scroll or resize only while the banner intersects the viewport, and reacts to live reduced-motion preference changes. No ScrollTrigger scrub or pin is involved.
 
 **Photographs in use:** About — Surat-to-world globe; Education — seed to stone; CVD vs natural — lattice cut; Price & size and Shapes — cut stone; Why lab-grown and Journal — grading bench; Contact — stone in tweezers; FAQ — CVD technical schematic; Jewellery — ring assembly; Inventory — cut stone; 404 — brilliant macro. All are existing assets; none were generated for the purpose.
 
 **Rules.**
 - The backdrop is decorative: `aria-hidden`, empty alt, never focusable. A photograph with something to say is passed as `PageHero`'s `image`, which keeps its alt text.
 - Banner grade is roughly 1000 px wide or more; the 526 × 292 rough-crystal JPEG and the 351 × 439 PNGs are not banner material.
-- `backdropFocus="x% y%"` keeps the subject clear of the headline; check it at 1440 and 390 px.
+- `backdropFocus="x% y%"` and `backdropMobileFocus` set desktop and mobile crops. Editorial routes pass these from `PAGE_MOTIF`; Price & size and Shapes use different crops of their shared asset. Check at 1440 and 390 px.
 - Do not layer screen-blended light effects (caustics) over a photograph — they flare white and take the headline with them.
 - One eager, high-priority image per route: the banner photograph is the LCP element.
 - Check every new banner in both themes and under reduced motion before merging.
@@ -145,7 +151,7 @@ The journal only renders real published records. It must show honest empty/confi
 
 ### Authentication and admin
 
-Task screens use a quieter form of the brand system. Authentication and administration stay outside decorative storefront flows where motion could interfere with forms or tables. The account pages share one stage (`AuthShell`) with no photographic banner; its caustic light sits at 0.18 opacity with a deep tint so the form, not the room, is what reads.
+Task screens use a quieter form of the brand system. Authentication and administration stay outside decorative storefront flows where motion could interfere with forms or tables. The account pages share one stage (`AuthShell`) in two halves: on the left a photograph (the stone in tweezers, through `HeroBackdrop` with a bottom-weighted scrim) carrying the mark, "Trade desk", one line of what an account is for and three things the desk keeps — enquiries with a reference, quotes/holds/inspections, grading reports and inspection media — all of which the account page actually provides; on the right the card on a still built ground. The panel is sticky and one screen tall from 900px so a long form scrolls beside it; in a hand it is a short band above the card; on the wide account workspace it stays a band. The caustic light and drafting drawing are gone from these pages.
 
 Form conventions established on the sign-up and sign-in pages:
 
