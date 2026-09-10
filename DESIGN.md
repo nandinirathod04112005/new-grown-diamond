@@ -82,7 +82,7 @@ Lower-level motion must not compete with higher-level motion.
 
 ### Reduced motion
 
-Every animation feature needs a `prefers-reduced-motion: reduce` path. Reduced motion removes theatre while retaining navigation, content, hierarchy, and feedback. Simplify or disable the custom cursor, route cover, smooth scroll, marquees, looping backgrounds, and large parallax effects.
+Every animation feature needs a `prefers-reduced-motion: reduce` path. Reduced motion removes theatre while retaining navigation, content, hierarchy, and feedback. Simplify or disable the custom cursor, route cover, smooth scroll, marquees, looping backgrounds, and large parallax effects. Page banners become a still photograph with its scrim in place: no opening, no drift, no light sweep, and scroll progress fixed at zero.
 
 ## Page patterns
 
@@ -92,11 +92,29 @@ The homepage forms one transformation narrative: atelier opening, origin, indepe
 
 ### Editorial pages
 
-`EditorialPage.jsx` is the shared structure for About, Education, Shapes, and Why Lab-Grown. `PageHero` receives an eyebrow, title, introduction, motif, and accent. Numbered sections should not duplicate content already explained by an interactive experience.
+`EditorialPage.jsx` is the shared structure for About, Education, Shapes, and Why Lab-Grown. `PageHero` receives an eyebrow, title, introduction, motif, accent, and a `backdrop` photograph (see Page banners); `PAGE_MOTIF` in `App.jsx` holds the per-route choice. Numbered sections should not duplicate content already explained by an interactive experience.
+
+### Page banners
+
+Every page opening except the homepage stands in front of a full-bleed photograph. One component does it everywhere — `components/layout/HeroBackdrop.jsx` — inside `PageHero`, the journal's opening, and the inventory's opening, so the pictures move the same way on every page.
+
+**Layers, back to front:** photograph → accent wash (`soft-light`, from the page accent) → legibility scrim built from `--ink`, heavy on the left and at the bottom edge, open on the right → the page's tinted field and grain, settled lower over a photograph → the drawn motif as an etched ornament (`opacity .55`) → copy. Building the scrim from `--ink` is what makes one treatment hold in both themes; do not introduce a hard-coded dark overlay.
+
+**Motion, all in CSS:** the photograph opens from soft, near, and pale to sharp and settled (1.9 s); drifts across 44 s; leans away from the pointer (`--mx/--my`); and falls behind the page as it scrolls (`--hp`, 0–1, written by `hooks/useHeroProgress.js` from an IntersectionObserver-gated frame loop). A faint band of light crosses every 14 s. The hooks write numbers; no ScrollTrigger scrub or pin is involved, and a banner whose script never runs is a finished still.
+
+**Photographs in use:** About — Surat-to-world globe; Education — seed to stone; CVD vs natural — lattice cut; Price & size and Shapes — cut stone; Why lab-grown and Journal — grading bench; Contact — stone in tweezers; FAQ — CVD technical schematic; Jewellery — ring assembly; Inventory — cut stone; 404 — brilliant macro. All are existing assets; none were generated for the purpose.
+
+**Rules.**
+- The backdrop is decorative: `aria-hidden`, empty alt, never focusable. A photograph with something to say is passed as `PageHero`'s `image`, which keeps its alt text.
+- Banner grade is roughly 1000 px wide or more; the 526 × 292 rough-crystal JPEG and the 351 × 439 PNGs are not banner material.
+- `backdropFocus="x% y%"` keeps the subject clear of the headline; check it at 1440 and 390 px.
+- Do not layer screen-blended light effects (caustics) over a photograph — they flare white and take the headline with them.
+- One eager, high-priority image per route: the banner photograph is the LCP element.
+- Check every new banner in both themes and under reduced motion before merging.
 
 ### Inventory
 
-Inventory is a trade tool inside an editorial site. Information takes priority over atmosphere once the results begin.
+Inventory is a trade tool inside an editorial site. Its opening carries the cut-stone banner one layer above the ambient field and below the copy and the hero stone. Information takes priority over atmosphere once the results begin.
 
 - Filters reflect published stock.
 - Cards expose comparable attributes.
@@ -108,16 +126,26 @@ Inventory is a trade tool inside an editorial site. Information takes priority o
 
 The contact page asks for actionable B2B information: shape, carat, colour, clarity, quantity, company, country, and contact details. Direct phone and email methods remain available if the database is unavailable.
 
+Both openings use the shared banner: the stone in tweezers behind the contact copy, the grading bench behind the journal's. The journal's former caustic-light layer is gone for the reason above.
+
 The journal only renders real published records. It must show honest empty/configuration/error states. The planned detail page should preserve the editorial language and support Article metadata.
 
 ### Authentication and admin
 
-Task screens use a quieter form of the brand system. Authentication and administration stay outside decorative storefront flows where motion could interfere with forms or tables.
+Task screens use a quieter form of the brand system. Authentication and administration stay outside decorative storefront flows where motion could interfere with forms or tables. The account pages share one stage (`AuthShell`) with no photographic banner.
+
+Form conventions established on the sign-up and sign-in pages:
+
+- Validation runs in JavaScript before the network; each message sits on its field (`aria-describedby`, `aria-invalid`), and focus moves to the first field that failed. Email is trimmed and lower-cased; passwords are never trimmed.
+- Password fields carry a reveal toggle (a real button, outside the label, `aria-pressed`). The staff access code gets the same treatment and is not presented as a numeric PIN.
+- Outcome screens replace the form and take focus themselves, so the heading is read and the tab sequence resumes there. Each outcome says what actually happened: "Account created successfully", "Check your email", or "No account was created" with a hand-off to the desk. Customer-facing copy never names SMTP, Supabase, or HTTP codes.
+- Sign-in reports "Email or password is incorrect." for either mistake; the unconfirmed-address case is named, with a resend that happens only on its button.
+- "Administrator" on sign-up asks for the staff access code, phone, and country; the code is checked on the server. The desk's own gate is labelled "Desk unlock code" so the two codes are not confused, and an active administrator lands on `/admin` directly after sign-in.
 
 ## Component boundaries
 
 - `components/chrome`: navigation, footer, theme, preload, transitions, continuation.
-- `components/layout`: page composition and motifs.
+- `components/layout`: page composition, motifs, and the shared banner photograph (`HeroBackdrop`).
 - `components/motion`: reusable reveal and text animation.
 - `components/media`: progressive image, video, canvas, and atmosphere.
 - `components/product`: comparison, shapes, and diamond inspection.
@@ -161,7 +189,7 @@ General components should not own page-specific copy. Pages and sections assembl
 
 Current production references are approximately 121 KB gzip for main JavaScript, 54 KB for Supabase, 30 KB for GSAP, 31 KB for CSS, and 1.33 MB for the largest video.
 
-Future changes should route-split major pages, lazy-load Supabase, keep Three.js outside the entry bundle, avoid large PNG files, prioritize only the actual LCP image, use conservative video preload settings, and check Core Web Vitals on throttled mobile.
+Future changes should route-split major pages, lazy-load Supabase, keep Three.js outside the entry bundle, avoid large PNG files, prioritize only the actual LCP image (on banner routes that is the `HeroBackdrop` photograph, eager and `fetchpriority="high"`), use conservative video preload settings, and check Core Web Vitals on throttled mobile.
 
 ## SEO requirements
 
@@ -181,6 +209,7 @@ Public marketing routes should be prerendered or server-rendered. Authentication
 8. Run lint and a production build.
 9. Inspect payloads for unexpected large assets.
 10. Capture QA screenshots for material layout changes.
+11. For any banner change, screenshot the route at 1440 and 390 px in both themes, settled and mid-scroll, and confirm reduced motion shows a still.
 
 ## Current design backlog
 
@@ -191,6 +220,9 @@ Public marketing routes should be prerendered or server-rendered. Authentication
 - Validate missing, portrait, landscape, video, and certificate product-media cases.
 - Review preloader frequency for repeat visitors.
 - Measure motion performance on low-power mobile hardware.
+- Replace the 754 × 541 brilliant macro behind the 404 banner with a banner-grade photograph when one exists.
+- Give Price & size, Shapes, and Inventory (cut stone) and Why lab-grown and Journal (grading bench) distinct photographs so adjacent pages do not share an opening.
+- Run the full adversarial review of the banner change; the first run did not complete.
 
 ## Governance
 
