@@ -134,7 +134,7 @@ export function useRouter() {
   }, []);
 
   const run = useCallback(
-    async (next, push) => {
+    async (next, push, options = {}) => {
       if (busy.current) return;
       const target = new URL(next, window.location.href);
 
@@ -152,11 +152,23 @@ export function useRouter() {
        * A link that ALREADY names a language wins: that is the switcher, and
        * an explicit choice must never be overridden by the page it was made
        * on.
+       *
+       * ENGLISH IS THE CASE THAT CANNOT BE INFERRED, and inferring it was a
+       * bug. English carries no prefix, so the switcher's English option on
+       * /hi/diamonds has href="/diamonds" — byte for byte the same as the
+       * ordinary header link for हीरे. The guard below rewrote it back to
+       * /hi/diamonds, which then equalled the current path and the navigation
+       * aborted: the option was a dead control on every localised page, with
+       * no way back to English except editing the address bar.
+       *
+       * So the switcher STATES its intent (`chooses`, from the anchor's
+       * hreflang) instead of the router guessing it from the path. Every other
+       * link is untouched and still inherits the current language.
        */
       const here = splitLocale(window.location.pathname);
       const there = splitLocale(target.pathname);
       const namesLocale = PREFIXES.includes(target.pathname.split('/')[1]);
-      if (here.locale !== 'en' && !namesLocale) {
+      if (here.locale !== 'en' && !namesLocale && !options.chooses) {
         target.pathname = localePath(there.path, here.locale);
       }
 
@@ -198,7 +210,9 @@ export function useRouter() {
       const anchor = event.target.closest?.('a[href]');
       if (!isInternalNavigation(event, anchor)) return;
       event.preventDefault();
-      run(anchor.getAttribute('href'), true);
+      /* hreflang is only ever set by the language switcher, and it is the one
+         place a link means "this language", not "this page". */
+      run(anchor.getAttribute('href'), true, { chooses: anchor.hasAttribute('hreflang') });
     };
 
     // Back and forward have already changed the URL by the time this fires, so
