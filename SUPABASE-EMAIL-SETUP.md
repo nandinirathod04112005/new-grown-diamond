@@ -1,7 +1,35 @@
 # Emailed links do not arrive, or do not work
 
-**Re-measured against the live project on 10 September 2026.** Two separate
-faults produce the same complaint, and they need different fixes:
+## RESOLVED, 10 September 2026 — the cause was a single wrong digit
+
+The project had custom SMTP configured against **smtp.gmail.com port 585**.
+Gmail does not listen on 585; it uses **587** for STARTTLS and 465 for SSL. So
+every send failed at the connection, which surfaced as:
+
+```
+POST /auth/v1/recover   500  {"error_code":"unexpected_failure",
+                              "msg":"Error sending recovery email"}
+```
+
+Changing the port to 587 fixed it. The same request now answers `200`, and the
+mail is delivered.
+
+Two other settings were wrong in the same place and were corrected with it:
+
+| Setting | Was | Now |
+|---|---|---|
+| Site URL | `http://localhost:3000` | the site's own address |
+| Redirect allow-list | two placeholders from a tutorial, `127.0.0.1:5500` and `your-real-domain.com` | every address the site is opened from, each with `/auth/callback` |
+
+**When the site moves to its real domain**, set Site URL to it and confirm the
+allow-list with:
+
+```
+npm run check:backend -- --origin https://newgrowndiamond.com
+```
+
+The rest of this document is the diagnosis that led there, and remains the
+guide for setting mail up from scratch.
 
 ## Fault 1: every link points at a machine nobody is running
 
