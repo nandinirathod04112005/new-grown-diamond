@@ -298,9 +298,27 @@ if (recoveryFlag !== -1 && process.argv[recoveryFlag + 1]) {
       say(PASS, 'Recovery request accepted', 'The API accepted it (HTTP 200). Supabase answers 200 whether or not an account exists, so this proves the request was not refused — not that mail was delivered. Check the inbox, and the spam folder.');
     } else {
       const parsed = (() => { try { return JSON.parse(body); } catch { return {}; } })();
-      say(FAIL, 'Recovery request refused', `HTTP ${res.status} ${parsed.error_code || parsed.code || ''}: ${parsed.msg || parsed.message || body.slice(0, 200)}${
-        /rate/i.test(body) ? '\nThat is the mail service cap, not anything the site did. Connecting your own SMTP raises it: see SUPABASE-EMAIL-SETUP.md.' : ''
-      }`);
+      /*
+       * The two failures mean different things and lead to different fixes,
+       * so they are never reported as one "email failed".
+       *
+       * 429 is the cap: the service refused to send another message this hour.
+       * 500 is the send itself failing, and it only happens for an address
+       * that EXISTS — an unknown address answers 200 without attempting
+       * anything. So a 500 is the mailer, every time.
+       */
+      const why = res.status === 429 || /rate/i.test(body)
+        ? '\nThat is the mail service cap for this hour, not anything the site did. Your own SMTP raises it.'
+        : res.status >= 500
+          ? '\nThe account exists and the send itself failed — an unknown address answers 200 without trying.'
+            + '\nThat points at the mailer, and there are two usual causes:'
+            + '\n  1. No custom SMTP, so the built-in service is being used. It sends only a few messages an hour and'
+            + '\n     only reliably to addresses on your own Supabase team. Every other recipient fails exactly like this.'
+            + '\n  2. Custom SMTP is set but its host, port, username or password is wrong.'
+            + '\nTest 1 quickly: run this again with the address you sign in to Supabase with. If that one works and'
+            + '\nothers do not, it is the built-in sender, and connecting SMTP is the fix.'
+          : '';
+      say(FAIL, 'Recovery email was not sent', `HTTP ${res.status} ${parsed.error_code || parsed.code || ''}: ${parsed.msg || parsed.message || body.slice(0, 200)}${why}\nSee SUPABASE-EMAIL-SETUP.md. Until it is fixed, scripts/set-password.mjs sets a password by hand.`);
     }
   } catch (error) {
     say(FAIL, 'Recovery request failed', String(error).slice(0, 200));

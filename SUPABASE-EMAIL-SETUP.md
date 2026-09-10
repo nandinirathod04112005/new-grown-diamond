@@ -39,14 +39,55 @@ and no error on the site. Sign-up is no longer affected — email confirmation i
 now OFF (`mailer_autoconfirm: true`), so a new account works immediately and
 waits for no link — but **password recovery still depends entirely on this**.
 
-To test delivery for one address you can open:
+**This is now confirmed, not suspected.** A recovery request from the live site
+answers:
+
+```
+POST /auth/v1/recover?redirect_to=...  500 (Internal Server Error)
+```
+
+and the site shows "The email could not be sent right now." The same endpoint
+answers **200** for an address that has no account, because Supabase does not
+attempt a send for an unknown address. So the endpoint is healthy and it is the
+SEND that fails. That is the mailer, and only two things cause it:
+
+1. **No custom SMTP**, so the built-in service is in use. It sends a few
+   messages an hour and only reliably to addresses belonging to the Supabase
+   project's own team. Every other recipient fails with exactly this 500.
+2. **Custom SMTP is configured, but its host, port, username or password is
+   wrong.**
+
+A quick way to tell them apart: request recovery for the address you sign in to
+Supabase with. If that one arrives and a customer's does not, it is cause 1.
+
+To test delivery for any one address:
 
 ```
 npm run check:backend -- --recovery you@example.com
 ```
 
-A `429 over_email_send_rate_limit` in that output is the service's cap and
-cannot be fixed in the code. Anything else that is not 200 is printed verbatim.
+A `429 over_email_send_rate_limit` is the hourly cap rather than a broken
+mailer. Anything else is printed verbatim.
+
+## While the mailer is down, nobody has to stay locked out
+
+Recovery is the only flow that needs email — sign-up does not, now that
+confirmation is off. So an account someone cannot get into can be handled by
+the desk directly:
+
+```
+SUPABASE_SERVICE_ROLE_KEY=... node scripts/set-password.mjs someone@example.com
+```
+
+It finds the account, asks for a new password twice with the typing hidden, and
+sets it. Tell the person out of band and ask them to change it from their
+account page once they are in.
+
+The service role key can read and write every row and bypasses every policy.
+Pass it on that one command line only. It must never appear in `.env.local`, in
+any `VITE_` variable, or in any committed file — anything named `VITE_` is
+compiled into the bundle and served to every visitor. If it has ever been
+pasted somewhere it should not be, rotate it under Project Settings, API.
 
 ## The cause
 
