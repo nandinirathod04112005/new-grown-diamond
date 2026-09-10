@@ -5,7 +5,6 @@ import { prefersReducedMotion } from '@/lib/motion/media.js';
 import { useHeroProgress } from '@/hooks/useHeroProgress.js';
 import { usePointerParallax } from '@/hooks/usePointerParallax.js';
 import Magnetic from '@/components/motion/Magnetic.jsx';
-import DotMatrix from '@/components/media/DotMatrix.jsx';
 import DiamondField from '@/components/media/DiamondField.jsx';
 
 
@@ -415,50 +414,10 @@ export default function Atelier() {
                 <span className={styles.beam} aria-hidden="true" />
                 <span className={styles.aura} aria-hidden="true" />
                 <span className={styles.pool} aria-hidden="true" />
-
-                {/*
-                  The photograph, assembled from dots. It gathers on arrival
-                  and comes apart again as the hero scrolls away — the real
-                  <img> above is what remains, so the finished frame is the
-                  picture at full detail rather than an impression of it.
-                */}
-                <DotMatrix src={diamondWide} progressRef={hero} className={styles.dots} />
-
-                {/*
-                  SCINTILLATION. The one thing a diamond does that nothing else
-                  does: as the light or the head moves, individual facets catch
-                  and let go, and the stone flashes. Eight points, each on its
-                  own long clock with a very short flash, so they never pulse
-                  together and never read as a blinking light. Placed over the
-                  crown where the bright facets actually are.
-                */}
-                <span className={styles.glints} aria-hidden="true">
-                  {Array.from({ length: 8 }, (_, i) => (
-                    <i
-                      key={i}
-                      style={{
-                        '--x': `${[38, 57, 46, 63, 34, 52, 68, 43][i]}%`,
-                        '--y': `${[40, 37, 46, 44, 47, 34, 41, 52][i]}%`,
-                        '--s': `${[26, 34, 20, 30, 22, 38, 24, 28][i]}px`,
-                        '--dur': `${[6.5, 9, 7.5, 11, 8, 12.5, 10, 6][i]}s`,
-                        '--delay': `${-[0, 2.4, 5.1, 1.3, 7.2, 3.6, 8.8, 4.4][i]}s`,
-                      }}
-                    />
-                  ))}
-                </span>
-
-                {/*
-                  The prism. Diamond's whole optical signature is that it bends
-                  colours by different amounts, so once a cycle the glow splits
-                  into a cyan and a violet that part and come back together.
-                */}
-                <span className={styles.prism} data-side="cool" aria-hidden="true" />
-                <span className={styles.prism} data-side="warm" aria-hidden="true" />
-
-                {/* The light the stone throws into the room, as rays rather
-                    than a wash — turning slowly, so the room is never twice
-                    the same. */}
-                <span className={styles.rays} aria-hidden="true" />
+                {/* The fine line of light from the stone down to the pool it
+                    is casting: what makes the gem the source of the caustic
+                    rather than an object above an unrelated glow. */}
+                <span className={styles.thread} aria-hidden="true" />
 
                 {/*
                   Fragments, in front of the stone and behind it both — the odd

@@ -6,7 +6,7 @@
   align-content: center;
   gap: var(--s-5);
   /* The block must FIT the sticky frame. Fixed 6rem padding made the content
-     942px tall inside a 900px frame, so the last line was silently clipped â€”
+     942px tall inside a 900px frame, so the last line was silently clipped —
      and on a laptop at 720px it would have lost a third of the paragraph.
      Vertical padding is now proportional to the viewport, not absolute. */
   padding: clamp(1.25rem, 7vh, 4rem) var(--gutter);
@@ -28,7 +28,7 @@
 
 /*
  * The chapter as a whole answers the phase, not the progress. `in` is its
- * approach, `view` its held state, `out` its departure â€” three CSS states and
+ * approach, `view` its held state, `out` its departure — three CSS states and
  * one transition, which is the entire reason the reference site needs no
  * scrubbed timeline.
  */
@@ -119,7 +119,7 @@
    * Bounded by the FRAME, not by the viewport.
    *
    * `min(72vh, 100%)` let the plate reach 72% of the window height while the
-   * row it sits in was already inset by the wrap's padding â€” so on a short,
+   * row it sits in was already inset by the wrap's padding — so on a short,
    * wide screen (1920x944) it ran 287px past the bottom of the sticky block
    * and the image was simply cut off. Sizing it against the row it occupies
    * means it can never outgrow the frame, whatever the aspect ratio.
@@ -184,7 +184,7 @@
 }
 
 /*
- * The print. Overflow lives HERE and nowhere above it â€” `overflow` on an
+ * The print. Overflow lives HERE and nowhere above it — `overflow` on an
  * element that also carries preserve-3d forces it flat, which would collapse
  * the whole card into a picture again.
  */
@@ -286,7 +286,7 @@
   .rule { transform: none; }
   .text { transform: none; }
   :global([data-section]) .wrap { opacity: 1; transform: none; }
-  /* The plate stops travelling but keeps its depth â€” the layers are the
+  /* The plate stops travelling but keeps its depth — the layers are the
      design, the movement was only how they were introduced. */
   :global([data-section]) .card { transform: none; transition: none; }
   .tilt { transform: none; }
@@ -312,7 +312,7 @@
    and a picture painted on the page.
 
    This rides on `.tilt` rather than `.card` because `.card` is
-   transitioned over 1.1s for its scroll pose â€” putting velocity there
+   transitioned over 1.1s for its scroll pose — putting velocity there
    would delay it by a second and destroy the entire point of it.
    `.tilt` is untransitioned, so velocity lands on the same frame the
    scroll does.
@@ -370,7 +370,7 @@
   display: inline-block;
   /*
    * The reveal for character `i`. The scene progress is remapped so the whole
-   * title has resolved by roughly a third of the way in â€” the headline should
+   * title has resolved by roughly a third of the way in — the headline should
    * be readable while the chapter is still arriving, not still assembling once
    * the visitor has started on the body copy.
    *
@@ -379,7 +379,7 @@
    */
   /*
    * `--i` is 0..1 across the title. Character i begins at scene progress
-   * 0.04 + i*0.26 and takes 0.11 to arrive â€” so the first letter starts almost
+   * 0.04 + i*0.26 and takes 0.11 to arrive — so the first letter starts almost
    * immediately, the last has begun by a third of the way in, and the whole
    * headline is readable long before the body copy is being read.
    */
@@ -414,13 +414,67 @@
 
   /*
    * Flipped chapters swap the two children with `order`, which moves the
-   * figure into the FIRST track â€” the narrow one. Left alone, a flipped wide
+   * figure into the FIRST track — the narrow one. Left alone, a flipped wide
    * plate rendered 510px against an unflipped 690px: the same treatment at two
    * different sizes, two chapters apart, which reads as a mistake. Reversing
    * the tracks keeps the wide side wide whichever way the row faces.
    */
   .wrap[data-flip]:has(.figure[data-wide]) { grid-template-columns: 1.15fr 0.85fr; }
 }
+
+/* Chapters are reading spreads, each composed around its existing media. */
+.scene { position: relative; height: auto; min-height: 0; overflow: visible; }
+.scene + div[aria-hidden] { display: none; }
+.wrap { height: auto; min-height: 0; padding: var(--showroom-space) var(--gutter); background: var(--ink); overflow: hidden; gap: var(--s-6); }
+:global([data-section]) .wrap { transform: none; opacity: 1; }
+.text { transform: none; gap: 1.5rem; }
+.title { font-size: clamp(2.8rem, 4.6vw, 5.6rem); max-width: 15ch; line-height: .98; letter-spacing: -.035em; }
+.index { letter-spacing: .12em; padding-bottom: 1rem; border-bottom: 1px solid var(--line-firm); }
+.body { font-size: var(--t-body); line-height: 1.8; --line-progress: 1; }
+.char { opacity: 1; translate: none; rotate: none; }
+.figure, .figure[data-wide] { aspect-ratio: 16/10; max-height: none; }
+:global([data-section]) .card { transform: none; position: absolute; inset: 0; }
+.tilt { transform: none; }
+.cast, .sheen, .edge, .badge { display: none; }
+.frame { border-radius: 0; border: 1px solid var(--ink-line); }
+.frame img { object-fit: contain; transform: none; animation: none; }
+.mediaLabel { font-size: .7rem; letter-spacing: .08em; }
+@media (min-width: 1024px) {
+ .wrap:has(.figure[data-wide]) { grid-template-columns: minmax(0, .8fr) minmax(0, 1.4fr); }
+ .wrap[data-flip]:has(.figure[data-wide]) { grid-template-columns: minmax(0, 1.4fr) minmax(0, .8fr); }
+ .wrap[data-chapter='precision'] { background: var(--showroom-paper); color: var(--showroom-ink); padding-block: calc(var(--showroom-space) * 1.25); }
+ .wrap[data-chapter='precision'] .title { color: var(--showroom-ink); }
+ .wrap[data-chapter='precision'] .body { color: #55524b; }
+ .wrap[data-chapter='precision'] .index { color: #765923; border-color: #b9b2a4; }
+ .wrap[data-chapter='quality'] { grid-template-columns: 1fr 1fr; }
+ .wrap[data-chapter='quality'] .text { grid-column: 1 / -1; grid-template-columns: 1fr 1fr; align-items: start; }
+ .wrap[data-chapter='quality'] .index { grid-column: 1 / -1; }
+ .wrap[data-chapter='quality'] .rule { display: none; }
+ .wrap[data-chapter='quality'] .figure { grid-column: 1 / -1; width: 85%; aspect-ratio: 2 / 1; justify-self: end; margin-top: 2rem; }
+ .wrap[data-chapter='jewellery'] { background: var(--surface-1); grid-template-columns: 1.5fr .8fr; }
+ .wrap[data-chapter='jewellery'] .figure { aspect-ratio: 1.2; }
+ .wrap[data-chapter='contact'] .index { font-family: var(--font-display); font-size: 3rem; letter-spacing: -.04em; }
+}
+@media (max-width: 1023px) {
+ .wrap { padding-block: 4rem; gap: 2rem; }
+ .text { order: 1 !important; }
+ .figure { order: 2 !important; }
+ .title { font-size: clamp(2.5rem, 8vw, 4rem); }
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) { .frame img { transition: scale 700ms var(--ease-primary); } .frame:hover img { scale: 1.025; } }
+
+.frame { clip-path: none; }
+:global([data-section]) .wrap[data-flip] .card { transform: none; }
+
+.body > span[aria-hidden] > span, .body > span[aria-hidden] > span > span { display: inline; text-wrap: pretty; }
+.body > span[aria-hidden] > span:not(:last-child)::after { content: ' '; }
+@media(max-width:899px) { .wrap { padding-block: 3rem; } }
+
+@media(prefers-reduced-motion:no-preference) {
+ .scene[data-section='view'] .figure { animation: showroomPlate 650ms var(--ease-primary) both; }
+}
+@keyframes showroomPlate { from { translate: 0 1.25rem; } to { translate: 0; } }
+
 
 /*
  * ONE PASS OF LIGHT ACROSS THE PLATE, tied to the scroll rather than a timer.
@@ -453,7 +507,6 @@
 @media (prefers-reduced-motion: reduce) {
   .frame::after { display: none; }
 }
-
 
 
 /*
@@ -546,4 +599,42 @@
 
   .index { opacity: 1; }
   .index::after { transform: scaleX(1); }
+}
+
+
+/*
+ * THE PLATE OPENS AS THE CHAPTER ARRIVES.
+ *
+ * Driven from --chapter, NOT from a timeline of its own — for the second time,
+ * because the trap is easy to walk back into. A view timeline is measured
+ * against the nearest scroll container, and the plate sits inside a box with
+ * `overflow: hidden`, which counts as one. Given its own timeline the frame
+ * tracked that box, which never scrolls, so the animation sat permanently
+ * finished and the plate simply appeared. The section's inherited number is
+ * the only clock down here that actually moves.
+ *
+ * A clip rather than a fade: a photograph that fades in reads as one that
+ * loaded late, where one that opens reads as a frame being drawn back from it.
+ * Both ramps are multiplied so they finish inside the first third and hold —
+ * the picture is whole long before anybody is reading beside it.
+ */
+.frame {
+  --open: clamp(0, calc(var(--chapter, 1) * 3), 1);
+  clip-path: inset(
+    calc((1 - var(--open)) * 9%)
+    calc((1 - var(--open)) * 6%)
+  );
+  opacity: calc(0.4 + var(--open) * 0.6);
+}
+
+/* The caption follows the picture rather than arriving with it. */
+.mediaLabel {
+  --late: clamp(0, calc((var(--chapter, 1) - 0.1) * 3.2), 1);
+  opacity: var(--late);
+  transform: translate3d(0, calc((1 - var(--late)) * 10px), 0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .frame { clip-path: none; opacity: 1; }
+  .mediaLabel { opacity: 1; transform: none; }
 }
