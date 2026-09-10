@@ -218,7 +218,8 @@
     inset: 0 0 0 auto;
     z-index: 70;
     width: min(26rem, 100%);
-    background: rgb(var(--scrim) / 0.98);
+    /* Opaque: at 0.98 the results bar's title ghosted through the panel. */
+    background: rgb(var(--scrim));
     border-left: 1px solid var(--f-line);
     box-shadow: -24px 0 60px rgba(0, 0, 0, 0.35);
     transform: translateX(100%);
@@ -455,6 +456,189 @@
 .row[data-dead] { opacity: 0.38; cursor: default; }
 .row[data-dead]:hover { background: transparent; }
 
+/* ---------------- graded scales ---------------- */
+
+/*
+ * Two handles on one bar. The bar is a hairline; the chosen span is the
+ * accent; the handles are ivory discs with an accent ring. Two native range
+ * inputs sit over the bar, transparent, and only their thumbs take the
+ * pointer — so the pair can share one track without either stealing the
+ * other's drag. --lo and --hi are the handle positions as fractions.
+ */
+.scale {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.25rem 0 0.35rem;
+}
+
+.reading {
+  font-size: var(--t-xs);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--f-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.scale[data-chosen] .reading { color: var(--f-ink); }
+
+.track {
+  position: relative;
+  height: 1.5rem;
+  /* Inset by half a segment so each handle sits over the centre of the grade
+     it names, and the ticks below line up with it. */
+  margin: 0 calc(50% / var(--n, 1));
+}
+
+.trackFull { margin: 0 0.5rem; }
+
+.track::before {
+  content: '';
+  position: absolute;
+  inset: 50% 0 auto 0;
+  height: 2px;
+  transform: translateY(-50%);
+  background: var(--f-line);
+  border-radius: 999px;
+}
+
+.fill {
+  position: absolute;
+  top: 50%;
+  left: calc(var(--lo, 0) * 100%);
+  width: calc((var(--hi, 1) - var(--lo, 0)) * 100%);
+  height: 2px;
+  transform: translateY(-50%);
+  background: var(--f-line-firm);
+  border-radius: 999px;
+}
+
+.scale[data-chosen] .fill { background: var(--accent); }
+
+.thumb {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  background: transparent;
+  appearance: none;
+  -webkit-appearance: none;
+  pointer-events: none;
+  cursor: pointer;
+}
+
+.thumb::-webkit-slider-runnable-track { background: transparent; height: 100%; }
+.thumb::-moz-range-track { background: transparent; }
+
+.thumb::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  pointer-events: auto;
+  width: 1.1rem;
+  height: 1.1rem;
+  margin-top: 0.2rem;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  background: var(--ivory);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  cursor: grab;
+}
+
+.thumb::-moz-range-thumb {
+  pointer-events: auto;
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  background: var(--ivory);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  cursor: grab;
+}
+
+.thumb:active::-webkit-slider-thumb { cursor: grabbing; }
+.thumb:focus-visible { outline: 0; }
+.thumb:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 45%, transparent); }
+.thumb:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 45%, transparent); }
+
+/* The grades under the bar, one column each, centred under their handle
+   position. Within the span they are lit; a grade with no stock behind it
+   is dimmed but stays, so the bar always shows the whole scale. */
+.ticks {
+  display: grid;
+  grid-template-columns: repeat(var(--n, 1), minmax(0, 1fr));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ticks button {
+  display: grid;
+  justify-items: center;
+  gap: 0.15rem;
+  width: 100%;
+  padding: 0.2rem 0;
+  border-radius: var(--radius-control);
+  font-size: 0.625rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--f-muted);
+  transition: color var(--dur-base) var(--ease-primary), background var(--dur-base) var(--ease-primary);
+}
+
+.ticks button span {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ticks button em {
+  font-style: normal;
+  font-size: 0.5625rem;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+  color: var(--f-faint);
+}
+
+.ticks li[data-in] button { color: var(--f-ink); }
+.ticks li[data-in] button em { color: var(--f-muted); }
+.ticks li[data-dead] button { opacity: 0.4; }
+.ticks button:hover { background: var(--surface-2); color: var(--f-ink); }
+
+/* The trade's weight bands as quick picks under the bar. */
+.bands {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin: 0.35rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bands button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.55rem;
+  border: 1px solid var(--f-line);
+  border-radius: var(--radius-control);
+  background: var(--f-chip);
+  color: var(--f-muted);
+  font-size: 0.625rem;
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
+  transition: border-color var(--dur-base) var(--ease-primary), color var(--dur-base) var(--ease-primary);
+}
+
+.bands button em {
+  font-style: normal;
+  font-size: 0.5625rem;
+  color: var(--f-faint);
+}
+
+.bands button:hover:not(:disabled) { border-color: var(--accent-deep); color: var(--f-ink); }
+.bands button:disabled { opacity: 0.3; cursor: default; }
+
 /* ---------------- shape grid ---------------- */
 
 /* Shape keeps its glyphs: three across the column, glyph, name and count. */
@@ -531,7 +715,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin-bottom: 0.35rem;
+  margin-top: 0.1rem;
 }
 
 .range label { display: block; flex: 1 1 0; min-width: 0; }
@@ -607,6 +791,8 @@
   .applied button,
   .row,
   .chevron,
+  .ticks button,
+  .bands button,
   .sideClear { transition: none; }
   .side { transition: none; }
 }

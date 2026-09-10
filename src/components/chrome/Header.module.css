@@ -62,8 +62,8 @@
    mark that refuses to break keep the header one line tall. */
 @media (min-width: 900px) and (max-width: 1199px) {
   .nav { gap: var(--s-3); }
-  .link { letter-spacing: 0.08em; white-space: nowrap; }
-  .mark { white-space: nowrap; letter-spacing: 0.22em; }
+  .link { font-size: 0.75rem; letter-spacing: 0.08em; white-space: nowrap; }
+  .mark { flex: 0 0 auto; margin-right: var(--s-4); white-space: nowrap; letter-spacing: 0.16em; }
 }
 
 /* Underline grows from the left, retreats to the right — the reference site's
@@ -161,6 +161,7 @@
 }
 
 .sheet[data-open] { clip-path: inset(0 0 0 0); }
+.sheet[hidden] { display: none; }
 
 .sheetNav { display: grid; }
 
@@ -220,6 +221,7 @@
 
 .subList a {
   display: block;
+  min-height: var(--target-min);
   padding: 0.55rem 0;
   font-size: var(--t-sm);
   line-height: 1.4;
@@ -284,3 +286,12 @@
 /* In the sheet the switcher sits above the contact block, within thumb reach
    at the bottom of a phone rather than up beside the close button. */
 .sheetLang { padding: var(--s-3) 0 0; }
+
+@media (max-width: 899px) {
+  .root { gap: 0.65rem; padding-block: 1rem; }
+  .mark { flex: 1; min-width: 0; font-size: 0.6875rem; letter-spacing: 0.2em; }
+  .burger { flex-shrink: 0; }
+  .sheet { padding-top: 6.5rem; gap: var(--s-5); }
+  .sheetFoot { letter-spacing: 0.06em; overflow-wrap: anywhere; }
+  .theme > :first-child { display: none; }
+}

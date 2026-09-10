@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom';
 import ShapeGlyph from './ShapeGlyph.jsx';
 import {
   CARAT_BANDS, CLARITIES, COLOURS, CUTS, EMPTY, FINISHES, FLUORESCENCES,
-  GROWTHS, SHAPES, countActive, facetCounts, fluorCode, gradeCode, isActive,
+  GROWTHS, SHAPES, facetCounts, fluorCode, gradeCode, isActive,
   labCode, matches, shapeCode,
 } from './stoneFilter.js';
 import styles from './StoneFilters.module.css';
@@ -23,10 +23,12 @@ import styles from './StoneFilters.module.css';
  * same column slides in from the edge as a drawer over the results, opened
  * from the bar that also carries the count and the applied choices.
  *
- * HOW IT READS. Each group is a toggle (see Group below) with its options
- * as checkbox rows and a count at the end of every row; the first four open,
- * the rest folded. Shape keeps its glyphs. Every option is still reachable
- * in two presses at most, and a folded group carries its chosen count.
+ * HOW IT READS. Each group is a toggle (see Group below); the first four
+ * open, the rest folded, and a folded group carries its chosen count. The
+ * graded groups — weight, colour, clarity, cut, polish, symmetry,
+ * fluorescence — are two-handle scales (ScaleRange, CaratRange), the way the
+ * large diamond catalogues set them; laboratory, growth and stock stage are
+ * checkbox rows; shape keeps its glyph tiles.
  *
  * Results update as each option is pressed. The stock sheet this answers to has
  * a Search button because it goes to a server; every stone here is already in
@@ -82,6 +84,170 @@ function Group({ title, count = 0, defaultOpen = false, extra, children }) {
     </details>
   );
 }
+
+/*
+ * A graded scale with two handles.
+ *
+ * Colour, clarity and the finish grades are ORDERED, and a buyer asks for a
+ * span of them — "D to F", "VS1 and better" — not for a scattering. The
+ * large diamond catalogues all settle on the same control for this: a bar
+ * divided into the grades, best on the left, with a handle at each end of the
+ * chosen span. That is what this is, built from two native range inputs laid
+ * over one track, so the keyboard already works (arrow keys move a handle,
+ * Home and End send it to an end) and a screen reader hears the grade at
+ * each handle, not a number.
+ *
+ * The state stays what it was — the array of chosen grades — so the matching
+ * and the facet counts are untouched: a span is simply the contiguous slice
+ * of the list, and the whole list means no filter at all. A grade can also be
+ * tapped: outside the span it extends the span to it; inside, it narrows the
+ * span to that one grade.
+ */
+function ScaleRange({ label, items, value, onChange, counts, loading, format = (item) => item }) {
+  const n = items.length;
+  const positions = value.map((v) => items.indexOf(v)).filter((i) => i >= 0);
+  const chosen = positions.length > 0;
+  const lo = chosen ? Math.min(...positions) : 0;
+  const hi = chosen ? Math.max(...positions) : n - 1;
+  const commit = (a, b) => onChange(a === 0 && b === n - 1 ? [] : items.slice(a, b + 1));
+  const tap = (i) => {
+    if (!chosen) return commit(i, i);
+    if (i < lo) return commit(i, hi);
+    if (i > hi) return commit(lo, i);
+    return commit(i, i);
+  };
+  const reading = !chosen ? 'Any' : lo === hi ? format(items[lo]) : `${format(items[lo])} – ${format(items[hi])}`;
+
+  return (
+    <div className={styles.scale} style={{ '--n': n, '--lo': lo / (n - 1), '--hi': hi / (n - 1) }} data-chosen={chosen ? '' : undefined}>
+      <p className={styles.reading}>{reading}</p>
+      <div className={styles.track}>
+        <span className={styles.fill} aria-hidden="true" />
+        {/* The handles cannot cross: each is clamped at the other. */}
+        <input
+          className={styles.thumb}
+          type="range"
+          min={0}
+          max={n - 1}
+          step={1}
+          value={lo}
+          aria-label={`${label} from`}
+          aria-valuetext={format(items[lo])}
+          onChange={(e) => commit(Math.min(Number(e.target.value), hi), hi)}
+        />
+        <input
+          className={styles.thumb}
+          type="range"
+          min={0}
+          max={n - 1}
+          step={1}
+          value={hi}
+          aria-label={`${label} to`}
+          aria-valuetext={format(items[hi])}
+          onChange={(e) => commit(lo, Math.max(Number(e.target.value), lo))}
+        />
+      </div>
+      <ol className={styles.ticks} aria-label={`${label} grades`}>
+        {items.map((item, i) => {
+          const c = counts?.get(item) ?? 0;
+          const within = chosen && i >= lo && i <= hi;
+          return (
+            <li key={item} data-in={within ? '' : undefined} data-dead={!loading && c === 0 ? '' : undefined}>
+              <button type="button" onClick={() => tap(i)} aria-pressed={within}>
+                <span>{format(item)}</span>
+                <em aria-hidden="true">{loading ? '' : c}</em>
+              </button>
+            </li>
+          );
+        })}
+      </ol>
+    </div>
+  );
+}
+
+/* The slider's reach. Stones above ten carats are typed into the box. */
+const CARAT_LO = 0.2;
+const CARAT_HI = 10;
+
+/*
+ * Weight: the same two-handle bar over a continuous scale, with the two
+ * boxes beneath it for a buyer who knows the number. A handle pushed to an
+ * end of the bar clears that end of the filter, so the bar at full width is
+ * the same state as two empty boxes.
+ */
+function CaratRange({ value, set }) {
+  const lo = value.caratMin === '' ? CARAT_LO : Math.min(Math.max(Number(value.caratMin) || CARAT_LO, CARAT_LO), CARAT_HI);
+  const hi = value.caratMax === '' ? CARAT_HI : Math.min(Math.max(Number(value.caratMax) || CARAT_HI, CARAT_LO), CARAT_HI);
+  const at = (v) => (v - CARAT_LO) / (CARAT_HI - CARAT_LO);
+  return (
+    <div className={styles.scale} style={{ '--lo': at(lo), '--hi': at(hi) }} data-chosen={value.caratMin !== '' || value.caratMax !== '' ? '' : undefined}>
+      <p className={styles.reading}>
+        {value.caratMin === '' && value.caratMax === '' ? 'Any weight' : `${value.caratMin || CARAT_LO} – ${value.caratMax || `${CARAT_HI}+`} ct`}
+      </p>
+      <div className={`${styles.track} ${styles.trackFull}`}>
+        <span className={styles.fill} aria-hidden="true" />
+        <input
+          className={styles.thumb}
+          type="range"
+          min={CARAT_LO}
+          max={CARAT_HI}
+          step={0.01}
+          value={lo}
+          aria-label="Carat from"
+          aria-valuetext={`${band(lo)} carat`}
+          onChange={(e) => {
+            const v = Math.min(Number(e.target.value), hi);
+            set({ caratMin: v <= CARAT_LO ? '' : band(v) });
+          }}
+        />
+        <input
+          className={styles.thumb}
+          type="range"
+          min={CARAT_LO}
+          max={CARAT_HI}
+          step={0.01}
+          value={hi}
+          aria-label="Carat to"
+          aria-valuetext={`${band(hi)} carat`}
+          onChange={(e) => {
+            const v = Math.max(Number(e.target.value), lo);
+            set({ caratMax: v >= CARAT_HI ? '' : band(v) });
+          }}
+        />
+      </div>
+      <div className={styles.range}>
+        <label>
+          <span className="u-visually-hidden">Carat from</span>
+          <input
+            type="number"
+            inputMode="decimal"
+            step="0.01"
+            min="0"
+            placeholder="From"
+            value={value.caratMin}
+            onChange={(e) => set({ caratMin: e.target.value })}
+          />
+        </label>
+        <span aria-hidden="true">–</span>
+        <label>
+          <span className="u-visually-hidden">Carat to</span>
+          <input
+            type="number"
+            inputMode="decimal"
+            step="0.01"
+            min="0"
+            placeholder="To"
+            value={value.caratMax}
+            onChange={(e) => set({ caratMax: e.target.value })}
+          />
+        </label>
+      </div>
+    </div>
+  );
+}
+
+/* The groups that are graded scales; the rest are lists. */
+const SCALES = ['colour', 'clarity', 'cut', 'polish', 'symmetry', 'fluorescence'];
 
 /*
  * `onChange` is a state setter, and every write goes through its updater form.
@@ -162,7 +328,6 @@ export default function StoneFilters({ stones, value, onChange, shown, loading =
   );
 
   const active = isActive(value);
-  const activeCount = countActive(value);
   const clearAll = useCallback(() => onChange(EMPTY), [onChange]);
 
   /*
@@ -178,7 +343,21 @@ export default function StoneFilters({ stones, value, onChange, shown, loading =
     symmetry: 'Symmetry', fluorescence: 'Fluorescence', lab: 'Lab', growth: 'Growth',
   };
   const applied = [];
+  const ORDER = { colour: COLOURS, clarity: CLARITIES, cut: CUTS, polish: FINISHES, symmetry: FINISHES, fluorescence: FLUORESCENCES };
   for (const [key, label] of Object.entries({ shape: '', ...GROUP_LABEL })) {
+    if (SCALES.includes(key) && value[key].length > 0) {
+      // A span is one choice, said once: "Colour D – G", removed as one.
+      const ordered = ORDER[key].filter((g) => value[key].includes(g));
+      const first = ordered[0];
+      const last = ordered[ordered.length - 1];
+      const name = (g) => (key === 'fluorescence' ? FLUOR_NAME[g] : GRADE_NAME[g]) ?? g;
+      applied.push({
+        id: key,
+        label: `${label} ${first === last ? name(first) : `${name(first)} – ${name(last)}`}`,
+        remove: () => set({ [key]: [] }),
+      });
+      continue;
+    }
     for (const item of value[key]) {
       applied.push({ id: `${key}:${item}`, label: label ? `${label} ${item}` : item, remove: () => toggle(key, item) });
     }
@@ -191,6 +370,8 @@ export default function StoneFilters({ stones, value, onChange, shown, loading =
     });
   }
   if (value.inStockOnly) applied.push({ id: 'stock', label: 'In stock only', remove: () => set({ inStockOnly: false }) });
+  /* Choices, not grades: a span of five colours is one filter, said once. */
+  const activeCount = applied.length;
 
   /*
    * Sidebar or drawer.
@@ -290,9 +471,10 @@ export default function StoneFilters({ stones, value, onChange, shown, loading =
     </ul>
   );
 
-  /* How many of a group's options are chosen — shown on the toggle so a
-     collapsed group still says what it is doing to the results. */
-  const chosen = (key) => value[key].length;
+  /* Shown on the toggle so a collapsed group still says what it is doing to
+     the results: how many options are chosen, or 1 for a graded span, which
+     is one choice however many grades it covers. */
+  const chosen = (key) => (SCALES.includes(key) ? Math.min(1, value[key].length) : value[key].length);
 
   const tally = loading ? 'Loading stock' : `${shown} of ${stones.length} ${stones.length === 1 ? 'stone' : 'stones'}`;
 
@@ -409,54 +591,27 @@ export default function StoneFilters({ stones, value, onChange, shown, loading =
         </Group>
 
         <Group title="Weight" count={value.caratMin !== '' || value.caratMax !== '' ? 1 : 0} defaultOpen>
-          <div className={styles.range}>
-            <label>
-              <span className="u-visually-hidden">Carat from</span>
-              <input
-                type="number"
-                inputMode="decimal"
-                step="0.01"
-                min="0"
-                placeholder="From"
-                value={value.caratMin}
-                onChange={(e) => set({ caratMin: e.target.value })}
-              />
-            </label>
-            <span aria-hidden="true">–</span>
-            <label>
-              <span className="u-visually-hidden">Carat to</span>
-              <input
-                type="number"
-                inputMode="decimal"
-                step="0.01"
-                min="0"
-                placeholder="To"
-                value={value.caratMax}
-                onChange={(e) => set({ caratMax: e.target.value })}
-              />
-            </label>
-          </div>
-          <ul className={styles.rows}>
+          <CaratRange value={value} set={set} />
+          {/* The bands a stock sheet is ruled in, as quick picks under the bar. */}
+          <ul className={styles.bands} aria-label="Weight bands">
             {CARAT_BANDS.map(([lo, hi]) => {
               const on = value.caratMin === band(lo) && value.caratMax === band(hi);
               const n = caratPool.filter((s) => s.carat >= lo && s.carat <= hi).length;
-              const dead = !loading && n === 0 && !on;
               return (
                 <li key={lo}>
-                  <label className={styles.row} data-on={on ? '' : undefined} data-dead={dead ? '' : undefined}>
-                    {/* Ticking the band already chosen clears it, so the
-                        list behaves as switches rather than a one-way trip. */}
-                    <input
-                      type="checkbox"
-                      checked={on}
-                      disabled={dead}
-                      onChange={() => set(on
-                        ? { caratMin: '', caratMax: '' }
-                        : { caratMin: band(lo), caratMax: band(hi) })}
-                    />
-                    <span>{band(lo)} – {band(hi)} ct</span>
+                  <button
+                    type="button"
+                    className={on ? styles.on : ''}
+                    aria-pressed={on}
+                    disabled={!loading && n === 0 && !on}
+                    /* Pressing the band already chosen clears it. */
+                    onClick={() => set(on
+                      ? { caratMin: '', caratMax: '' }
+                      : { caratMin: band(lo), caratMax: band(hi) })}
+                  >
+                    <span>{band(lo)} – {band(hi)}</span>
                     <em aria-hidden="true">{loading ? '' : n}</em>
-                  </label>
+                  </button>
                 </li>
               );
             })}
@@ -464,11 +619,11 @@ export default function StoneFilters({ stones, value, onChange, shown, loading =
         </Group>
 
         <Group title="Colour" count={chosen('colour')} defaultOpen>
-          {rows('colour', COLOURS, counts.colour)}
+          <ScaleRange label="Colour" items={COLOURS} value={value.colour} onChange={(v) => set({ colour: v })} counts={counts.colour} loading={loading} />
         </Group>
 
         <Group title="Clarity" count={chosen('clarity')} defaultOpen>
-          {rows('clarity', CLARITIES, counts.clarity)}
+          <ScaleRange label="Clarity" items={CLARITIES} value={value.clarity} onChange={(v) => set({ clarity: v })} counts={counts.clarity} loading={loading} />
         </Group>
 
         <Group
@@ -499,19 +654,19 @@ export default function StoneFilters({ stones, value, onChange, shown, loading =
             </div>
           )}
         >
-          {rows('cut', CUTS, counts.cut, (g) => GRADE_NAME[g] ?? g)}
+          <ScaleRange label="Cut" items={CUTS} value={value.cut} onChange={(v) => set({ cut: v })} counts={counts.cut} loading={loading} format={(g) => GRADE_NAME[g] ?? g} />
         </Group>
 
         <Group title="Polish" count={chosen('polish')}>
-          {rows('polish', FINISHES, counts.polish, (g) => GRADE_NAME[g] ?? g)}
+          <ScaleRange label="Polish" items={FINISHES} value={value.polish} onChange={(v) => set({ polish: v })} counts={counts.polish} loading={loading} format={(g) => GRADE_NAME[g] ?? g} />
         </Group>
 
         <Group title="Symmetry" count={chosen('symmetry')}>
-          {rows('symmetry', FINISHES, counts.symmetry, (g) => GRADE_NAME[g] ?? g)}
+          <ScaleRange label="Symmetry" items={FINISHES} value={value.symmetry} onChange={(v) => set({ symmetry: v })} counts={counts.symmetry} loading={loading} format={(g) => GRADE_NAME[g] ?? g} />
         </Group>
 
         <Group title="Fluorescence" count={chosen('fluorescence')}>
-          {rows('fluorescence', FLUORESCENCES, counts.fluorescence, (f) => FLUOR_NAME[f] ?? f)}
+          <ScaleRange label="Fluorescence" items={FLUORESCENCES} value={value.fluorescence} onChange={(v) => set({ fluorescence: v })} counts={counts.fluorescence} loading={loading} format={(f) => FLUOR_NAME[f] ?? f} />
         </Group>
 
         <Group title="Laboratory" count={chosen('lab')}>
