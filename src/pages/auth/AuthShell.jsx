@@ -31,7 +31,9 @@ export default function AuthShell({ eyebrow, title, intro, children, aside, wide
       {/* The built ground, matching the home hero: a key pool behind the card,
           a drafting grid that dies before it reaches an edge, a vignette. */}
       <div className={styles.field} aria-hidden="true" />
-      <CausticField className={styles.caustics} />
+      {/* Dim, and a deeper tint: at the component's own strength the light
+          read as a bright teal cloud behind the form and out-shouted it. */}
+      <CausticField className={styles.caustics} tint={[0.08, 0.46, 0.45]} />
       {/* Sits between the moving light and the card, so the area that gets
           read settles onto a near-solid ground however busy the room is. */}
       <div className={styles.pool} aria-hidden="true" />

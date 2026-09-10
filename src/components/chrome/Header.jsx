@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { currentPath, subscribePath } from '@/lib/router.js';
+import { splitLocale } from '@/i18n/locales.js';
 import ThemeToggle from './ThemeToggle.jsx';
 import LanguageSwitch from './LanguageSwitch.jsx';
 import { useT } from '@/i18n/localeContext.js';
@@ -63,6 +65,32 @@ export default function Header() {
 
   const close = useCallback(() => setOpen(false), []);
 
+  /*
+   * Which page is this. Read from the router's store rather than from a prop,
+   * and compared without the language prefix so /hi/diamonds still lights up
+   * Diamonds. Education counts as current on every page it lists, since those
+   * are where its own link leads.
+   */
+  const here = useSyncExternalStore(subscribePath, currentPath, () => '/');
+  const page = splitLocale(here).path;
+  const at = (href) => page === href || (href !== '/' && page.startsWith(`${href}/`));
+  const isCurrent = (item) => at(item.href) || Boolean(item.items?.some((sub) => at(sub.href)));
+
+  /*
+   * Once the page has scrolled, a soft fall of ink is laid under the header
+   * so the nav reads over whatever passes beneath it. A flag, read once per
+   * frame; the header's own height never changes, so nothing below it moves.
+   */
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    let frame = 0;
+    const read = () => { frame = 0; setScrolled(window.scrollY > 40); };
+    const onScroll = () => { if (!frame) frame = requestAnimationFrame(read); };
+    read();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => { window.removeEventListener('scroll', onScroll); cancelAnimationFrame(frame); };
+  }, []);
+
   useEffect(() => {
     if (!open) return undefined;
 
@@ -100,6 +128,9 @@ export default function Header() {
 
   return (
     <>
+      {/* Outside the header, because the header blends with `difference` and
+          a background inside it would be inverted along with the type. */}
+      <div className={styles.scrim} data-on={scrolled && !open ? '' : undefined} aria-hidden="true" />
       <header className={styles.root} data-open={open ? '' : undefined}>
         <a className={styles.mark} href="/">New Grown Diamond</a>
 
@@ -111,15 +142,27 @@ export default function Header() {
               href={item.href}
               items={item.items}
               linkClassName={styles.link}
+              current={isCurrent(item)}
             />
           ) : (
-            <a key={item.href} className={styles.link} href={item.href}>
+            <a
+              key={item.href}
+              className={styles.link}
+              href={item.href}
+              aria-current={isCurrent(item) ? 'page' : undefined}
+            >
               {t(item.key)}
             </a>
           )))}
         </nav>
 
-        <a className={styles.account} href={ACCOUNT.href}>{t(ACCOUNT.key)}</a>
+        <a
+          className={styles.account}
+          href={ACCOUNT.href}
+          aria-current={at(ACCOUNT.href) ? 'page' : undefined}
+        >
+          {t(ACCOUNT.key)}
+        </a>
 
         <div className={styles.theme}>
           {/* Beside the theme control rather than in the nav: both are settings
@@ -158,6 +201,7 @@ export default function Header() {
                 href={item.href}
                 className={styles.sheetLink}
                 style={{ '--i': i }}
+                aria-current={isCurrent(item) ? 'page' : undefined}
                 onClick={close}
               >
                 <span className={styles.sheetIndex}>{String(i + 1).padStart(2, '0')}</span>
@@ -171,7 +215,7 @@ export default function Header() {
                 <ul className={styles.subList}>
                   {item.items.map((sub) => (
                     <li key={sub.href}>
-                      <a href={sub.href} onClick={close}>{sub.label}</a>
+                      <a href={sub.href} aria-current={at(sub.href) ? 'page' : undefined} onClick={close}>{sub.label}</a>
                     </li>
                   ))}
                 </ul>

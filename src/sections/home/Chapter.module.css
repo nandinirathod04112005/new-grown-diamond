@@ -39,8 +39,8 @@
 }
 
 :global([data-section='in']) .wrap {
-  opacity: 0.72;
-  transform: translateY(1.5rem);
+  opacity: 0.86;
+  transform: translateY(1rem);
 }
 
 :global([data-section='view']) .wrap {
@@ -49,8 +49,8 @@
 }
 
 :global([data-section='out']) .wrap {
-  opacity: 0.72;
-  transform: translateY(-1.25rem);
+  opacity: 0.86;
+  transform: translateY(-1rem);
 }
 
 /* ---------------- the reading side ---------------- */
@@ -73,19 +73,28 @@
 
 .title {
   font-family: var(--font-display);
-  font-size: var(--t-2xl);
+  /* Capped below the page-title scale: at --t-2xl "Real diamond. Different
+     origin." broke into four one-word lines beside its plate. Balanced so the
+     two lines it should be share their length. */
+  font-size: clamp(2.1rem, 1.1rem + 3.4vw, 4.4rem);
   font-weight: 300;
-  line-height: 1;
+  line-height: 1.02;
   letter-spacing: -0.015em;
   color: var(--ivory);
+  max-width: 14ch;
+  text-wrap: balance;
 }
 
 .body {
   --line-progress: clamp(0.34, var(--sp, 1) * 2.8, 1);
-  max-width: var(--measure);
+  /* A reading size, not a display size: at --t-lg the lines re-wrapped inside
+     themselves and the paragraph ran to nine rows on a laptop. */
+  max-width: var(--measure-narrow);
   color: var(--text-muted);
-  font-size: var(--t-lg);
+  font-size: clamp(1.05rem, 0.98rem + 0.4vw, 1.3rem);
   font-weight: 300;
+  line-height: 1.55;
+  text-wrap: pretty;
 }
 
 .rule {

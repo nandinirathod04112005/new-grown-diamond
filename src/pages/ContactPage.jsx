@@ -140,41 +140,54 @@ export default function ContactPage() {
           noValidate
           data-tried={tried ? '' : undefined}
         >
-          <div className={styles.formGrid}>
-            <label className={styles.fieldControl}>
-              <span>Name *</span>
-              <input name="name" autoComplete="name" minLength="2" maxLength="160" placeholder=" " required />
-            </label>
-            <label className={styles.fieldControl}>
-              <span>Email *</span>
-              <input name="email" type="email" autoComplete="email" maxLength="254" placeholder=" " required />
-            </label>
-            <label className={styles.fieldControl}>
-              <span>Company</span>
-              <input name="company" autoComplete="organization" maxLength="160" />
-            </label>
-            <label className={styles.fieldControl}>
-              <span>Phone</span>
-              <input
-                name="phone"
-                type="tel"
-                autoComplete="tel"
-                inputMode="tel"
-                maxLength="40"
-                pattern="[+()\-\s\d]{7,40}"
-              />
-            </label>
-            <label className={styles.fieldControl}>
-              <span>Country</span>
-              <input name="country" autoComplete="country-name" maxLength="80" />
-            </label>
-            <label className={styles.fieldControl}>
-              <span>Enquiry type *</span>
-              <select name="enquiryType" defaultValue={defaultSubject} required>
-                {SUBJECTS.map((subject) => <option key={subject}>{subject}</option>)}
-              </select>
-            </label>
-          </div>
+          {/*
+            Two groups, named. Eight controls in one undifferentiated grid gave
+            no sense of how far along the form a visitor was; "who you are"
+            and "what you need" is the order the desk reads them in. The
+            fields, names and validation are exactly what they were.
+          */}
+          <fieldset className={styles.fieldGroup}>
+            <legend>Who you are</legend>
+            <div className={styles.formGrid}>
+              <label className={styles.fieldControl}>
+                <span>Name *</span>
+                <input name="name" autoComplete="name" minLength="2" maxLength="160" placeholder=" " required />
+              </label>
+              <label className={styles.fieldControl}>
+                <span>Email *</span>
+                <input name="email" type="email" autoComplete="email" maxLength="254" placeholder=" " required />
+              </label>
+              <label className={styles.fieldControl}>
+                <span>Company</span>
+                <input name="company" autoComplete="organization" maxLength="160" />
+              </label>
+              <label className={styles.fieldControl}>
+                <span>Phone</span>
+                <input
+                  name="phone"
+                  type="tel"
+                  autoComplete="tel"
+                  inputMode="tel"
+                  maxLength="40"
+                  pattern="[+()\-\s\d]{7,40}"
+                />
+              </label>
+            </div>
+          </fieldset>
+          <fieldset className={styles.fieldGroup}>
+            <legend>What you need</legend>
+            <div className={styles.formGrid}>
+              <label className={styles.fieldControl}>
+                <span>Country</span>
+                <input name="country" autoComplete="country-name" maxLength="80" />
+              </label>
+              <label className={styles.fieldControl}>
+                <span>Enquiry type *</span>
+                <select name="enquiryType" defaultValue={defaultSubject} required>
+                  {SUBJECTS.map((subject) => <option key={subject}>{subject}</option>)}
+                </select>
+              </label>
+            </div>
           <label className={styles.fieldControl}>
             <span>Shape, carat, colour, clarity and quantity *</span>
             <textarea
@@ -187,6 +200,7 @@ export default function ContactPage() {
               required
             />
           </label>
+          </fieldset>
           <label className={styles.trap} aria-hidden="true">
             Website
             <input name="website" tabIndex="-1" autoComplete="off" />

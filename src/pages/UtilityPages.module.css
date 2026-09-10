@@ -25,16 +25,31 @@
 .form { display: grid; gap: var(--s-4); }
 .formGrid { display: grid; gap: var(--s-4); }
 
-.fieldControl { display: grid; gap: 0.65rem; }
-.fieldControl > span { color: var(--text-muted); font-size: 0.62rem; letter-spacing: 0.16em; text-transform: uppercase; }
+/* A named group of fields. The legend is the eyebrow of the form. */
+.fieldGroup { display: grid; gap: var(--s-4); margin: 0; padding: 0; border: 0; min-width: 0; }
+.fieldGroup legend {
+  margin-bottom: var(--s-3);
+  padding: 0;
+  color: var(--gold-lift);
+  font-size: var(--t-xs);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.fieldControl { display: grid; gap: 0.55rem; }
+/* Labels at a readable size: 0.62rem was a caption, and on a phone it was
+   the smallest type on the page — on the one screen where it is the only
+   thing telling you what to type. */
+.fieldControl > span { color: var(--text); opacity: 0.78; font-size: var(--t-xs); letter-spacing: 0.14em; text-transform: uppercase; }
 .fieldControl input,
 .fieldControl select,
 .fieldControl textarea {
   width: 100%;
+  min-height: var(--control-h);
   border: 0;
-  border-bottom: 1px solid var(--ink-line);
+  border-bottom: 1px solid var(--line-firm);
   border-radius: 0;
-  padding: 0.9rem 0;
+  padding: 0.75rem 0;
   background: transparent;
   color: var(--text);
   font: inherit;
@@ -53,9 +68,10 @@
 .formActions { display: grid; gap: var(--s-3); align-items: center; }
 .formActions button {
   width: max-content;
-  min-height: 3rem;
+  min-height: var(--control-h);
   padding: 0.9rem 1.25rem;
   border: 1px solid var(--gold);
+  border-radius: var(--radius-control);
   color: var(--gold-lift);
   font-size: var(--t-xs);
   letter-spacing: 0.15em;

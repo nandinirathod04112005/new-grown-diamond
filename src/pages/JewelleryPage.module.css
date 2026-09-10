@@ -41,3 +41,14 @@
    the same accent that fails on this panel in the first place. */
 .close div > p.callLine a:hover,
 .close div > p.callLine a:focus-visible { opacity: 0.72; }
+
+/* The step descriptions were set at the panel's default 1rem in a muted
+   grey beside 2.4rem headings — the one thing on the page a buyer needs to
+   read was the hardest to. A reading size and a measure. */
+.process article { align-items: start; }
+.process article > span { padding-top: 0.4rem; font-size: var(--t-xs); letter-spacing: 0.2em; }
+.process h2 { font-size: clamp(1.7rem, 1.2rem + 1.6vw, 2.5rem); line-height: 1.05; }
+.process article p { max-width: 46ch; font-size: var(--t-body); line-height: 1.7; color: var(--text-muted); }
+
+/* Same letterboxing as the inventory's closing image, same fix. */
+.close img { height: auto; }

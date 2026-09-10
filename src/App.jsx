@@ -29,6 +29,7 @@ const ContactPage = lazy(() => import('@/pages/ContactPage.jsx'));
 const InventoryPage = lazy(() => import('@/pages/InventoryPage.jsx'));
 const JewelleryPage = lazy(() => import('@/pages/JewelleryPage.jsx'));
 const BlogsPage = lazy(() => import('@/pages/BlogsPage.jsx'));
+const BlogPostPage = lazy(() => import('@/pages/BlogPostPage.jsx'));
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage.jsx'));
 const SignInPage = lazy(() => import('@/pages/auth/SignInPage.jsx'));
 const RegisterPage = lazy(() => import('@/pages/auth/RegisterPage.jsx'));
@@ -336,8 +337,13 @@ export default function App() {
         {path === '/blogs' && <BlogsPage />}
         {path !== '/'
           && !content
+        {/* The page the journal cards have always pointed at. */}
+        {path.startsWith('/blogs/') && (
+          <BlogPostPage slug={decodeURIComponent(path.slice('/blogs/'.length))} />
+        )}
           && !['/faq', '/contact', '/diamonds', '/jewellery', '/blogs'].includes(path)
           && <NotFoundPage />}
+          && !path.startsWith('/blogs/')
         </Suspense>
         <Footer />
       </div>

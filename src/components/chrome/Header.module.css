@@ -12,6 +12,30 @@
 /* Keep the transformed close control above the full-screen sheet. */
 .root[data-open] { z-index: 90; }
 
+/*
+ * The scrolled state. A gradient of the page's own scrim colour, fixed under
+ * the header and outside its blend, that fades in once the page has moved —
+ * so the nav keeps its contrast over a passing photograph or headline without
+ * a bar arriving, and without the header ever changing height.
+ */
+.scrim {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 39;
+  height: 7.5rem;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgb(var(--scrim) / 0.82) 0%,
+    rgb(var(--scrim) / 0.46) 52%,
+    transparent 100%
+  );
+  opacity: 0;
+  transition: opacity var(--dur-slow) var(--ease-primary);
+}
+
+.scrim[data-on] { opacity: 1; }
+
 .mark {
   font-family: var(--font-display);
   font-size: var(--t-sm);
@@ -59,6 +83,12 @@
 
 .link:hover::after,
 .link:focus-visible::after {
+  transform: scaleX(1);
+  transform-origin: left center;
+}
+
+/* The page you are on keeps its underline; the others earn theirs on hover. */
+.link[aria-current='page']::after {
   transform: scaleX(1);
   transform-origin: left center;
 }
@@ -155,7 +185,10 @@
 }
 
 .sheetLink:hover .sheetLabel,
-.sheetLink:focus-visible .sheetLabel { color: var(--gold-lift); }
+.sheetLink:focus-visible .sheetLabel,
+.sheetLink[aria-current='page'] .sheetLabel { color: var(--gold-lift); }
+
+.subList a[aria-current='page'] { color: var(--gold-lift); }
 
 /*
  * The pages nested under a sheet link.

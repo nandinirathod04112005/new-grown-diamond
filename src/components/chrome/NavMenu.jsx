@@ -20,7 +20,7 @@ import styles from './NavMenu.module.css';
  * a keyboard without borrowing ARIA menu semantics it does not need. This is a
  * disclosure: a button, expanded or not, and a list of links.
  */
-export default function NavMenu({ label, href, items, className, linkClassName }) {
+export default function NavMenu({ label, href, items, className, linkClassName, current = false }) {
   const [open, setOpen] = useState(false);
   const [rect, setRect] = useState(null);
   const group = useRef(null);
@@ -93,7 +93,7 @@ export default function NavMenu({ label, href, items, className, linkClassName }
       onMouseEnter={show}
       onMouseLeave={hide}
     >
-      <a className={linkClassName} href={href}>{label}</a>
+      <a className={linkClassName} href={href} aria-current={current ? 'page' : undefined}>{label}</a>
 
       <button
         ref={trigger}

@@ -106,3 +106,16 @@
    rule above makes every div a relative, z-2 grid item, and at higher
    specificity it was turning the photograph into an empty relative box. */
 .hero > div.backdrop { position: absolute; inset: 0; display: block; z-index: 1; }
+
+/* Less air above the finder: the pinned production sequence already ends on
+   a full frame, and a further 8.5rem before "Find a stone" read as a gap. */
+.finder { padding-top: var(--s-6); }
+
+/* The "Results" jump lands with the first card clear of the fixed header. */
+.grid { scroll-margin-top: 6rem; }
+
+/* The closing photograph followed its 541px height attribute while scaling
+   its width, and `contain` letterboxed the difference: on a phone that was
+   some 130px of blank above and below the stone. The attributes still reserve
+   the ratio before it loads; the box now follows it. */
+.proof img { height: auto; }

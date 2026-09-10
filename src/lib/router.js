@@ -34,6 +34,26 @@ import { prefersReducedMotion } from '@/lib/motion/media.js';
  */
 let live = null;
 
+/*
+ * Who is listening for the path.
+ *
+ * The header sits outside the route switch and marks the current page in its
+ * nav. It needs the path without being re-rendered by App for the purpose,
+ * and without owning a second router — so the router announces each commit
+ * and the header subscribes. `useSyncExternalStore` on the other end makes it
+ * a store, not a prop threaded through the shell.
+ */
+const pathListeners = new Set();
+
+export function subscribePath(listener) {
+  pathListeners.add(listener);
+  return () => pathListeners.delete(listener);
+}
+
+const announcePath = () => {
+  for (const listener of pathListeners) listener();
+};
+
 /** Navigate from outside React. No-op before the router has mounted. */
 export function navigateTo(to) {
   live?.(to);
@@ -109,6 +129,7 @@ export function useRouter() {
      */
     const { pathname } = new URL(next, window.location.href);
     setPath(pathname.replace(/\/+$/, '') || '/');
+    announcePath();
     resetScroll();
   }, []);
 

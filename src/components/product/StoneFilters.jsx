@@ -107,6 +107,33 @@ export default function StoneFilters({ stones, value, onChange, shown, loading =
   const activeCount = countActive(value);
 
   /*
+   * What is applied, said back in one row.
+   *
+   * With eleven groups on the panel, the only record of a choice was the
+   * inverted chip somewhere inside them — a buyer scrolling the results had no
+   * way to see, or undo, what was narrowing them without going back up through
+   * every group. Each entry here removes exactly the one choice it names.
+   */
+  const GROUP_LABEL = {
+    colour: 'Colour', clarity: 'Clarity', cut: 'Cut', polish: 'Polish',
+    symmetry: 'Symmetry', fluorescence: 'Fluorescence', lab: 'Lab', growth: 'Growth',
+  };
+  const applied = [];
+  for (const [key, label] of Object.entries({ shape: '', ...GROUP_LABEL })) {
+    for (const item of value[key]) {
+      applied.push({ id: `${key}:${item}`, label: label ? `${label} ${item}` : item, remove: () => toggle(key, item) });
+    }
+  }
+  if (value.caratMin !== '' || value.caratMax !== '') {
+    applied.push({
+      id: 'carat',
+      label: `${value.caratMin || '0'} – ${value.caratMax || '∞'} ct`,
+      remove: () => set({ caratMin: '', caratMax: '' }),
+    });
+  }
+  if (value.inStockOnly) applied.push({ id: 'stock', label: 'In stock only', remove: () => set({ inStockOnly: false }) });
+
+  /*
    * Every group open at once is right on a desk and wrong in a hand: at phone
    * width the panel runs some two thousand pixels before the first stone, so a
    * visitor who came to look at diamonds scrolls past ten fieldsets to reach
@@ -164,6 +191,11 @@ export default function StoneFilters({ stones, value, onChange, shown, loading =
             </>
           )}
         </p>
+        {/* The results sit below some 1200px of options on a desk; this is
+            the short way down for someone who has already chosen. */}
+        {open && !loading && shown > 0 && (
+          <a className={styles.jump} href="#stones">Results <span aria-hidden="true">↓</span></a>
+        )}
         <button
           type="button"
           className={styles.clear}
@@ -181,6 +213,19 @@ export default function StoneFilters({ stones, value, onChange, shown, loading =
           {open ? 'Hide filters' : 'Filters'}
         </button>
       </div>
+
+      {applied.length > 0 && !loading && (
+        <ul className={styles.applied} aria-label="Applied filters">
+          {applied.map((chip) => (
+            <li key={chip.id}>
+              <button type="button" onClick={chip.remove} aria-label={`Remove ${chip.label}`}>
+                <span>{chip.label}</span>
+                <em aria-hidden="true">×</em>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
 
       <fieldset className={styles.group}>
         <legend>Shape</legend>

@@ -127,7 +127,9 @@ export default function BlogsPage() {
                         {post.published_at ? formatDate(post.published_at) : 'Undated'}
                         {post.author_name ? ` · ${post.author_name}` : ''}
                       </p>
-                      <h2 className={styles.cardTitle}>{post.title}</h2>
+                      <h2 className={styles.cardTitle}>
+                        <a className={styles.link} href={`/blogs/${encodeURIComponent(post.slug)}`}>{post.title}</a>
+                      </h2>
                       {post.excerpt ? <p className={styles.excerpt}>{post.excerpt}</p> : null}
                     </div>
                   </div>

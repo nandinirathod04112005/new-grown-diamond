@@ -6,9 +6,70 @@ body {
   background: var(--ink);
   color: var(--text);
   font-family: var(--font-body);
-  font-size: var(--t-base);
+  /* 16px on a phone, 17px on a wide screen: comfortable for a page that is
+     read, not skimmed. Components that set their own size are unaffected. */
+  font-size: var(--t-body);
   font-weight: 300;
   letter-spacing: 0.01em;
+}
+
+/*
+ * ------------------------------------------------------------------
+ * The button, once.
+ *
+ * Primary inverts against the ground (ivory on ink, and the reverse on the
+ * light theme); ghost is a firm hairline. Every state is here — hover, focus,
+ * active, disabled, busy — so a page that reaches for this cannot style hover
+ * and forget the rest.
+ * ------------------------------------------------------------------ */
+.u-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  min-height: var(--control-h);
+  padding: 0 1.4rem;
+  border: 1px solid var(--ivory);
+  border-radius: var(--radius-control);
+  background: var(--ivory);
+  color: var(--ink);
+  font-size: var(--t-xs);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  line-height: 1;
+  text-decoration: none;
+  transition:
+    background var(--dur-base) var(--ease-primary),
+    color var(--dur-base) var(--ease-primary),
+    border-color var(--dur-base) var(--ease-primary),
+    opacity var(--dur-base) var(--ease-primary);
+}
+
+.u-button:hover,
+.u-button:focus-visible {
+  background: var(--accent-lift);
+  border-color: var(--accent-lift);
+  color: var(--text-invert);
+}
+
+.u-button:active { translate: 0 1px; }
+
+.u-button:disabled,
+.u-button[aria-disabled='true'] { opacity: 0.45; cursor: not-allowed; }
+
+.u-button[data-busy] { cursor: progress; }
+
+.u-button--ghost {
+  background: transparent;
+  border-color: var(--line-firm);
+  color: var(--text);
+}
+
+.u-button--ghost:hover,
+.u-button--ghost:focus-visible {
+  background: var(--text);
+  border-color: var(--text);
+  color: var(--ink);
 }
 
 /* Shared section choreography: composited movement with a brief stagger. */

@@ -142,7 +142,11 @@
 :global([data-section='facet']) .line[data-for='facet'],
 :global([data-section='design']) .line[data-for='design'],
 :global([data-section='atelier']) .line[data-for='atelier'],
-:global([data-section='out']) .line[data-for='atelier'] {
+:global([data-section='out']) .line[data-for='atelier'],
+/* Reduced motion holds every scene at `view`, a state this sequence never
+   names — so no line matched and the homepage opened with no headline at
+   all. The arrived line is the last one. */
+:global([data-section='view']) .line[data-for='atelier'] {
   opacity: 1;
   translate: 0 0;
 }

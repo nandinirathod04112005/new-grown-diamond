@@ -313,3 +313,68 @@
   .quick button,
   .clear { transition: none; }
 }
+
+/* ---------------- what is applied ---------------- */
+
+/* One row under the head: every active choice, each removable on its own.
+   Pill-shaped, unlike the square option chips, so the two are not mistaken
+   for each other. */
+.applied {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: calc(var(--s-3) * -1) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.applied button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 2.25rem;
+  padding: 0 0.85rem;
+  border: 1px solid var(--f-line-firm);
+  border-radius: 999px;
+  background: var(--f-chip);
+  color: var(--f-ink);
+  font-size: var(--t-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition:
+    border-color var(--dur-base) var(--ease-primary),
+    color var(--dur-base) var(--ease-primary);
+}
+
+.applied button em {
+  font-style: normal;
+  font-size: 1rem;
+  line-height: 1;
+  color: var(--f-muted);
+}
+
+.applied button:hover,
+.applied button:focus-visible {
+  border-color: var(--accent-deep);
+  color: var(--accent-lift);
+}
+
+.applied button:hover em,
+.applied button:focus-visible em { color: inherit; }
+
+/* The way down to the results, styled as the hairline control it sits beside. */
+.jump {
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--f-line);
+  border-radius: 2px;
+  font-size: var(--t-xs);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--f-muted);
+  transition:
+    border-color var(--dur-base) var(--ease-primary),
+    color var(--dur-base) var(--ease-primary);
+}
+
+.jump:hover,
+.jump:focus-visible { border-color: var(--f-line-firm); color: var(--f-ink); }

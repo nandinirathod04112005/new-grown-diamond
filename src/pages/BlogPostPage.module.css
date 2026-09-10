@@ -1,0 +1,156 @@
+/* The journal's reading page: one column of measured type on the ink ground,
+   the cover held full-width above it, and the same states the index shows. */
+.page {
+  background: var(--ink);
+  min-height: 100vh;
+  padding: calc(var(--s-8) + 1rem) var(--gutter) var(--s-8);
+}
+
+.article {
+  display: grid;
+  gap: var(--s-6);
+  max-width: 72rem;
+  margin: 0 auto;
+}
+
+.head {
+  display: grid;
+  gap: var(--s-4);
+  max-width: 60rem;
+}
+
+.eyebrow {
+  font-size: var(--t-xs);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--gold-lift);
+}
+
+.eyebrow a { color: inherit; }
+.eyebrow a:hover,
+.eyebrow a:focus-visible { text-decoration: underline; text-underline-offset: 0.3em; }
+
+.title {
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: clamp(2.4rem, 1.4rem + 4vw, 5.2rem);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--ivory);
+  max-width: 18ch;
+  text-wrap: balance;
+}
+
+.standfirst {
+  max-width: var(--measure);
+  color: var(--text-muted);
+  font-size: var(--t-lg);
+  font-weight: 300;
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+
+.cover {
+  margin: 0;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border: 1px solid var(--ink-line);
+  background: linear-gradient(150deg, #23262c, #14161a);
+}
+
+.cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* The reading column. A step above body size, generous leading, and the
+   measure the rest of the site reads at. */
+.body {
+  display: grid;
+  gap: 1.25em;
+  max-width: var(--measure);
+  color: var(--text);
+  font-size: clamp(1.05rem, 1rem + 0.35vw, 1.2rem);
+  line-height: 1.75;
+  text-wrap: pretty;
+}
+
+.foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-4);
+  padding-top: var(--s-5);
+  border-top: 1px solid var(--ink-line);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-4);
+  margin-top: var(--s-2);
+}
+
+.textLink {
+  color: var(--accent-lift);
+  font-size: var(--t-xs);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  border-bottom: 1px solid currentColor;
+  padding-bottom: 2px;
+}
+
+/* ---------------- states ---------------- */
+.notice {
+  display: grid;
+  gap: var(--s-3);
+  justify-items: start;
+  max-width: 44rem;
+  padding: var(--s-5);
+  border: 1px solid var(--ink-line);
+  border-left: 2px solid var(--accent);
+  background: rgba(19, 19, 23, 0.5);
+}
+
+.notice[data-tone='error'] { border-left-color: #e06c6c; }
+
+.notice h1 {
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: var(--t-xl);
+  line-height: 1.1;
+  color: var(--ivory);
+}
+
+.notice p { color: var(--text-muted); line-height: 1.7; max-width: 52ch; }
+
+/* Shaped like the head it stands in for, so nothing jumps when the post lands. */
+.skeleton {
+  display: grid;
+  gap: var(--s-4);
+  max-width: 60rem;
+}
+
+.skeleton span {
+  display: block;
+  height: 1.2rem;
+  border-radius: 2px;
+  background: linear-gradient(100deg, rgba(255, 255, 255, 0.03) 30%, rgba(255, 255, 255, 0.07) 50%, rgba(255, 255, 255, 0.03) 70%);
+  background-size: 220% 100%;
+  animation: shimmer 1.5s var(--ease-inout) infinite;
+}
+
+.skeleton span:first-child { height: 3.4rem; width: 70%; }
+.skeleton span:nth-child(2) { width: 55%; }
+.skeleton span:nth-child(3) { height: 12rem; }
+
+@keyframes shimmer {
+  from { background-position: 140% 0; }
+  to { background-position: -40% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton span { animation: none; }
+}

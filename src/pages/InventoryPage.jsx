@@ -151,7 +151,7 @@ export default function InventoryPage() {
         )}
 
         {stage === 'ready' && rows.length > 0 && (
-          <div className={styles.grid}>
+          <div id="stones" className={styles.grid}>
             {rows.map((stone, i) => (
               <DiamondCard key={stone.publicId} stone={stone} index={i} onInspect={setViewing} />
             ))}

@@ -43,7 +43,9 @@ const PHASES = [
   { name: 'facet', vh: 90 },
   { name: 'design', vh: 90 },
   { name: 'atelier', vh: 120 },
-  { name: 'out', vh: 60 },
+  /* Was 60: most of a viewport of black between the last line and the
+     first chapter, which read as the page ending. */
+  { name: 'out', vh: 34 },
 ];
 
 const LINES = [
@@ -56,7 +58,10 @@ const LINES = [
 export default function Atelier() {
   return (
     <ScrollScene phases={PHASES} id="top" label="From rough crystal to polished diamond">
-      <div className={styles.stage}>
+      {/* A darkened room in both themes. Without the stage tokens, the light
+          theme flipped --ivory to near-black and the second line of the
+          headline and both buttons vanished into the black behind them. */}
+      <div className={`${styles.stage} u-stage-dark`}>
         {/* The hard overhead source and the cone it throws. Everything else in
             the frame is lit by this one lamp, which is what makes the black
             read as a room rather than as a background colour. */}

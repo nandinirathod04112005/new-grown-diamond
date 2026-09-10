@@ -41,6 +41,12 @@ Colour must never be the only way to communicate status.
 
 Fonts are self-hosted from `src/assets/fonts`.
 
+### Controls and body copy
+
+- Body copy reads at `--t-body` (16px on a phone, 17px on a wide screen); components that set their own size are unaffected.
+- Every control reads `--control-h`, `--radius-control` and `--line-firm`; raised surfaces read `--surface-1` / `--surface-2`. All derive from theme tokens and flip with the theme.
+- `.u-button` (primary, inverting against the ground) and `.u-button--ghost` (hairline) carry hover, focus, active, disabled and busy states. Reach for them before writing a new button.
+
 ### Spacing, grid, and media
 
 - Use the global gutter and spacing tokens.
@@ -79,16 +85,23 @@ Lower-level motion must not compete with higher-level motion.
 - Start below-fold canvas and video work only near the viewport.
 - Keep route departure faster than arrival.
 - Short staggered reveals are acceptable; content must not feel locked.
+- Homepage chapters approach in 20vh, hold for `max(58vh, 14vh per line)` and leave in 26vh; the atelier leaves in 34vh. Longer spacers left most of a viewport empty between chapters.
 
 ### Reduced motion
 
-Every animation feature needs a `prefers-reduced-motion: reduce` path. Reduced motion removes theatre while retaining navigation, content, hierarchy, and feedback. Simplify or disable the custom cursor, route cover, smooth scroll, marquees, looping backgrounds, and large parallax effects. Page banners become a still photograph with its scrim in place: no opening, no drift, no light sweep, and scroll progress fixed at zero.
+Every animation feature needs a `prefers-reduced-motion: reduce` path. Reduced motion removes theatre while retaining navigation, content, hierarchy, and feedback. Simplify or disable the custom cursor, route cover, smooth scroll, marquees, looping backgrounds, and large parallax effects. Page banners become a still photograph with its scrim in place: no opening, no drift, no light sweep, and scroll progress fixed at zero. Scenes are held at the `view` phase, so any scene with its own phase names (the atelier) must also style `view` — otherwise its headline never appears.
 
 ## Page patterns
+
+### Header
+
+Fixed, blending with `difference`, and never changing height. Once the page has scrolled 40px a gradient of the page's own scrim colour fades in beneath it (outside the blend) so the nav keeps its contrast over passing photographs and headlines. The current page carries `aria-current="page"`: a held underline on desktop, the accent colour in the phone sheet; Education counts as current on every page it lists. The path comes from the router's `subscribePath` store, not from a prop.
 
 ### Home
 
 The homepage forms one transformation narrative: atelier opening, origin, independent grading, material truth, jewellery application, international supply, then a closing reel and action. Each chapter should make one clear claim with one supporting visual.
+
+The atelier is a darkened stage in both themes (`u-stage-dark`). Chapter headings are capped at 4.4rem and balanced to two lines beside their plate; chapter copy reads at a paragraph size on a 56ch measure.
 
 ### Editorial pages
 
@@ -116,7 +129,7 @@ Every page opening except the homepage stands in front of a full-bleed photograp
 
 Inventory is a trade tool inside an editorial site. Its opening carries the cut-stone banner one layer above the ambient field and below the copy and the hero stone. Information takes priority over atmosphere once the results begin.
 
-- Filters reflect published stock.
+- Filters reflect published stock. Every applied choice is repeated in one row of removable pills under the panel head, beside the count and Clear all; a "Results" link jumps past the panel to the first card.
 - Cards expose comparable attributes.
 - The viewer provides media, specifications, and certificates.
 - Loading, empty, error, and unconfigured states tell the truth.
@@ -124,15 +137,15 @@ Inventory is a trade tool inside an editorial site. Its opening carries the cut-
 
 ### Contact and journal
 
-The contact page asks for actionable B2B information: shape, carat, colour, clarity, quantity, company, country, and contact details. Direct phone and email methods remain available if the database is unavailable.
+The contact page asks for actionable B2B information: shape, carat, colour, clarity, quantity, company, country, and contact details. The form is two named groups — "Who you are" and "What you need" — with labels at `--t-xs` and controls at `--control-h`. Direct phone and email methods remain available if the database is unavailable.
 
 Both openings use the shared banner: the stone in tweezers behind the contact copy, the grading bench behind the journal's. The journal's former caustic-light layer is gone for the reason above.
 
-The journal only renders real published records. It must show honest empty/configuration/error states. The planned detail page should preserve the editorial language and support Article metadata.
+The journal only renders real published records. It must show honest empty/configuration/error states. Cards link to `/blogs/:slug`; the detail page (`BlogPostPage`) reads the same published row, renders the body as paragraphs from plain text through text nodes only, and tells the truth in five states — loading, table not published, deployment unconfigured, request failed, and slug not found. Article metadata is still to do.
 
 ### Authentication and admin
 
-Task screens use a quieter form of the brand system. Authentication and administration stay outside decorative storefront flows where motion could interfere with forms or tables. The account pages share one stage (`AuthShell`) with no photographic banner.
+Task screens use a quieter form of the brand system. Authentication and administration stay outside decorative storefront flows where motion could interfere with forms or tables. The account pages share one stage (`AuthShell`) with no photographic banner; its caustic light sits at 0.18 opacity with a deep tint so the form, not the room, is what reads.
 
 Form conventions established on the sign-up and sign-in pages:
 
@@ -213,7 +226,7 @@ Public marketing routes should be prerendered or server-rendered. Authentication
 
 ## Current design backlog
 
-- Implement the journal article template.
+- Add Article structured data and social metadata to the journal detail page.
 - Add a US wholesale landing experience with New York trust signals.
 - Define page metadata and social share imagery.
 - Establish a consistent large-table admin pattern.

@@ -646,3 +646,7 @@
   outline-offset: -1px;
 }
 
+/* Wins over the canvas's own opacity rule, which shares its specificity and
+   otherwise lands later in the bundle. The task is the form; the light is
+   the room it sits in. */
+.stage .caustics { opacity: 0.18; }

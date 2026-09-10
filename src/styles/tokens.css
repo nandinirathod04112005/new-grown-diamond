@@ -113,6 +113,23 @@
 
   --gutter: clamp(1.25rem, 5vw, 5rem);
   --measure: 62ch;
+  --measure-narrow: 56ch;
+
+  /*
+   * ---- controls, once ----
+   *
+   * The height of a control, the corner it turns, the firmer hairline it draws
+   * and the raised surfaces it sits on are decided here so a chip on the stock
+   * finder and a button on the contact form are the same object. All of them
+   * are derived from the theme tokens above, so they flip with the theme
+   * without a second set of values.
+   */
+  --t-body: clamp(1rem, 0.96rem + 0.2vw, 1.0625rem);
+  --control-h: 3rem;
+  --radius-control: 2px;
+  --line-firm: color-mix(in srgb, var(--text) 28%, transparent);
+  --surface-1: var(--ink-raised);
+  --surface-2: color-mix(in srgb, var(--ink-raised) 84%, var(--text) 6%);
 }
 
 /*

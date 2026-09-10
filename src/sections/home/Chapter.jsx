@@ -28,10 +28,16 @@ import styles from './Chapter.module.css';
  * the pointer by half a second and the card would feel like it was dragging.
  */
 export default function Chapter({ index, title, lines, image, alt, mediaLabel, id, flip = false, wide = false }) {
+  /*
+   * Shorter approach and departure than before (35/45vh): together with the
+   * previous chapter's exit they left most of a viewport with nothing in it,
+   * which read as the page having run out rather than as pacing. The held
+   * state keeps its per-line allowance.
+   */
   const phases = useMemo(() => [
-    { name: 'in', vh: 35 },
-    { name: 'view', vh: Math.max(70, lines.length * 18) },
-    { name: 'out', vh: 45 },
+    { name: 'in', vh: 20 },
+    { name: 'view', vh: Math.max(58, lines.length * 14) },
+    { name: 'out', vh: 26 },
   ], [lines.length]);
 
   return (
