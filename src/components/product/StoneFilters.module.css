@@ -5,39 +5,60 @@
  * drop a piece of admin software into the middle of the site. What carries over
  * is its density — every option visible, nothing behind a menu — expressed in
  * the type, rules and ink this page already uses everywhere else.
+ *
+ * Two parts, laid out by the page: the results BAR (title, count, applied
+ * choices) and the SIDE (the groups). On a desk the side is a sticky column to
+ * the left of the stones; below 1024px it is a drawer that slides in over
+ * them, opened from the bar.
  */
 
-.panel {
-  /*
-   * Named against the page's ground, not against one theme's colour.
-   *
-   * The finder used to be an inverted vitrine — cream while the site was dark —
-   * and this panel was written for that cream with hard-coded black borders and
-   * white chip fills. It now sits on the page's own ink, so every value comes
-   * from the ordinary ink tokens and follows the theme the way the rest of the
-   * site does. Naming them once here is what keeps the twenty rules below from
-   * each having to know which ground they are on.
-   */
+/*
+ * Named against the page's ground, not against one theme's colour.
+ *
+ * The finder used to be an inverted vitrine — cream while the site was dark —
+ * and this panel was written for that cream with hard-coded black borders and
+ * white chip fills. It now sits on the page's own ink, so every value comes
+ * from the ordinary ink tokens and follows the theme the way the rest of the
+ * site does. Naming them once here is what keeps the rules below from each
+ * having to know which ground they are on.
+ */
+.f {
   --f-ink: var(--text);
   --f-line: var(--ink-line);
-  --f-line-firm: color-mix(in srgb, var(--f-ink) 30%, transparent);
+  --f-line-firm: var(--line-firm);
   --f-muted: var(--text-muted);
   --f-faint: color-mix(in srgb, var(--f-ink) 45%, transparent);
-  --f-chip: color-mix(in srgb, var(--ink-raised) 88%, var(--f-ink) 6%);
-  --f-field: var(--ink-raised);
+  --f-chip: var(--surface-2);
+  --f-field: var(--surface-1);
+}
 
+/* ---------------- the results bar ---------------- */
+
+.bar {
   display: grid;
-  gap: var(--s-5);
-  margin-bottom: var(--s-6);
-  padding-bottom: var(--s-5);
+  gap: var(--s-3);
+  padding-bottom: var(--s-4);
   border-bottom: 1px solid var(--f-line);
+}
+
+/* In a hand the bar stays under the header while the stones scroll, so the
+   count and the way back into the drawer are never further than the top of
+   the screen. Its own ink behind it, or the cards would read through. */
+@media (max-width: 1023px) {
+  .bar {
+    position: sticky;
+    top: 4.75rem;
+    z-index: 5;
+    padding-top: var(--s-3);
+    background: var(--ink);
+  }
 }
 
 .head {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
-  gap: var(--s-2) var(--s-4);
+  align-items: center;
+  gap: var(--s-2) var(--s-3);
 }
 
 .title {
@@ -58,9 +79,10 @@
 }
 
 .clear {
-  padding: 0.5rem 0.9rem;
+  min-height: 2.5rem;
+  padding: 0 0.9rem;
   border: 1px solid var(--f-line-firm);
-  border-radius: 2px;
+  border-radius: var(--radius-control);
   font-size: var(--t-xs);
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -70,39 +92,233 @@
     color var(--dur-base) var(--ease-primary);
 }
 
-.clear:hover:not(:disabled) { background: var(--f-ink); color: var(--ink); }
+.clear:hover:not(:disabled),
+.clear:focus-visible:not(:disabled) { background: var(--f-ink); color: var(--ink); }
 .clear:disabled { opacity: 0.34; cursor: default; }
 
 /*
- * The collapse is a phone control and says so by not existing above the
- * breakpoint — where the panel is always open, a Hide button would offer to
- * take away something the layout has room for.
+ * The way into the drawer. A phone control, and it says so by not existing
+ * above the breakpoint, where the column is always in view. The count badge
+ * is the only sign, on a closed drawer, that anything is applied.
  */
-.disclose {
-  padding: 0.5rem 0.9rem;
+.opener {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 2.5rem;
+  padding: 0 0.9rem;
   border: 1px solid var(--f-ink);
-  border-radius: 2px;
+  border-radius: var(--radius-control);
+  background: var(--f-ink);
+  color: var(--ink);
   font-size: var(--t-xs);
   letter-spacing: 0.16em;
   text-transform: uppercase;
+}
+
+.opener b {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.3rem;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--text-invert);
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+@media (min-width: 1024px) { .opener { display: none; } }
+
+/* ---------------- what is applied ---------------- */
+
+/* Every active choice, each removable on its own. Pill-shaped, unlike the
+   square option chips, so the two are not mistaken for each other. */
+.applied {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.applied button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 2.25rem;
+  padding: 0 0.85rem;
+  border: 1px solid var(--f-line-firm);
+  border-radius: 999px;
+  background: var(--f-chip);
+  color: var(--f-ink);
+  font-size: var(--t-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition:
+    border-color var(--dur-base) var(--ease-primary),
+    color var(--dur-base) var(--ease-primary);
+}
+
+.applied button em {
+  font-style: normal;
+  font-size: 1rem;
+  line-height: 1;
+  color: var(--f-muted);
+}
+
+.applied button:hover,
+.applied button:focus-visible {
+  border-color: var(--accent-deep);
+  color: var(--accent-lift);
+}
+
+.applied button:hover em,
+.applied button:focus-visible em { color: inherit; }
+
+/* ---------------- the column ---------------- */
+
+.side {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  min-width: 0;
+}
+
+/*
+ * A desk: a column beside the stones that stays put while they scroll. It is
+ * taller than a window, so it scrolls within itself under the header; the
+ * hairline on its right is the seam between choosing and looking.
+ */
+@media (min-width: 1024px) {
+  .side {
+    position: sticky;
+    top: 5.5rem;
+    max-height: calc(100vh - 6.5rem);
+    max-height: calc(100dvh - 6.5rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-right: var(--s-4);
+    border-right: 1px solid var(--f-line);
+    scrollbar-width: thin;
+  }
+
+  .sideHead,
+  .sideFoot { display: none; }
+}
+
+/*
+ * A hand: a drawer from the right edge, over the stones. Transformed off
+ * screen and invisible when closed rather than unmounted, so it keeps its
+ * scroll position and the page keeps its selections; `inert` (set by the
+ * component) keeps it out of reach until it opens.
+ */
+@media (max-width: 1023px) {
+  .side {
+    position: fixed;
+    inset: 0 0 0 auto;
+    z-index: 70;
+    width: min(26rem, 100%);
+    background: rgb(var(--scrim) / 0.98);
+    border-left: 1px solid var(--f-line);
+    box-shadow: -24px 0 60px rgba(0, 0, 0, 0.35);
+    transform: translateX(100%);
+    visibility: hidden;
+    transition:
+      transform var(--dur-slow) var(--ease-primary),
+      visibility 0s linear var(--dur-slow);
+  }
+
+  .side[data-open] {
+    transform: none;
+    visibility: visible;
+    transition: transform var(--dur-slow) var(--ease-primary);
+  }
+}
+
+.veil {
+  position: fixed;
+  inset: 0;
+  z-index: 69;
+  background: rgb(var(--scrim) / 0.55);
+}
+
+.sideHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding: var(--s-4) var(--s-4) var(--s-3);
+  border-bottom: 1px solid var(--f-line);
+}
+
+.sideTitle {
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: var(--t-lg);
+  line-height: 1;
+  color: var(--f-ink);
+}
+
+.closer {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 1px solid var(--f-line-firm);
+  border-radius: 999px;
+  color: var(--f-ink);
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.closer:hover,
+.closer:focus-visible { background: var(--f-ink); color: var(--ink); }
+
+.sideFoot {
+  display: flex;
+  gap: var(--s-3);
+  padding: var(--s-3) var(--s-4);
+  border-top: 1px solid var(--f-line);
+  background: rgb(var(--scrim) / 0.98);
+}
+
+.sideFoot .clear { flex: 0 0 auto; }
+
+.apply {
+  flex: 1 1 auto;
+  min-height: var(--control-h);
+  padding: 0 1rem;
+  border: 1px solid var(--f-ink);
+  border-radius: var(--radius-control);
   background: var(--f-ink);
   color: var(--ink);
+  font-size: var(--t-xs);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  transition: background var(--dur-base) var(--ease-primary), color var(--dur-base) var(--ease-primary);
 }
 
-/* Hiding the groups rather than not rendering them keeps the filters mounted,
-   so a collapsed panel still holds its selections and the tally beside the
-   button still counts them. */
-.shut > fieldset,
-.shut > .pair { display: none; }
-
-@media (min-width: 720px) {
-  .disclose { display: none; }
-  .shut > fieldset,
-  .shut > .pair { display: revert; }
-  .shut > .pair { display: grid; }
-}
+.apply:hover,
+.apply:focus-visible { background: var(--accent-lift); border-color: var(--accent-lift); color: var(--text-invert); }
 
 /* ---------------- groups ---------------- */
+
+.panel {
+  display: grid;
+  gap: var(--s-5);
+  min-width: 0;
+}
+
+@media (max-width: 1023px) {
+  .panel {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: var(--s-4);
+  }
+}
 
 .group {
   border: 0;
@@ -123,22 +339,6 @@
   color: var(--f-muted);
 }
 
-/*
- * Two groups per row from tablet up.
- *
- * Colour beside clarity, polish beside symmetry: these are read as pairs when
- * a buyer specifies a stone, and pairing them halves the panel's height without
- * hiding anything.
- */
-.pair {
-  display: grid;
-  gap: var(--s-5);
-}
-
-@media (min-width: 720px) {
-  .pair { grid-template-columns: 1fr 1fr; gap: var(--s-4) var(--s-6); }
-}
-
 /* ---------------- option buttons ---------------- */
 
 .chips,
@@ -156,9 +356,9 @@
   display: flex;
   align-items: center;
   gap: 0.45rem;
-  padding: 0.5rem 0.75rem;
+  padding: 0.5rem 0.7rem;
   border: 1px solid var(--f-line);
-  border-radius: 2px;
+  border-radius: var(--radius-control);
   font-size: var(--t-xs);
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -221,18 +421,23 @@
 
 /* ---------------- shape row ---------------- */
 
+/* Three across the column: glyph, name, count. */
+.shapes { gap: 0.4rem; }
+
+.shapes li { flex: 1 1 calc(33.333% - 0.4rem); max-width: calc(33.333% - 0.27rem); }
+
 .shapes button {
+  width: 100%;
   flex-direction: column;
   gap: 0.3rem;
-  width: 5.25rem;
-  padding: 0.65rem 0.35rem 0.55rem;
+  padding: 0.6rem 0.25rem 0.5rem;
   text-align: center;
   letter-spacing: 0.06em;
 }
 
 .glyph {
-  width: 1.75rem;
-  height: 1.75rem;
+  width: 1.6rem;
+  height: 1.6rem;
   color: var(--accent);
 }
 
@@ -247,13 +452,14 @@
   margin-bottom: 0.55rem;
 }
 
-.range label { display: block; }
+.range label { display: block; flex: 1 1 0; min-width: 0; }
 
 .range input {
-  width: 7rem;
+  width: 100%;
+  min-height: 2.5rem;
   padding: 0.5rem 0.65rem;
   border: 1px solid var(--f-line);
-  border-radius: 2px;
+  border-radius: var(--radius-control);
   background: var(--f-field);
   color: var(--f-ink);
   font-size: var(--t-xs);
@@ -281,7 +487,7 @@
 .quick button {
   padding: 0.25rem 0.5rem;
   border: 1px solid var(--f-line-firm);
-  border-radius: 2px;
+  border-radius: var(--radius-control);
   font-size: 0.5625rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -289,7 +495,8 @@
   transition: background var(--dur-base) var(--ease-primary), color var(--dur-base) var(--ease-primary);
 }
 
-.quick button:hover { background: var(--f-ink); color: var(--ink); }
+.quick button:hover,
+.quick button:focus-visible { background: var(--f-ink); color: var(--ink); }
 
 /* ---------------- stone stage ---------------- */
 
@@ -298,6 +505,7 @@
   align-items: center;
   gap: 0.55rem;
   width: max-content;
+  min-height: 2.5rem;
   font-size: var(--t-xs);
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -311,70 +519,42 @@
   .chips button,
   .shapes button,
   .quick button,
-  .clear { transition: none; }
+  .clear,
+  .apply,
+  .applied button { transition: none; }
+  .side { transition: none; }
 }
 
-/* ---------------- what is applied ---------------- */
+/* ---------------- ordering that matters ---------------- */
 
-/* One row under the head: every active choice, each removable on its own.
-   Pill-shaped, unlike the square option chips, so the two are not mistaken
-   for each other. */
-.applied {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-  margin: calc(var(--s-3) * -1) 0 0;
-  padding: 0;
-  list-style: none;
+/* The drawer's own head and foot exist only in a hand. Declared last, after
+   the `display: flex` that shapes them, so the desk's `none` is the rule that
+   wins at equal specificity. */
+@media (min-width: 1024px) {
+  .sideHead,
+  .sideFoot { display: none; }
 }
 
-.applied button {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.55rem;
-  min-height: 2.25rem;
-  padding: 0 0.85rem;
-  border: 1px solid var(--f-line-firm);
-  border-radius: 999px;
-  background: var(--f-chip);
-  color: var(--f-ink);
-  font-size: var(--t-xs);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  transition:
-    border-color var(--dur-base) var(--ease-primary),
-    color var(--dur-base) var(--ease-primary);
+/* In a hand the bar's row is title above, then count on the left with the
+   two controls on the right — instead of the controls wrapping wherever the
+   count leaves room. */
+@media (max-width: 1023px) {
+  .head {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    grid-template-areas:
+      'title title title'
+      'tally opener clear';
+    align-items: center;
+  }
+  .title { grid-area: title; margin: 0 0 var(--s-1); }
+  .tally { grid-area: tally; }
+  .opener { grid-area: opener; }
+  .clear { grid-area: clear; }
 }
 
-.applied button em {
-  font-style: normal;
-  font-size: 1rem;
-  line-height: 1;
-  color: var(--f-muted);
+/* The fixed header runs to 92px on a phone; the sticky bar stops beneath
+   it, not under it. */
+@media (max-width: 599px) {
+  .bar { top: 6rem; }
 }
-
-.applied button:hover,
-.applied button:focus-visible {
-  border-color: var(--accent-deep);
-  color: var(--accent-lift);
-}
-
-.applied button:hover em,
-.applied button:focus-visible em { color: inherit; }
-
-/* The way down to the results, styled as the hairline control it sits beside. */
-.jump {
-  padding: 0.5rem 0.9rem;
-  border: 1px solid var(--f-line);
-  border-radius: 2px;
-  font-size: var(--t-xs);
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--f-muted);
-  transition:
-    border-color var(--dur-base) var(--ease-primary),
-    color var(--dur-base) var(--ease-primary);
-}
-
-.jump:hover,
-.jump:focus-visible { border-color: var(--f-line-firm); color: var(--f-ink); }

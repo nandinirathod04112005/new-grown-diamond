@@ -1,4 +1,5 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import ShapeGlyph from './ShapeGlyph.jsx';
 import {
@@ -17,13 +18,28 @@ import styles from './StoneFilters.module.css';
  * is long, but it is scanned rather than read, and a collapsed group is a
  * filter the buyer never learns exists.
  *
+ * WHERE IT SITS. On a desk the groups stand in a column BESIDE the stones — a
+ * sidebar that stays put while the results scroll, so a choice and its effect
+ * are on screen together. Stacked above the results, as it was, the panel put
+ * twelve hundred pixels between the buyer and the first stone. In a hand the
+ * same column slides in from the edge as a drawer over the results, opened
+ * from the bar that also carries the count and the applied choices.
+ *
  * Results update as each option is pressed. The stock sheet this answers to has
  * a Search button because it goes to a server; every stone here is already in
  * hand, so a button that re-applies filters already applied would be a step
- * that costs a click and returns nothing.
+ * that costs a click and returns nothing. The drawer's "Show N stones" only
+ * closes it.
+ *
+ * This component renders TWO siblings — the results bar and the column — and
+ * the page lays them out: on a desk the column takes the first grid column and
+ * the bar heads the second; in a hand the bar is sticky and the column is the
+ * drawer, portalled to the body.
  */
 
 const band = (n) => n.toFixed(2);
+
+const WIDE = '(min-width: 1024px)';
 
 /*
  * `onChange` is a state setter, and every write goes through its updater form.
@@ -105,13 +121,14 @@ export default function StoneFilters({ stones, value, onChange, shown, loading =
 
   const active = isActive(value);
   const activeCount = countActive(value);
+  const clearAll = useCallback(() => onChange(EMPTY), [onChange]);
 
   /*
    * What is applied, said back in one row.
    *
-   * With eleven groups on the panel, the only record of a choice was the
-   * inverted chip somewhere inside them — a buyer scrolling the results had no
-   * way to see, or undo, what was narrowing them without going back up through
+   * With eleven groups in the column, the only record of a choice was the
+   * inverted chip somewhere inside them — a buyer reading the results had no
+   * way to see, or undo, what was narrowing them without going back through
    * every group. Each entry here removes exactly the one choice it names.
    */
   const GROUP_LABEL = {
@@ -134,18 +151,64 @@ export default function StoneFilters({ stones, value, onChange, shown, loading =
   if (value.inStockOnly) applied.push({ id: 'stock', label: 'In stock only', remove: () => set({ inStockOnly: false }) });
 
   /*
-   * Every group open at once is right on a desk and wrong in a hand: at phone
-   * width the panel runs some two thousand pixels before the first stone, so a
-   * visitor who came to look at diamonds scrolls past ten fieldsets to reach
-   * one. Below the two-column breakpoint it collapses behind its own summary.
+   * Sidebar or drawer.
    *
    * Read from the media query at initialisation rather than corrected in an
-   * effect, so the first render is already the settled state — the desktop
-   * never paints a collapsed panel and then opens it.
+   * effect, so the first render is already the settled state — a desk never
+   * paints a closed drawer and then a column. The listener keeps a window
+   * that is resized across the breakpoint honest: a drawer left open becomes
+   * the column, and the column is never announced as a dialog.
    */
-  const [open, setOpen] = useState(
-    () => typeof window === 'undefined' || window.matchMedia('(min-width: 720px)').matches,
+  const [wide, setWide] = useState(
+    () => typeof window === 'undefined' || window.matchMedia(WIDE).matches,
   );
+  useEffect(() => {
+    const query = window.matchMedia(WIDE);
+    const update = () => setWide(query.matches);
+    query.addEventListener('change', update);
+    return () => query.removeEventListener('change', update);
+  }, []);
+
+  const [open, setOpen] = useState(false);
+  const panelId = useId();
+  const panel = useRef(null);
+  const opener = useRef(null);
+  const close = useCallback(() => setOpen(false), []);
+  const drawer = !wide && open;
+
+  /*
+   * The drawer is a real dialog while it is open: focus moves into it, Tab
+   * stays inside it, Escape closes it, the page behind does not scroll, and
+   * focus returns to the button that opened it. The same four rules as the
+   * site menu, for the same reason — without them a panel over the page is
+   * something a keyboard can fall out of and never get back into.
+   */
+  useEffect(() => {
+    if (!drawer) return undefined;
+    const node = panel.current;
+    const opened = opener.current;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    node?.querySelector('button, input, a')?.focus();
+
+    const onKey = (event) => {
+      if (event.key === 'Escape') { close(); return; }
+      if (event.key !== 'Tab' || !node) return;
+      const items = [...node.querySelectorAll('button:not(:disabled), input:not(:disabled), a[href]')]
+        .filter((el) => el.offsetParent !== null);
+      if (!items.length) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prev;
+      opened?.focus();
+    };
+  }, [drawer, close]);
 
   const chips = (key, items, counted) => (
     <ul className={styles.chips}>
@@ -173,44 +236,39 @@ export default function StoneFilters({ stones, value, onChange, shown, loading =
       })}
     </ul>
   );
-  return (
-    <form
-      className={open ? styles.panel : `${styles.panel} ${styles.shut}`}
-      onSubmit={(e) => e.preventDefault()}
-      aria-busy={loading || undefined}
-    >
+
+  const tally = loading ? 'Loading stock' : `${shown} of ${stones.length} ${stones.length === 1 ? 'stone' : 'stones'}`;
+
+  /* The results bar: what is being looked at, how many, what narrows it,
+     and — in a hand — the way into the drawer. */
+  const bar = (
+    <div className={`${styles.f} ${styles.bar}`}>
       <div className={styles.head}>
         <h2 className={styles.title}>Find a stone</h2>
         <p className={styles.tally} role="status">
-          {loading ? 'Loading stock' : (
-            <>
-              {shown} of {stones.length} {stones.length === 1 ? 'stone' : 'stones'}
-              {activeCount > 0 && (
-                <span> · {activeCount} filter{activeCount === 1 ? '' : 's'}</span>
-              )}
-            </>
+          {tally}
+          {!loading && activeCount > 0 && (
+            <span> · {activeCount} filter{activeCount === 1 ? '' : 's'}</span>
           )}
         </p>
-        {/* The results sit below some 1200px of options on a desk; this is
-            the short way down for someone who has already chosen. */}
-        {open && !loading && shown > 0 && (
-          <a className={styles.jump} href="#stones">Results <span aria-hidden="true">↓</span></a>
-        )}
         <button
+          ref={opener}
           type="button"
-          className={styles.clear}
-          onClick={() => onChange(EMPTY)}
-          disabled={!active}
+          className={styles.opener}
+          aria-expanded={open}
+          aria-controls={panelId}
+          onClick={() => setOpen(true)}
         >
-          Clear all
+          Filters
+          {activeCount > 0 && <b aria-hidden="true">{activeCount}</b>}
         </button>
         <button
           type="button"
-          className={styles.disclose}
-          aria-expanded={open}
-          onClick={() => setOpen((v) => !v)}
+          className={styles.clear}
+          onClick={clearAll}
+          disabled={!active}
         >
-          {open ? 'Hide filters' : 'Filters'}
+          Clear all
         </button>
       </div>
 
@@ -226,88 +284,124 @@ export default function StoneFilters({ stones, value, onChange, shown, loading =
           ))}
         </ul>
       )}
+    </div>
+  );
 
-      <fieldset className={styles.group}>
-        <legend>Shape</legend>
-        <ul className={styles.shapes}>
-          {shapes.map((item) => {
-            const n = counts.shape.get(item) ?? 0;
-            const on = value.shape.includes(item);
-            return (
-              <li key={item}>
-                <button
-                  type="button"
-                  className={on ? styles.on : ''}
-                  aria-pressed={on}
-                  disabled={!loading && n === 0 && !on}
-                  onClick={() => toggle('shape', item)}
-                >
-                  <ShapeGlyph shape={item} className={styles.glyph} />
-                  <span>{item}</span>
-                  <em aria-hidden="true">{loading ? '' : n}</em>
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      </fieldset>
+  /*
+   * The column. A sidebar beside the stones on a desk; over them, as a
+   * drawer, in a hand. `inert` keeps a closed drawer out of the tab order and
+   * away from assistive technology without unmounting it, so it keeps its
+   * scroll position and the page keeps its selections.
+   *
+   * In a hand it is PORTALLED to the body, for the reason NavMenu is: the
+   * page content sits in a stacking context of its own (`.u-above-film`),
+   * and nothing inside it — whatever its z-index — can paint over the fixed
+   * header. Left in place, the header's mark and menu control sat on top of
+   * the drawer's title and close button.
+   */
+  const column = (
+    <aside
+      id={panelId}
+      ref={panel}
+      className={`${styles.f} ${styles.side}`}
+      data-open={drawer ? '' : undefined}
+      inert={!wide && !open}
+      role={wide ? undefined : 'dialog'}
+      aria-modal={wide ? undefined : 'true'}
+      aria-label="Filters"
+    >
+      <div className={styles.sideHead}>
+        <p className={styles.sideTitle}>Filters</p>
+        <button type="button" className={styles.closer} onClick={close} aria-label="Close filters">
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
 
-      <fieldset className={styles.group}>
-        <legend>Weight</legend>
-        <div className={styles.range}>
-          <label>
-            <span className="u-visually-hidden">Carat from</span>
-            <input
-              type="number"
-              inputMode="decimal"
-              step="0.01"
-              min="0"
-              placeholder="From"
-              value={value.caratMin}
-              onChange={(e) => set({ caratMin: e.target.value })}
-            />
-          </label>
-          <span aria-hidden="true">–</span>
-          <label>
-            <span className="u-visually-hidden">Carat to</span>
-            <input
-              type="number"
-              inputMode="decimal"
-              step="0.01"
-              min="0"
-              placeholder="To"
-              value={value.caratMax}
-              onChange={(e) => set({ caratMax: e.target.value })}
-            />
-          </label>
-        </div>
-        <ul className={styles.chips}>
-          {CARAT_BANDS.map(([lo, hi]) => {
-            const on = value.caratMin === band(lo) && value.caratMax === band(hi);
-            const n = caratPool.filter((s) => s.carat >= lo && s.carat <= hi).length;
-            return (
-              <li key={lo}>
-                <button
-                  type="button"
-                  className={on ? styles.on : ''}
-                  aria-pressed={on}
-                  disabled={!loading && n === 0 && !on}
-                  /* Pressing the band already chosen clears it, so the row
-                     behaves as switches rather than a one-way trip. */
-                  onClick={() => set(on
-                    ? { caratMin: '', caratMax: '' }
-                    : { caratMin: band(lo), caratMax: band(hi) })}
-                >
-                  <span>{band(lo)} – {band(hi)}</span>
-                  <em aria-hidden="true">{loading ? '' : n}</em>
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      </fieldset>
+      <form
+        className={styles.panel}
+        onSubmit={(e) => e.preventDefault()}
+        aria-busy={loading || undefined}
+      >
+        <fieldset className={styles.group}>
+          <legend>Shape</legend>
+          <ul className={styles.shapes}>
+            {shapes.map((item) => {
+              const n = counts.shape.get(item) ?? 0;
+              const on = value.shape.includes(item);
+              return (
+                <li key={item}>
+                  <button
+                    type="button"
+                    className={on ? styles.on : ''}
+                    aria-pressed={on}
+                    disabled={!loading && n === 0 && !on}
+                    onClick={() => toggle('shape', item)}
+                  >
+                    <ShapeGlyph shape={item} className={styles.glyph} />
+                    <span>{item}</span>
+                    <em aria-hidden="true">{loading ? '' : n}</em>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </fieldset>
 
-      <div className={styles.pair}>
+        <fieldset className={styles.group}>
+          <legend>Weight</legend>
+          <div className={styles.range}>
+            <label>
+              <span className="u-visually-hidden">Carat from</span>
+              <input
+                type="number"
+                inputMode="decimal"
+                step="0.01"
+                min="0"
+                placeholder="From"
+                value={value.caratMin}
+                onChange={(e) => set({ caratMin: e.target.value })}
+              />
+            </label>
+            <span aria-hidden="true">–</span>
+            <label>
+              <span className="u-visually-hidden">Carat to</span>
+              <input
+                type="number"
+                inputMode="decimal"
+                step="0.01"
+                min="0"
+                placeholder="To"
+                value={value.caratMax}
+                onChange={(e) => set({ caratMax: e.target.value })}
+              />
+            </label>
+          </div>
+          <ul className={styles.chips}>
+            {CARAT_BANDS.map(([lo, hi]) => {
+              const on = value.caratMin === band(lo) && value.caratMax === band(hi);
+              const n = caratPool.filter((s) => s.carat >= lo && s.carat <= hi).length;
+              return (
+                <li key={lo}>
+                  <button
+                    type="button"
+                    className={on ? styles.on : ''}
+                    aria-pressed={on}
+                    disabled={!loading && n === 0 && !on}
+                    /* Pressing the band already chosen clears it, so the row
+                       behaves as switches rather than a one-way trip. */
+                    onClick={() => set(on
+                      ? { caratMin: '', caratMax: '' }
+                      : { caratMin: band(lo), caratMax: band(hi) })}
+                  >
+                    <span>{band(lo)} – {band(hi)}</span>
+                    <em aria-hidden="true">{loading ? '' : n}</em>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </fieldset>
+
         <fieldset className={styles.group}>
           <legend>Colour</legend>
           {chips('colour', COLOURS, counts.colour)}
@@ -317,9 +411,7 @@ export default function StoneFilters({ stones, value, onChange, shown, loading =
           <legend>Clarity</legend>
           {chips('clarity', CLARITIES, counts.clarity)}
         </fieldset>
-      </div>
 
-      <div className={styles.pair}>
         <fieldset className={styles.group}>
           <legend>
             <span>Cut</span>
@@ -350,13 +442,6 @@ export default function StoneFilters({ stones, value, onChange, shown, loading =
         </fieldset>
 
         <fieldset className={styles.group}>
-          <legend>Fluorescence</legend>
-          {chips('fluorescence', FLUORESCENCES, counts.fluorescence)}
-        </fieldset>
-      </div>
-
-      <div className={styles.pair}>
-        <fieldset className={styles.group}>
           <legend>Polish</legend>
           {chips('polish', FINISHES, counts.polish)}
         </fieldset>
@@ -365,9 +450,12 @@ export default function StoneFilters({ stones, value, onChange, shown, loading =
           <legend>Symmetry</legend>
           {chips('symmetry', FINISHES, counts.symmetry)}
         </fieldset>
-      </div>
 
-      <div className={styles.pair}>
+        <fieldset className={styles.group}>
+          <legend>Fluorescence</legend>
+          {chips('fluorescence', FLUORESCENCES, counts.fluorescence)}
+        </fieldset>
+
         <fieldset className={styles.group}>
           <legend>Laboratory</legend>
           {chips('lab', labs, counts.lab)}
@@ -379,19 +467,43 @@ export default function StoneFilters({ stones, value, onChange, shown, loading =
           <legend>Growth</legend>
           {chips('growth', GROWTHS, counts.growth)}
         </fieldset>
-      </div>
 
-      <fieldset className={styles.group}>
-        <legend>Stone stage</legend>
-        <label className={styles.check}>
-          <input
-            type="checkbox"
-            checked={value.inStockOnly}
-            onChange={(e) => set({ inStockOnly: e.target.checked })}
-          />
-          <span>In stock only</span>
-        </label>
-      </fieldset>
-    </form>
+        <fieldset className={styles.group}>
+          <legend>Stone stage</legend>
+          <label className={styles.check}>
+            <input
+              type="checkbox"
+              checked={value.inStockOnly}
+              onChange={(e) => set({ inStockOnly: e.target.checked })}
+            />
+            <span>In stock only</span>
+          </label>
+        </fieldset>
+      </form>
+
+      {/* The drawer's own foot: the choices are already applied, so the
+          primary action only takes the buyer back to what they narrowed. */}
+      <div className={styles.sideFoot}>
+        <button type="button" className={styles.clear} onClick={clearAll} disabled={!active}>
+          Clear all
+        </button>
+        <button type="button" className={styles.apply} onClick={close}>
+          {loading ? 'Show stones' : `Show ${shown} ${shown === 1 ? 'stone' : 'stones'}`}
+        </button>
+      </div>
+    </aside>
+  );
+
+  return (
+    <>
+      {bar}
+      {wide ? column : createPortal(
+        <>
+          {column}
+          {drawer && <div className={styles.veil} onClick={close} aria-hidden="true" />}
+        </>,
+        document.body,
+      )}
+    </>
   );
 }

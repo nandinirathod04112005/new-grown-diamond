@@ -129,7 +129,7 @@ Every page opening except the homepage stands in front of a full-bleed photograp
 
 Inventory is a trade tool inside an editorial site. Its opening carries the cut-stone banner one layer above the ambient field and below the copy and the hero stone. Information takes priority over atmosphere once the results begin.
 
-- Filters reflect published stock. Every applied choice is repeated in one row of removable pills under the panel head, beside the count and Clear all; a "Results" link jumps past the panel to the first card.
+- Filters reflect published stock. The finder is two parts: a results bar (title, count, Clear all, and every applied choice as a removable pill) and the filter column. From 1024px the column is a sticky sidebar beside the stones, scrolling within itself under the header; below that it is a drawer portalled to the body (dialog semantics, focus trap, Escape, scroll lock, focus restored), opened from a "Filters" button in the bar that carries the active count. The bar is sticky under the header on phones. Choices apply as they are pressed; "Show N stones" only closes the drawer.
 - Cards expose comparable attributes.
 - The viewer provides media, specifications, and certificates.
 - Loading, empty, error, and unconfigured states tell the truth.

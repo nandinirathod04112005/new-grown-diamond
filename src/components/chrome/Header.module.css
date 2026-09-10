@@ -57,6 +57,15 @@
   .theme { display: block; }
 }
 
+/* Between the phone menu and a wide desk the row is tight: the mark and
+   "Our story" were wrapping onto second lines at 1024. Closer spacing and a
+   mark that refuses to break keep the header one line tall. */
+@media (min-width: 900px) and (max-width: 1199px) {
+  .nav { gap: var(--s-3); }
+  .link { letter-spacing: 0.08em; white-space: nowrap; }
+  .mark { white-space: nowrap; letter-spacing: 0.22em; }
+}
+
 /* Underline grows from the left, retreats to the right — the reference site's
    link treatment, and the reason the two halves use different curves. */
 .link {

@@ -111,7 +111,30 @@
    a full frame, and a further 8.5rem before "Find a stone" read as a gap. */
 .finder { padding-top: var(--s-6); }
 
-/* The "Results" jump lands with the first card clear of the fixed header. */
+/*
+ * Choosing beside looking.
+ *
+ * From 1024px the finder is two columns: the filter column on the left, and
+ * the results bar with the stones under it on the right. The filter column
+ * spans every row on its side so the bar, the cards and the states all sit
+ * beside it; the states that replace the stones (error, unconfigured, nothing
+ * published) take the whole width, since there is nothing to filter.
+ */
+.finder {
+  display: grid;
+  align-items: start;
+  gap: var(--s-5) var(--s-6);
+}
+
+@media (min-width: 1024px) {
+  .finder { grid-template-columns: minmax(16rem, 19rem) minmax(0, 1fr); }
+  .finder > aside { grid-column: 1; grid-row: 1 / span 6; }
+  .finder > :not(aside) { grid-column: 2; }
+  .finder > .state { grid-column: 1 / -1; }
+  /* Beside a column the cards get two across on a laptop and three wide. */
+  .grid { grid-template-columns: repeat(auto-fill, minmax(clamp(240px, 21vw, 320px), 1fr)); }
+}
+
 .grid { scroll-margin-top: 6rem; }
 
 /* The closing photograph followed its 541px height attribute while scaling
