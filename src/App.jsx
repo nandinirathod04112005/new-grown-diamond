@@ -11,6 +11,7 @@ import Footer from '@/components/chrome/Footer.jsx';
 import Preloader from '@/components/chrome/Preloader.jsx';
 import SiteExperience from '@/components/chrome/SiteExperience.jsx';
 import SmoothScrollProvider from '@/providers/SmoothScrollProvider.jsx';
+import AmbientField from '@/components/chrome/AmbientField.jsx';
 import PageTransition from '@/components/chrome/PageTransition.jsx';
 import DiamondCursor from '@/components/cursor/DiamondCursor.jsx';
 import ContinueNext from '@/components/chrome/ContinueNext.jsx';
@@ -281,6 +282,10 @@ export default function App() {
       {/*
         The fixed diamond backdrop is gone.
         
+      {/* The room the whole site sits in: two slow light masses and a turning
+          lattice, fixed behind every page. Pure CSS, so it cannot fail, and it
+          stops entirely under reduced motion. */}
+      <AmbientField />
         It sat at 55% opacity behind every chapter — a single macro photograph
         blown across the whole viewport and blurred, which read as a grey smear
         rather than as atmosphere, and competed with the actual subject of each

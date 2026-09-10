@@ -12,15 +12,21 @@ import DotMatrix from '@/components/media/DotMatrix.jsx';
 /*
  * The house stone, drawn for this page rather than sourced.
  *
- * Real brilliant geometry — 58 facets, table at 54.5% of the girdle, eight-fold
- * symmetry — shaded from the same light direction the rest of the site uses.
- * It is an illustration and the caption says so; it is also the one view of a
- * brilliant that can honestly be turned, because a round brilliant IS radially
- * symmetric about this axis, which is what lets the background pair rotate
- * without pretending a flat picture has a back.
+ * Ray-traced, not drawn. Real brilliant geometry — 58 facets, crown 34.5
+ * degrees, pavilion 40.75, table 56% — and every pixel is a ray that refracts
+ * through the crown, bounces off the pavilion by total internal reflection and
+ * leaves into a studio environment, traced once per wavelength so the stone
+ * throws its own colour. It is a render and the caption says so.
+ *
+ * The turning pair behind the hero use the face-up trace, which is the one
+ * view a still image may honestly rotate: a round brilliant IS radially
+ * symmetric about that axis, so nothing hidden is being invented.
  */
 import diamondWide from '@/assets/diamonds/ngd-brilliant-figure-wide.webp';
 import diamondTall from '@/assets/diamonds/ngd-brilliant-figure-tall.webp';
+/* The same stone traced face-up on transparency: the pair that turn behind
+   the hero need no room around them, only the gem. */
+import diamondFace from '@/assets/diamonds/ngd-brilliant-traced-face.webp';
 
 import styles from './Atelier.module.css';
 
@@ -208,8 +214,8 @@ export default function Atelier() {
             different clocks so the pair never lines up into a pattern.
           */}
           <div className={styles.orbit} aria-hidden="true">
-            <img className={styles.orbitBig} src={diamondTall} alt="" width="976" height="1024" loading="lazy" decoding="async" />
-            <img className={styles.orbitSmall} src={diamondTall} alt="" width="976" height="1024" loading="lazy" decoding="async" />
+            <img className={styles.orbitBig} src={diamondFace} alt="" width="760" height="760" loading="lazy" decoding="async" />
+            <img className={styles.orbitSmall} src={diamondFace} alt="" width="760" height="760" loading="lazy" decoding="async" />
           </div>
 
           {/*
@@ -327,7 +333,7 @@ export default function Atelier() {
                   <img
                     className={styles.photo}
                     src={diamondWide}
-                    alt="An illustration of a round brilliant diamond seen face-up, its facets catching one light."
+                    alt="A round brilliant diamond, rendered: its facets catch a studio light and split it into colour."
                     width="1536"
                     height="1024"
                     loading="eager"
@@ -367,7 +373,7 @@ export default function Atelier() {
                   />
                 </svg>
               </div>
-              <figcaption className={styles.note}>Illustration · round brilliant, 58 facets</figcaption>
+              <figcaption className={styles.note}>Rendered · round brilliant, 58 facets</figcaption>
             </figure>
           </div>
         </div>

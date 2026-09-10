@@ -1,0 +1,99 @@
+/*
+ * Behind everything, and it must stay there.
+ *
+ * z-index 0 on a fixed element with no stacking-context ancestor puts it under
+ * the page content, which all sits in the normal flow above it. It is never
+ * given a background of its own — only light — so whatever the theme sets on
+ * body still shows through and both themes work without a variant.
+ */
+.field {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  /* Cheap on the compositor and impossible to interact with. */
+  contain: strict;
+}
+
+.field span {
+  position: absolute;
+  display: block;
+  border-radius: 50%;
+  filter: blur(120px);
+  will-change: transform;
+}
+
+/*
+ * Two masses on clocks that do not divide into one another — 71 and 97
+ * seconds — so the pair never returns to the same arrangement and the movement
+ * never reads as a loop.
+ */
+.driftA {
+  width: min(70vw, 60rem);
+  height: min(70vw, 60rem);
+  left: -18%;
+  top: -14%;
+  background: radial-gradient(closest-side, rgba(120, 148, 190, 0.16), transparent 70%);
+  animation: driftA 71s ease-in-out infinite;
+}
+
+.driftB {
+  width: min(60vw, 48rem);
+  height: min(60vw, 48rem);
+  right: -14%;
+  bottom: -18%;
+  background: radial-gradient(closest-side, rgba(189, 160, 106, 0.14), transparent 70%);
+  animation: driftB 97s ease-in-out infinite;
+}
+
+@keyframes driftA {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  33%      { transform: translate3d(9vw, 6vh, 0) scale(1.12); }
+  66%      { transform: translate3d(-5vw, 11vh, 0) scale(0.94); }
+}
+
+@keyframes driftB {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  40%      { transform: translate3d(-8vw, -7vh, 0) scale(1.1); }
+  75%      { transform: translate3d(4vw, -12vh, 0) scale(0.96); }
+}
+
+/*
+ * A faceted lattice, turning. Two crossed gradients at sixty degrees give the
+ * rhombic grid a brilliant's crown is set out on; the radial mask keeps it away
+ * from the edges so it reads as light on a surface rather than as wallpaper.
+ */
+.lattice {
+  inset: -40%;
+  width: auto;
+  height: auto;
+  border-radius: 0;
+  filter: none;
+  opacity: 0.5;
+  background-image:
+    repeating-linear-gradient(60deg, rgba(189, 160, 106, 0.05) 0 1px, transparent 1px 84px),
+    repeating-linear-gradient(-60deg, rgba(150, 178, 214, 0.045) 0 1px, transparent 1px 84px);
+  mask-image: radial-gradient(52% 46% at 50% 44%, #000 8%, transparent 72%);
+  -webkit-mask-image: radial-gradient(52% 46% at 50% 44%, #000 8%, transparent 72%);
+  animation: latticeTurn 260s linear infinite;
+}
+
+@keyframes latticeTurn {
+  from { rotate: 0deg; }
+  to   { rotate: 360deg; }
+}
+
+/* The light theme carries far less of it: on a pale ground the same values
+   read as smudges rather than as atmosphere. */
+:global([data-theme='light']) .driftA { background: radial-gradient(closest-side, rgba(90, 118, 165, 0.09), transparent 70%); }
+:global([data-theme='light']) .driftB { background: radial-gradient(closest-side, rgba(150, 122, 66, 0.08), transparent 70%); }
+:global([data-theme='light']) .lattice { opacity: 0.32; }
+
+@media (prefers-reduced-motion: reduce) {
+  .driftA,
+  .driftB,
+  .lattice {
+    animation: none;
+  }
+}

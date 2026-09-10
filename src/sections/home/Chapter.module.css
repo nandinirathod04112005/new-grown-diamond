@@ -421,3 +421,35 @@
    */
   .wrap[data-flip]:has(.figure[data-wide]) { grid-template-columns: 1.15fr 0.85fr; }
 }
+
+/*
+ * ONE PASS OF LIGHT ACROSS THE PLATE, tied to the scroll rather than a timer.
+ *
+ * --sp runs 0..1 across the whole chapter, so the band crosses the card once
+ * as the chapter is read and is gone by the time the next one arrives. Driving
+ * it from the scroll instead of a loop means it can never sweep while the
+ * reader is sitting still, which is when a moving highlight becomes a
+ * distraction rather than a material.
+ */
+.frame::after {
+  content: '';
+  position: absolute;
+  inset: -30% -60%;
+  pointer-events: none;
+  z-index: 3;
+  mix-blend-mode: screen;
+  opacity: calc(1 - abs(var(--sp, 0) * 2 - 1));
+  background: linear-gradient(
+    108deg,
+    transparent 44%,
+    rgba(255, 250, 238, 0.09) 48%,
+    rgba(255, 250, 238, 0.22) 50%,
+    rgba(206, 222, 245, 0.09) 52%,
+    transparent 56%
+  );
+  transform: translate3d(calc(var(--sp, 0) * 128% - 64%), 0, 0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .frame::after { display: none; }
+}
