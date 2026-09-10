@@ -33,7 +33,6 @@ import DotMatrix from '@/components/media/DotMatrix.jsx';
  * on their own clocks. The gem is the only thing in the frame that is an image.
  */
 import diamondWide from '@/assets/diamonds/ngd-brilliant-profile.webp';
-const diamondTall = diamondWide;
 /* The same stone traced face-up on transparency: the pair that turn behind
    the hero need no room around them, only the gem. */
 import diamondFace from '@/assets/diamonds/ngd-brilliant-traced-face.webp';
