@@ -492,19 +492,29 @@
  * gaps, which is what stops this being a flat graphic.
  */
 .blades {
+  /*
+   * Fills the panel, and that is load-bearing rather than tidy. A mask
+   * percentage is measured against the ELEMENT it is on, so a seam at 46% of a
+   * centred 84%-wide box and a seam at 46% of the full-width photograph are
+   * two different lines on screen — which is why the first attempt showed
+   * blades scattered across the whole panel instead of confined to one side.
+   * Same box, same percentage, one seam.
+   */
   position: absolute;
   z-index: 3;
-  left: 50%;
-  top: 44%;
-  translate: -50% -50%;
-  width: min(84%, 40rem);
-  aspect-ratio: 1.2;
+  inset: 0;
   pointer-events: none;
   overflow: hidden;
-  clip-path: polygon(22% 6%, 78% 6%, 96% 34%, 50% 98%, 4% 34%);
-  /* Laid back and turned, so the plates recede rather than sitting flat. */
-  transform: perspective(1100px) rotateX(16deg) rotateZ(-7deg);
-  transform-origin: 50% 60%;
+  /* The brilliant, in the panel's own coordinates. */
+  clip-path: polygon(31% 14%, 69% 14%, 85% 40%, 50% 90%, 15% 40%);
+  /*
+   * NO TRANSFORM HERE. A transform moves the painted content and its mask
+   * together, so the rotated assembly's masked edge no longer sat on the seam
+   * line — blades appeared a hundred pixels to the left of the division they
+   * were supposed to respect. The recession now comes from the gradient's own
+   * angle and its darkening toward the culet, which costs nothing and cannot
+   * drift out of alignment.
+   */
   background:
     /* the plates: a bright edge, then the dark face behind it */
     repeating-linear-gradient(
@@ -517,6 +527,9 @@
     linear-gradient(190deg, rgba(26, 44, 92, 0.7), rgba(4, 6, 14, 0.96));
   mix-blend-mode: screen;
   opacity: 1;
+  /* The complement of the photograph's mask, to the percentage point. */
+  mask-image: linear-gradient(90deg, transparent calc(var(--seam) - 3%), #000 var(--seam));
+  -webkit-mask-image: linear-gradient(90deg, transparent calc(var(--seam) - 3%), #000 var(--seam));
 }
 
 /* The sweep. One pass of light travelling across the rank, which is the whole
@@ -561,13 +574,32 @@
   animation: bladeGlow 9s ease-in-out infinite;
 }
 
+@keyframes seamTravel {
+  0%, 100% { --seam: 38%; }
+  50%      { --seam: 60%; }
+}
+
+/* The line itself: a hairline of light where the two states meet. */
+.seam {
+  position: absolute;
+  z-index: 4;
+  top: 8%;
+  bottom: 8%;
+  left: var(--seam);
+  width: 1px;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent, rgba(226, 238, 255, 0.85) 22%, rgba(226, 238, 255, 0.85) 78%, transparent);
+  box-shadow: 0 0 14px rgba(180, 210, 255, 0.55);
+}
+
 @keyframes bladeGlow {
   0%, 100% { opacity: 0.55; scale: 0.96; }
   50%      { opacity: 1; scale: 1.06; }
 }
 
 @media (max-width: 899px) {
-  .blades { width: 86%; }
+  /* A narrower panel wants a taller stone. */
+  .blades { clip-path: polygon(26% 16%, 74% 16%, 90% 42%, 50% 92%, 10% 42%); }
 }
 
 /* ---------------- the dot matrix ---------------- */
@@ -811,9 +843,34 @@
  * node. A faceted polygon rather than a circle or an inset: this is a diamond
  * being uncovered, and the shape of the opening should say so.
  */
+/*
+ * Registered, because an unregistered custom property cannot be animated: the
+ * browser has no idea it holds a length, so it jumps between keyframes or
+ * simply holds. The first attempt at the seam did exactly that.
+ */
+@property --seam {
+  syntax: '<percentage>';
+  inherits: true;
+  initial-value: 46%;
+}
+
+/*
+ * THE SEAM: rough on one side of it, cut on the other.
+ *
+ * One number divides the panel. Left of it the photograph shows through,
+ * cooled and darkened so it reads as the raw crystal; right of it the lit
+ * assembly takes over as the finished stone. Both are masked by the SAME
+ * value, so the two halves are exact complements and no gap or overlap can
+ * open between them however slowly it moves.
+ *
+ * It breathes rather than sitting still, because a fixed seam reads as a
+ * graphic and a moving one reads as the cut being made.
+ */
 .aperture {
   position: relative;
   overflow: hidden;
+  --seam: 46%;
+  animation: seamTravel 19s ease-in-out infinite;
   /* The room the stone is suspended in: the reference's indigo, darkest at the
      edges so the shaft and the pool are the only light in it. */
   /* The reference's card is near-black with one blue source in it, not a
@@ -961,12 +1018,16 @@
    * photograph is simply there.
    */
   /*
-   * A GHOST, not the subject. The blades are the object in this composition,
-   * and at full strength the photograph simply swallowed them — they are
-   * screen-blended light and it is already bright. Left faintly visible it
-   * gives the assembly something to sit in front of.
+   * THE ROUGH SIDE. The photograph now holds the left of the seam, cooled and
+   * darkened so it reads as the raw crystal rather than as a finished stone,
+   * and masked off exactly where the assembly begins. At full strength across
+   * the whole panel it swallowed the blades, which are screen-blended light;
+   * confined to its own half it can be strong again.
    */
-  opacity: 0.16;
+  opacity: 0.62;
+  filter: saturate(0.35) brightness(0.62) contrast(1.15);
+  mask-image: linear-gradient(90deg, #000 calc(var(--seam) - 3%), transparent var(--seam));
+  -webkit-mask-image: linear-gradient(90deg, #000 calc(var(--seam) - 3%), transparent var(--seam));
 }
 
 /* A quiet, honest label. The image is a render, and the page says so rather
@@ -1087,7 +1148,8 @@
   .aura,
   .rays,
   .prism,
-  .bladeGlow { animation: none; }
+  .bladeGlow,
+  .aperture { animation: none; }
 
   /* The sweep is the effect; frozen it is a stripe across the stone. */
   .bladeLight { display: none; }

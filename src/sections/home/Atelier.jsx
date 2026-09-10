@@ -471,6 +471,9 @@ export default function Atelier() {
                   itself, `.bladeLight` is the sweep that travels across it,
                   and `.bladeGlow` is what it throws back into the panel.
                 */}
+                {/* The seam: the line the stone is divided on, rough to the
+                    left of it and cut to the right. */}
+                <span className={styles.seam} aria-hidden="true" />
                 <span className={styles.bladeGlow} aria-hidden="true" />
                 <span className={styles.blades} aria-hidden="true">
                   <i className={styles.bladeLight} />
