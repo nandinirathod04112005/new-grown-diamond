@@ -544,6 +544,17 @@ export default function StoneFilters({ stones, value, onChange, shown, loading =
       ref={panel}
       className={`${styles.f} ${styles.side}`}
       data-open={drawer ? '' : undefined}
+      /*
+       * The smooth scroller must keep its hands off this box.
+       *
+       * Lenis listens for wheel on the window and scrolls the document with
+       * it, so a wheel over this column moved the page behind instead of the
+       * list under the pointer: on desktop nine of the eleven filter groups
+       * could not be reached with a mouse at all, and over the open drawer the
+       * page scrolled behind the modal. This attribute is Lenis's own opt-out,
+       * and it hands the wheel back to the element that is actually scrollable.
+       */
+      data-lenis-prevent=""
       inert={!wide && !open}
       role={wide ? undefined : 'dialog'}
       aria-modal={wide ? undefined : 'true'}

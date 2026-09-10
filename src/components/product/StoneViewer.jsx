@@ -93,6 +93,9 @@ export default function StoneViewer({ stone, onClose }) {
       <div
         ref={panel}
         className={styles.panel}
+        /* The panel scrolls its own overflow; without this the smooth
+           scroller takes the wheel and moves the page behind the dialog. */
+        data-lenis-prevent=""
         role="dialog"
         aria-modal="true"
         aria-label={`${stone.carat?.toFixed?.(2) ?? ''} carat ${stone.shape} diamond, ${stone.stockNumber}`}
