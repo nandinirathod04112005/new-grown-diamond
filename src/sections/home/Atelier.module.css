@@ -114,6 +114,106 @@
   transition: transform 420ms var(--ease-primary);
 }
 
+/* ---------------- the turning stones ---------------- */
+/*
+ * Two of the house stone, behind everything, turning.
+ *
+ * A round brilliant seen face-up is radially symmetric about this axis, so
+ * rotating it is honest — there is no hidden side being invented. They are
+ * dim enough to read as light in the room rather than as pictures, run in
+ * opposite directions on clocks that do not divide into one another, and are
+ * hidden entirely from anyone who asked for less motion.
+ */
+.orbit {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  /* Faded away as the next section arrives, with the rest of the decoration. */
+  opacity: calc((1 - var(--t) * 0.8) * 1);
+}
+
+.orbit img {
+  position: absolute;
+  display: block;
+  object-fit: contain;
+  mix-blend-mode: screen;
+  filter: blur(0.4px);
+}
+
+.orbitBig {
+  width: min(86vh, 46rem);
+  height: min(86vh, 46rem);
+  left: -14%;
+  top: 50%;
+  translate: 0 -50%;
+  opacity: 0.13;
+  animation: orbitTurn 150s linear infinite;
+}
+
+.orbitSmall {
+  width: min(34vh, 17rem);
+  height: min(34vh, 17rem);
+  right: -3%;
+  bottom: 6%;
+  opacity: 0.2;
+  animation: orbitTurn 92s linear infinite reverse;
+}
+
+@keyframes orbitTurn {
+  from { rotate: 0deg; }
+  to   { rotate: 360deg; }
+}
+
+/* ---------------- the plan ---------------- */
+/*
+ * The stone as a cutter would set it out: girdle, table, crown facets,
+ * pavilion mains to the culet. Drawn stroke by stroke by the entrance, then
+ * one arrowhead runs the outline. It sits behind the words at low contrast —
+ * it is a watermark with a story, not a diagram competing to be read.
+ */
+.plan {
+  position: absolute;
+  z-index: 0;
+  /* Behind the words and to their left, clear of the buttons: it is a
+     watermark, and a watermark that crosses a call to action is a mistake. */
+  left: clamp(-6rem, -5vw, -2rem);
+  top: 42%;
+  translate: 0 -50%;
+  width: min(26vw, 18rem);
+  height: auto;
+  pointer-events: none;
+  color: rgba(189, 160, 106, 0.9);
+  opacity: calc(0.3 - var(--t) * 0.3);
+  overflow: visible;
+}
+
+.planLine {
+  fill: none;
+  stroke: rgba(189, 160, 106, 0.34);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+  stroke-linecap: round;
+}
+
+.planTrace {
+  fill: none;
+  stroke: rgba(223, 199, 151, 0.75);
+  stroke-width: 1.4;
+  vector-effect: non-scaling-stroke;
+  stroke-linecap: round;
+}
+
+/* ---------------- the dot matrix ---------------- */
+/*
+ * The canvas covers the photograph and hands over to it. `--formed` is written
+ * by the component each frame, so the two are exact complements: while the
+ * dots are gathering the picture is not yet there, and once they have gathered
+ * it is. Neither can be visible alone by accident.
+ */
+.dots { z-index: 2; }
+
 /* ---------------- the composition ---------------- */
 .inner {
   position: relative;
@@ -426,6 +526,13 @@
   /* Keeps the stone in frame at every ratio the box takes. */
   object-position: 57% 50%;
   transform-origin: 57% 48%;
+  /*
+   * Held back while the dots are still gathering, and fully present once they
+   * have. --formed is 0 until the DotMatrix mounts, so with no canvas — no
+   * script, an old browser, reduced motion — this resolves to 1 and the
+   * photograph is simply there.
+   */
+  opacity: clamp(0.06, calc((var(--formed, 1) - 0.32) / 0.5), 1);
 }
 
 /* A quiet, honest label. The image is a render, and the page says so rather
@@ -478,6 +585,18 @@
   .float { animation-duration: 18s; }
   .sway { transform: none; }
 
+  /*
+   * One turning stone, smaller and dimmer; the plan would crowd the headline
+   * on a narrow column, so it stands down entirely.
+   *
+   * Written as `.orbit img.x` rather than `.x`: `.orbit img` sets display on
+   * these already, and a single class cannot outrank it whatever the media
+   * query says. The second stone stayed on screen because of exactly that.
+   */
+  .orbit img.orbitBig { width: 62vh; height: 62vh; left: -26%; opacity: 0.09; }
+  .orbit img.orbitSmall { display: none; }
+  .plan { display: none; }
+
   .note { text-align: center; }
 
   .actions { width: 100%; }
@@ -521,6 +640,12 @@
 
   .sweep { display: none; }
   .sway { transform: none; }
+
+  /* The turning pair stops and stays; the plan is simply drawn. */
+  .orbit img.orbitBig,
+  .orbit img.orbitSmall { animation: none; }
+
+  .photo { opacity: 1; }
 
   .visual,
   .copy {

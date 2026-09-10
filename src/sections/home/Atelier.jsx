@@ -5,11 +5,22 @@ import { prefersReducedMotion } from '@/lib/motion/media.js';
 import { useHeroProgress } from '@/hooks/useHeroProgress.js';
 import { usePointerParallax } from '@/hooks/usePointerParallax.js';
 import Magnetic from '@/components/motion/Magnetic.jsx';
+import DotMatrix from '@/components/media/DotMatrix.jsx';
 
-import diamondWide from '@/assets/diamonds/hero-diamond-wide.webp';
-import diamondWideSmall from '@/assets/diamonds/hero-diamond-wide@1024.webp';
-import diamondTall from '@/assets/diamonds/hero-diamond-tall.webp';
-import diamondTallSmall from '@/assets/diamonds/hero-diamond-tall@720.webp';
+
+
+/*
+ * The house stone, drawn for this page rather than sourced.
+ *
+ * Real brilliant geometry — 58 facets, table at 54.5% of the girdle, eight-fold
+ * symmetry — shaded from the same light direction the rest of the site uses.
+ * It is an illustration and the caption says so; it is also the one view of a
+ * brilliant that can honestly be turned, because a round brilliant IS radially
+ * symmetric about this axis, which is what lets the background pair rotate
+ * without pretending a flat picture has a back.
+ */
+import diamondWide from '@/assets/diamonds/ngd-brilliant-figure-wide.webp';
+import diamondTall from '@/assets/diamonds/ngd-brilliant-figure-tall.webp';
 
 import styles from './Atelier.module.css';
 
@@ -144,6 +155,20 @@ export default function Atelier() {
           { drawSVG: '50% 50%' },
           { drawSVG: '0% 100%', duration: 1.3 * t, ease: 'power2.inOut' },
           0.85 * t,
+        )
+        /* The plan builds stroke by stroke, in a cutter's order. */
+        .fromTo(
+          q(`.${styles.planLine}`),
+          { drawSVG: '0% 0%' },
+          { drawSVG: '0% 100%', duration: 0.7 * t, stagger: 0.09 * t, ease: 'power2.out' },
+          0.5 * t,
+        )
+        /* Then one arrowhead runs the outline, once. */
+        .fromTo(
+          q(`.${styles.planTrace}`),
+          { drawSVG: '0% 0%' },
+          { drawSVG: '0% 100%', duration: 1.6 * t, ease: 'power1.inOut' },
+          1.15 * t,
         );
     },
     /* No dependencies: the opening plays once for the visit, and a re-render
@@ -169,6 +194,60 @@ export default function Atelier() {
             <span className={styles.key} />
             <span className={styles.fill} />
           </div>
+
+          {/*
+            TWO REAL STONES, TURNING, BEHIND EVERYTHING.
+
+            This is the house's own photograph of a round brilliant seen
+            face-up — the one cut where rotation is honest, because a brilliant
+            IS radially symmetric about that axis. Turning any other view would
+            be pretending a flat picture has a back.
+
+            They are dim, enormous and slow: one large behind the words, one
+            small at the right edge, running in opposite directions on
+            different clocks so the pair never lines up into a pattern.
+          */}
+          <div className={styles.orbit} aria-hidden="true">
+            <img className={styles.orbitBig} src={diamondTall} alt="" width="976" height="1024" loading="lazy" decoding="async" />
+            <img className={styles.orbitSmall} src={diamondTall} alt="" width="976" height="1024" loading="lazy" decoding="async" />
+          </div>
+
+          {/*
+            The diamond drawn as lines, beside the words. Four strokes: the
+            table, the crown, the girdle and the pavilion — the order a cutter
+            works in. Each is drawn rather than faded, and an arrowhead runs
+            the outline once the drawing is done, so the shape is built in
+            front of the reader instead of appearing.
+          */}
+          <svg
+            className={styles.plan}
+            viewBox="0 0 120 108"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <defs>
+              <marker id="ngd-plan-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+                <path d="M0 1 L9 5 L0 9" fill="none" stroke="currentColor" strokeWidth="1.6" />
+              </marker>
+            </defs>
+            {/* girdle */}
+            <path className={styles.planLine} d="M6 34 L114 34" pathLength="1" />
+            {/* crown: table and its shoulders */}
+            <path className={styles.planLine} d="M34 8 L86 8" pathLength="1" />
+            <path className={styles.planLine} d="M6 34 L34 8 L86 8 L114 34" pathLength="1" />
+            {/* crown facets */}
+            <path className={styles.planLine} d="M34 8 L48 34 M86 8 L72 34 M60 8 L60 34" pathLength="1" />
+            {/* pavilion to the culet */}
+            <path className={styles.planLine} d="M6 34 L60 102 L114 34" pathLength="1" />
+            <path className={styles.planLine} d="M48 34 L60 102 M72 34 L60 102 M24 34 L60 102 M96 34 L60 102" pathLength="1" />
+            {/* the arrow that traces the outline once it is built */}
+            <path
+              className={styles.planTrace}
+              d="M6 34 L34 8 L86 8 L114 34 L60 102 Z"
+              pathLength="1"
+              markerEnd="url(#ngd-plan-arrow)"
+            />
+          </svg>
 
           <div className={styles.inner}>
             <div className={styles.copy}>
@@ -243,19 +322,12 @@ export default function Atelier() {
                     original, so a centre-crop on a narrow screen would cut the
                     stone in half and keep the empty black beside it.
                   */}
-                  <source
-                    media="(max-width: 899px)"
-                    srcSet={`${diamondTallSmall} 720w, ${diamondTall} 976w`}
-                    sizes="100vw"
-                  />
-                  <source
-                    srcSet={`${diamondWideSmall} 1024w, ${diamondWide} 1536w`}
-                    sizes="(min-width: 900px) 58vw, 100vw"
-                  />
+                  <source media="(max-width: 899px)" srcSet={diamondTall} />
+                  <source srcSet={diamondWide} />
                   <img
                     className={styles.photo}
                     src={diamondWide}
-                    alt="A faceted diamond hourglass holding a stream of gold dust, lit against black."
+                    alt="An illustration of a round brilliant diamond seen face-up, its facets catching one light."
                     width="1536"
                     height="1024"
                     loading="eager"
@@ -266,6 +338,14 @@ export default function Atelier() {
                 </picture>
                 </div>
                 </div>
+
+                {/*
+                  The photograph, assembled from dots. It gathers on arrival
+                  and comes apart again as the hero scrolls away — the real
+                  <img> above is what remains, so the finished frame is the
+                  picture at full detail rather than an impression of it.
+                */}
+                <DotMatrix src={diamondWide} progressRef={hero} className={styles.dots} />
 
                 {/* One pass of light across the facets, long apart enough that
                     it stays an event rather than becoming wallpaper. */}
@@ -287,7 +367,7 @@ export default function Atelier() {
                   />
                 </svg>
               </div>
-              <figcaption className={styles.note}>Rendered study · New Grown Diamond</figcaption>
+              <figcaption className={styles.note}>Illustration · round brilliant, 58 facets</figcaption>
             </figure>
           </div>
         </div>

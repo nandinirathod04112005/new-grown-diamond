@@ -1,0 +1,36 @@
+/*
+ * The dot matrix sits over the photograph it is made from, and hands over to
+ * it. `--formed` is written by the component every frame: 0 while the dots are
+ * scattered, 1 once they have gathered. The photograph's own opacity is driven
+ * from it in Atelier.module.css, so the two are always exact complements and
+ * neither can be visible alone by accident.
+ */
+.wrap {
+  position: absolute;
+  inset: 0;
+  display: block;
+  pointer-events: none;
+  z-index: 2;
+  --formed: 0;
+  /*
+   * The dots retire over the last third of the gathering, so the finished
+   * frame is the photograph and not a halftone printed on top of it. Without
+   * this the matrix stayed at full strength once formed and the stone read as
+   * a screen-printed poster.
+   */
+  opacity: clamp(0, calc((1 - var(--formed)) / 0.35), 1);
+}
+
+.canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* Screen: the dots are light on a dark field and must never darken the
+     photograph they are resolving into. */
+  mix-blend-mode: screen;
+}
+
+/* Nothing to run: the photograph underneath is already the finished state. */
+@media (prefers-reduced-motion: reduce) {
+  .wrap { display: none; }
+}
