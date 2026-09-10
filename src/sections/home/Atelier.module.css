@@ -281,30 +281,30 @@
   left: 50%;
   bottom: 2%;
   translate: -50% 0;
-  width: 96%;
-  height: 34%;
+  width: 78%;
+  height: 26%;
   pointer-events: none;
   border-radius: 50%;
   mix-blend-mode: screen;
-  opacity: 0.9;
-  filter: blur(13px);
+  opacity: 0.66;
+  filter: blur(18px);
   background:
-    radial-gradient(closest-side, rgba(244, 248, 255, 0.85), rgba(190, 210, 255, 0.3) 42%, transparent 74%),
+    radial-gradient(closest-side, rgba(226, 236, 255, 0.55), transparent 72%),
     conic-gradient(
       from 0deg,
-      rgba(120, 170, 255, 0.62),
-      rgba(214, 150, 255, 0.54),
-      rgba(255, 214, 158, 0.48),
-      rgba(150, 245, 226, 0.52),
-      rgba(120, 170, 255, 0.62)
+      rgba(120, 160, 255, 0.40),
+      rgba(196, 150, 255, 0.34),
+      rgba(255, 210, 160, 0.30),
+      rgba(150, 240, 226, 0.32),
+      rgba(120, 160, 255, 0.40)
     );
   animation: poolTurn 34s linear infinite, poolPulse 7s ease-in-out infinite;
 }
 
 @keyframes poolTurn { from { rotate: 0deg; } to { rotate: 360deg; } }
 @keyframes poolPulse {
-  0%, 100% { opacity: 0.68; }
-  50%      { opacity: 1; }
+  0%, 100% { opacity: 0.52; }
+  50%      { opacity: 0.82; }
 }
 
 /*
@@ -441,32 +441,6 @@
 
 @keyframes raysTurn { from { rotate: 0deg; } to { rotate: 360deg; } }
 
-/*
- * THE THREAD. In the reference a fine line of light runs from the stone down
- * to the pool it is casting — the thing that makes the gem look like the
- * source of the caustic rather than an object sitting above an unrelated
- * glow. Narrow, short, and brightest at its foot.
- */
-.thread {
-  position: absolute;
-  z-index: 2;
-  left: 50%;
-  translate: -50% 0;
-  top: 56%;
-  width: 3px;
-  height: 30%;
-  pointer-events: none;
-  mix-blend-mode: screen;
-  filter: blur(2px);
-  background: linear-gradient(180deg, transparent, rgba(214, 232, 255, 0.5) 40%, rgba(244, 250, 255, 0.9));
-  animation: threadPulse 7s ease-in-out infinite;
-}
-
-@keyframes threadPulse {
-  0%, 100% { opacity: 0.45; transform: scaleY(0.92); }
-  50%      { opacity: 0.95; transform: scaleY(1.05); }
-}
-
 /* Fragments in the shaft. Each is a small faceted sliver on its own clock. */
 .shards {
   position: absolute;
@@ -486,8 +460,8 @@
   position: absolute;
   left: var(--x);
   top: var(--y);
-  width: calc(var(--s) * 1.5);
-  height: calc(var(--s) * 2.3);
+  width: var(--s);
+  height: calc(var(--s) * 1.6);
   clip-path: polygon(50% 0%, 100% 38%, 62% 100%, 12% 72%);
   background: linear-gradient(150deg, rgba(232, 240, 255, 0.92), rgba(150, 178, 240, 0.35));
   rotate: var(--rot);
@@ -501,6 +475,99 @@
   18%       { opacity: 0.85; }
   70%       { opacity: 0.55; }
   100%      { opacity: 0; transform: translate3d(6px, -30px, 0) scale(1.05); }
+}
+
+/* ---------------- the blades ---------------- */
+/*
+ * A DIAMOND DRAWN AS A COMB OF LIT PLATES.
+ *
+ * The reference does one thing and does it well: a rank of thin plates
+ * receding into the dark, with the light living along their EDGES rather than
+ * on their faces, so the object reads as an assembly rather than as a picture.
+ * That is a repeating gradient and a perspective, and it costs nothing.
+ *
+ * Cut to a brilliant's outline — table across the top, shoulders to the
+ * girdle, then down to the culet — so the comb is a diamond rather than a
+ * comb. The stone's own photograph still sits behind it and shows through the
+ * gaps, which is what stops this being a flat graphic.
+ */
+.blades {
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  top: 44%;
+  translate: -50% -50%;
+  width: min(84%, 40rem);
+  aspect-ratio: 1.2;
+  pointer-events: none;
+  overflow: hidden;
+  clip-path: polygon(22% 6%, 78% 6%, 96% 34%, 50% 98%, 4% 34%);
+  /* Laid back and turned, so the plates recede rather than sitting flat. */
+  transform: perspective(1100px) rotateX(16deg) rotateZ(-7deg);
+  transform-origin: 50% 60%;
+  background:
+    /* the plates: a bright edge, then the dark face behind it */
+    repeating-linear-gradient(
+      99deg,
+      rgba(196, 226, 255, 0.95) 0 1.2px,
+      rgba(96, 150, 230, 0.45) 1.2px 2.4px,
+      rgba(6, 9, 20, 0.92) 2.4px 10px
+    ),
+    /* the depth: darker toward the culet, where the plates crowd */
+    linear-gradient(190deg, rgba(26, 44, 92, 0.7), rgba(4, 6, 14, 0.96));
+  mix-blend-mode: screen;
+  opacity: 1;
+}
+
+/* The sweep. One pass of light travelling across the rank, which is the whole
+   reason the object reads as lit rather than as drawn. */
+.bladeLight {
+  position: absolute;
+  inset: -30% -60%;
+  display: block;
+  background: linear-gradient(
+    99deg,
+    transparent 40%,
+    rgba(198, 226, 255, 0.30) 47%,
+    rgba(236, 246, 255, 0.75) 50%,
+    rgba(160, 200, 255, 0.28) 53%,
+    transparent 60%
+  );
+  mix-blend-mode: screen;
+  animation: bladeSweep 7.5s ease-in-out infinite;
+}
+
+@keyframes bladeSweep {
+  0%        { transform: translate3d(-46%, 0, 0); opacity: 0; }
+  12%       { opacity: 1; }
+  62%       { opacity: 1; }
+  74%, 100% { transform: translate3d(46%, 0, 0); opacity: 0; }
+}
+
+/* What the assembly throws back into the panel behind it. */
+.bladeGlow {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  top: 46%;
+  translate: -50% -50%;
+  width: 86%;
+  aspect-ratio: 1.1;
+  pointer-events: none;
+  border-radius: 50%;
+  mix-blend-mode: screen;
+  filter: blur(46px);
+  background: radial-gradient(closest-side, rgba(86, 146, 246, 0.55), rgba(44, 78, 168, 0.2) 48%, transparent 74%);
+  animation: bladeGlow 9s ease-in-out infinite;
+}
+
+@keyframes bladeGlow {
+  0%, 100% { opacity: 0.55; scale: 0.96; }
+  50%      { opacity: 1; scale: 1.06; }
+}
+
+@media (max-width: 899px) {
+  .blades { width: 86%; }
 }
 
 /* ---------------- the dot matrix ---------------- */
@@ -747,24 +814,21 @@
 .aperture {
   position: relative;
   overflow: hidden;
-  /* The room's own proportion, since the stone inside it is no longer what
-     gives the box its height. */
-  aspect-ratio: 3 / 2;
   /* The room the stone is suspended in: the reference's indigo, darkest at the
      edges so the shaft and the pool are the only light in it. */
+  /* The reference's card is near-black with one blue source in it, not a
+     coloured panel. Everything that is blue here is light, not paint. */
   background:
-    radial-gradient(130% 84% at 50% 2%, rgba(96, 110, 190, 0.42), transparent 58%),
-    radial-gradient(76% 44% at 50% 96%, rgba(128, 146, 224, 0.40), transparent 62%),
-    linear-gradient(180deg, #10143a 0%, #0b0e28 46%, #141a44 100%);
+    radial-gradient(70% 50% at 54% 46%, rgba(34, 62, 128, 0.34), transparent 68%),
+    linear-gradient(180deg, #06070d 0%, #04050a 55%, #070810 100%);
   /*
-   * NO FRAME. The reference is a room with a stone hanging in it, not a stone
-   * in a display case — so the faceted aperture that used to cut this box is
-   * gone and the scene runs to its own edges, softened away at them rather
-   * than stopped by a line.
+   * Vertical sides, faceted only at top and bottom. The first version cut in
+   * from 112% on the diagonal, which looked right on an empty frame and sliced
+   * the stone's right-hand facets off the moment a real photograph was in it.
+   * At the subject's x the roof now takes about two per cent, which reads as a
+   * bevel rather than a crop.
    */
-  clip-path: none;
-  mask-image: radial-gradient(118% 108% at 50% 46%, #000 52%, transparent 96%);
-  -webkit-mask-image: radial-gradient(118% 108% at 50% 46%, #000 52%, transparent 96%);
+  clip-path: polygon(50% 0%, 100% 8%, 100% 92%, 50% 100%, 0% 92%, 0% 8%);
 }
 
 /*
@@ -772,26 +836,11 @@
  * Two planes moving at different rates is what makes a flat photograph sit
  * inside the frame rather than on it.
  */
-/*
- * The stone hangs in the upper half of the room, not filling it.
- *
- * That proportion is the whole reference: a gem about a third the height of
- * the frame, a shaft above it and a pool of its own light below. Filling the
- * box the same photograph read as a product shot in a case, which is the
- * opposite picture.
- */
 .sway {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  /* pushes the stone up, leaving the floor to the caustic */
-  padding-bottom: 24%;
+  display: block;
   transform: translate3d(calc(var(--mx) * 9px), calc(var(--my) * 6px), 0);
   transition: transform 320ms var(--ease-primary);
 }
-
-.aperture picture { display: block; }
 
 /*
  * The breath. Fourteen seconds for one cycle, a hair over half a degree of
@@ -876,8 +925,6 @@
   overflow: visible;
 }
 
-.rim { display: none; }
-
 .rimLine {
   fill: none;
   stroke: rgba(189, 160, 106, 0.55);
@@ -900,11 +947,8 @@
      around it is CSS, so cropping it would cut the subject rather than the
      background. */
   object-fit: contain;
-  object-position: 50% 50%;
-  transform-origin: 50% 50%;
-  width: auto;
-  max-width: 58%;
-  max-height: 27svh;
+  object-position: 50% 46%;
+  transform-origin: 50% 46%;
   /* The light it throws. Two shadows rather than one: a tight white core and a
      wide violet spill, which is what the reference's glow actually is. */
   filter:
@@ -916,7 +960,13 @@
    * script, an old browser, reduced motion — this resolves to 1 and the
    * photograph is simply there.
    */
-  opacity: clamp(0.06, calc((var(--formed, 1) - 0.32) / 0.5), 1);
+  /*
+   * A GHOST, not the subject. The blades are the object in this composition,
+   * and at full strength the photograph simply swallowed them — they are
+   * screen-blended light and it is already bright. Left faintly visible it
+   * gives the assembly something to sit in front of.
+   */
+  opacity: 0.16;
 }
 
 /* A quiet, honest label. The image is a render, and the page says so rather
@@ -952,11 +1002,11 @@
   }
 
   .photo {
-    max-width: 66%;
-    max-height: 22svh;
+    aspect-ratio: 1;
+    object-position: 50% 48%;
+    max-height: 44svh;
+    object-fit: contain;
   }
-
-  .sway { padding-bottom: 26%; }
 
   .aura { width: 78%; }
   /* Fewer flashes and a smaller ray wheel in a narrow column. */
@@ -1037,7 +1087,10 @@
   .aura,
   .rays,
   .prism,
-  .thread { animation: none; }
+  .bladeGlow { animation: none; }
+
+  /* The sweep is the effect; frozen it is a stripe across the stone. */
+  .bladeLight { display: none; }
 
   .rule::after { display: none; }
 
