@@ -9,6 +9,7 @@
     "seo:validate": "node scripts/validate-seo.mjs",
     "lint": "oxlint",
     "preview": "vite preview"
+    "check:backend": "node scripts/check-backend.mjs",
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
