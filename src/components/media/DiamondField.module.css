@@ -1,0 +1,18 @@
+/*
+ * The swarm sits behind everything in the hero and must never take a click or
+ * a screen reader's attention. It is one composited layer and nothing more.
+ */
+.field {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* Nothing to draw: the component returns before it ever paints, and the hero
+   reads exactly as it does with the canvas empty. */
+@media (prefers-reduced-motion: reduce) {
+  .field { display: none; }
+}

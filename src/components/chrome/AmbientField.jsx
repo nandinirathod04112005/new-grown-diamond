@@ -4,12 +4,13 @@ import styles from './AmbientField.module.css';
  * The room the whole site sits in.
  *
  * A fixed layer behind every page: two very slow light masses that drift
- * against each other, and a faint faceted lattice that turns once every few
- * minutes. It is deliberately close to invisible — the test is that removing
+ * against each other, a faint faceted lattice that turns once every few
+ * minutes, and two fields of small diamonds drifting across it at different
+ * sizes and speeds. It is deliberately close to invisible — the test is that removing
  * it should make the site feel flatter without anyone being able to say what
  * changed.
  *
- * WHY IT IS SAFE TO HAVE ON EVERY PAGE. It is three elements and pure CSS: no
+ * WHY IT IS SAFE TO HAVE ON EVERY PAGE. It is five elements and pure CSS: no
  * script, no canvas, no scroll listener, nothing that can fail. `position:
  * fixed` means it never grows the page, `pointer-events: none` means it can
  * never take a click, and it is hidden from assistive technology entirely.
@@ -25,6 +26,10 @@ export default function AmbientField() {
       <span className={styles.driftA} />
       <span className={styles.driftB} />
       <span className={styles.lattice} />
+      {/* A field of small stones, drifting. Two layers at different sizes and
+          speeds so the depth reads; both close to invisible on their own. */}
+      <span className={styles.dotsNear} />
+      <span className={styles.dotsFar} />
     </div>
   );
 }

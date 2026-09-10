@@ -114,6 +114,24 @@
   transition: transform 420ms var(--ease-primary);
 }
 
+/* ---------------- the house, written in stones ---------------- */
+/*
+ * Behind the words and the gem both, and quiet: the swarm carries the brand
+ * and then the shape, and neither is worth reading over the headline. It
+ * simplifies away with the rest of the decoration as the next section arrives.
+ */
+.swarm {
+  z-index: 0;
+  opacity: calc(1 - var(--t) * 0.42);
+  mix-blend-mode: screen;
+}
+
+@media (max-width: 899px) {
+  /* A narrow column cannot hold three letters and a stone at a readable size,
+     so the swarm is dimmer still and lets the headline have the space. */
+  .swarm { opacity: calc(0.7 - var(--t) * 0.3); }
+}
+
 /* ---------------- the turning stones ---------------- */
 /*
  * Two of the house stone, behind everything, turning.
@@ -473,6 +491,12 @@
   mix-blend-mode: screen;
 }
 
+.shards {
+  /* Lifted with the scroll, faster than the stone, so the shaft gains depth
+     as the hero leaves rather than travelling as one flat plane. */
+  transform: translate3d(0, calc(var(--t) * -34px), 0);
+}
+
 .shards i {
   position: absolute;
   left: var(--x);
@@ -538,10 +562,19 @@
   margin: 0;
 }
 
-/* One mask per line, and the mask is what makes the entrance possible: the
-   line is translated inside a box that clips it, so it rises out of nothing
+/* One mask per WORD now, and the mask is what makes the entrance possible: the
+   word is translated inside a box that clips it, so it rises out of nothing
    rather than sliding in from somewhere the reader can see. */
 .line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  /* The space between words, since the masks are inline blocks and the
+     original spaces are gone. */
+  column-gap: 0.26em;
+}
+
+.wordMask {
   display: block;
   overflow: hidden;
   padding-block: 0.06em;
@@ -561,10 +594,29 @@
 .gold { color: #cdb17f; font-style: italic; }
 
 .rule {
+  position: relative;
   width: min(100%, 15rem);
   height: 1px;
   transform-origin: left center;
   background: linear-gradient(90deg, rgba(189, 160, 106, 0.85), rgba(189, 160, 106, 0));
+}
+
+/* A point of light running the rule, once every nine seconds. One pixel tall
+   and gone in a fifth of the cycle, so it is a glint rather than a loading
+   bar — which is exactly what a repeating highlight becomes if it lingers. */
+.rule::after {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3.5rem;
+  background: linear-gradient(90deg, transparent, rgba(255, 244, 222, 0.95), transparent);
+  animation: ruleGlint 9s var(--ease-primary) 2.4s infinite;
+}
+
+@keyframes ruleGlint {
+  0%, 78%   { transform: translateX(-4rem); opacity: 0; }
+  82%       { opacity: 1; }
+  96%, 100% { transform: translateX(15rem); opacity: 0; }
 }
 
 .sub {
@@ -962,6 +1014,8 @@
   .aura,
   .rays,
   .prism { animation: none; }
+
+  .rule::after { display: none; }
 
   /* No rotation, and the still stone returns. */
   .spin { display: none; }

@@ -6,7 +6,7 @@
   align-content: center;
   gap: var(--s-5);
   /* The block must FIT the sticky frame. Fixed 6rem padding made the content
-     942px tall inside a 900px frame, so the last line was silently clipped —
+     942px tall inside a 900px frame, so the last line was silently clipped â€”
      and on a laptop at 720px it would have lost a third of the paragraph.
      Vertical padding is now proportional to the viewport, not absolute. */
   padding: clamp(1.25rem, 7vh, 4rem) var(--gutter);
@@ -28,7 +28,7 @@
 
 /*
  * The chapter as a whole answers the phase, not the progress. `in` is its
- * approach, `view` its held state, `out` its departure — three CSS states and
+ * approach, `view` its held state, `out` its departure â€” three CSS states and
  * one transition, which is the entire reason the reference site needs no
  * scrubbed timeline.
  */
@@ -119,7 +119,7 @@
    * Bounded by the FRAME, not by the viewport.
    *
    * `min(72vh, 100%)` let the plate reach 72% of the window height while the
-   * row it sits in was already inset by the wrap's padding — so on a short,
+   * row it sits in was already inset by the wrap's padding â€” so on a short,
    * wide screen (1920x944) it ran 287px past the bottom of the sticky block
    * and the image was simply cut off. Sizing it against the row it occupies
    * means it can never outgrow the frame, whatever the aspect ratio.
@@ -184,7 +184,7 @@
 }
 
 /*
- * The print. Overflow lives HERE and nowhere above it — `overflow` on an
+ * The print. Overflow lives HERE and nowhere above it â€” `overflow` on an
  * element that also carries preserve-3d forces it flat, which would collapse
  * the whole card into a picture again.
  */
@@ -286,7 +286,7 @@
   .rule { transform: none; }
   .text { transform: none; }
   :global([data-section]) .wrap { opacity: 1; transform: none; }
-  /* The plate stops travelling but keeps its depth — the layers are the
+  /* The plate stops travelling but keeps its depth â€” the layers are the
      design, the movement was only how they were introduced. */
   :global([data-section]) .card { transform: none; transition: none; }
   .tilt { transform: none; }
@@ -312,7 +312,7 @@
    and a picture painted on the page.
 
    This rides on `.tilt` rather than `.card` because `.card` is
-   transitioned over 1.1s for its scroll pose — putting velocity there
+   transitioned over 1.1s for its scroll pose â€” putting velocity there
    would delay it by a second and destroy the entire point of it.
    `.tilt` is untransitioned, so velocity lands on the same frame the
    scroll does.
@@ -370,7 +370,7 @@
   display: inline-block;
   /*
    * The reveal for character `i`. The scene progress is remapped so the whole
-   * title has resolved by roughly a third of the way in — the headline should
+   * title has resolved by roughly a third of the way in â€” the headline should
    * be readable while the chapter is still arriving, not still assembling once
    * the visitor has started on the body copy.
    *
@@ -379,7 +379,7 @@
    */
   /*
    * `--i` is 0..1 across the title. Character i begins at scene progress
-   * 0.04 + i*0.26 and takes 0.11 to arrive — so the first letter starts almost
+   * 0.04 + i*0.26 and takes 0.11 to arrive â€” so the first letter starts almost
    * immediately, the last has begun by a third of the way in, and the whole
    * headline is readable long before the body copy is being read.
    */
@@ -414,7 +414,7 @@
 
   /*
    * Flipped chapters swap the two children with `order`, which moves the
-   * figure into the FIRST track — the narrow one. Left alone, a flipped wide
+   * figure into the FIRST track â€” the narrow one. Left alone, a flipped wide
    * plate rendered 510px against an unflipped 690px: the same treatment at two
    * different sizes, two chapters apart, which reads as a mistake. Reversing
    * the tracks keeps the wide side wide whichever way the row faces.
@@ -452,4 +452,98 @@
 
 @media (prefers-reduced-motion: reduce) {
   .frame::after { display: none; }
+}
+
+
+
+/*
+ * DEPTH INSIDE THE PLATE, from one number.
+ *
+ * TWO THINGS HAD TO BE GOT RIGHT HERE, and the first attempt got both wrong.
+ *
+ * These chapters used to be pinned scroll scenes and every visual hung off
+ * --sp, the phase ScrollScene wrote. They are ordinary reading spreads now, so
+ * --sp never changes: anything driven from it freezes at its initial value,
+ * which for an opacity means invisible. That is how the first version hid the
+ * chapter index completely.
+ *
+ * The replacement, `animation-timeline: view()`, then had to go on the right
+ * element. A view timeline is measured against the nearest SCROLL CONTAINER,
+ * and both the plate and the text sit inside boxes with `overflow: hidden` —
+ * which counts. Put on the photograph, the timeline tracked the frame around
+ * it, which never scrolls, and every animation sat frozen at exactly half.
+ *
+ * So the timeline lives on the section, which nothing clips, and animates one
+ * registered custom property. Custom properties inherit, so every layer inside
+ * reads the same number and cannot drift out of step with the others. One
+ * timeline, one value, no listener, all on the compositor.
+ */
+@property --chapter {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0.5;
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .scene {
+      animation: chapterProgress linear both;
+      animation-timeline: view();
+      animation-range: entry 0% exit 100%;
+    }
+  }
+}
+
+@keyframes chapterProgress {
+  from { --chapter: 0; }
+  to   { --chapter: 1; }
+}
+
+/*
+ * The photograph moves against its own frame: low as it arrives, high as it
+ * leaves, travelling a fraction of what the page does. Two planes at different
+ * rates is what tells the eye one is behind the other. Scaled just over 1 so
+ * the travel never uncovers an edge, which is the one way this fails visibly.
+ */
+.frame img {
+  transform: translate3d(0, calc((var(--chapter, 0.5) - 0.5) * -34px), 0) scale(1.07);
+  will-change: transform;
+}
+
+/* The title lifts as it is read. Sixteen pixels across the whole chapter:
+   enough to lift the words off the page, small enough that nobody chasing a
+   line has to follow it. */
+.title {
+  transform: translate3d(0, calc((var(--chapter, 0.5) - 0.5) * -16px), 0);
+}
+
+/*
+ * The index arrives with its rule drawing under it — one movement from one
+ * number, rather than two animations that happen to agree. Both ramps are
+ * clamped so they finish early and hold, instead of still creeping while the
+ * chapter is being read.
+ */
+.index {
+  position: relative;
+  opacity: clamp(0, calc(var(--chapter, 1) * 4), 1);
+  transform: translate3d(0, calc((1 - clamp(0, calc(var(--chapter, 1) * 4), 1)) * 12px), 0);
+}
+
+.index::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 -1px 0;
+  height: 1px;
+  background: linear-gradient(90deg, var(--accent, #bda06a), transparent);
+  transform: scaleX(clamp(0, calc(var(--chapter, 1) * 2.6), 1));
+  transform-origin: left center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .frame img,
+  .title,
+  .index { transform: none; }
+
+  .index { opacity: 1; }
+  .index::after { transform: scaleX(1); }
 }

@@ -90,10 +90,69 @@
 :global([data-theme='light']) .driftB { background: radial-gradient(closest-side, rgba(150, 122, 66, 0.08), transparent 70%); }
 :global([data-theme='light']) .lattice { opacity: 0.32; }
 
+/*
+ * TWO FIELDS OF SMALL STONES.
+ *
+ * Points of light rather than drawn gems: at this size — under two pixels —
+ * a faceted shape is indistinguishable from a round one, and a tiled radial
+ * gradient is a single paint the compositor repeats, where thousands of
+ * clipped elements would not be affordable at all.
+ *
+ * Near and far run at different sizes and different speeds, and that
+ * difference IS the depth: one field alone reads as a texture stuck to the
+ * glass, two read as a space with things in it. Both are masked away from the
+ * edges so the pattern never announces where it stops.
+ */
+.dotsNear,
+.dotsFar {
+  inset: -20%;
+  width: auto;
+  height: auto;
+  border-radius: 0;
+  filter: none;
+  mask-image: radial-gradient(78% 68% at 50% 46%, #000 14%, transparent 78%);
+  -webkit-mask-image: radial-gradient(78% 68% at 50% 46%, #000 14%, transparent 78%);
+}
+
+.dotsNear {
+  opacity: 0.30;
+  background-image:
+    radial-gradient(rgba(226, 234, 255, 0.55) 0.9px, transparent 1px),
+    radial-gradient(rgba(223, 199, 151, 0.40) 0.9px, transparent 1px);
+  background-size: 118px 118px, 172px 172px;
+  background-position: 0 0, 46px 62px;
+  animation: dotsNear 64s linear infinite;
+}
+
+.dotsFar {
+  opacity: 0.18;
+  background-image: radial-gradient(rgba(200, 214, 245, 0.5) 0.6px, transparent 1px);
+  background-size: 62px 62px;
+  animation: dotsFar 118s linear infinite;
+}
+
+/* Moved by background-position rather than by transform: the field is larger
+   than the screen and shifting the paint costs nothing, where translating a
+   full-viewport layer would promote it and hold the memory. */
+@keyframes dotsNear {
+  from { background-position: 0 0, 46px 62px; }
+  to   { background-position: 118px 236px, 164px 406px; }
+}
+
+@keyframes dotsFar {
+  from { background-position: 0 0; }
+  to   { background-position: -62px 186px; }
+}
+
+:global([data-theme='light']) .dotsNear { opacity: 0.16; }
+:global([data-theme='light']) .dotsFar { opacity: 0.10; }
+
 @media (prefers-reduced-motion: reduce) {
   .driftA,
   .driftB,
-  .lattice {
+  .lattice,
+  .dotsNear,
+  .dotsFar {
     animation: none;
   }
 }

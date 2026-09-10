@@ -6,6 +6,7 @@ import { useHeroProgress } from '@/hooks/useHeroProgress.js';
 import { usePointerParallax } from '@/hooks/usePointerParallax.js';
 import Magnetic from '@/components/motion/Magnetic.jsx';
 import DotMatrix from '@/components/media/DotMatrix.jsx';
+import DiamondField from '@/components/media/DiamondField.jsx';
 
 
 
@@ -134,8 +135,16 @@ export default function Atelier() {
         /* Each headline line rises out of its own overflow mask. */
         .fromTo(
           q(`.${styles.lineInner}`),
-          { yPercent: 118 },
-          { yPercent: 0, duration: 1.15 * t, stagger: 0.09 * t },
+          { yPercent: 118, rotate: 2.5 },
+          {
+            yPercent: 0,
+            rotate: 0,
+            duration: 1.2 * t,
+            /* Small enough that the words overlap: the last is already moving
+               before the first has settled, which is what makes it read as one
+               phrase rather than four separate arrivals. */
+            stagger: { each: 0.055 * t, from: 'start' },
+          },
           0.15 * t,
         )
         /* Copy and buttons arrive BEFORE the stone has finished opening, so the
@@ -228,6 +237,20 @@ export default function Atelier() {
             small at the right edge, running in opposite directions on
             different clocks so the pair never lines up into a pattern.
           */}
+          {/*
+            THE HOUSE, WRITTEN IN STONES, THEN GATHERED INTO ONE.
+
+            Four hundred small diamonds fly in from the dark and settle into
+            N G D. As the page is scrolled they leave the letters and gather
+            into the outline of a single brilliant, turning violet as they go
+            — and scrolling back reassembles the word, because the morph is an
+            interpolation between two point sets rather than a simulation.
+
+            Behind everything, at low contrast: it is the room the headline is
+            read in, not a thing to be looked at directly.
+          */}
+          <DiamondField progressRef={hero} className={styles.swarm} />
+
           <div className={styles.orbit} aria-hidden="true">
             <img className={styles.orbitBig} src={realStone} alt="" width="754" height="541" loading="lazy" decoding="async" />
             <img className={styles.orbitSmall} src={realStone} alt="" width="754" height="541" loading="lazy" decoding="async" />
@@ -282,12 +305,26 @@ export default function Atelier() {
                 <span className="u-visually-hidden">
                   {LINES.map((l) => `${l.top} ${l.bottom}`).join(' ')}
                 </span>
-                <span className={styles.line} aria-hidden="true">
-                  <span className={`${styles.lineInner} ${styles.lead}`}>{OPENING.top}</span>
-                </span>
-                <span className={styles.line} aria-hidden="true">
-                  <span className={`${styles.lineInner} ${styles.gold}`}>{OPENING.bottom}</span>
-                </span>
+                {/*
+                  Word by word rather than line by line. Each word carries its
+                  own mask, so the line arrives as a wave travelling across it
+                  instead of a block sliding up — the same movement the eye
+                  makes reading it. Whole words, never characters: splitting
+                  mid-word breaks the shapes a reader recognises, and on a
+                  narrow column it also breaks the wrapping.
+                */}
+                {[
+                  { text: OPENING.top, tone: styles.lead },
+                  { text: OPENING.bottom, tone: styles.gold },
+                ].map((line) => (
+                  <span key={line.text} className={styles.line} aria-hidden="true">
+                    {line.text.split(' ').map((word, i) => (
+                      <span key={`${word}-${i}`} className={styles.wordMask}>
+                        <span className={`${styles.lineInner} ${line.tone}`}>{word}</span>
+                      </span>
+                    ))}
+                  </span>
+                ))}
               </h1>
 
               <span className={styles.rule} aria-hidden="true" />
