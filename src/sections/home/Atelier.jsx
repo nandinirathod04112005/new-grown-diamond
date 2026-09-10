@@ -132,6 +132,18 @@ export default function Atelier() {
           { opacity: 0 },
           { opacity: 1, duration: 0.8 * t },
           1.1 * t,
+        )
+        /*
+         * The case edge, drawn rather than faded. DrawSVGPlugin ships with
+         * GSAP now and is registered in lib/motion/gsap.js, so this costs no
+         * new dependency. It starts from both ends of the outline and meets at
+         * the bottom point, which is why the stroke reads as being traced.
+         */
+        .fromTo(
+          q(`.${styles.rimLine}`),
+          { drawSVG: '50% 50%' },
+          { drawSVG: '0% 100%', duration: 1.3 * t, ease: 'power2.inOut' },
+          0.85 * t,
         );
     },
     /* No dependencies: the opening plays once for the visit, and a re-render
@@ -209,6 +221,21 @@ export default function Atelier() {
 
             <figure className={styles.visual}>
               <div className={styles.aperture}>
+                {/*
+                  FOUR LAYERS AROUND ONE FLAT PHOTOGRAPH.
+                  It is a still image, so nothing here pretends the stone can
+                  be turned. What it can do is behave like an object in a room:
+                  breathe on a long loop, take light across its facets, and sit
+                  a little deeper than the frame it is in.
+
+                  .sway is the pointer layer for the stone alone, a touch
+                  stronger than the stage behind it, which is what separates
+                  the two planes. .float is the loop. The photograph keeps its
+                  own transform for the entrance, so all three are on their own
+                  element and none overwrites another.
+                */}
+                <div className={styles.sway}>
+                <div className={styles.float}>
                 <picture>
                   {/*
                     The phone gets a genuinely different crop, not the wide
@@ -237,6 +264,28 @@ export default function Atelier() {
                     draggable="false"
                   />
                 </picture>
+                </div>
+                </div>
+
+                {/* One pass of light across the facets, long apart enough that
+                    it stays an event rather than becoming wallpaper. */}
+                <span className={styles.sweep} aria-hidden="true" />
+
+                {/* The faceted edge of the display case, drawn once as the
+                    aperture finishes opening. */}
+                <svg
+                  className={styles.rim}
+                  viewBox="0 0 100 100"
+                  preserveAspectRatio="none"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <polygon
+                    className={styles.rimLine}
+                    points="50,0.4 99.6,8 99.6,92 50,99.6 0.4,92 0.4,8"
+                    pathLength="1"
+                  />
+                </svg>
               </div>
               <figcaption className={styles.note}>Rendered study · New Grown Diamond</figcaption>
             </figure>

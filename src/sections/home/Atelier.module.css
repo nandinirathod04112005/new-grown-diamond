@@ -331,6 +331,92 @@
   clip-path: polygon(50% 0%, 100% 8%, 100% 92%, 50% 100%, 0% 92%, 0% 8%);
 }
 
+/*
+ * The stone's own pointer layer, a little stronger than the stage behind it.
+ * Two planes moving at different rates is what makes a flat photograph sit
+ * inside the frame rather than on it.
+ */
+.sway {
+  display: block;
+  transform: translate3d(calc(var(--mx) * 9px), calc(var(--my) * 6px), 0);
+  transition: transform 320ms var(--ease-primary);
+}
+
+/*
+ * The breath. Fourteen seconds for one cycle, a hair over half a degree of
+ * roll and eight pixels of rise — slow enough that nobody watching the
+ * headline notices it moving, present enough that the stone is never dead.
+ */
+.float {
+  display: block;
+  animation: stoneBreath 14s var(--ease-primary) infinite;
+  transform-origin: 57% 52%;
+}
+
+@keyframes stoneBreath {
+  0%   { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
+  33%  { transform: translate3d(0, -8px, 0) rotate(0.55deg) scale(1.006); }
+  66%  { transform: translate3d(0, 4px, 0) rotate(-0.4deg) scale(0.998); }
+  100% { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
+}
+
+/*
+ * Light crossing the facets. A narrow, steeply raked band that travels once
+ * and then waits — the waiting is the point, because a sweep on a short loop
+ * stops being light and becomes a barber's pole. Screen blending means it can
+ * only ever add light, so it cannot grey the photograph down.
+ */
+.sweep {
+  position: absolute;
+  inset: -20% -40%;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  opacity: 0;
+  background: linear-gradient(
+    104deg,
+    transparent 42%,
+    rgba(255, 250, 236, 0.10) 47%,
+    rgba(255, 250, 236, 0.30) 50%,
+    rgba(214, 226, 245, 0.12) 53%,
+    transparent 58%
+  );
+  animation: facetSweep 9s var(--ease-primary) 3.4s infinite;
+}
+
+@keyframes facetSweep {
+  0%        { transform: translate3d(-42%, 0, 0); opacity: 0; }
+  6%        { opacity: 1; }
+  26%       { opacity: 1; }
+  32%, 100% { transform: translate3d(42%, 0, 0); opacity: 0; }
+}
+
+/*
+ * The faceted edge of the case. Drawn by the entrance timeline, then left as a
+ * hairline that brightens very slowly — the only continuously animated colour
+ * on the screen, and it moves less than the eye can follow deliberately.
+ */
+.rim {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.rimLine {
+  fill: none;
+  stroke: rgba(189, 160, 106, 0.55);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+  animation: rimGlow 11s ease-in-out infinite;
+}
+
+@keyframes rimGlow {
+  0%, 100% { stroke: rgba(189, 160, 106, 0.34); }
+  50%      { stroke: rgba(223, 199, 151, 0.72); }
+}
+
 .photo {
   display: block;
   width: 100%;
@@ -387,6 +473,11 @@
     transform: translate3d(0, calc(var(--t) * -26px), 0) scale(calc(1 + var(--t) * 0.04));
   }
 
+  /* Half the travel on a small screen, where the same movement reads twice
+     as large, and no pointer layer because there is no pointer. */
+  .float { animation-duration: 18s; }
+  .sway { transform: none; }
+
   .note { text-align: center; }
 
   .actions { width: 100%; }
@@ -414,11 +505,22 @@
   .drift,
   .key,
   .fill,
+  .sway,
   .cta,
   .cta::before,
   .arrow {
     transition: none;
   }
+
+  /* Every loop stops. The rim stays drawn and the sweep is simply absent —
+     the composition is finished, it just does not breathe. */
+  .float,
+  .rimLine {
+    animation: none;
+  }
+
+  .sweep { display: none; }
+  .sway { transform: none; }
 
   .visual,
   .copy {
