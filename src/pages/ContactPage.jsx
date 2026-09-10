@@ -161,6 +161,17 @@ export default function ContactPage() {
                 <span>Company</span>
                 <input name="company" autoComplete="organization" maxLength="160" />
               </label>
+              {/*
+                Every one of the five characters in the pattern below is
+                escaped on purpose. Browsers now compile the pattern attribute
+                in unicodeSets ('v') mode, where ( ) and - are syntax
+                characters inside a class, and one unescaped character makes
+                the whole pattern illegal. An illegal pattern is not a strict
+                pattern: the browser discards it, logs a SyntaxError, and the
+                field then accepts "abc def ghi" as a phone number — which is
+                what it did. Checked with new RegExp(source, 'v') against real
+                numbers in four formats before it was changed.
+              */}
               <label className={styles.fieldControl}>
                 <span>Phone</span>
                 <input
@@ -169,7 +180,8 @@ export default function ContactPage() {
                   autoComplete="tel"
                   inputMode="tel"
                   maxLength="40"
-                  pattern="[+()\-\s\d]{7,40}"
+                  pattern="[+\(\)\-\s\d]{7,40}"
+                  title="Digits, spaces, and + ( ) - only"
                 />
               </label>
             </div>

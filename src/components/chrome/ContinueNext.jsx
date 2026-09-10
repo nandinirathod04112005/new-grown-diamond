@@ -165,6 +165,19 @@ export default function ContinueNext({ path }) {
       className={styles.root}
       href={stop.next}
       data-on={atEnd ? '' : undefined}
+      /*
+       * Out of the tab order until it is on screen.
+       *
+       * The control is always in the DOM so it can fade in, and CSS hides it
+       * with opacity:0 and pointer-events:none. Neither of those removes it
+       * from the tab sequence: a keyboard visitor pressing Tab on the home
+       * page landed on stop 26 with no visible focus anywhere, and pressing
+       * Enter there navigated them to another page they had no way of knowing
+       * was selected. A control nobody can see must not be reachable, and
+       * tabIndex is what says so — aria-hidden alone would leave it focusable.
+       */
+      tabIndex={atEnd ? undefined : -1}
+      aria-hidden={atEnd ? undefined : 'true'}
       style={{ '--fill': progress.toFixed(3) }}
     >
       {/* Fills as they keep scrolling, so the site is visibly asking rather

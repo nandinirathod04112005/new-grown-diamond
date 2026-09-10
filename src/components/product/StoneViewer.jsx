@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import fallback from '@/assets/diamonds/ngd-brilliant-macro.webp';
 import { stoneEnquiryUrl } from '@/lib/whatsapp.js';
@@ -19,6 +20,15 @@ const TABS = [
  * Focus is trapped while open, Escape closes, the page behind is inert and
  * scroll-locked, and focus returns to whatever opened it. Those four together
  * are what make an overlay usable by keyboard rather than a trap.
+ *
+ * RENDERED INTO document.body, and it has to be. The inventory sits inside a
+ * transformed, z-indexed ancestor, which is a stacking context — so this
+ * overlay's z-index was being compared against its siblings inside that box
+ * rather than against the page, and the fixed header (z-index 40 at the root)
+ * painted straight over the top 88px of the dialog. That is where the close
+ * button lives: elementFromPoint at its centre returned the HEADER, and
+ * clicking it did nothing at every width from 1024px up. A portal puts the
+ * overlay in the root stacking context, where its z-index means what it says.
  */
 export default function StoneViewer({ stone, onClose }) {
   const [tab, setTab] = useState('photo');
@@ -78,7 +88,7 @@ export default function StoneViewer({ stone, onClose }) {
   const src = stone.imageUrl || fallback;
   const cert = stone.certificate_url || '';
 
-  return (
+  return createPortal(
     <div className={styles.scrim} onClick={onClose} role="presentation">
       <div
         ref={panel}
@@ -194,6 +204,7 @@ export default function StoneViewer({ stone, onClose }) {
           </a>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
