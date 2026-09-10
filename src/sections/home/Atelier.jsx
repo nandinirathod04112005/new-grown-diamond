@@ -1,53 +1,50 @@
-import ScrollScene from '@/components/scroll/ScrollScene.jsx';
-import polished from '@/assets/diamonds/ngd-brilliant-macro.webp';
-import StarRays from '@/components/media/StarRays.jsx';
+import { useRef } from 'react';
+
+import { gsap, useGSAP } from '@/lib/motion/gsap.js';
+import { prefersReducedMotion } from '@/lib/motion/media.js';
+import { useHeroProgress } from '@/hooks/useHeroProgress.js';
+import { usePointerParallax } from '@/hooks/usePointerParallax.js';
+import Magnetic from '@/components/motion/Magnetic.jsx';
+
+import diamondWide from '@/assets/diamonds/hero-diamond-wide.webp';
+import diamondWideSmall from '@/assets/diamonds/hero-diamond-wide@1024.webp';
+import diamondTall from '@/assets/diamonds/hero-diamond-tall.webp';
+import diamondTallSmall from '@/assets/diamonds/hero-diamond-tall@720.webp';
+
 import styles from './Atelier.module.css';
 
 /**
- * The atelier: one stone, lit on a plinth, becoming itself.
+ * The opening: the house line on the left, one lit diamond holding the right.
  *
- * Built from the four-panel sequence the client supplied. The reference is not
- * four pictures — it is one object photographed at four moments of the same
- * transformation, and the whole idea is that the plinth, the spotlight and the
- * frame never move while the STONE changes. Rebuilding it as four separate
- * slides would have thrown away the only thing that makes it work.
+ * WHAT THIS REPLACED, AND WHY IT IS WORTH SAYING. This was a four-stage pinned
+ * narrative — rough crystal, cut plan, polished stone — that held the page for
+ * 242vh while a seam travelled across a plinth. It was a good idea and it cost
+ * too much: a visitor arriving at the site could not reach a single word of the
+ * business's own copy without scrolling through two and a half screens of
+ * theatre, and the sequence's later headlines were only ever visible mid-scroll.
  *
- * So there is one stage and one vertical seam that travels across it:
+ * The brief for this rebuild was a single cinematic screen, unpinned. So the
+ * scene is one viewport, it releases the page immediately, and the section
+ * below arrives on ordinary scrolling. Every word the hero carried is still
+ * here: the four headline pairs remain the accessible name of this H1, exactly
+ * as before, and the display shows the opening pair at editorial scale.
  *
- *   rough        the as-grown crystal, alone
- *   facet        seam mid-frame: rough on the left, the cut plan on the right
- *   design       seam travels on: the plan gives way to the finished stone
- *   atelier      the polished brilliant, alone
+ * THREE TRANSFORMS, THREE ELEMENTS, ON PURPOSE. Entrance, pointer and scroll
+ * each own a different node, so none can overwrite another's transform:
  *
- * Each layer is clipped by the SAME pair of numbers, so the three can never
- * overlap or leave a gap however fast the page is scrolled — the seam is one
- * value, not three animations trying to agree.
+ *   .hero      the scroll target. useHeroProgress writes --hp on it.
+ *   .drift     the pointer layer. usePointerParallax writes --mx/--my on it,
+ *              and CSS turns those into a few degrees of tilt.
+ *   .lift      the scroll layer, driven from --hp in CSS alone.
+ *   .photo     the entrance layer, and the only thing GSAP scales.
  *
- * It is also the company's actual process, which is why it earns the space: a
- * visitor scrolling this has been shown what the business does before reading
- * a word of copy.
- *
- * THE FIRST TWO STAGES ARE DRAWN AND THE LAST IS A PHOTOGRAPH, deliberately.
- * The only as-grown image in the project is a laboratory specimen sheet — six
- * crystals on grey rock with a 2 mm scale bar — and it has an opaque
- * background, so on a lit plinth it reads as a rectangle of rock rather than a
- * stone. Faking it was not an option and neither was cropping it.
- *
- * Drawing the first two states turns that limitation into the arc: the
- * sequence starts as a PLAN and resolves into a real photograph. The stone
- * becomes real in front of you, which is a better telling of this business
- * than three photographs would have been.
+ * NOTHING HERE IS REQUIRED FOR THE HERO TO BE FINISHED. The stylesheet defines
+ * the arrived composition, and the timeline animates from a start state toward
+ * it — so a failed script, a blocked bundle or reduced motion all leave a
+ * complete, readable opening rather than an empty screen.
  */
-const PHASES = [
-  { name: 'rough', vh: 90 },
-  { name: 'facet', vh: 90 },
-  { name: 'design', vh: 90 },
-  { name: 'atelier', vh: 120 },
-  /* Was 60: most of a viewport of black between the last line and the
-     first chapter, which read as the page ending. */
-  { name: 'out', vh: 34 },
-];
 
+/* Unchanged: the same four pairs the pinned sequence carried. */
 const LINES = [
   { key: 'rough', top: 'The beginning', bottom: 'of brilliance.' },
   { key: 'facet', top: 'Every facet', bottom: 'matters.' },
@@ -55,172 +52,197 @@ const LINES = [
   { key: 'atelier', top: 'Every stone has a tale', bottom: 'at the atelier.' },
 ];
 
+const OPENING = LINES[0];
+
 export default function Atelier() {
+  const hero = useRef(null);
+  const drift = useRef(null);
+  const scope = useRef(null);
+
+  useHeroProgress(hero);
+  usePointerParallax(drift, 1);
+
+  useGSAP(
+    () => {
+      if (prefersReducedMotion()) return;
+
+      const q = gsap.utils.selector(scope);
+      /* A phone gets the same choreography at three-quarter length: the same
+         reveal, less waiting, which is what a small screen wants. */
+      const phone = window.matchMedia?.('(max-width: 899px)').matches;
+      const t = phone ? 0.72 : 1;
+
+      const tl = gsap.timeline({ defaults: { ease: 'expo.out' } });
+
+      /*
+       * The aperture. A polygon that starts as a small faceted opening over the
+       * centre of the stone and expands to the full frame — the diamond is
+       * uncovered rather than faded up, because a fade reads as an image
+       * arriving late and an opening reads as a display case being unshuttered.
+       */
+      tl.fromTo(
+        q(`.${styles.aperture}`),
+        {
+          clipPath: 'polygon(50% 41%, 57% 46%, 57% 54%, 50% 59%, 43% 54%, 43% 46%)',
+        },
+        {
+          clipPath: 'polygon(50% 0%, 100% 8%, 100% 92%, 50% 100%, 0% 92%, 0% 8%)',
+          duration: 1.5 * t,
+          ease: 'expo.inOut',
+        },
+        0,
+      )
+        /* Settling from slightly too close, which is how a lens finds focus. */
+        .fromTo(
+          q(`.${styles.photo}`),
+          { scale: 1.12 },
+          { scale: 1, duration: 1.8 * t, ease: 'expo.out' },
+          0,
+        )
+        /* Each headline line rises out of its own overflow mask. */
+        .fromTo(
+          q(`.${styles.lineInner}`),
+          { yPercent: 118 },
+          { yPercent: 0, duration: 1.15 * t, stagger: 0.09 * t },
+          0.15 * t,
+        )
+        /* Copy and buttons arrive BEFORE the stone has finished opening, so the
+           screen reads as one movement rather than image-then-text. */
+        .fromTo(
+          q(`.${styles.subInner}`),
+          { yPercent: 130, opacity: 0 },
+          { yPercent: 0, opacity: 1, duration: 0.9 * t },
+          0.62 * t,
+        )
+        .fromTo(
+          q(`.${styles.cta}`),
+          { y: 18, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.85 * t, stagger: 0.08 * t },
+          0.74 * t,
+        )
+        /* The rule is drawn last and completes the composition. */
+        .fromTo(
+          q(`.${styles.rule}`),
+          { scaleX: 0 },
+          { scaleX: 1, duration: 1.1 * t, ease: 'power2.inOut' },
+          0.9 * t,
+        )
+        .fromTo(
+          q(`.${styles.note}`),
+          { opacity: 0 },
+          { opacity: 1, duration: 0.8 * t },
+          1.1 * t,
+        );
+    },
+    /* No dependencies: the opening plays once for the visit, and a re-render
+       must never restart it. useGSAP reverts the timeline on unmount. */
+    { scope, dependencies: [] },
+  );
+
   return (
-    <ScrollScene phases={PHASES} id="top" label="From rough crystal to polished diamond">
-      {/* A darkened room in both themes. Without the stage tokens, the light
-          theme flipped --ivory to near-black and the second line of the
-          headline and both buttons vanished into the black behind them. */}
-      <div className={`${styles.stage} u-stage-dark`}>
-        {/* The hard overhead source and the cone it throws. Everything else in
-            the frame is lit by this one lamp, which is what makes the black
-            read as a room rather than as a background colour. */}
-        <span className={styles.spot} aria-hidden="true" />
-        <span className={styles.cone} aria-hidden="true" />
-
-        {/*
-          The starfield and the rays the stone throws through it. The origin is
-          set to where the subject actually sits on the plinth, so the beams
-          read as coming FROM the diamond rather than being projected onto it.
-        */}
-        <StarRays className={styles.sky} origin={[0.5, 0.44]} />
-
-        {/* The drafting grid arrives only for the design stage, exactly as it
-            does in the reference — the plan appears when planning happens. */}
-        <span className={styles.grid} aria-hidden="true" />
-
-        <div className={styles.marks} aria-hidden="true">
-          <span>N</span><span>G</span>
-        </div>
-
-        <h1 className={styles.head}>
-          {/* Every line stays in the document for screen readers and search;
-              only one is visible at a time. */}
-          <span className="u-visually-hidden">
-            {LINES.map((l) => `${l.top} ${l.bottom}`).join(' ')}
-          </span>
-          {LINES.map((line) => (
-            <span key={line.key} className={styles.line} data-for={line.key} aria-hidden="true">
-              <em>{line.top}</em>
-              <b>{line.bottom}</b>
-            </span>
-          ))}
-        </h1>
-
-        <div className={styles.plinth}>
-          <div className={styles.subject}>
-            {/* Three states of one stone, clipped by one travelling seam. */}
-            <RoughPlan className={styles.rough} />
-            <CutPlan className={styles.wire} />
-            <img
-              className={styles.polished}
-              src={polished}
-              alt=""
-              width="754"
-              height="541"
-              loading="eager"
-              fetchPriority="high"
-              decoding="async"
-            />
+    <section
+      ref={hero}
+      id="top"
+      className={`${styles.hero} u-stage-dark`}
+      aria-label="From rough crystal to polished diamond"
+    >
+      <div ref={scope} className={styles.lift}>
+        <div ref={drift} className={styles.drift}>
+          {/*
+            Two soft sources, and the only moving decoration on the screen.
+            They travel AGAINST the pointer, which is what gives a flat
+            photograph the feeling of sitting inside a room.
+          */}
+          <div className={styles.ambient} aria-hidden="true">
+            <span className={styles.key} />
+            <span className={styles.fill} />
           </div>
 
-          {/* The lit top of the pedestal, then the drape falling from it. */}
-          <span className={styles.top} aria-hidden="true" />
-          <span className={styles.drape} aria-hidden="true" />
-        </div>
+          <div className={styles.inner}>
+            <div className={styles.copy}>
+              <h1 className={styles.head}>
+                {/*
+                  The accessible name is unchanged: all four pairs, in order,
+                  exactly as the pinned sequence read them out. The display
+                  shows the opening pair, and the duplicate is hidden from
+                  assistive technology so the heading is announced once.
+                */}
+                <span className="u-visually-hidden">
+                  {LINES.map((l) => `${l.top} ${l.bottom}`).join(' ')}
+                </span>
+                <span className={styles.line} aria-hidden="true">
+                  <span className={`${styles.lineInner} ${styles.lead}`}>{OPENING.top}</span>
+                </span>
+                <span className={styles.line} aria-hidden="true">
+                  <span className={`${styles.lineInner} ${styles.gold}`}>{OPENING.bottom}</span>
+                </span>
+              </h1>
 
-        <p className={styles.sub}>
-          <span>Grown in Surat · CVD &amp; HPHT · IGI certified options</span>
-        </p>
+              <span className={styles.rule} aria-hidden="true" />
 
-        <div className={styles.actions}>
-          <a href="/diamonds">Discover the diamonds</a>
-          <a href="/contact">Request inventory</a>
+              <p className={styles.sub}>
+                <span className="u-visually-hidden">
+                  Grown in Surat · CVD &amp; HPHT · IGI certified options
+                </span>
+                <span className={styles.subMask} aria-hidden="true">
+                  <span className={styles.subInner}>
+                    Grown in Surat · CVD &amp; HPHT · IGI certified options
+                  </span>
+                </span>
+              </p>
+
+              <div className={styles.actions}>
+                <Magnetic radius={90} pull={0.18}>
+                  <a className={`${styles.cta} ${styles.ctaLead}`} href="/diamonds">
+                    <span>Discover the diamonds</span>
+                    <i className={styles.arrow} aria-hidden="true" />
+                  </a>
+                </Magnetic>
+                <Magnetic radius={90} pull={0.18}>
+                  <a className={styles.cta} href="/contact">
+                    <span>Request inventory</span>
+                    <i className={styles.arrow} aria-hidden="true" />
+                  </a>
+                </Magnetic>
+              </div>
+            </div>
+
+            <figure className={styles.visual}>
+              <div className={styles.aperture}>
+                <picture>
+                  {/*
+                    The phone gets a genuinely different crop, not the wide
+                    frame squeezed. The subject sits right of centre in the
+                    original, so a centre-crop on a narrow screen would cut the
+                    stone in half and keep the empty black beside it.
+                  */}
+                  <source
+                    media="(max-width: 899px)"
+                    srcSet={`${diamondTallSmall} 720w, ${diamondTall} 976w`}
+                    sizes="100vw"
+                  />
+                  <source
+                    srcSet={`${diamondWideSmall} 1024w, ${diamondWide} 1536w`}
+                    sizes="(min-width: 900px) 58vw, 100vw"
+                  />
+                  <img
+                    className={styles.photo}
+                    src={diamondWide}
+                    alt="A faceted diamond hourglass holding a stream of gold dust, lit against black."
+                    width="1536"
+                    height="1024"
+                    loading="eager"
+                    fetchPriority="high"
+                    decoding="async"
+                    draggable="false"
+                  />
+                </picture>
+              </div>
+              <figcaption className={styles.note}>Rendered study · New Grown Diamond</figcaption>
+            </figure>
+          </div>
         </div>
       </div>
-    </ScrollScene>
-  );
-}
-
-/**
- * The rough: an as-grown crystal, drawn.
- *
- * Irregular on purpose — a rough diamond is a blocky octahedral lump with
- * uneven faces, and anything symmetrical here would read as a cut stone and
- * ruin the point of the first stage. Same stroke language as the cut plan, so
- * the two read as pages from one notebook.
- */
-function RoughPlan({ className }) {
-  return (
-    <svg className={className} viewBox="0 0 100 100" aria-hidden="true" focusable="false">
-      <path
-        className={styles.wireLine}
-        d="M46 6 L70 18 L84 40 L80 66 L62 88 L38 92 L18 76 L12 50 L22 24 Z"
-        pathLength="1"
-      />
-      {/* Internal cleavage planes — the faces an as-grown crystal actually
-          shows, not a facet pattern. */}
-      <path className={styles.wireLine} d="M46 6 L38 44 L12 50" pathLength="1" />
-      <path className={styles.wireLine} d="M38 44 L80 66" pathLength="1" />
-      <path className={styles.wireLine} d="M38 44 L38 92" pathLength="1" />
-      <path className={styles.wireLine} d="M70 18 L38 44" pathLength="1" />
-      <path className={styles.wireLine} d="M84 40 L38 44" pathLength="1" />
-      <path className={styles.wireLine} d="M18 76 L38 44" pathLength="1" />
-      <path className={styles.wireLine} d="M62 88 L38 44" pathLength="1" />
-      {/* A faint fill, so it reads as a solid body rather than a wire cage. */}
-      <path
-        className={styles.roughBody}
-        d="M46 6 L70 18 L84 40 L80 66 L62 88 L38 92 L18 76 L12 50 L22 24 Z"
-      />
-    </svg>
-  );
-}
-
-/**
- * The cut plan: a cushion outline with its facet layout, drawn the way a
- * planner marks up a rough stone. Line only — this is the stage where the
- * diamond does not exist yet, so a rendered gem here would be a lie about the
- * order of events.
- */
-function CutPlan({ className }) {
-  const R = 46;
-  const outline = 'M50 4 C74 4 96 26 96 50 C96 74 74 96 50 96 C26 96 4 74 4 50 C4 26 26 4 50 4 Z';
-  return (
-    <svg className={className} viewBox="0 0 100 100" aria-hidden="true" focusable="false">
-      {/* Construction circle and crosshairs, as on the reference. */}
-      <circle className={styles.dash} cx="50" cy="50" r={R} pathLength="1" />
-      {[[50, 2], [50, 98], [2, 50], [98, 50]].map(([x, y]) => (
-        <g key={`${x}-${y}`} className={styles.tick}>
-          <line x1={x - 2} y1={y} x2={x + 2} y2={y} />
-          <line x1={x} y1={y - 2} x2={x} y2={y + 2} />
-        </g>
-      ))}
-
-      <path className={styles.wireLine} d={outline} pathLength="1" />
-      {/* The table, inset and turned — the flat top seen from above. */}
-      <path
-        className={styles.wireLine}
-        d="M50 20 C66 20 80 34 80 50 C80 66 66 80 50 80 C34 80 20 66 20 50 C20 34 34 20 50 20 Z"
-        pathLength="1"
-      />
-      {/* Crown facets: girdle out to table, the star pattern of a cushion. */}
-      {Array.from({ length: 16 }, (_, i) => {
-        const a = (i / 16) * Math.PI * 2;
-        const outer = [50 + Math.cos(a) * 45, 50 + Math.sin(a) * 45];
-        const inner = [50 + Math.cos(a) * (i % 2 ? 30 : 24), 50 + Math.sin(a) * (i % 2 ? 30 : 24)];
-        return (
-          <line
-            key={i}
-            className={styles.wireLine}
-            x1={outer[0].toFixed(1)} y1={outer[1].toFixed(1)}
-            x2={inner[0].toFixed(1)} y2={inner[1].toFixed(1)}
-            pathLength="1"
-          />
-        );
-      })}
-      {/* Pavilion mains crossing to the culet. */}
-      {Array.from({ length: 8 }, (_, i) => {
-        const a = (i / 8) * Math.PI * 2 + Math.PI / 8;
-        return (
-          <line
-            key={`p${i}`}
-            className={styles.wireLine}
-            x1={(50 + Math.cos(a) * 30).toFixed(1)} y1={(50 + Math.sin(a) * 30).toFixed(1)}
-            x2="50" y2="50"
-            pathLength="1"
-          />
-        );
-      })}
-    </svg>
+    </section>
   );
 }

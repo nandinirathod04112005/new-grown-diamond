@@ -1,350 +1,429 @@
 /*
- * One lit room. Everything in the frame is lit by the single overhead source,
- * which is what makes the black read as a space rather than a background
- * colour — the difference between a photograph and a swatch.
+ * The opening screen.
+ *
+ * THIS FILE DESCRIBES THE FINISHED HERO, not a starting state. Everything here
+ * is the arrived composition; the entrance timeline in Atelier.jsx animates
+ * from a start state toward what is written below. That order matters: with no
+ * JavaScript, a failed bundle or reduced motion, the visitor gets the complete
+ * screen rather than an invisible one waiting for a script that never came.
+ *
+ * Three transforms live on three different elements so they cannot overwrite
+ * one another — .lift is scroll, .drift is pointer, .photo is the entrance.
+ * Nothing sets `transform` on more than one of those at a time.
+ *
+ * The stage stays dark in both themes. In light mode this reads as an inset
+ * cinematic panel, which is a deliberate luxury convention rather than an
+ * oversight: the photograph is lit against black, and dropping it onto a pale
+ * page would leave a grey rectangle with no light in it.
  */
-.stage {
+.hero {
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  min-height: 100svh;
+  display: grid;
+  align-items: center;
+  background: var(--stage-ink, #0b0b0d);
+  /* Written by useHeroProgress: 0 at rest, 1 once the hero has left. */
+  --hp: 0;
+  /* Written by usePointerParallax, both -1..1. */
+  --mx: 0;
+  --my: 0;
+}
+
+/* A hairline where the stage meets the page below, so the panel ends
+   deliberately rather than fading into whatever follows. */
+.hero::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(189, 160, 106, 0.5), transparent);
+}
+
+/* ---------------- the scroll layer ---------------- */
+/*
+ * Only --hp drives this, and only over the first stretch of the scene. The
+ * visual rises and grows a little while the copy moves less, which is what
+ * separates the two planes as the page leaves. Capped well below 1 so the
+ * movement is a drift, not a departure.
+ */
+.lift {
   position: relative;
   width: 100%;
-  height: 100%;
-  display: grid;
-  align-content: center;
-  justify-items: center;
-  overflow: hidden;
-  background: #000;
+  /* 0 -> 1 across roughly the first 70% of the hero's own height. */
+  --t: clamp(0, calc(var(--hp) / 0.7), 1);
+}
 
-  /*
-   * THE SEAM.
-   *
-   * Two numbers drive the whole transformation, and every layer is clipped by
-   * the same pair — so the three states can never overlap or leave a gap
-   * however fast the page is scrolled. Three independent animations trying to
-   * agree on a boundary is exactly how these things tear.
-   *
-   *   --a  the cut plan taking over from the rough crystal
-   *   --b  the polished stone taking over from the cut plan
-   */
-  --a: clamp(0, calc((var(--sp, 0) - 0.10) / 0.28), 1);
-  --b: clamp(0, calc((var(--sp, 0) - 0.46) / 0.30), 1);
+/* ---------------- the pointer layer ---------------- */
+.drift {
+  position: relative;
+  width: 100%;
+  transform-style: preserve-3d;
+  perspective: 1400px;
+}
+
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .drift {
+    /* Three degrees and fourteen pixels. Enough to feel like a room, little
+       enough that the headline never swims while it is being read. */
+    transform:
+      translate3d(calc(var(--mx) * -14px), calc(var(--my) * -9px), 0)
+      rotateY(calc(var(--mx) * 3deg))
+      rotateX(calc(var(--my) * -2.2deg));
+    transition: transform 240ms var(--ease-primary);
+  }
 }
 
 /* ---------------- the light ---------------- */
-
-/* The source: a hard ellipse at the top of the frame. */
-.spot {
+.ambient {
   position: absolute;
-  top: -7%;
-  left: 50%;
-  translate: -50% 0;
-  width: min(34vw, 26rem);
-  height: 12vh;
-  border-radius: 50%;
-  background: radial-gradient(closest-side, #fff, rgba(255, 255, 255, 0.72) 46%, transparent 78%);
-  filter: blur(6px);
-  animation: lampOn 1.6s var(--ease-primary) both;
-}
-
-/*
- * The cone. A trapezoid clipped out of a soft gradient, widening as it falls —
- * this is the element that tells the eye where the light is coming from, and
- * without it the stone just looks bright for no reason.
- */
-.cone {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  translate: -50% 0;
-  width: min(92vw, 74rem);
-  height: 86%;
-  clip-path: polygon(43% 0%, 57% 0%, 100% 100%, 0% 100%);
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.20) 0%,
-    rgba(255, 255, 255, 0.06) 30%,
-    transparent 68%
-  );
-  /* Heavily blurred, because a crisply clipped triangle reads as a shape drawn
-     on the page rather than as light falling through it. */
-  filter: blur(42px);
-  animation: lampOn 2s var(--ease-primary) 0.15s both;
-}
-
-@keyframes lampOn { from { opacity: 0; } }
-
-/*
- * The drafting grid, present only while the stone is being planned. It is tied
- * to the phase rather than faded in on a timer, so scrubbing back takes the
- * plan away again — the page runs the process in both directions.
- */
-.grid {
-  position: absolute;
-  inset: 0;
+  inset: -12% -6%;
+  z-index: 0;
   pointer-events: none;
-  opacity: 0;
-  background-image:
-    linear-gradient(rgba(238, 236, 231, 0.09) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(238, 236, 231, 0.09) 1px, transparent 1px);
-  background-size: 46px 46px;
-  mask-image: radial-gradient(62% 58% at 50% 46%, #000 10%, transparent 78%);
-  -webkit-mask-image: radial-gradient(62% 58% at 50% 46%, #000 10%, transparent 78%);
-  transition: opacity var(--dur-xl) var(--ease-primary);
+  /* Simplified away as the next section arrives. */
+  opacity: calc(1 - var(--t) * 0.75);
 }
 
-:global([data-section='facet']) .grid { opacity: 0.5; }
-:global([data-section='design']) .grid { opacity: 1; }
-
-/* The house initials, thin and cornered, as on the reference sheets. */
-.marks {
+.ambient span {
   position: absolute;
-  top: var(--s-5);
-  left: var(--gutter);
-  right: var(--gutter);
-  display: flex;
-  justify-content: space-between;
-  font-family: var(--font-display);
-  font-size: var(--t-xl);
-  color: rgba(238, 236, 231, 0.34);
-  letter-spacing: 0.1em;
-  animation: lampOn 2s var(--ease-primary) 0.5s both;
+  display: block;
+  border-radius: 50%;
+  filter: blur(90px);
+}
+
+/* The key: a cool source behind the stone. */
+.key {
+  right: 4%;
+  top: 2%;
+  width: min(52vw, 40rem);
+  height: min(52vw, 40rem);
+  background: radial-gradient(closest-side, rgba(150, 178, 214, 0.20), transparent 72%);
+  transform: translate3d(calc(var(--mx) * 26px), calc(var(--my) * 18px), 0);
+  transition: transform 420ms var(--ease-primary);
+}
+
+/* The fill: a champagne bounce low and left, under the words. */
+.fill {
+  left: -4%;
+  bottom: -8%;
+  width: min(46vw, 34rem);
+  height: min(46vw, 34rem);
+  background: radial-gradient(closest-side, rgba(189, 160, 106, 0.16), transparent 70%);
+  transform: translate3d(calc(var(--mx) * 20px), calc(var(--my) * 14px), 0);
+  transition: transform 420ms var(--ease-primary);
+}
+
+/* ---------------- the composition ---------------- */
+.inner {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: var(--measure-wide, 92rem);
+  margin-inline: auto;
+  padding: clamp(6rem, 12vh, 9rem) var(--gutter) clamp(3rem, 8vh, 5rem);
+  display: grid;
+  gap: clamp(1.5rem, 4vw, 4rem);
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
+}
+
+@media (min-width: 900px) {
+  .inner {
+    grid-template-columns: minmax(0, 44fr) minmax(0, 56fr);
+  }
 }
 
 /* ---------------- the words ---------------- */
-/*
- * Cleared of the fixed header. The stage centres its content, so at 800px the
- * first line landed directly under the navigation — two sets of type on one
- * line, neither readable.
- */
-.head {
+.copy {
   position: relative;
-  z-index: 3;
-  margin-top: clamp(3rem, 9vh, 6rem);
   display: grid;
-  place-items: center;
-  text-align: center;
-  margin-bottom: clamp(1.5rem, 5vh, 3rem);
-  /* Every line occupies the same cell, so the block never reflows as the
-     wording changes underneath it. */
-  grid-template-areas: 'stack';
+  justify-items: start;
+  gap: clamp(1rem, 2.4vh, 1.6rem);
+  /* Moves at a third of the visual's rate: the depth cue. */
+  transform: translate3d(0, calc(var(--t) * -22px), 0);
 }
 
+.head {
+  display: grid;
+  margin: 0;
+}
+
+/* One mask per line, and the mask is what makes the entrance possible: the
+   line is translated inside a box that clips it, so it rises out of nothing
+   rather than sliding in from somewhere the reader can see. */
 .line {
-  grid-area: stack;
-  display: grid;
-  gap: 0.1em;
-  opacity: 0;
-  translate: 0 0.8rem;
-  transition:
-    opacity var(--dur-slow) var(--ease-primary),
-    translate var(--dur-slow) var(--ease-primary);
+  display: block;
+  overflow: hidden;
+  padding-block: 0.06em;
 }
 
-:global([data-section='rough']) .line[data-for='rough'],
-:global([data-section='facet']) .line[data-for='facet'],
-:global([data-section='design']) .line[data-for='design'],
-:global([data-section='atelier']) .line[data-for='atelier'],
-:global([data-section='out']) .line[data-for='atelier'],
-/* Reduced motion holds every scene at `view`, a state this sequence never
-   names — so no line matched and the homepage opened with no headline at
-   all. The arrived line is the last one. */
-:global([data-section='view']) .line[data-for='atelier'] {
-  opacity: 1;
-  translate: 0 0;
-}
-
-.line em,
-.line b {
+.lineInner {
   display: block;
   font-family: var(--font-display);
-  font-style: normal;
   font-weight: 300;
-  line-height: 1.04;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  font-size: clamp(1.5rem, 0.7rem + 2.6vw, 3.1rem);
+  font-size: clamp(2.6rem, 1.1rem + 4.4vw, 5.6rem);
+  line-height: 0.98;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
 }
 
-/* Two tones, as the reference does it: the setup warm, the payoff white. */
-.line em { color: #d8cba6; }
-.line b { color: var(--ivory); }
+.lead { color: var(--ivory); }
+.gold { color: #cdb17f; font-style: italic; }
+
+.rule {
+  width: min(100%, 15rem);
+  height: 1px;
+  transform-origin: left center;
+  background: linear-gradient(90deg, rgba(189, 160, 106, 0.85), rgba(189, 160, 106, 0));
+}
 
 .sub {
-  position: relative;
-  z-index: 3;
-  margin-top: clamp(1rem, 3vh, 2rem);
-  font-size: 0.5625rem;
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-  color: rgba(238, 236, 231, 0.5);
-  animation: lampOn 2s var(--ease-primary) 0.8s both;
+  margin: 0;
+  max-width: 34ch;
 }
 
-.actions {
-  position: relative;
-  z-index: 3;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: var(--s-3);
-  margin-top: var(--s-3);
-  animation: lampOn 2s var(--ease-primary) 0.95s both;
-}
-
-.actions a {
-  padding: 0.85rem 1.4rem;
-  border: 1px solid rgba(238, 236, 231, 0.24);
-  color: var(--ivory);
-  font-size: var(--t-xs);
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  transition: background-color var(--dur-base) var(--ease-primary), color var(--dur-base) var(--ease-primary);
-}
-
-.actions a:first-child { background: var(--ivory); color: #0a0a0c; border-color: var(--ivory); }
-.actions a:hover, .actions a:focus-visible { background: var(--ivory); color: #0a0a0c; }
-
-/* ---------------- the plinth ---------------- */
-.plinth {
-  position: relative;
-  z-index: 2;
-  width: min(72vw, 30rem);
-  display: grid;
-  justify-items: center;
-}
-
-.subject {
-  position: relative;
-  width: min(46vw, 17rem);
-  aspect-ratio: 1;
-  display: grid;
-  place-items: center;
-  /* Sits on the pedestal rather than in front of it. */
-  margin-bottom: -6%;
-  /*
-   * Clips its contents, and that is load-bearing rather than tidy: the rough
-   * crystal is zoomed with a transform, and a transform on an absolutely
-   * positioned child is NOT bounded by its own box. Without this the specimen
-   * sheet scaled straight past the subject and filled the whole viewport,
-   * scale bar included.
-   */
+.subMask {
+  display: block;
   overflow: hidden;
 }
 
+.subInner {
+  display: block;
+  font-size: var(--t-sm);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  line-height: 1.7;
+  color: rgba(238, 236, 231, 0.62);
+}
+
+/* ---------------- the buttons ---------------- */
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: clamp(0.25rem, 1.5vh, 0.75rem);
+}
+
 /*
- * The three states, all filling the same box and clipped by the one seam.
- *
- *   rough    left of the first seam
- *   plan     between the two seams
- *   polished right of the second seam
- *
- * Written as one expression each so they are exact complements — no rounding
- * gap can open between them at any scroll position.
+ * The fill arrives from the left rather than the colour simply changing, and
+ * the arrow steps with it. Both are transforms and opacity only, so a hover
+ * costs no layout.
  */
-.rough,
-.wire,
-.polished {
+.cta {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 3.25rem;
+  padding: 0 1.35rem;
+  border: 1px solid rgba(238, 236, 231, 0.26);
+  color: var(--ivory);
+  font-size: var(--t-xs);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: color 320ms var(--ease-primary), border-color 320ms var(--ease-primary);
+}
+
+.cta::before {
+  content: '';
   position: absolute;
   inset: 0;
+  z-index: -1;
+  background: var(--ivory);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 420ms var(--ease-primary);
+}
+
+.cta:hover,
+.cta:focus-visible {
+  color: #0a0a0c;
+  border-color: var(--ivory);
+}
+
+.cta:hover::before,
+.cta:focus-visible::before {
+  transform: scaleX(1);
+}
+
+/* The lead button starts filled, so the two read as primary and secondary
+   without needing different words. */
+.ctaLead {
+  border-color: var(--ivory);
+  color: #0a0a0c;
+}
+
+.ctaLead::before { transform: scaleX(1); }
+
+.ctaLead:hover,
+.ctaLead:focus-visible {
+  color: var(--ivory);
+  border-color: rgba(238, 236, 231, 0.5);
+}
+
+.ctaLead:hover::before,
+.ctaLead:focus-visible::before {
+  transform: scaleX(0);
+  transform-origin: right center;
+}
+
+/* Keyboard gets the same clarity as hover, plus a ring that survives the fill. */
+.cta:focus-visible {
+  outline: 2px solid var(--accent-lift);
+  outline-offset: 3px;
+}
+
+.arrow {
+  width: 1.1rem;
+  height: 1px;
+  background: currentColor;
+  position: relative;
+  transition: transform 320ms var(--ease-primary);
+}
+
+.arrow::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  width: 0.42rem;
+  height: 0.42rem;
+  border-top: 1px solid currentColor;
+  border-right: 1px solid currentColor;
+  transform: translate(0, -50%) rotate(45deg);
+}
+
+.cta:hover .arrow,
+.cta:focus-visible .arrow {
+  transform: translateX(4px);
+}
+
+/* ---------------- the stone ---------------- */
+.visual {
+  position: relative;
+  margin: 0;
+  /* The scroll transform lives here, and nowhere else on this branch. */
+  transform: translate3d(0, calc(var(--t) * -58px), 0) scale(calc(1 + var(--t) * 0.08));
+  transform-origin: 60% 45%;
+  will-change: transform;
+}
+
+/*
+ * The aperture is the element the entrance clips, so it must not also be the
+ * element that scales — that is why the photograph inside it is a separate
+ * node. A faceted polygon rather than a circle or an inset: this is a diamond
+ * being uncovered, and the shape of the opening should say so.
+ */
+.aperture {
+  position: relative;
+  overflow: hidden;
+  /*
+   * Vertical sides, faceted only at top and bottom. The first version cut in
+   * from 112% on the diagonal, which looked right on an empty frame and sliced
+   * the stone's right-hand facets off the moment a real photograph was in it.
+   * At the subject's x the roof now takes about two per cent, which reads as a
+   * bevel rather than a crop.
+   */
+  clip-path: polygon(50% 0%, 100% 8%, 100% 92%, 50% 100%, 0% 92%, 0% 8%);
+}
+
+.photo {
+  display: block;
   width: 100%;
-  height: 100%;
+  height: auto;
+  aspect-ratio: 1536 / 1024;
+  object-fit: cover;
+  /* Keeps the stone in frame at every ratio the box takes. */
+  object-position: 57% 50%;
+  transform-origin: 57% 48%;
 }
 
-/* The rough stage is drawn, not photographed — see Atelier.jsx. */
-.rough {
-  clip-path: inset(0 calc(var(--a) * 100%) 0 0);
-  overflow: visible;
+/* A quiet, honest label. The image is a render, and the page says so rather
+   than implying a photograph of stock. */
+.note {
+  margin-top: 0.9rem;
+  font-size: var(--t-xs);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(238, 236, 231, 0.34);
+  text-align: right;
 }
 
-/* Enough body to read as a solid crystal catching the lamp, not a wire cage. */
-.roughBody {
-  fill: rgba(226, 236, 250, 0.09);
-  stroke: none;
-}
-
-.wire {
-  clip-path: inset(0 calc(var(--b) * 100%) 0 calc((1 - var(--a)) * 100%));
-  overflow: visible;
-}
-
-.polished {
-  object-fit: contain;
-  clip-path: inset(0 0 0 calc((1 - var(--b)) * 100%));
-  filter: contrast(1.16) brightness(1.16);
-  mix-blend-mode: screen;
-}
-
-.wireLine {
-  fill: none;
-  stroke: rgba(238, 236, 231, 0.72);
-  stroke-width: 0.4;
-  vector-effect: non-scaling-stroke;
-}
-
-.dash {
-  fill: none;
-  stroke: rgba(238, 236, 231, 0.34);
-  stroke-width: 0.4;
-  stroke-dasharray: 0.012 0.02;
-  vector-effect: non-scaling-stroke;
-}
-
-.tick line {
-  stroke: rgba(238, 236, 231, 0.5);
-  stroke-width: 0.5;
-  vector-effect: non-scaling-stroke;
-}
-
-/* The lit top of the pedestal: a shallow ellipse catching the lamp. */
-.top {
-  width: min(58vw, 21rem);
-  height: 2.6rem;
-  border-radius: 50%;
-  background:
-    radial-gradient(closest-side, rgba(255, 250, 240, 0.85), rgba(180, 175, 165, 0.32) 58%, transparent 76%);
-  filter: blur(2px);
-}
-
-/*
- * The drape. Satin is nothing but alternating light and shadow, so it is drawn
- * as a set of vertical bands with soft edges rather than a photograph — a real
- * fabric shot would have to be lit to match this lamp exactly, and any
- * mismatch reads instantly as a collage.
- */
-.drape {
-  width: min(66vw, 25rem);
-  height: clamp(7rem, 22vh, 13rem);
-  margin-top: -0.6rem;
-  clip-path: polygon(8% 0%, 92% 0%, 100% 100%, 0% 100%);
-  background:
-    linear-gradient(92deg,
-      #05050600 0%, #1c1c1e 8%, #08080a 18%, #232326 30%, #0b0b0d 42%,
-      #2a2a2e 54%, #0a0a0c 66%, #1e1e21 78%, #070709 90%, #05050600 100%),
-    linear-gradient(180deg, rgba(255, 250, 240, 0.16) 0%, transparent 22%);
-}
-
-/* ---------------- leaving ---------------- */
-:global([data-section='out']) .stage {
-  opacity: calc(1 - var(--p, 0));
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .spot, .cone, .marks, .sub, .actions { animation: none; }
-  .line { transition: none; }
-}
-
+/* ---------------- in a hand ---------------- */
 @media (max-width: 899px) {
-  .subject { width: min(58vw, 13rem); }
-  .plinth { width: 86vw; }
-  .top { width: 66vw; }
-  .drape { width: 78vw; }
-  .marks { font-size: var(--t-lg); }
+  .hero {
+    /* svh, and no more than one screen: a hero taller than the phone is a
+       hero whose buttons nobody finds. */
+    min-height: 100svh;
+  }
+
+  .inner {
+    padding: clamp(5rem, 11vh, 7rem) var(--gutter) clamp(2rem, 5vh, 3rem);
+    gap: clamp(1.25rem, 3vh, 2rem);
+    align-content: center;
+  }
+
+  .copy { gap: 0.9rem; }
+
+  .lineInner {
+    font-size: clamp(2.1rem, 8.4vw, 3.2rem);
+    letter-spacing: -0.03em;
+  }
+
+  .photo {
+    aspect-ratio: 976 / 1024;
+    object-position: 50% 50%;
+    max-height: 46svh;
+    object-fit: contain;
+  }
+
+  .visual {
+    /* Half the desktop travel, so the phone gets a hint of depth rather than
+       a departure. */
+    transform: translate3d(0, calc(var(--t) * -26px), 0) scale(calc(1 + var(--t) * 0.04));
+  }
+
+  .note { text-align: center; }
+
+  .actions { width: 100%; }
+
+  /* Full width and stacked. Side by side, the longer label wrapped to a
+     second row on its own and the pair sat unevenly. */
+  .cta {
+    flex: 1 1 100%;
+    justify-content: space-between;
+    min-height: 3rem;
+    padding: 0 1rem;
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+  }
 }
 
+/* ---------------- reduced motion ---------------- */
 /*
- * Behind the plinth and the type, in front of nothing else. The CSS cone stays
- * as the soft ambient wash from the overhead lamp; the shader supplies the
- * hard rays, the stars and the flares that a gradient cannot.
+ * The arrived composition, immediately and permanently. --hp is never written
+ * by the hook under reduced motion and --mx/--my never move, so the two
+ * transforms above already resolve to their resting values; these rules remove
+ * the transitions so nothing eases even once.
  */
-.sky {
-  z-index: 1;
-  opacity: 0.95;
+@media (prefers-reduced-motion: reduce) {
+  .drift,
+  .key,
+  .fill,
+  .cta,
+  .cta::before,
+  .arrow {
+    transition: none;
+  }
+
+  .visual,
+  .copy {
+    transform: none;
+  }
+
+  .photo { will-change: auto; }
 }
