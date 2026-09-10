@@ -33,9 +33,15 @@ import DotMatrix from '@/components/media/DotMatrix.jsx';
  * on their own clocks. The gem is the only thing in the frame that is an image.
  */
 import diamondWide from '@/assets/diamonds/ngd-brilliant-profile.webp';
-/* The same stone traced face-up on transparency: the pair that turn behind
-   the hero need no room around them, only the gem. */
-import diamondFace from '@/assets/diamonds/ngd-brilliant-traced-face.webp';
+/*
+ * The same stone traced at thirty angles and laid out in a strip. Stepping
+ * through it is a real rotation — different facets catch at every angle,
+ * which is the whole difference between a turning gem and a picture on a
+ * turntable. 7800x260 and 145 KB, stepped by the compositor, no script.
+ */
+import spinSheet from '@/assets/diamonds/ngd-brilliant-spin.webp';
+/* The house's own photograph of a real stone, for the pair behind the hero. */
+import realStone from '@/assets/diamonds/ngd-brilliant-macro.webp';
 
 import styles from './Atelier.module.css';
 
@@ -223,8 +229,8 @@ export default function Atelier() {
             different clocks so the pair never lines up into a pattern.
           */}
           <div className={styles.orbit} aria-hidden="true">
-            <img className={styles.orbitBig} src={diamondFace} alt="" width="760" height="760" loading="lazy" decoding="async" />
-            <img className={styles.orbitSmall} src={diamondFace} alt="" width="760" height="760" loading="lazy" decoding="async" />
+            <img className={styles.orbitBig} src={realStone} alt="" width="754" height="541" loading="lazy" decoding="async" />
+            <img className={styles.orbitSmall} src={realStone} alt="" width="754" height="541" loading="lazy" decoding="async" />
           </div>
 
           {/*
@@ -350,6 +356,18 @@ export default function Atelier() {
                     draggable="false"
                   />
                 </picture>
+
+                {/*
+                  The rotation. Thirty traced angles stepped by the compositor,
+                  fading in once the dots have finished gathering — so the
+                  opening is still an arrival, and the stone only begins to
+                  turn after it has arrived.
+                */}
+                <span
+                  className={styles.spin}
+                  style={{ backgroundImage: `url(${spinSheet})` }}
+                  aria-hidden="true"
+                />
                 </div>
                 </div>
 
@@ -374,6 +392,42 @@ export default function Atelier() {
                   picture at full detail rather than an impression of it.
                 */}
                 <DotMatrix src={diamondWide} progressRef={hero} className={styles.dots} />
+
+                {/*
+                  SCINTILLATION. The one thing a diamond does that nothing else
+                  does: as the light or the head moves, individual facets catch
+                  and let go, and the stone flashes. Eight points, each on its
+                  own long clock with a very short flash, so they never pulse
+                  together and never read as a blinking light. Placed over the
+                  crown where the bright facets actually are.
+                */}
+                <span className={styles.glints} aria-hidden="true">
+                  {Array.from({ length: 8 }, (_, i) => (
+                    <i
+                      key={i}
+                      style={{
+                        '--x': `${[38, 57, 46, 63, 34, 52, 68, 43][i]}%`,
+                        '--y': `${[40, 37, 46, 44, 47, 34, 41, 52][i]}%`,
+                        '--s': `${[26, 34, 20, 30, 22, 38, 24, 28][i]}px`,
+                        '--dur': `${[6.5, 9, 7.5, 11, 8, 12.5, 10, 6][i]}s`,
+                        '--delay': `${-[0, 2.4, 5.1, 1.3, 7.2, 3.6, 8.8, 4.4][i]}s`,
+                      }}
+                    />
+                  ))}
+                </span>
+
+                {/*
+                  The prism. Diamond's whole optical signature is that it bends
+                  colours by different amounts, so once a cycle the glow splits
+                  into a cyan and a violet that part and come back together.
+                */}
+                <span className={styles.prism} data-side="cool" aria-hidden="true" />
+                <span className={styles.prism} data-side="warm" aria-hidden="true" />
+
+                {/* The light the stone throws into the room, as rays rather
+                    than a wash — turning slowly, so the room is never twice
+                    the same. */}
+                <span className={styles.rays} aria-hidden="true" />
 
                 {/*
                   Fragments, in front of the stone and behind it both — the odd
