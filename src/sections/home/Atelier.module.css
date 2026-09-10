@@ -223,53 +223,6 @@
   stroke-linecap: round;
 }
 
-/* ---------------- the rotation ---------------- */
-/*
- * Thirty frames in one horizontal strip, stepped.
- *
- * `background-size: 3000%` makes one frame fill the box, and stepping
- * background-position from 0 to 100 in twenty-nine steps lands exactly on each
- * frame. It runs `alternate`, so the stone turns seventy degrees and comes
- * back rather than jumping from the last frame to the first — a suspended
- * stone turns in the light and returns; it does not pirouette.
- *
- * A square, centred and full height, because the frames are square and the box
- * is not: stretching them to the box would squash the gem.
- */
-.spin {
-  position: absolute;
-  z-index: 2;
-  top: 0;
-  bottom: 0;
-  left: 50%;
-  translate: -50% 0;
-  aspect-ratio: 1;
-  pointer-events: none;
-  background-repeat: no-repeat;
-  background-size: 3000% 100%;
-  background-position: 0% 50%;
-  opacity: 0;
-  filter:
-    drop-shadow(0 0 18px rgba(206, 224, 255, 0.34))
-    drop-shadow(0 0 64px rgba(122, 132, 235, 0.30));
-  animation:
-    spinSteps 9s steps(29) 2s infinite alternate,
-    spinArrive 1.1s var(--ease-primary) 1.9s both;
-}
-
-@keyframes spinSteps {
-  from { background-position: 0% 50%; }
-  to   { background-position: 100% 50%; }
-}
-
-@keyframes spinArrive { to { opacity: 1; } }
-
-/* While the stone is turning, the still frame beneath it would double the
-   outline, so it stands down. Reduced motion puts it straight back. */
-@media (prefers-reduced-motion: no-preference) {
-  .photo { opacity: 0; }
-}
-
 /* ---------------- the shaft, the pool, the fragments ---------------- */
 /*
  * Built from the reference: a stone held in a shaft of light, above the pool
@@ -1017,9 +970,6 @@
 
   .rule::after { display: none; }
 
-  /* No rotation, and the still stone returns. */
-  .spin { display: none; }
-  .photo { opacity: 1; }
 
   /* The flashes go entirely. A diamond's sparkle IS the movement; frozen,
      eight stars stuck on the stone read as damage. */

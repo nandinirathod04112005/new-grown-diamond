@@ -1,12 +1,11 @@
 import { useEffect, useRef } from 'react';
 
 import { prefersReducedMotion } from '@/lib/motion/media.js';
-/* Two images, two jobs: the small round stone is what each particle IS, and
-   the side-on stone is the SHAPE they gather into. A face-up gem's silhouette
-   is a circle, and five hundred stones arranged in a circle read as a blob;
-   the profile is unmistakably a diamond. */
-import gem from '@/assets/diamonds/ngd-brilliant-traced-face.webp';
-import shapeSrc from '@/assets/diamonds/ngd-brilliant-profile.webp';
+/* The real stone does both jobs now: it is what each particle IS, and its
+   silhouette is the shape they gather into. One photograph, so the swarm and
+   the subject are the same diamond rather than two different ones. */
+import gem from '@/assets/diamonds/ngd-brilliant-cutout.webp';
+import shapeSrc from '@/assets/diamonds/ngd-brilliant-cutout.webp';
 import styles from './DiamondField.module.css';
 
 /**
@@ -136,15 +135,16 @@ export default function DiamondField({ progressRef, className = '' }) {
       const stone = sample((c, w, h) => {
         c.clearRect(0, 0, w, h);
         /*
-         * Cropped to the gem's own bounds. The traced frame is square and the
-         * stone sits in a band across its middle, so drawing the whole file
-         * put half the height into empty space and the silhouette came back as
-         * a flat oval with its point lost.
+         * Sampled from the photograph's own alpha. Large enough to be
+         * resolved: sampled small, the silhouette came back as two dozen grid
+         * cells and five hundred stones piled into it as a lump.
          */
-        const SX = 0.10;
-        const SY = 0.33;
-        const SW = 0.80;
-        const SH = 0.52;
+        /* The cut-out is trimmed to the stone already, so the whole file is
+           the silhouette and there is nothing to crop away. */
+        const SX = 0;
+        const SY = 0;
+        const SW = 1;
+        const SH = 1;
         const boxW = Math.min(w * 0.34, h * 0.9);
         const boxH = boxW * (SH / SW);
         c.drawImage(

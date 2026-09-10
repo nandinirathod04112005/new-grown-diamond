@@ -33,16 +33,21 @@ import DiamondField from '@/components/media/DiamondField.jsx';
  * shaft, the fragments and the pool below, all of them CSS, all of them moving
  * on their own clocks. The gem is the only thing in the frame that is an image.
  */
-import diamondWide from '@/assets/diamonds/ngd-brilliant-profile.webp';
 /*
- * The same stone traced at thirty angles and laid out in a strip. Stepping
- * through it is a real rotation — different facets catch at every angle,
- * which is the whole difference between a turning gem and a picture on a
- * turntable. 7800x260 and 145 KB, stepped by the compositor, no script.
+ * THE REAL STONE. The house's own photograph of one of its brilliants, lifted
+ * off the white paper it was shot on by flooding inward from the border — a
+ * brightness threshold would have punched holes through the table, because
+ * this stone's facets are as white as the paper; what separates them is that
+ * the paper touches the frame and the facets do not.
+ *
+ * It replaces the traced gem, and the rotation goes with it. A photograph is
+ * one angle: spinning it would turn the outline while every facet kept facing
+ * the same way, which is the exact tell of a fake. A real stone can be
+ * suspended and lit and it can catch the light, and that is what it does here.
  */
-import spinSheet from '@/assets/diamonds/ngd-brilliant-spin.webp';
-/* The house's own photograph of a real stone, for the pair behind the hero. */
-import realStone from '@/assets/diamonds/ngd-brilliant-macro.webp';
+import diamondWide from '@/assets/diamonds/ngd-brilliant-cutout.webp';
+/* The same photograph, for the pair turning far behind the hero. */
+import realStone from '@/assets/diamonds/ngd-brilliant-cutout.webp';
 
 import styles from './Atelier.module.css';
 
@@ -252,8 +257,8 @@ export default function Atelier() {
           <DiamondField progressRef={hero} className={styles.swarm} />
 
           <div className={styles.orbit} aria-hidden="true">
-            <img className={styles.orbitBig} src={realStone} alt="" width="754" height="541" loading="lazy" decoding="async" />
-            <img className={styles.orbitSmall} src={realStone} alt="" width="754" height="541" loading="lazy" decoding="async" />
+            <img className={styles.orbitBig} src={realStone} alt="" width="743" height="530" loading="lazy" decoding="async" />
+            <img className={styles.orbitSmall} src={realStone} alt="" width="743" height="530" loading="lazy" decoding="async" />
           </div>
 
           {/*
@@ -384,9 +389,9 @@ export default function Atelier() {
                   <img
                     className={styles.photo}
                     src={diamondWide}
-                    alt="A brilliant-cut diamond seen from the side, held in a shaft of light."
-                    width="1000"
-                    height="1000"
+                    alt="A New Grown Diamond brilliant, photographed close and held in a shaft of light."
+                    width="743"
+                    height="530"
                     loading="eager"
                     fetchPriority="high"
                     decoding="async"
@@ -394,17 +399,6 @@ export default function Atelier() {
                   />
                 </picture>
 
-                {/*
-                  The rotation. Thirty traced angles stepped by the compositor,
-                  fading in once the dots have finished gathering — so the
-                  opening is still an arrival, and the stone only begins to
-                  turn after it has arrived.
-                */}
-                <span
-                  className={styles.spin}
-                  style={{ backgroundImage: `url(${spinSheet})` }}
-                  aria-hidden="true"
-                />
                 </div>
                 </div>
 
@@ -509,7 +503,7 @@ export default function Atelier() {
                   />
                 </svg>
               </div>
-              <figcaption className={styles.note}>Rendered · brilliant cut, 58 facets</figcaption>
+              <figcaption className={styles.note}>Photograph · a New Grown Diamond brilliant</figcaption>
             </figure>
           </div>
         </div>
