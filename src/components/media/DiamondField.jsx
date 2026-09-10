@@ -99,17 +99,21 @@ export default function DiamondField({ progressRef, className = '' }) {
       /*
        * WHERE THE MARK SITS, and it took a wrong answer to find it.
        *
-       * Drawn across the whole hero the word was over eight hundred pixels
-       * wide, which put its G and D behind the opaque case on the right — so
-       * the site spelled "N" and half a letter. Shrinking it was not enough
-       * either: at three-quarters height it still crossed the case. The clear
-       * band is BELOW the case, near the foot of the stage, where the
-       * composition leaves a full-width strip empty — so that is where the
-       * mark stands, small enough to read as a watermark rather than as a
-       * second headline.
+       * WHERE A BIG MARK CAN ACTUALLY GO.
+       *
+       * Behind the composition, the opaque case swallowed the G and the D and
+       * the site spelled "N" and half a letter. Moved in front and blown up to
+       * two thirds of the stage it hit the opposite problem: the stones are
+       * screen-blended, so over the brightly lit diamond they added nothing to
+       * something already near white and the D disappeared again.
+       *
+       * The band below the case is dark across the full width, which is where
+       * light-on-dark letters read. So the mark sits there, in front, at
+       * getting on for half the stage — large, unobstructed, and legible for
+       * the same reason the headline is.
        */
       const MARK_Y = 0.90;
-      const MARK_W = 0.36;
+      const MARK_W = 0.46;
 
       const word = sample((c, w, h) => {
         c.clearRect(0, 0, w, h);

@@ -121,15 +121,21 @@
  * simplifies away with the rest of the decoration as the next section arrives.
  */
 .swarm {
-  z-index: 0;
-  opacity: calc(1 - var(--t) * 0.42);
+  /*
+   * In FRONT of the composition, not behind it. Behind, the opaque case ate
+   * two of the three letters. In front, screen-blended at a little over half
+   * strength, the stones read as light lying across the stage — they add to
+   * what is under them and can never darken the headline.
+   */
+  z-index: 5;
+  opacity: calc(0.62 - var(--t) * 0.42);
   mix-blend-mode: screen;
 }
 
 @media (max-width: 899px) {
   /* A narrow column cannot hold three letters and a stone at a readable size,
      so the swarm is dimmer still and lets the headline have the space. */
-  .swarm { opacity: calc(0.7 - var(--t) * 0.3); }
+  .swarm { opacity: calc(0.5 - var(--t) * 0.3); }
 }
 
 /* ---------------- the turning stones ---------------- */
@@ -749,8 +755,12 @@
  */
 .float {
   display: block;
-  animation: stoneBreath 14s var(--ease-primary) infinite;
-  transform-origin: 57% 52%;
+  animation: stoneBreath 18s ease-in-out infinite;
+  transform-origin: 50% 52%;
+  /* The turn needs depth or it is a flip: without perspective a rotateY is an
+     orthographic squash and reads as a closing door. */
+  transform-style: preserve-3d;
+  perspective: 1200px;
 }
 
 /*
@@ -759,12 +769,22 @@
  * either way as it does. Still slow enough that it never competes with the
  * headline being read beside it.
  */
+/*
+ * THE TURN, and what it can honestly be.
+ *
+ * This is a photograph: one angle, with every facet fixed. Spun flat it would
+ * read as a coin on a turntable. Turned about its own vertical axis under
+ * perspective, though, it behaves the way a real object does when it is moved
+ * a little in the light — the silhouette narrows and widens and the near side
+ * comes forward. Eighteen degrees each way is as far as that holds; past it
+ * the eye starts asking to see the back, and a still photograph has none.
+ */
 @keyframes stoneBreath {
-  0%   { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
-  25%  { transform: translate3d(2px, -14px, 0) rotate(1.4deg) scale(1.012); }
-  50%  { transform: translate3d(0, -19px, 0) rotate(0deg) scale(1.016); }
-  75%  { transform: translate3d(-2px, -9px, 0) rotate(-1.3deg) scale(1.008); }
-  100% { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
+  0%   { transform: translate3d(0, 0, 0) rotateY(-18deg) rotate(-0.8deg) scale(1); }
+  25%  { transform: translate3d(2px, -14px, 0) rotateY(-6deg) rotate(0.5deg) scale(1.012); }
+  50%  { transform: translate3d(0, -19px, 0) rotateY(9deg) rotate(1.1deg) scale(1.02); }
+  75%  { transform: translate3d(-2px, -9px, 0) rotateY(18deg) rotate(0.4deg) scale(1.012); }
+  100% { transform: translate3d(0, 0, 0) rotateY(-18deg) rotate(-0.8deg) scale(1); }
 }
 
 /*
