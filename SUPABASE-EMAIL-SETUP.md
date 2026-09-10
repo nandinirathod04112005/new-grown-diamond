@@ -99,6 +99,28 @@ mailer. Anything else is printed verbatim.
 
 ## While the mailer is down, nobody has to stay locked out
 
+There are two ways, and both skip email entirely. Prefer the first: the
+customer chooses their own password and the desk never handles one.
+
+### Send them a recovery link by hand
+
+```
+SUPABASE_SERVICE_ROLE_KEY=... node scripts/recovery-link.mjs someone@example.com   --origin https://newgrowndiamond.com
+```
+
+It prints a link to this site's own reset page carrying the same recovery token
+the email would have contained. Send it over whatever channel you already use
+with that customer. It works no matter what Site URL and the allow-list say,
+because the address is ours rather than one Supabase has to approve.
+
+The link is single use and it expires. Whoever opens it can set that account's
+password, so send it to that customer and nobody else, and only once you are
+satisfied they are who they say. That is the same trust the emailed link asks
+for; it is just travelling by a different road.
+
+### Or set a password for them
+
+
 Recovery is the only flow that needs email — sign-up does not, now that
 confirmation is off. So an account someone cannot get into can be handled by
 the desk directly:
