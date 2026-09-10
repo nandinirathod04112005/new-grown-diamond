@@ -22,8 +22,18 @@ import DotMatrix from '@/components/media/DotMatrix.jsx';
  * view a still image may honestly rotate: a round brilliant IS radially
  * symmetric about that axis, so nothing hidden is being invented.
  */
-import diamondWide from '@/assets/diamonds/ngd-brilliant-figure-wide.webp';
-import diamondTall from '@/assets/diamonds/ngd-brilliant-figure-tall.webp';
+/*
+ * The stone from the reference: traced from the side, so the silhouette is the
+ * one everybody draws when they draw a diamond — flat table, short crown, long
+ * pavilion to a point — and lit in that picture's indigo, with a cyan kick from
+ * the left and a violet one from the right for the iridescence.
+ *
+ * It arrives on transparency, which is the point: the room around it is the
+ * shaft, the fragments and the pool below, all of them CSS, all of them moving
+ * on their own clocks. The gem is the only thing in the frame that is an image.
+ */
+import diamondWide from '@/assets/diamonds/ngd-brilliant-profile.webp';
+const diamondTall = diamondWide;
 /* The same stone traced face-up on transparency: the pair that turn behind
    the hero need no room around them, only the gem. */
 import diamondFace from '@/assets/diamonds/ngd-brilliant-traced-face.webp';
@@ -328,14 +338,13 @@ export default function Atelier() {
                     original, so a centre-crop on a narrow screen would cut the
                     stone in half and keep the empty black beside it.
                   */}
-                  <source media="(max-width: 899px)" srcSet={diamondTall} />
                   <source srcSet={diamondWide} />
                   <img
                     className={styles.photo}
                     src={diamondWide}
-                    alt="A round brilliant diamond, rendered: its facets catch a studio light and split it into colour."
-                    width="1536"
-                    height="1024"
+                    alt="A brilliant-cut diamond seen from the side, held in a shaft of light."
+                    width="1000"
+                    height="1000"
                     loading="eager"
                     fetchPriority="high"
                     decoding="async"
@@ -356,6 +365,7 @@ export default function Atelier() {
                   gem stays the subject and the light stays weather.
                 */}
                 <span className={styles.beam} aria-hidden="true" />
+                <span className={styles.aura} aria-hidden="true" />
                 <span className={styles.pool} aria-hidden="true" />
 
                 {/*
@@ -409,7 +419,7 @@ export default function Atelier() {
                   />
                 </svg>
               </div>
-              <figcaption className={styles.note}>Rendered · round brilliant, 58 facets</figcaption>
+              <figcaption className={styles.note}>Rendered · brilliant cut, 58 facets</figcaption>
             </figure>
           </div>
         </div>

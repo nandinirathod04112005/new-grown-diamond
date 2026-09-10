@@ -283,6 +283,32 @@
   50%      { opacity: 0.82; }
 }
 
+/*
+ * The aura. It sits behind the gem and breathes on the same period as the
+ * levitation, so the light swells as the stone rises — one event, not two
+ * things happening near each other.
+ */
+.aura {
+  position: absolute;
+  z-index: 1;
+  left: 50%;
+  top: 44%;
+  translate: -50% -50%;
+  width: 62%;
+  aspect-ratio: 1;
+  pointer-events: none;
+  border-radius: 50%;
+  mix-blend-mode: screen;
+  background: radial-gradient(closest-side, rgba(150, 168, 255, 0.34), rgba(96, 108, 210, 0.12) 46%, transparent 72%);
+  filter: blur(34px);
+  animation: auraBreathe 14s var(--ease-primary) infinite;
+}
+
+@keyframes auraBreathe {
+  0%, 100% { opacity: 0.55; scale: 0.94; }
+  50%      { opacity: 1; scale: 1.08; }
+}
+
 /* Fragments in the shaft. Each is a small faceted sliver on its own clock. */
 .shards {
   position: absolute;
@@ -529,6 +555,12 @@
 .aperture {
   position: relative;
   overflow: hidden;
+  /* The room the stone is suspended in: the reference's indigo, darkest at the
+     edges so the shaft and the pool are the only light in it. */
+  background:
+    radial-gradient(120% 90% at 50% 8%, rgba(58, 66, 120, 0.42), transparent 62%),
+    radial-gradient(90% 60% at 50% 104%, rgba(74, 84, 150, 0.34), transparent 64%),
+    linear-gradient(180deg, #0a0c1c 0%, #070812 52%, #0b0d1e 100%);
   /*
    * Vertical sides, faceted only at top and bottom. The first version cut in
    * from 112% on the diagonal, which looked right on an empty frame and sliced
@@ -561,10 +593,17 @@
   transform-origin: 57% 52%;
 }
 
+/*
+ * Suspended, not resting. The reference's stone hangs in its shaft, so the
+ * loop is a levitation: it rises and settles, and turns a degree and a half
+ * either way as it does. Still slow enough that it never competes with the
+ * headline being read beside it.
+ */
 @keyframes stoneBreath {
   0%   { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
-  33%  { transform: translate3d(0, -8px, 0) rotate(0.55deg) scale(1.006); }
-  66%  { transform: translate3d(0, 4px, 0) rotate(-0.4deg) scale(0.998); }
+  25%  { transform: translate3d(2px, -14px, 0) rotate(1.4deg) scale(1.012); }
+  50%  { transform: translate3d(0, -19px, 0) rotate(0deg) scale(1.016); }
+  75%  { transform: translate3d(-2px, -9px, 0) rotate(-1.3deg) scale(1.008); }
   100% { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
 }
 
@@ -630,10 +669,17 @@
   width: 100%;
   height: auto;
   aspect-ratio: 1536 / 1024;
-  object-fit: cover;
-  /* Keeps the stone in frame at every ratio the box takes. */
-  object-position: 57% 50%;
-  transform-origin: 57% 48%;
+  /* Contained, not covered: the gem arrives on transparency and the room
+     around it is CSS, so cropping it would cut the subject rather than the
+     background. */
+  object-fit: contain;
+  object-position: 50% 46%;
+  transform-origin: 50% 46%;
+  /* The light it throws. Two shadows rather than one: a tight white core and a
+     wide violet spill, which is what the reference's glow actually is. */
+  filter:
+    drop-shadow(0 0 18px rgba(206, 224, 255, 0.34))
+    drop-shadow(0 0 64px rgba(122, 132, 235, 0.30));
   /*
    * Held back while the dots are still gathering, and fully present once they
    * have. --formed is 0 until the DotMatrix mounts, so with no canvas — no
@@ -676,11 +722,13 @@
   }
 
   .photo {
-    aspect-ratio: 976 / 1024;
-    object-position: 50% 50%;
-    max-height: 46svh;
+    aspect-ratio: 1;
+    object-position: 50% 48%;
+    max-height: 44svh;
     object-fit: contain;
   }
+
+  .aura { width: 78%; }
 
   .visual {
     /* Half the desktop travel, so the phone gets a hint of depth rather than
@@ -752,7 +800,8 @@
   /* The shaft and the pool stay, still; the fragments go, because a dozen
      frozen slivers read as dirt on the lens rather than as light. */
   .beam,
-  .pool { animation: none; }
+  .pool,
+  .aura { animation: none; }
   .shards { display: none; }
 
   /* The turning pair stops and stays; the plan is simply drawn. */
