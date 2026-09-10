@@ -205,6 +205,114 @@
   stroke-linecap: round;
 }
 
+/* ---------------- the shaft, the pool, the fragments ---------------- */
+/*
+ * Built from the reference: a stone held in a shaft of light, above the pool
+ * of colour it throws on the floor, with fragments drifting in the beam.
+ *
+ * Three elements, three clocks, all CSS. None of them touches the
+ * photograph's transform — the gem keeps its own entrance and its own breath,
+ * and the weather happens around it. Every one of them stops under reduced
+ * motion, and the composition still reads with all three switched off.
+ */
+
+/* The shaft. A trapezoid, widening as it falls, heavily blurred — a crisp
+   edge here reads as a shape drawn on the page rather than as light. */
+.beam {
+  position: absolute;
+  z-index: 1;
+  top: -12%;
+  left: 50%;
+  translate: -50% 0;
+  width: 46%;
+  height: 86%;
+  pointer-events: none;
+  clip-path: polygon(41% 0%, 59% 0%, 88% 100%, 12% 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(196, 214, 255, 0.34) 0%,
+    rgba(150, 168, 235, 0.14) 34%,
+    rgba(120, 132, 210, 0.05) 62%,
+    transparent 86%
+  );
+  filter: blur(26px);
+  mix-blend-mode: screen;
+  animation: beamBreathe 11s ease-in-out infinite;
+}
+
+@keyframes beamBreathe {
+  0%, 100% { opacity: 0.72; transform: scaleX(1); }
+  50%      { opacity: 1; transform: scaleX(1.08); }
+}
+
+/*
+ * The pool the stone throws. A conic sweep of prismatic colour, squashed into
+ * an ellipse and blurred until the individual hues stop being identifiable —
+ * which is the difference between dispersed light and a rainbow sticker.
+ * It turns slowly, so the colour moves through itself rather than sitting.
+ */
+.pool {
+  position: absolute;
+  z-index: 1;
+  left: 50%;
+  bottom: 2%;
+  translate: -50% 0;
+  width: 78%;
+  height: 26%;
+  pointer-events: none;
+  border-radius: 50%;
+  mix-blend-mode: screen;
+  opacity: 0.66;
+  filter: blur(18px);
+  background:
+    radial-gradient(closest-side, rgba(226, 236, 255, 0.55), transparent 72%),
+    conic-gradient(
+      from 0deg,
+      rgba(120, 160, 255, 0.40),
+      rgba(196, 150, 255, 0.34),
+      rgba(255, 210, 160, 0.30),
+      rgba(150, 240, 226, 0.32),
+      rgba(120, 160, 255, 0.40)
+    );
+  animation: poolTurn 34s linear infinite, poolPulse 7s ease-in-out infinite;
+}
+
+@keyframes poolTurn { from { rotate: 0deg; } to { rotate: 360deg; } }
+@keyframes poolPulse {
+  0%, 100% { opacity: 0.52; }
+  50%      { opacity: 0.82; }
+}
+
+/* Fragments in the shaft. Each is a small faceted sliver on its own clock. */
+.shards {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+
+.shards i {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--s);
+  height: calc(var(--s) * 1.6);
+  clip-path: polygon(50% 0%, 100% 38%, 62% 100%, 12% 72%);
+  background: linear-gradient(150deg, rgba(232, 240, 255, 0.92), rgba(150, 178, 240, 0.35));
+  rotate: var(--rot);
+  opacity: 0;
+  animation: shardDrift var(--dur) ease-in-out var(--delay) infinite;
+}
+
+/* Up, and a little across, fading in and out so none of them ever pops. */
+@keyframes shardDrift {
+  0%        { opacity: 0; transform: translate3d(0, 14px, 0) scale(0.86); }
+  18%       { opacity: 0.85; }
+  70%       { opacity: 0.55; }
+  100%      { opacity: 0; transform: translate3d(6px, -30px, 0) scale(1.05); }
+}
+
 /* ---------------- the dot matrix ---------------- */
 /*
  * The canvas covers the photograph and hands over to it. `--formed` is written
@@ -640,6 +748,12 @@
 
   .sweep { display: none; }
   .sway { transform: none; }
+
+  /* The shaft and the pool stay, still; the fragments go, because a dozen
+     frozen slivers read as dirt on the lens rather than as light. */
+  .beam,
+  .pool { animation: none; }
+  .shards { display: none; }
 
   /* The turning pair stops and stays; the plan is simply drawn. */
   .orbit img.orbitBig,

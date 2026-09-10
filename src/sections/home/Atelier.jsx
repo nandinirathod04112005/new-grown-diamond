@@ -346,12 +346,48 @@ export default function Atelier() {
                 </div>
 
                 {/*
+                  THE SCENE THE REFERENCE ASKS FOR: a stone held in a shaft of
+                  light above the pool of colour it throws on the floor, with
+                  fragments drifting around it.
+
+                  Every part is CSS on its own element, so the beam, the pool
+                  and the shards each run their own clock and none of them
+                  touches the photograph's transform. Behind the stone, so the
+                  gem stays the subject and the light stays weather.
+                */}
+                <span className={styles.beam} aria-hidden="true" />
+                <span className={styles.pool} aria-hidden="true" />
+
+                {/*
                   The photograph, assembled from dots. It gathers on arrival
                   and comes apart again as the hero scrolls away — the real
                   <img> above is what remains, so the finished frame is the
                   picture at full detail rather than an impression of it.
                 */}
                 <DotMatrix src={diamondWide} progressRef={hero} className={styles.dots} />
+
+                {/*
+                  Fragments, in front of the stone and behind it both — the odd
+                  ones drift nearer, the even ones further, which is what gives
+                  the shaft depth. Twelve, not a hundred: the reference has a
+                  handful of readable shards, and a cloud of them would be
+                  confetti.
+                */}
+                <span className={styles.shards} aria-hidden="true">
+                  {Array.from({ length: 12 }, (_, i) => (
+                    <i
+                      key={i}
+                      style={{
+                        '--x': `${[14, 78, 33, 62, 8, 88, 47, 24, 69, 41, 92, 56][i]}%`,
+                        '--y': `${[22, 16, 68, 38, 54, 60, 12, 86, 78, 30, 44, 92][i]}%`,
+                        '--s': `${[7, 5, 9, 4, 6, 8, 5, 7, 4, 6, 9, 5][i]}px`,
+                        '--rot': `${[18, -32, 47, -12, 63, -55, 8, 39, -24, 71, -41, 27][i]}deg`,
+                        '--dur': `${[13, 17, 11, 19, 15, 21, 12, 18, 14, 20, 16, 22][i]}s`,
+                        '--delay': `${-[0, 3, 7, 1, 9, 5, 11, 2, 8, 4, 6, 10][i]}s`,
+                      }}
+                    />
+                  ))}
+                </span>
 
                 {/* One pass of light across the facets, long apart enough that
                     it stays an event rather than becoming wallpaper. */}
