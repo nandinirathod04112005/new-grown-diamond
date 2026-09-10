@@ -13,12 +13,13 @@
  * in the database and bypass every policy. Three rules, enforced below where
  * they can be:
  *
- *   1. It is read from the ENVIRONMENT only. It is never read from .env.local,
- *      never written to a file, never printed, and never sent anywhere except
- *      the project's own API.
- *   2. It must never go in .env.local, in any VITE_ variable, or in any file
- *      that is committed. Anything named VITE_ is compiled into the bundle and
- *      served to every visitor.
+ *   1. It is taken from the environment, or failing that from .env.local. It
+ *      is never written and never printed, and goes nowhere except the
+ *      project's own API.
+ *   2. Its NAME must never carry a VITE_ or NEXT_PUBLIC_ prefix. Those two
+ *      prefixes are what Vite copies into the browser bundle, so a key named
+ *      that way would be served to every visitor. SUPABASE_SERVICE_ROLE_KEY
+ *      is invisible to the front end, and .env.local is git-ignored.
  *   3. Run this from a terminal you control. In most shells, a command that
  *      begins with a space is kept out of the history file.
  *
@@ -26,12 +27,13 @@
  * dashboard under Project Settings, API. That takes a minute and invalidates
  * the old one.
  */
-import { readFileSync } from 'node:fs';
 import { createInterface } from 'node:readline';
 import process from 'node:process';
 
+import { envFile, readSecret } from './_secret.mjs';
+
 const email = process.argv[2];
-const KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+const { value: KEY, source: KEY_SOURCE } = readSecret('SUPABASE_SERVICE_ROLE_KEY');
 
 function die(message) {
   console.error(`\n${message}\n`);
@@ -60,16 +62,10 @@ if (KEY.startsWith('sb_publishable') || /"role"\s*:\s*"anon"/.test(Buffer.from(K
   die('That is the publishable key, not the service role key. The publishable key cannot change a password, by design.');
 }
 
-let URL_ = '';
-try {
-  URL_ = Object.fromEntries(
-    readFileSync(new URL('../.env.local', import.meta.url), 'utf8')
-      .split(/\r?\n/)
-      .filter((l) => l.includes('='))
-      .map((l) => { const at = l.indexOf('='); return [l.slice(0, at).trim(), l.slice(at + 1).trim()]; }),
-  ).VITE_SUPABASE_URL;
-} catch { /* falls through to the check below */ }
+const env = envFile();
+const URL_ = env.VITE_SUPABASE_URL || env.NEXT_PUBLIC_SUPABASE_URL || '';
 if (!URL_) die('VITE_SUPABASE_URL could not be read from .env.local.');
+console.log(`Service role key read from ${KEY_SOURCE}.`);
 
 const admin = { apikey: KEY, Authorization: `Bearer ${KEY}`, 'Content-Type': 'application/json' };
 

@@ -20,9 +20,10 @@
  *
  *   SUPABASE_ACCESS_TOKEN=sbp_... node scripts/fix-auth-config.mjs
  *
- * It is read from the environment only: never from a file, never written, and
- * never printed. It can be revoked on that page at any time, and should be
- * when it is no longer needed.
+ * It is taken from the environment, or failing that from .env.local — which
+ * is git-ignored, and which Vite never copies into the browser bundle because
+ * the name carries no VITE_ or NEXT_PUBLIC_ prefix. It is never written and
+ * never printed. Revoke it on that page when it is no longer needed.
  *
  * FLAGS
  *   --site <url>          set the Site URL
@@ -38,10 +39,11 @@
  *                         a command line that shells record in history
  *   --apply               actually write the change
  */
-import { readFileSync } from 'node:fs';
 import process from 'node:process';
 
-const TOKEN = process.env.SUPABASE_ACCESS_TOKEN || '';
+import { projectRef, readSecret } from './_secret.mjs';
+
+const { value: TOKEN, source: TOKEN_SOURCE } = readSecret('SUPABASE_ACCESS_TOKEN');
 const args = process.argv.slice(2);
 const APPLY = args.includes('--apply');
 
@@ -62,15 +64,7 @@ function die(message) {
 }
 
 /* The project reference is the first label of the project URL. */
-let ref = '';
-try {
-  const url = Object.fromEntries(
-    readFileSync(new URL('../.env.local', import.meta.url), 'utf8')
-      .split(/\r?\n/).filter((l) => l.includes('='))
-      .map((l) => { const at = l.indexOf('='); return [l.slice(0, at).trim(), l.slice(at + 1).trim()]; }),
-  ).VITE_SUPABASE_URL;
-  ref = new URL(url).hostname.split('.')[0];
-} catch { /* handled below */ }
+const ref = projectRef();
 if (!ref) die('VITE_SUPABASE_URL could not be read from .env.local, so the project reference is unknown.');
 
 if (!TOKEN) {
@@ -91,7 +85,7 @@ if (TOKEN.startsWith('sb_publishable') || TOKEN.startsWith('sb_secret') || TOKEN
 const API = `https://api.supabase.com/v1/projects/${ref}/config/auth`;
 const auth = { Authorization: `Bearer ${TOKEN}`, 'Content-Type': 'application/json' };
 
-console.log(`Project ${ref}\n`);
+console.log(`Project ${ref}   (access token read from ${TOKEN_SOURCE})\n`);
 
 const current = await (async () => {
   const res = await fetch(API, { headers: auth });

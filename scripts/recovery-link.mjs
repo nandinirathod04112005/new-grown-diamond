@@ -23,15 +23,18 @@
  * on a project nobody has configured yet.
  *
  * THE KEY. The service role key can read and write every row and bypasses
- * every policy. It is read from the environment only: never from .env.local,
- * never written, never printed. Pass it on this one command line, and rotate
- * it under Project Settings, API if it has ever gone somewhere it should not.
+ * every policy. It is taken from the environment, or failing that from
+ * .env.local — which is git-ignored, and which Vite never copies into the
+ * browser bundle because the name carries no VITE_ or NEXT_PUBLIC_ prefix.
+ * It is never written and never printed. Rotate it under Project Settings,
+ * API if it has ever gone somewhere it should not.
  */
-import { readFileSync } from 'node:fs';
 import process from 'node:process';
 
+import { envFile, readSecret } from './_secret.mjs';
+
 const email = process.argv[2];
-const KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+const { value: KEY, source: KEY_SOURCE } = readSecret('SUPABASE_SERVICE_ROLE_KEY');
 
 const originFlag = process.argv.indexOf('--origin');
 const ORIGIN = (originFlag !== -1 && process.argv[originFlag + 1] ? process.argv[originFlag + 1] : 'http://localhost:5173').replace(/\/+$/, '');
@@ -55,15 +58,10 @@ if (KEY.startsWith('sb_publishable') || /"role"\s*:\s*"anon"/.test(Buffer.from(K
   die('That is the publishable key. Generating a recovery token needs the service role key.');
 }
 
-let URL_ = '';
-try {
-  URL_ = Object.fromEntries(
-    readFileSync(new URL('../.env.local', import.meta.url), 'utf8')
-      .split(/\r?\n/).filter((l) => l.includes('='))
-      .map((l) => { const at = l.indexOf('='); return [l.slice(0, at).trim(), l.slice(at + 1).trim()]; }),
-  ).VITE_SUPABASE_URL;
-} catch { /* handled below */ }
+const env = envFile();
+const URL_ = env.VITE_SUPABASE_URL || env.NEXT_PUBLIC_SUPABASE_URL || '';
 if (!URL_) die('VITE_SUPABASE_URL could not be read from .env.local.');
+console.log(`Service role key read from ${KEY_SOURCE}.`);
 
 const res = await fetch(`${URL_}/auth/v1/admin/generate_link`, {
   method: 'POST',

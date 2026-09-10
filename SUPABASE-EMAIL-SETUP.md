@@ -57,6 +57,26 @@ SUPABASE_ACCESS_TOKEN=sbp_... SMTP_PASS=abcd... node scripts/fix-auth-config.mjs
 
 Revoke the token on that page when you are done.
 
+### Passing a credential without wrestling with the shell
+
+Every operator script takes its credential from the environment first, and
+failing that from `.env.local`. So instead of constructing an environment
+variable, add the line to that file:
+
+```
+SUPABASE_SERVICE_ROLE_KEY=...
+SUPABASE_ACCESS_TOKEN=sbp_...
+```
+
+That is safe here for two checked reasons: `.gitignore` covers `.env.*`, so the
+file is never committed; and `vite.config.js` sets `envPrefix` to `VITE_` and
+`NEXT_PUBLIC_`, so Vite copies **only** those two prefixes into the browser
+bundle. A name without one of those prefixes cannot reach a visitor.
+
+The rule that matters: never give a privileged key a `VITE_` or `NEXT_PUBLIC_`
+name. `SUPABASE_SERVICE_ROLE_KEY` is invisible to the front end;
+`VITE_SUPABASE_SERVICE_ROLE_KEY` would be published to everyone.
+
 ## Fault 2: the message itself may never be sent
 
 The project uses **Supabase's built-in email service** unless custom SMTP has
