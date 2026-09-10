@@ -13,10 +13,8 @@ import styles from './StoneFilters.module.css';
  * The stock finder.
  *
  * A trade buyer arrives knowing the stone they want and wants to say so in one
- * pass — shape, weight, colour, clarity, then the finish grades. That is why
- * every group is open at once rather than folded behind a disclosure: the panel
- * is long, but it is scanned rather than read, and a collapsed group is a
- * filter the buyer never learns exists.
+ * pass — shape, weight, colour, clarity, then the finish grades. The column
+ * is ordered that way, and the groups named first stand open.
  *
  * WHERE IT SITS. On a desk the groups stand in a column BESIDE the stones — a
  * sidebar that stays put while the results scroll, so a choice and its effect
@@ -24,6 +22,11 @@ import styles from './StoneFilters.module.css';
  * twelve hundred pixels between the buyer and the first stone. In a hand the
  * same column slides in from the edge as a drawer over the results, opened
  * from the bar that also carries the count and the applied choices.
+ *
+ * HOW IT READS. Each group is a toggle (see Group below) with its options
+ * as checkbox rows and a count at the end of every row; the first four open,
+ * the rest folded. Shape keeps its glyphs. Every option is still reachable
+ * in two presses at most, and a folded group carries its chosen count.
  *
  * Results update as each option is pressed. The stock sheet this answers to has
  * a Search button because it goes to a server; every stone here is already in
@@ -40,6 +43,45 @@ import styles from './StoneFilters.module.css';
 const band = (n) => n.toFixed(2);
 
 const WIDE = '(min-width: 1024px)';
+
+/* The codes a buyer scans for, spelled out beside them where a row has room. */
+const GRADE_NAME = { ID: 'Ideal', EX: 'Excellent', VG: 'Very Good', G: 'Good' };
+const FLUOR_NAME = { NON: 'None', FNT: 'Faint', MED: 'Medium', STG: 'Strong', VST: 'Very Strong' };
+
+/*
+ * One group of the column: a toggle that opens onto its options.
+ *
+ * A native disclosure — details/summary — because that is the control a
+ * keyboard and a screen reader already know how to work: Enter or Space on
+ * the heading, announced as expanded or collapsed, no script involved. The
+ * groups a buyer names first (shape, weight, colour, clarity) open by
+ * default; the finish grades and the rest start folded, as the large
+ * catalogues do, so the column reads as a table of contents before it reads
+ * as a wall. A folded group still shows how many of its options are chosen,
+ * so nothing narrowing the results is ever out of sight.
+ *
+ * The fieldset inside keeps the grouping semantics for the checkboxes; its
+ * legend is the toggle's own label, hidden visually because the summary
+ * already shows it.
+ */
+function Group({ title, count = 0, defaultOpen = false, extra, children }) {
+  return (
+    <details className={styles.group} open={defaultOpen || undefined}>
+      <summary className={styles.summary}>
+        <span className={styles.groupName}>{title}</span>
+        {count > 0 && <b className={styles.groupCount} aria-label={`${count} chosen`}>{count}</b>}
+        <svg className={styles.chevron} viewBox="0 0 10 6" aria-hidden="true" focusable="false">
+          <path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.2" />
+        </svg>
+      </summary>
+      <fieldset className={styles.groupBody}>
+        <legend className="u-visually-hidden">{title}</legend>
+        {extra}
+        {children}
+      </fieldset>
+    </details>
+  );
+}
 
 /*
  * `onChange` is a state setter, and every write goes through its updater form.
@@ -189,13 +231,22 @@ export default function StoneFilters({ stones, value, onChange, shown, loading =
     const opened = opener.current;
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    node?.querySelector('button, input, a')?.focus();
+    /*
+     * Only what can actually take focus: enabled, and rendered. The column's
+     * desk-only Clear all is first in the DOM but display:none in the drawer,
+     * and focusing it silently did nothing — focus stayed on the opener
+     * behind the veil, and the first Tab walked out of the dialog.
+     */
+    const focusables = () => (node
+      ? [...node.querySelectorAll('button:not(:disabled), input:not(:disabled), a[href], summary')]
+        .filter((el) => el.offsetParent !== null)
+      : []);
+    focusables()[0]?.focus();
 
     const onKey = (event) => {
       if (event.key === 'Escape') { close(); return; }
       if (event.key !== 'Tab' || !node) return;
-      const items = [...node.querySelectorAll('button:not(:disabled), input:not(:disabled), a[href]')]
-        .filter((el) => el.offsetParent !== null);
+      const items = focusables();
       if (!items.length) return;
       const first = items[0];
       const last = items[items.length - 1];
@@ -210,32 +261,38 @@ export default function StoneFilters({ stones, value, onChange, shown, loading =
     };
   }, [drawer, close]);
 
-  const chips = (key, items, counted) => (
-    <ul className={styles.chips}>
+  /*
+   * One option per row: a checkbox, its label and, at the end of the row,
+   * how many stones it would leave. The list a buyer reads down rather than
+   * a cloud they scan across — the shape every large catalogue settles on
+   * for a column, because a column is read top to bottom.
+   *
+   * A dead end (nothing behind it) stays in the list, greyed, so the buyer
+   * learns the house holds none this week rather than wondering where the
+   * option went. While the stock is still arriving nothing is a dead end.
+   */
+  const rows = (key, items, counted, format = (item) => item) => (
+    <ul className={styles.rows}>
       {items.map((item) => {
         const n = counted.get(item) ?? 0;
         const on = value[key].includes(item);
+        const dead = !loading && n === 0 && !on;
         return (
           <li key={item}>
-            <button
-              type="button"
-              className={on ? styles.on : ''}
-              aria-pressed={on}
-              /* A dead end stays visible and legible — it is information about
-                 the stock — but it cannot be walked into. While the stock is
-                 still arriving nothing is a dead end yet, and greying the whole
-                 panel would read as broken rather than as loading. */
-              disabled={!loading && n === 0 && !on}
-              onClick={() => toggle(key, item)}
-            >
-              <span>{item}</span>
+            <label className={styles.row} data-on={on ? '' : undefined} data-dead={dead ? '' : undefined}>
+              <input type="checkbox" checked={on} disabled={dead} onChange={() => toggle(key, item)} />
+              <span>{format(item)}</span>
               <em aria-hidden="true">{loading ? '' : n}</em>
-            </button>
+            </label>
           </li>
         );
       })}
     </ul>
   );
+
+  /* How many of a group's options are chosen — shown on the toggle so a
+     collapsed group still says what it is doing to the results. */
+  const chosen = (key) => value[key].length;
 
   const tally = loading ? 'Loading stock' : `${shown} of ${stones.length} ${stones.length === 1 ? 'stone' : 'stones'}`;
 
@@ -312,6 +369,11 @@ export default function StoneFilters({ stones, value, onChange, shown, loading =
     >
       <div className={styles.sideHead}>
         <p className={styles.sideTitle}>Filters</p>
+        {/* Two controls for two places: the desk's column offers Clear all
+            at its top; the drawer offers the way out. CSS shows one each. */}
+        <button type="button" className={styles.sideClear} onClick={clearAll} disabled={!active}>
+          Clear all
+        </button>
         <button type="button" className={styles.closer} onClick={close} aria-label="Close filters">
           <span aria-hidden="true">×</span>
         </button>
@@ -322,8 +384,7 @@ export default function StoneFilters({ stones, value, onChange, shown, loading =
         onSubmit={(e) => e.preventDefault()}
         aria-busy={loading || undefined}
       >
-        <fieldset className={styles.group}>
-          <legend>Shape</legend>
+        <Group title="Shape" count={chosen('shape')} defaultOpen>
           <ul className={styles.shapes}>
             {shapes.map((item) => {
               const n = counts.shape.get(item) ?? 0;
@@ -345,10 +406,9 @@ export default function StoneFilters({ stones, value, onChange, shown, loading =
               );
             })}
           </ul>
-        </fieldset>
+        </Group>
 
-        <fieldset className={styles.group}>
-          <legend>Weight</legend>
+        <Group title="Weight" count={value.caratMin !== '' || value.caratMax !== '' ? 1 : 0} defaultOpen>
           <div className={styles.range}>
             <label>
               <span className="u-visually-hidden">Carat from</span>
@@ -376,46 +436,46 @@ export default function StoneFilters({ stones, value, onChange, shown, loading =
               />
             </label>
           </div>
-          <ul className={styles.chips}>
+          <ul className={styles.rows}>
             {CARAT_BANDS.map(([lo, hi]) => {
               const on = value.caratMin === band(lo) && value.caratMax === band(hi);
               const n = caratPool.filter((s) => s.carat >= lo && s.carat <= hi).length;
+              const dead = !loading && n === 0 && !on;
               return (
                 <li key={lo}>
-                  <button
-                    type="button"
-                    className={on ? styles.on : ''}
-                    aria-pressed={on}
-                    disabled={!loading && n === 0 && !on}
-                    /* Pressing the band already chosen clears it, so the row
-                       behaves as switches rather than a one-way trip. */
-                    onClick={() => set(on
-                      ? { caratMin: '', caratMax: '' }
-                      : { caratMin: band(lo), caratMax: band(hi) })}
-                  >
-                    <span>{band(lo)} – {band(hi)}</span>
+                  <label className={styles.row} data-on={on ? '' : undefined} data-dead={dead ? '' : undefined}>
+                    {/* Ticking the band already chosen clears it, so the
+                        list behaves as switches rather than a one-way trip. */}
+                    <input
+                      type="checkbox"
+                      checked={on}
+                      disabled={dead}
+                      onChange={() => set(on
+                        ? { caratMin: '', caratMax: '' }
+                        : { caratMin: band(lo), caratMax: band(hi) })}
+                    />
+                    <span>{band(lo)} – {band(hi)} ct</span>
                     <em aria-hidden="true">{loading ? '' : n}</em>
-                  </button>
+                  </label>
                 </li>
               );
             })}
           </ul>
-        </fieldset>
+        </Group>
 
-        <fieldset className={styles.group}>
-          <legend>Colour</legend>
-          {chips('colour', COLOURS, counts.colour)}
-        </fieldset>
+        <Group title="Colour" count={chosen('colour')} defaultOpen>
+          {rows('colour', COLOURS, counts.colour)}
+        </Group>
 
-        <fieldset className={styles.group}>
-          <legend>Clarity</legend>
-          {chips('clarity', CLARITIES, counts.clarity)}
-        </fieldset>
+        <Group title="Clarity" count={chosen('clarity')} defaultOpen>
+          {rows('clarity', CLARITIES, counts.clarity)}
+        </Group>
 
-        <fieldset className={styles.group}>
-          <legend>
-            <span>Cut</span>
-            <span className={styles.quick}>
+        <Group
+          title="Cut"
+          count={chosen('cut')}
+          extra={(
+            <div className={styles.quick}>
               <button
                 type="button"
                 onClick={() => triple(['ID', 'EX'])}
@@ -436,49 +496,48 @@ export default function StoneFilters({ stones, value, onChange, shown, loading =
               >
                 Reset
               </button>
-            </span>
-          </legend>
-          {chips('cut', CUTS, counts.cut)}
-        </fieldset>
+            </div>
+          )}
+        >
+          {rows('cut', CUTS, counts.cut, (g) => GRADE_NAME[g] ?? g)}
+        </Group>
 
-        <fieldset className={styles.group}>
-          <legend>Polish</legend>
-          {chips('polish', FINISHES, counts.polish)}
-        </fieldset>
+        <Group title="Polish" count={chosen('polish')}>
+          {rows('polish', FINISHES, counts.polish, (g) => GRADE_NAME[g] ?? g)}
+        </Group>
 
-        <fieldset className={styles.group}>
-          <legend>Symmetry</legend>
-          {chips('symmetry', FINISHES, counts.symmetry)}
-        </fieldset>
+        <Group title="Symmetry" count={chosen('symmetry')}>
+          {rows('symmetry', FINISHES, counts.symmetry, (g) => GRADE_NAME[g] ?? g)}
+        </Group>
 
-        <fieldset className={styles.group}>
-          <legend>Fluorescence</legend>
-          {chips('fluorescence', FLUORESCENCES, counts.fluorescence)}
-        </fieldset>
+        <Group title="Fluorescence" count={chosen('fluorescence')}>
+          {rows('fluorescence', FLUORESCENCES, counts.fluorescence, (f) => FLUOR_NAME[f] ?? f)}
+        </Group>
 
-        <fieldset className={styles.group}>
-          <legend>Laboratory</legend>
-          {chips('lab', labs, counts.lab)}
-        </fieldset>
+        <Group title="Laboratory" count={chosen('lab')}>
+          {rows('lab', labs, counts.lab, (l) => (l === 'NONE' ? 'No report' : l))}
+        </Group>
 
-        <fieldset className={styles.group}>
-          {/* Not on the sheet this answers to, because that sheet is not for
-              lab-grown stock. Here it is among the first things asked. */}
-          <legend>Growth</legend>
-          {chips('growth', GROWTHS, counts.growth)}
-        </fieldset>
+        {/* Not on the sheet this answers to, because that sheet is not for
+            lab-grown stock. Here it is among the first things asked. */}
+        <Group title="Growth" count={chosen('growth')}>
+          {rows('growth', GROWTHS, counts.growth)}
+        </Group>
 
-        <fieldset className={styles.group}>
-          <legend>Stone stage</legend>
-          <label className={styles.check}>
-            <input
-              type="checkbox"
-              checked={value.inStockOnly}
-              onChange={(e) => set({ inStockOnly: e.target.checked })}
-            />
-            <span>In stock only</span>
-          </label>
-        </fieldset>
+        <Group title="Stone stage" count={value.inStockOnly ? 1 : 0}>
+          <ul className={styles.rows}>
+            <li>
+              <label className={styles.row} data-on={value.inStockOnly ? '' : undefined}>
+                <input
+                  type="checkbox"
+                  checked={value.inStockOnly}
+                  onChange={(e) => set({ inStockOnly: e.target.checked })}
+                />
+                <span>In stock only</span>
+              </label>
+            </li>
+          </ul>
+        </Group>
       </form>
 
       {/* The drawer's own foot: the choices are already applied, so the

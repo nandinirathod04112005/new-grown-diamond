@@ -204,9 +204,6 @@
     border-right: 1px solid var(--f-line);
     scrollbar-width: thin;
   }
-
-  .sideHead,
-  .sideFoot { display: none; }
 }
 
 /*
@@ -308,7 +305,6 @@
 
 .panel {
   display: grid;
-  gap: var(--s-5);
   min-width: 0;
 }
 
@@ -316,63 +312,119 @@
   .panel {
     overflow-y: auto;
     overscroll-behavior: contain;
-    padding: var(--s-4);
+    padding: 0 var(--s-4) var(--s-3);
   }
 }
 
+/*
+ * A group is a toggle. Hairlines between them, the way a catalogue's column
+ * is ruled; the summary is the group's name in the same small caps the
+ * legends used, with the chosen count and a chevron that turns when open.
+ */
 .group {
-  border: 0;
-  padding: 0;
-  margin: 0;
+  border-top: 1px solid var(--f-line);
   min-width: 0;
 }
 
-.group legend {
+.group:first-child { border-top: 0; }
+
+.summary {
   display: flex;
   align-items: center;
-  gap: var(--s-3);
-  width: 100%;
-  padding: 0 0 var(--s-2);
+  gap: var(--s-2);
+  min-height: 2.9rem;
+  padding: 0.35rem 0;
+  list-style: none;
+  cursor: pointer;
   font-size: 0.5625rem;
   letter-spacing: 0.34em;
   text-transform: uppercase;
-  color: var(--f-muted);
+  color: var(--f-ink);
+  user-select: none;
 }
 
-/* ---------------- option buttons ---------------- */
+.summary::-webkit-details-marker { display: none; }
 
-.chips,
-.shapes {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
+.summary:hover .groupName,
+.summary:focus-visible .groupName { color: var(--accent-lift); }
+
+.groupName { margin-right: auto; }
+
+.groupCount {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.15rem;
+  height: 1.15rem;
+  padding: 0 0.3rem;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--text-invert);
+  font-size: 0.5625rem;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.chevron {
+  width: 0.7rem;
+  height: 0.5rem;
+  color: var(--f-muted);
+  transition: transform var(--dur-base) var(--ease-primary);
+}
+
+.group[open] .chevron { transform: rotate(180deg); }
+
+.groupBody {
+  display: grid;
+  gap: var(--s-2);
+  margin: 0;
+  padding: 0 0 var(--s-4);
+  border: 0;
+  min-width: 0;
+}
+
+/* ---------------- option rows ---------------- */
+
+.rows {
+  display: grid;
+  gap: 0.1rem;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.chips button,
-.shapes button {
-  display: flex;
+/* Checkbox, label, count — read left to right, one per line. The row is the
+   target, not the box: a 2.25rem band the whole width of the column. */
+.row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: 0.45rem;
-  padding: 0.5rem 0.7rem;
-  border: 1px solid var(--f-line);
+  gap: 0.65rem;
+  min-height: 2.25rem;
+  padding: 0.2rem 0.4rem;
+  margin: 0 -0.4rem;
   border-radius: var(--radius-control);
   font-size: var(--t-xs);
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--f-ink);
-  background: var(--f-chip);
-  transition:
-    background var(--dur-base) var(--ease-primary),
-    border-color var(--dur-base) var(--ease-primary),
-    color var(--dur-base) var(--ease-primary);
+  cursor: pointer;
+  transition: background var(--dur-base) var(--ease-primary);
 }
 
-.chips button:hover:not(:disabled),
-.shapes button:hover:not(:disabled) {
-  border-color: var(--accent-deep);
+.row:hover { background: var(--surface-2); }
+
+.row input {
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
+  accent-color: var(--accent);
+  cursor: inherit;
+}
+
+.row > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /*
@@ -382,7 +434,64 @@
  * tabular — a buyer scanning for "VS1" should not have to step over the number
  * to find it.
  */
-.chips em,
+.row em {
+  font-style: normal;
+  font-size: 0.5625rem;
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
+  color: var(--f-faint);
+}
+
+.row[data-on] { color: var(--ivory); }
+.row[data-on] em { color: var(--f-muted); }
+
+/*
+ * An option with nothing behind it is dimmed, not removed.
+ *
+ * Removing it would make the list reflow under the cursor on every click, and
+ * would hide the most useful thing the column knows: that the house holds no
+ * FL at all this week.
+ */
+.row[data-dead] { opacity: 0.38; cursor: default; }
+.row[data-dead]:hover { background: transparent; }
+
+/* ---------------- shape grid ---------------- */
+
+/* Shape keeps its glyphs: three across the column, glyph, name and count. */
+.shapes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.shapes li { flex: 1 1 calc(33.333% - 0.4rem); max-width: calc(33.333% - 0.27rem); }
+
+.shapes button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  width: 100%;
+  padding: 0.6rem 0.25rem 0.5rem;
+  border: 1px solid var(--f-line);
+  border-radius: var(--radius-control);
+  background: var(--f-chip);
+  color: var(--f-ink);
+  font-size: var(--t-xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-align: center;
+  transition:
+    background var(--dur-base) var(--ease-primary),
+    border-color var(--dur-base) var(--ease-primary),
+    color var(--dur-base) var(--ease-primary);
+}
+
+.shapes button:hover:not(:disabled) { border-color: var(--accent-deep); }
+
 .shapes em {
   font-style: normal;
   font-size: 0.5625rem;
@@ -392,10 +501,10 @@
 }
 
 /*
- * A selected option inverts against the ground.
+ * A selected shape inverts against the ground.
  *
  * `--ivory` and `--ink` flip together with the theme, so the pair is a solid
- * light chip with dark type on the dark page and the exact reverse on the
+ * light tile with dark type on the dark page and the exact reverse on the
  * light one — without either rule naming a colour.
  */
 .on {
@@ -406,34 +515,7 @@
 
 .on em { color: color-mix(in srgb, var(--ink) 62%, transparent); }
 
-/*
- * An option with nothing behind it is dimmed, not removed.
- *
- * Removing it would make the rows reflow under the cursor on every click, and
- * would hide the most useful thing the panel knows: that the house holds no
- * FL at all this week.
- */
-.chips button:disabled,
-.shapes button:disabled {
-  opacity: 0.3;
-  cursor: default;
-}
-
-/* ---------------- shape row ---------------- */
-
-/* Three across the column: glyph, name, count. */
-.shapes { gap: 0.4rem; }
-
-.shapes li { flex: 1 1 calc(33.333% - 0.4rem); max-width: calc(33.333% - 0.27rem); }
-
-.shapes button {
-  width: 100%;
-  flex-direction: column;
-  gap: 0.3rem;
-  padding: 0.6rem 0.25rem 0.5rem;
-  text-align: center;
-  letter-spacing: 0.06em;
-}
+.shapes button:disabled { opacity: 0.3; cursor: default; }
 
 .glyph {
   width: 1.6rem;
@@ -449,7 +531,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin-bottom: 0.55rem;
+  margin-bottom: 0.35rem;
 }
 
 .range label { display: block; flex: 1 1 0; min-width: 0; }
@@ -472,20 +554,16 @@
 
 /* ---------------- cut shortcuts ---------------- */
 
-/*
- * The shortcuts sit against their label, not at the far edge of the column.
- *
- * Pushed right with `margin-left: auto` they landed mid-row with white space on
- * both sides and read as belonging to nothing — they act on cut, polish and
- * symmetry together, and have to look attached to the grades to say so.
- */
+/* The three shortcuts act on cut, polish and symmetry together, so they sit
+   at the head of the Cut group, above its rows, where the grades begin. */
 .quick {
   display: flex;
   gap: 0.3rem;
+  margin-bottom: 0.25rem;
 }
 
 .quick button {
-  padding: 0.25rem 0.5rem;
+  padding: 0.3rem 0.55rem;
   border: 1px solid var(--f-line-firm);
   border-radius: var(--radius-control);
   font-size: 0.5625rem;
@@ -498,30 +576,38 @@
 .quick button:hover,
 .quick button:focus-visible { background: var(--f-ink); color: var(--ink); }
 
-/* ---------------- stone stage ---------------- */
+/* ---------------- the column's own head ---------------- */
 
-.check {
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-  width: max-content;
-  min-height: 2.5rem;
-  font-size: var(--t-xs);
-  letter-spacing: 0.1em;
+/* On a desk the head carries the title and Clear all; in the drawer it
+   carries the title and the way out. The other control is not rendered
+   visibly on that side. */
+.sideClear {
+  min-height: 2.25rem;
+  padding: 0 0.7rem;
+  border: 1px solid var(--f-line-firm);
+  border-radius: var(--radius-control);
+  font-size: 0.625rem;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--f-ink);
-  cursor: pointer;
+  transition: background var(--dur-base) var(--ease-primary), color var(--dur-base) var(--ease-primary);
 }
 
-.check input { width: 1rem; height: 1rem; accent-color: var(--accent); }
+.sideClear:hover:not(:disabled),
+.sideClear:focus-visible:not(:disabled) { background: var(--f-ink); color: var(--ink); }
+.sideClear:disabled { opacity: 0.34; cursor: default; }
+
+@media (max-width: 1023px) { .sideClear { display: none; } }
 
 @media (prefers-reduced-motion: reduce) {
-  .chips button,
   .shapes button,
   .quick button,
   .clear,
   .apply,
-  .applied button { transition: none; }
+  .applied button,
+  .row,
+  .chevron,
+  .sideClear { transition: none; }
   .side { transition: none; }
 }
 
@@ -531,8 +617,9 @@
    the `display: flex` that shapes them, so the desk's `none` is the rule that
    wins at equal specificity. */
 @media (min-width: 1024px) {
-  .sideHead,
-  .sideFoot { display: none; }
+  .sideFoot,
+  .closer { display: none; }
+  .sideHead { padding: 0 0 var(--s-3); }
 }
 
 /* In a hand the bar's row is title above, then count on the left with the
