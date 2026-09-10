@@ -105,8 +105,29 @@ SEND that fails. That is the mailer, and only two things cause it:
 2. **Custom SMTP is configured, but its host, port, username or password is
    wrong.**
 
-A quick way to tell them apart: request recovery for the address you sign in to
-Supabase with. If that one arrives and a customer's does not, it is cause 1.
+**That test has now been run, and it rules cause 1 out.** Requesting recovery
+for the project owner's own address answers:
+
+```
+POST /auth/v1/recover   500  {"error_code":"unexpected_failure",
+                              "msg":"Error sending recovery email",
+                              "error_id":"01a08b09-6a90-7790-95dc-b998f2f02d1e"}
+```
+
+An address with no account answers `200 {}` instead, because Supabase does not
+attempt a send for one — so the 500 only ever appears where an account exists
+and a send was really tried. The owner's own address failing means this is not
+the built-in sender's team-only restriction. **No address works.** The mail path
+is broken outright: either there is no custom SMTP and the built-in service is
+failing for this project, or custom SMTP is configured with a wrong host, port,
+username or password.
+
+### Finding the exact reason in one minute
+
+Every failure returns an `error_id`. In the dashboard, open **Logs → Auth** and
+search for that id. The entry carries the underlying SMTP error — a refused
+login, an unreachable host, a rejected sender — which names the fix precisely
+instead of leaving it to be guessed at.
 
 To test delivery for any one address:
 
