@@ -384,6 +384,122 @@ html.lenis body { height: auto; }
   .u-above-film:not([data-leaving]),
   .u-vel-stretch { transform: none; }
 }
+
+/*
+ * R.K.-inspired cinematic scroll layer.
+ *
+ * The reference uses ScrollTrigger to push alternating photographs in from
+ * the sides and slowly enlarge its opening image. Here the same visual rhythm
+ * is expressed with native view timelines: no new scroll listener, no forced
+ * layout reads and no fight with the existing reveal transform. `translate`
+ * and `scale` are individual transform properties, so they compose with the
+ * entrance animation instead of replacing it.
+ */
+@supports (animation-timeline: view()) {
+  @media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
+    .u-above-film main:not([data-reference-motion='off']) > section:first-child img:not(article img, [data-motion='off']) {
+      animation: rkHeroLens linear both;
+      animation-timeline: view(block);
+      animation-range: cover 0% cover 72%;
+      transform-origin: 50% 45%;
+      will-change: scale;
+    }
+
+    .u-above-film main:not([data-reference-motion='off']) > section:not(:first-child):nth-of-type(odd) img:not(article img, [data-motion='off']),
+    .u-above-film main:not([data-reference-motion='off']) > section:not(:first-child):nth-of-type(even) img:not(article img, [data-motion='off']) {
+      animation: rkImageTravel linear both;
+      animation-timeline: view(block);
+      animation-range: entry 0% exit 100%;
+      will-change: translate, scale;
+    }
+
+    .u-above-film main:not([data-reference-motion='off']) > section:not(:first-child):nth-of-type(even) img:not(article img, [data-motion='off']) {
+      --rk-direction: -1;
+    }
+
+    .u-above-film main:not([data-reference-motion='off']) > section:not(:first-child):nth-of-type(odd) img:not(article img, [data-motion='off']) {
+      --rk-direction: 1;
+    }
+  }
+}
+
+@keyframes rkHeroLens {
+  from { scale: 1.16; }
+  to { scale: 1; }
+}
+
+@keyframes rkImageTravel {
+  0% { translate: calc(var(--rk-direction, 1) * 5vw) 2.5%; scale: 1.08; }
+  48% { translate: 0 0; scale: 1; }
+  100% { translate: calc(var(--rk-direction, 1) * -2.5vw) -2%; scale: 1.025; }
+}
+
+/* A fine travelling edge introduces every public chapter. It mirrors the
+   reference's stacked panels, but does not pin the visitor or lengthen the
+   document just to display an effect. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .u-above-film main:not([data-reference-motion='off']) > section {
+      position: relative;
+    }
+
+    .u-above-film main:not([data-reference-motion='off']) > section::after {
+      content: '';
+      position: absolute;
+      z-index: 8;
+      left: var(--gutter);
+      right: var(--gutter);
+      top: 0;
+      height: 1px;
+      pointer-events: none;
+      background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--gold-lift) 72%, transparent), transparent);
+      transform: scaleX(0);
+      transform-origin: center;
+      animation: rkSectionLine linear both;
+      animation-timeline: view(block);
+      animation-range: entry 0% entry 38%;
+    }
+  }
+}
+
+@keyframes rkSectionLine { to { transform: scaleX(1); } }
+
+/* GSAP marks the chapters it actually controls. The raised surface and large
+   shadow make the incoming chapter visibly pass over the previous one, the
+   panel-stack signature that distinguishes the supplied reference. */
+@media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
+  .u-above-film main > section[data-cinematic-panel] {
+    z-index: 1;
+    border-radius: clamp(1rem, 2vw, 2rem) clamp(1rem, 2vw, 2rem) 0 0;
+    box-shadow: 0 -2rem 5rem rgba(0,0,0,.18);
+  }
+}
+
+/* Living highlights: headings catch one restrained spectral reflection and
+   card photography moves deeper on intent. */
+@media (prefers-reduced-motion: no-preference) {
+  .u-above-film main h1 em,
+  .u-above-film main h2 em {
+    color: transparent;
+    background: linear-gradient(105deg, var(--gold) 10%, #fff1c9 43%, var(--gold-lift) 56%, var(--gold) 88%);
+    background-size: 220% 100%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    animation: rkTypeLight 7s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes rkTypeLight { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+
+@media (hover:hover) and (pointer:fine) {
+  .u-above-film main article { overflow: clip; }
+  .u-above-film main article img { transition: transform 900ms cubic-bezier(.16,1,.3,1), filter 600ms ease; }
+  .u-above-film main article:hover img { transform: scale(1.06); filter: contrast(1.04) saturate(1.08); }
+  .u-above-film main a svg,
+  .u-above-film main button svg { transition: transform 420ms cubic-bezier(.16,1,.3,1); }
+  .u-above-film main a:hover svg,
+  .u-above-film main button:hover svg { transform: translate3d(3px,-3px,0) rotate(3deg); }
+}
 /* Keep long browsing pages steady while scrolling. */
 .u-above-film:not([data-leaving]) { transform:none; }
 :focus-visible { outline:2px solid var(--accent);outline-offset:4px; }

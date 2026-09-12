@@ -157,7 +157,7 @@ export default function Header() {
       {/* Outside the header, because the header blends with `difference` and
           a background inside it would be inverted along with the type. */}
       <div className={styles.scrim} data-on={scrolled && !open ? '' : undefined} aria-hidden="true" />
-      <header className={styles.root} data-open={open ? '' : undefined} data-scrolled={scrolled ? '' : undefined}>
+      <header className={styles.root} data-site-header="" data-open={open ? '' : undefined} data-scrolled={scrolled ? '' : undefined}>
         <a className={styles.mark} href="/" aria-label="New Grown Diamond — home">
           <span className={styles.markGlyph} aria-hidden="true">N</span>
           <span className={styles.markWords}>New Grown <b>Diamond</b></span>

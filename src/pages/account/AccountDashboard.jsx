@@ -11,6 +11,7 @@ import { useWishlist } from '@/wishlist/useWishlist.js';
 import { interpolate, useLocale } from '@/i18n/localeContext.js';
 import { useCopy } from '@/i18n/useCopy.js';
 import ProfileForm from './ProfileForm.jsx';
+import ChangePassword from './ChangePassword.jsx';
 import DeleteAccount from './DeleteAccount.jsx';
 import COPY from './AccountDashboard.copy.js';
 import styles from './AccountDashboard.module.css';
@@ -403,7 +404,14 @@ export default function AccountDashboard({ user, profile, onProfileSaved, signOu
                 <div><dt>{c.status}</dt><dd><Lock /> {profile?.account_status ?? '—'}</dd></div>
               </dl>
               <div className={styles.security}>
-                <a href="/forgot-password">{c.changePassword}</a>
+                {/*
+                  Changing it HERE is the ordinary route now. The emailed link
+                  below is kept for the one case it is actually for — somebody
+                  who cannot sign in at all — rather than being the only way to
+                  do something this open session already authorises.
+                */}
+                <ChangePassword />
+                <a href="/forgot-password">{c.forgotInstead}</a>
                 <span>{c.secureLink}</span>
               </div>
             </section>

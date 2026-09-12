@@ -77,8 +77,11 @@
   text-transform: uppercase;
   white-space: nowrap;
   color: var(--text);
-  transition: color var(--dur-base) var(--ease-primary);
+  transform-origin: left center;
+  transition: color var(--dur-base) var(--ease-primary), transform 700ms cubic-bezier(.16,1,.3,1), letter-spacing 700ms cubic-bezier(.16,1,.3,1);
 }
+
+.root[data-scrolled] .mark { transform: scale(.9); letter-spacing: .15em; }
 
 .mark:hover,
 .mark:focus-visible { color: var(--accent); }
@@ -558,7 +561,19 @@
 /* ---------------- 4D storefront header refresh ---------------- */
 .root {
   gap: 1rem;
-  background: color-mix(in srgb, var(--ink) 94%, transparent);
+  /*
+   * OPAQUE. This was `color-mix(… var(--ink) 94%, transparent)`, and the 6%
+   * was not reading as glass — it was reading as a fault. There is no
+   * backdrop-filter behind it (the old one was deleted because it sat behind a
+   * fully opaque colour and blurred the page for nothing), so the page simply
+   * showed through: scrolling the diamonds route put "…seed to a finished
+   * stone." legibly across the wordmark and the nav.
+   *
+   * Six per cent of translucency cannot be seen when it works and is obvious
+   * when it does not. If the glass look is wanted, it needs a real
+   * backdrop-filter and a much lower alpha — not this.
+   */
+  background: var(--ink);
   border-bottom-color: color-mix(in srgb, var(--text) 10%, transparent);
   box-shadow: 0 10px 34px rgba(10, 28, 24, 0.045);
   isolation: isolate;

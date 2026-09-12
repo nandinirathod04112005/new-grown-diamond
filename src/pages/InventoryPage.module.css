@@ -285,3 +285,37 @@
   .diamondStage::before, .realDiamond, .realDiamond i, .diamondShadow, .orbit, .orbitInner { animation: none; }
   .realDiamond { background-position: 48.27% 0; transform: none; }
 }
+
+/* The foot of the grid: how much of the catalogue is on screen, and the way to
+   see more of it. Only rendered while something is still held back. */
+.more {
+  display: grid;
+  justify-items: center;
+  gap: .75rem;
+  padding: 2.5rem 0 1rem;
+}
+
+.more p {
+  margin: 0;
+  font-size: var(--t-xs);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.more button {
+  min-height: var(--target-min);
+  padding: 0 1.6rem;
+  border: 1px solid var(--line-firm);
+  border-radius: 2px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: var(--t-xs);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background var(--dur-base) var(--ease-primary), color var(--dur-base) var(--ease-primary);
+}
+
+.more button:hover { background: var(--text); color: var(--ink); }

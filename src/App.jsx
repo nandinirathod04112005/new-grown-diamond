@@ -19,6 +19,7 @@ import { splitLocale } from '@/i18n/locales.js';
 import { useLocale } from '@/i18n/localeContext.js';
 import { useScrollVelocity } from '@/hooks/useScrollVelocity.js';
 import usePageAnimations from '@/hooks/usePageAnimations.js';
+import useCinematicScroll from '@/hooks/useCinematicScroll.js';
 import { usePageViews } from '@/hooks/usePageViews.js';
 import { PAGES } from '@/pages/siteContent.js';
 import SeoHead from '@/components/seo/SeoHead.jsx';
@@ -213,6 +214,7 @@ export default function App() {
    */
   const { path: rawPath, phase } = useRouter();
   const { locale, path } = splitLocale(rawPath);
+  useCinematicScroll(path);
   usePageAnimations(path);
   /* Anonymous visit counting (lib/analytics.js): the full address, with its
      /hi or /gu prefix, so languages can be told apart. It sends only from the

@@ -31,6 +31,18 @@ export default function InventoryPage() {
   // first render is already the settled state.
   const [stage, setStage] = useState(() => (isConfigured ? 'loading' : 'unconfigured'));
   const [filters, setFilters] = useState(EMPTY);
+  const [total, setTotal] = useState(0);
+  const [loadingMore, setLoadingMore] = useState(false);
+  /*
+   * ONE PAGE OF STONES, FETCHED AND DRAWN.
+   *
+   * Not the catalogue. The day a supplier stock list put 18,061 stones live,
+   * this page asked for all of them and built a card for every match in one
+   * render pass — each with a photograph and the site's 3D hover treatment.
+   * The tab stopped answering. Both halves had to be bounded: what is asked
+   * for, and what is drawn.
+   */
+  const PAGE = 60;
   const [viewing, setViewing] = useState(null);
   const { t } = useLocale();
   const c = useCopy(COPY);
@@ -38,9 +50,13 @@ export default function InventoryPage() {
   // The fetch never sets state synchronously: the effect's first write happens
   // after the await, and Retry sets the loading state from the click that
   // caused it. That keeps the render pass free of cascading updates.
-  const fetchStones = useCallback(async () => {
+  const fetchStones = useCallback(async (offset = 0) => {
     try {
-      setStones(await listDiamonds());
+      const { stones: page, total: count } = await listDiamonds({ limit: PAGE, offset });
+      /* Appending, not replacing: "Show more" adds the next page to what is
+         already on screen rather than starting the grid again. */
+      setStones((prev) => (offset === 0 ? page : [...prev, ...page]));
+      setTotal(count);
       setStage('ready');
     } catch (err) {
       // The visitor never sees Supabase internals; the console does.
@@ -61,13 +77,15 @@ export default function InventoryPage() {
     fetchStones();
   }, [fetchStones]);
 
+
   const rows = useMemo(
     () => stones.filter((s) => matches(s, filters)),
     [stones, filters],
   );
 
+
   return (
-    <main className={styles.page}>
+    <main className={styles.page} data-reference-motion="off">
       <header className={styles.hero}>
         {/* Ambient field: the stock page was the one hero with nothing moving
             in it at rest. */}
@@ -167,11 +185,29 @@ export default function InventoryPage() {
         )}
 
         {stage === 'ready' && rows.length > 0 && (
-          <div id="stones" className={styles.grid}>
-            {rows.map((stone, i) => (
-              <DiamondCard key={stone.publicId} stone={stone} index={i} onInspect={setViewing} />
-            ))}
-          </div>
+          <>
+            <div id="stones" className={styles.grid}>
+              {rows.map((stone, i) => (
+                <DiamondCard key={stone.publicId} stone={stone} index={i} onInspect={setViewing} />
+              ))}
+            </div>
+            {stones.length < total && (
+              <div className={styles.more}>
+                <p>{`${rows.length.toLocaleString()} shown of ${total.toLocaleString()} stones in stock`}</p>
+                <button
+                  type="button"
+                  disabled={loadingMore}
+                  onClick={async () => {
+                    setLoadingMore(true);
+                    await fetchStones(stones.length);
+                    setLoadingMore(false);
+                  }}
+                >
+                  {loadingMore ? 'Loading…' : 'Show more'}
+                </button>
+              </div>
+            )}
+          </>
         )}
       </section>
 

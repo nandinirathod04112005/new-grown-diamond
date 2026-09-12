@@ -25,7 +25,23 @@ export function publicUrl(bucket, path) {
   return data?.publicUrl ?? '';
 }
 
+/**
+ * A stone's photograph, wherever it actually lives.
+ *
+ * TWO KINDS OF STONE NOW SHARE THIS COLUMN. One was photographed here and its
+ * picture is a key in our own storage bucket; the other arrived on a supplier's
+ * stock list and its picture is a URL on the supplier's CDN. Wrapping the
+ * second in a bucket path produced
+ *   .../storage/v1/object/public/diamonds/https://hd.diamvideo.com/...
+ * which is not an address of anything — every one of the 20,099 imported
+ * stones showed an empty frame.
+ *
+ * An absolute URL is already an answer and is handed back untouched; anything
+ * else is still a key in our bucket.
+ */
 export function diamondImageUrl(path) {
+  if (!path) return '';
+  if (/^https?:\/\//i.test(path)) return path;
   return publicUrl(DIAMOND_BUCKET, path);
 }
 

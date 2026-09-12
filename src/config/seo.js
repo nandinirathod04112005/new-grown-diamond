@@ -30,7 +30,23 @@ export const OG_IMAGE_ALT = 'A New Grown Diamond round brilliant laboratory-grow
 const ARTICLE_ROUTES = JOURNAL_ARCHIVE.map((p) => `/blogs/${p.slug}`);
 
 export const PUBLIC_ROUTES = ['/', '/diamonds', '/jewellery', '/about', '/education', '/price-and-size', '/cvd-vs-natural', '/shapes', '/why-lab-grown', '/faq', '/blogs', '/feedback', '/contact', '/cart', '/wishlist', '/privacy-policy', '/terms-and-conditions', ...ARTICLE_ROUTES];
-export const PRIVATE_ROUTES = ['/login', '/register', '/account', '/forgot-password', '/reset-password'];
+/*
+ * Routes that get a built shell but are never indexed.
+ *
+ * /auth/callback IS ON THIS LIST, and leaving it off was a real outage rather
+ * than an oversight in a list. These entries are what make a static host serve
+ * the app at a path that is not a file on disk; without one, `_redirects` sends
+ * the request to the catch-all, which answers `/404.html` with a 404. Every
+ * confirmation and password-recovery email Supabase sends lands on
+ * /auth/callback — so the one route that every emailed link in the product
+ * depends on was the one route that answered 404 on every static host, while
+ * /login, /forgot-password and /reset-password beside it all worked.
+ *
+ * Adding a route to the app is therefore not finished until it is either here,
+ * in PUBLIC_ROUTES, or covered by a rule in public/_redirects (which is how the
+ * /admin/* pages are served).
+ */
+export const PRIVATE_ROUTES = ['/login', '/register', '/account', '/forgot-password', '/reset-password', '/auth/callback'];
 
 export const SEO_BY_ROUTE = {
   '/': { title: 'Lab Grown Diamond Manufacturer | New Grown Diamond', description: DEFAULT_DESCRIPTION },

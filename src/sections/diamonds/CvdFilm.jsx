@@ -34,7 +34,7 @@ import styles from './CvdProcess.module.css';
  * burned-in captions: the opening shot and the gas-panel shot carried
  * machine-written labels with spelling errors.
  */
-export default function CvdFilm({ onScrubber, interactive = false }) {
+export default function CvdFilm({ onScrubber, interactive = false, autoplay = false }) {
   const box = useRef(null);
   const video = useRef(null);
   const [small] = useState(() => typeof window !== 'undefined' && window.matchMedia?.('(max-width: 767px)').matches);
@@ -59,7 +59,7 @@ export default function CvdFilm({ onScrubber, interactive = false }) {
 
   /* The scrubber: one seek in flight, always towards the latest request. */
   useEffect(() => {
-    if (interactive || !armed) return undefined;
+    if (interactive || autoplay || !armed) return undefined;
     const v = video.current;
     if (!v) return undefined;
 
@@ -93,7 +93,7 @@ export default function CvdFilm({ onScrubber, interactive = false }) {
       v.removeEventListener('loadedmetadata', ready);
       onScrubber?.(null);
     };
-  }, [armed, interactive, onScrubber]);
+  }, [armed, autoplay, interactive, onScrubber]);
 
   if (interactive) {
     return (
@@ -112,6 +112,8 @@ export default function CvdFilm({ onScrubber, interactive = false }) {
         poster={poster}
         muted
         playsInline
+        autoPlay={autoplay}
+        loop={autoplay}
         preload={armed ? 'auto' : 'none'}
         disablePictureInPicture
         tabIndex={-1}

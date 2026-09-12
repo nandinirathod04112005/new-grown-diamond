@@ -5,7 +5,7 @@ import fallback from '@/assets/diamonds/ngd-brilliant-macro.webp';
 import { useCart } from '@/cart/useCart.js';
 import { carat as fmtCarat, money, text } from '@/components/product/stoneFormat.js';
 import StoneViewer from '@/components/product/StoneViewer.jsx';
-import { listDiamonds } from '@/lib/supabase/queries/diamonds.js';
+import { listDiamondsByIds } from '@/lib/supabase/queries/diamonds.js';
 import { isConfigured } from '@/lib/supabase/client.js';
 import { resizedImage } from '@/lib/storageImages.js';
 import { useWishlist } from '@/wishlist/useWishlist.js';
@@ -39,7 +39,7 @@ export default function WishlistPage() {
   useEffect(() => {
     if (!isConfigured) return undefined;
     let alive = true;
-    listDiamonds()
+    listDiamondsByIds(saved.map((item) => item.publicId))
       .then((rows) => {
         if (!alive) return;
         setLive(new Map(rows.map((row) => [row.publicId, row])));
@@ -52,7 +52,7 @@ export default function WishlistPage() {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [saved]);
 
   /* Each saved stone, with live data laid over the snapshot where it exists. */
   const rows = saved.map((item) => {

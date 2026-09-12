@@ -18,9 +18,19 @@ export function storedTheme() {
   }
 }
 
-/** What the visitor is actually looking at right now. */
+/**
+ * What the visitor is actually looking at right now.
+ *
+ * THE FALLBACK HERE IS ONE OF THREE that have to say the same word: the inline
+ * script in index.html (which paints first), this, and ThemeToggle's initial
+ * state. All three said 'light' while every comment around them said dark was
+ * the authored default — the code had drifted from its own description, and a
+ * first-time visitor got the light theme on a site written for the dark one.
+ * Changing one alone would give a flash of the wrong theme, or a toggle whose
+ * label disagrees with the page.
+ */
 export function resolvedTheme() {
-  return storedTheme() ?? 'light';
+  return storedTheme() ?? 'dark';
 }
 
 /**

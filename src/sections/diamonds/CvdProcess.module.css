@@ -17,6 +17,77 @@
 
 .root > * { min-width: 0; }
 
+/* Inventory film mode: the video owns its timeline and the page keeps its
+   natural height. This replaces the former 525vh pinned scroll sequence. */
+.playMode { max-width: 1320px; }
+
+.playStage {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  min-height: 20rem;
+  max-height: min(76vh, 52rem);
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--gold) 38%, var(--ink-line));
+  border-radius: 1.25rem;
+  background: var(--ink-raised);
+  box-shadow: 0 2.5rem 6rem rgba(0,0,0,.34);
+}
+
+.playStage .film {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  border: 0;
+  border-radius: inherit;
+  /*
+   * THE CENTRING FROM THE BASE RULE HAS TO GO WITH THE REST OF IT.
+   *
+   * `.film` centres itself with `left: 50%` plus `translate: -50% -50%`. This
+   * block replaces the positioning with `inset: 0` but was leaving the
+   * translate behind, so the window kept being pulled half its own width to
+   * the left and half its height up — measured at 1188x652 sitting at
+   * left: -468 in a 1440 viewport. Two thirds of the frame hung off the side
+   * of the screen and the right half of the section was empty.
+   *
+   * `aspect-ratio` is left alone deliberately: the stage is 16/9 too, so the
+   * inherited value agrees with it.
+   */
+  translate: none;
+}
+
+.playStage .filmVideo { width: 100%; height: 100%; object-fit: cover; }
+.playStage .filmProgress::after { animation: filmPlayback 16.8s linear infinite; }
+
+.playCaption {
+  position: absolute;
+  z-index: 5;
+  inset: auto clamp(1.2rem, 4vw, 3rem) clamp(1.2rem, 4vw, 2.5rem);
+  display: grid;
+  gap: .35rem;
+  width: max-content;
+  max-width: calc(100% - 2.4rem);
+  padding: 1rem 1.2rem;
+  border-left: 1px solid var(--gold-lift);
+  background: linear-gradient(90deg, rgba(3,5,6,.78), transparent);
+  text-shadow: 0 2px 12px #000;
+}
+
+.playCaption span,
+.playCaption small { color: var(--gold-lift); font-size: .6rem; letter-spacing: .18em; text-transform: uppercase; }
+.playCaption strong { font: 300 clamp(1.3rem, 3vw, 2.4rem)/1 var(--font-display); }
+.playCaption small { color: rgba(255,255,255,.62); }
+
+@keyframes filmPlayback { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+@media (max-width: 700px) {
+  .playStage { aspect-ratio: 4 / 5; min-height: 0; border-radius: .75rem; }
+  .playCaption { inset-inline: 1rem; bottom: 1rem; width: auto; }
+}
+
 .head { display: grid; gap: var(--s-3); }
 
 .title {

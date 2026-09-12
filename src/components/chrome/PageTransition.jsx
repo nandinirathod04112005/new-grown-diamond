@@ -50,7 +50,22 @@ export default function PageTransition({ phase }) {
         </span>
       ))}
 
-      <span className={styles.mark}>New Grown Diamond</span>
+      <span className={styles.lightSweep} />
+      <span className={styles.halo}><i /><i /></span>
+      <span className={styles.sparkles}>
+        {Array.from({ length: 6 }, (_, i) => <i key={i} style={{ '--spark': i }} />)}
+      </span>
+      <span className={styles.mark}>
+        <span className={styles.gemWrap}>
+          <svg className={styles.gem} viewBox="0 0 64 52" focusable="false">
+            <path d="M12 4h40l9 13-29 31L3 17 12 4Z" />
+            <path d="m3 17 17-1 12 32 12-32 17 1M12 4l8 12L32 4l12 12 8-12M20 16h24" />
+          </svg>
+          <i />
+        </span>
+        <span>New Grown Diamond</span>
+        <i />
+      </span>
     </div>
   );
 }

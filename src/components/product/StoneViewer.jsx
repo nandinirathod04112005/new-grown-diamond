@@ -329,8 +329,32 @@ export default function StoneViewer({ stone, onClose }) {
                 <SideView shape={stone.shape} table={row?.table_percentage} depth={row?.depth_percentage} />
               )}
               {media === 'size' && <StoneSize shape={stone.shape} carat={stone.carat} measured={measured} />}
+              {/*
+                NOT AN IFRAME.
+                This was `<iframe src={cert}>`, and it could never have worked:
+                IGI answers with `X-Frame-Options: SAMEORIGIN`, and every other
+                grading laboratory does the same. The browser refuses to draw
+                the page and says nothing, so the Certificate tab was a black
+                rectangle — the stone looked uncertified, which is the opposite
+                of what this panel exists to say.
+
+                It cannot be fixed from our side, and it should not be: a
+                report is proof BECAUSE it is read on the laboratory's own
+                domain. So the panel states the report, and hands the visitor
+                over to the laboratory to read it.
+              */}
               {media === 'cert' && cert && (
-                <iframe className={styles.certFrame} src={cert} title={interpolate(c.reportFor, { stock: stone.stockNumber })} />
+                <div className={styles.certPanel}>
+                  <span className={styles.certSeal} aria-hidden="true" />
+                  <p className={styles.certPanelTitle}>
+                    {interpolate(c.cert.framedTitle, { lab: lab ?? c.cert.laboratory })}
+                  </p>
+                  <p className={styles.certPanelBody}>{c.cert.framedBody}</p>
+                  <a className={styles.certPanelBtn} href={cert} target="_blank" rel="noopener noreferrer">
+                    {interpolate(c.cert.framedOpen, { number: report ?? '', lab: lab ?? '' }).replace(/\s+/g, ' ').trim()}
+                    <i aria-hidden="true" />
+                  </a>
+                </div>
               )}
             </div>
 

@@ -84,9 +84,9 @@ function recipe(kind, coarse) {
 function recipeFor(kind, coarse) {
   switch (kind) {
     case 'heading':
-      return { y: coarse ? 18 : 34, scale: 1, duration: 950 };
+      return { x: 0, y: coarse ? 18 : 34, scale: 1, duration: 950 };
     case 'image':
-      return { y: coarse ? 14 : 26, scale: 1.035, duration: 1150 };
+      return { x: coarse ? 0 : 72, y: coarse ? 14 : 26, scale: 1.055, duration: 1150 };
     case 'card':
       return { y: coarse ? 16 : 28, scale: 1.012, duration: 900 };
     case 'container':
@@ -134,7 +134,9 @@ export default function usePageAnimations(path) {
           if (node.contains(document.activeElement)) continue;
 
           const kind = KIND(node);
-          const { y, scale, duration, ruled } = recipe(kind, coarse);
+          const { x = 0, y, scale, duration, ruled } = recipe(kind, coarse);
+          const section = node.closest('section');
+          const lateral = section?.matches(':nth-of-type(even)') ? -x : x;
 
           /* An article is itself one of the targets, so asking it for the
              closest article made every card its own group and every delay was
@@ -151,7 +153,7 @@ export default function usePageAnimations(path) {
             ? { opacity: 0, transform: 'scaleX(0)', transformOrigin: 'left center' }
             : {
               opacity: 0,
-              transform: `translate3d(0, ${y}px, 0) scale(${scale})`,
+              transform: `translate3d(${lateral}px, ${y}px, 0) scale(${scale})`,
               filter: coarse ? 'none' : kind === 'image' ? 'blur(9px) saturate(.72)' : kind === 'heading' ? 'blur(5px)' : 'none',
               clipPath: kind === 'heading' ? 'inset(0 0 100% 0)' : kind === 'image' && !coarse ? 'inset(3% 0 3% 0)' : 'inset(0)',
             };

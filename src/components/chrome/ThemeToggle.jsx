@@ -16,7 +16,7 @@ const ORDER = ['dark', 'light'];
 
 export default function ThemeToggle() {
   const c = useCopy(COPY);
-  const [choice, setChoice] = useState(() => storedTheme() ?? 'light');
+  const [choice, setChoice] = useState(() => storedTheme() ?? 'dark');
 
   function cycle() {
     const next = ORDER[(ORDER.indexOf(choice) + 1) % ORDER.length];

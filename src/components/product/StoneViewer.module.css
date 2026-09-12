@@ -300,7 +300,84 @@
   pointer-events: none;
 }
 
-.certFrame { width: 100%; height: 100%; border: 0; background: #fff; }
+/* The certificate panel. `.certFrame` is gone with the iframe it styled — see
+   the note in StoneViewer.jsx: a grading laboratory refuses to be embedded, so
+   there is nothing left to give a white background to. */
+.certPanel {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: .9rem;
+  height: 100%;
+  padding: clamp(1.5rem, 4vw, 3rem);
+  text-align: center;
+}
+
+/* A drawn seal rather than an image: it must read on the dark stage at any
+   size, and it is decoration, not evidence. */
+.certSeal {
+  width: 3.25rem;
+  height: 3.25rem;
+  border: 1px solid var(--gold-lift);
+  border-radius: 50%;
+  position: relative;
+}
+
+.certSeal::before,
+.certSeal::after {
+  content: '';
+  position: absolute;
+  inset: .45rem;
+  border: 1px solid color-mix(in srgb, var(--gold-lift) 45%, transparent);
+  border-radius: 50%;
+}
+
+.certSeal::after { inset: .8rem; border-style: dashed; }
+
+.certPanelTitle {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.05rem, 2vw, 1.4rem);
+  font-weight: 300;
+  color: var(--ivory, #f7f5ed);
+}
+
+.certPanelBody {
+  margin: 0;
+  max-width: 34rem;
+  font-size: var(--t-xs);
+  line-height: 1.6;
+  color: color-mix(in srgb, #f7f5ed 62%, transparent);
+  text-wrap: pretty;
+}
+
+.certPanelBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: .55rem;
+  min-height: var(--target-min);
+  margin-top: .35rem;
+  padding: 0 1.4rem;
+  border: 1px solid var(--gold-lift);
+  border-radius: 2px;
+  color: var(--gold-lift);
+  font-size: var(--t-xs);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  transition: background var(--dur-base) var(--ease-primary), color var(--dur-base) var(--ease-primary);
+}
+
+.certPanelBtn:hover,
+.certPanelBtn:focus-visible { background: var(--gold-lift); color: #0a0f12; }
+
+/* The "opens elsewhere" arrow, drawn so it needs no icon font. */
+.certPanelBtn i {
+  width: .5rem;
+  height: .5rem;
+  border-top: 1px solid currentColor;
+  border-right: 1px solid currentColor;
+  transform: rotate(45deg);
+}
 
 .thumbs { display: flex; flex-wrap: wrap; gap: 0.6rem; }
 

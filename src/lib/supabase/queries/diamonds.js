@@ -46,23 +46,66 @@ function toCard(row) {
 }
 
 /**
- * Live storefront stock.
+ * Just these stones, by their public ids.
+ *
+ * For the wishlist and the cart, which hold a handful of ids and need to know
+ * whether each is still live. Both used to call listDiamonds() and search the
+ * result — which meant downloading the entire catalogue to check six stones,
+ * and once the catalogue passed a thousand rows it stopped being able to
+ * answer correctly at all, because the stone being looked for might be on a
+ * page that was never fetched.
+ */
+export async function listDiamondsByIds(publicIds) {
+  if (!supabase || !publicIds?.length) return [];
+  const { data, error } = await supabase
+    .from('diamonds')
+    .select(DIAMOND_CARD_COLUMNS)
+    .in('public_id', publicIds)
+    .eq('active', true)
+    .is('archived_at', null);
+  if (error) throw error;
+  return (data ?? []).map(toCard);
+}
+
+/**
+ * Live storefront stock, ONE PAGE AT A TIME.
+ *
+ * This used to fetch everything. That was fine while the catalogue was three
+ * stones and became a hang the day a supplier list put 18,061 live: PostgREST
+ * caps a response at 1,000 rows, so the page silently received a truncated
+ * catalogue AND built a thousand cards in a single render pass. The tab stopped
+ * answering, and no amount of client-side work could fix it, because the cost
+ * was in the number of rows asked for.
+ *
+ * `total` comes back with the page because the foot of the grid has to say how
+ * much is behind it. EXACT, not estimated: "18,061 stones in stock" is a claim
+ * a trade buyer reads as fact, and the planner's estimate was out by eight
+ * thousand right after the stock list landed. Counting thirty thousand rows
+ * costs Postgres a few milliseconds; being wrong about the size of the
+ * inventory costs more than that.
  *
  * The active / not-archived filters are stated here even though the database
  * policies already enforce them: defence in depth, and the intent stays
  * readable at the call site instead of living only in a policy.
  */
-export async function listDiamonds() {
-  if (!supabase) return [];
-  const { data, error } = await supabase
+export async function listDiamonds({ limit = 120, offset = 0 } = {}) {
+  if (!supabase) return { stones: [], total: 0 };
+  const { data, error, count } = await supabase
     .from('diamonds')
-    .select(DIAMOND_CARD_COLUMNS)
+    .select(DIAMOND_CARD_COLUMNS, { count: 'exact' })
     .eq('active', true)
     .is('archived_at', null)
     .order('featured', { ascending: false })
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    /* Ordering by created_at alone is not a total order once a stock list
+       lands: thousands of rows share a timestamp to the microsecond, and
+       Postgres may return them in a different order per page, which shows a
+       visitor the same stone twice and hides another. public_id breaks the
+       tie and never repeats. */
+    .order('public_id', { ascending: true })
+    .range(offset, offset + limit - 1);
   if (error) throw error;
-  return (data ?? []).map(toCard);
+  return { stones: (data ?? []).map(toCard), total: count ?? 0 };
 }
 
 export async function getDiamond(publicId) {
@@ -224,4 +267,71 @@ export async function listShapePhotos() {
     if (url) out[shape] = { url, carat: Number(row.carat) || 0, publicId: row.public_id };
   }
   return out;
+}
+
+/* ------------------------------------------------------------------ */
+
+/** Columns a stock import is allowed to write. Anything else in the file is
+ *  ignored rather than rejected, so a supplier adding a column does not break
+ *  the import. */
+export const IMPORT_COLUMNS = [
+  'public_id', 'stock_number', 'report_number', 'shape', 'carat', 'color', 'clarity',
+  'cut', 'polish', 'symmetry', 'fluorescence', 'laboratory', 'certificate_number',
+  'certificate_url', 'measurements', 'depth_percentage', 'table_percentage', 'ratio',
+  'growth_method', 'location', 'availability', 'price_per_carat', 'total_price',
+  'currency', 'image_path', 'internal_notes', 'active', 'featured', 'price_visible',
+  'video_url', 'girdle', 'culet', 'shade', 'milky', 'eye_clean',
+  'crown_angle', 'crown_height', 'pavilion_angle', 'pavilion_height',
+];
+
+/**
+ * A whole stock list, in one go.
+ *
+ * UPSERT ON stock_number, not insert. A price list is re-sent every time the
+ * stock moves, and most of what it contains is stones that are already here at
+ * a new rate. Inserting would fail on the first one of those and leave the
+ * import half-applied; upserting brings the existing row up to date and adds
+ * only what is genuinely new. The stone number is what the trade already uses
+ * to mean "this stone", and the column carries a unique index, so it is the
+ * natural key.
+ *
+ * ONE AUDIT ENTRY FOR THE WHOLE IMPORT. adminCreateDiamond writes an audit row
+ * per stone, which is right for a stone typed in by hand and wrong for thirty
+ * thousand: it would double the work, and bury every real edit in the log under
+ * a wall of identical lines.
+ *
+ * Chunked because PostgREST has to hold the whole request in memory and a
+ * 30,000-row body is a timeout, not a write. Each chunk is its own request, so
+ * an interrupted import leaves the chunks before it applied — re-running it is
+ * safe and finishes the job, which is the other reason this upserts.
+ */
+export async function adminImportDiamonds(rows, { chunkSize = 500, onProgress } = {}) {
+  if (!supabase) throw new Error('Supabase is not configured');
+  const clean = rows.map((row) => {
+    const out = {};
+    for (const key of IMPORT_COLUMNS) if (row[key] !== undefined) out[key] = row[key];
+    return out;
+  });
+
+  let written = 0;
+  const failures = [];
+  for (let i = 0; i < clean.length; i += chunkSize) {
+    const chunk = clean.slice(i, i + chunkSize);
+    const { error } = await supabase
+      .from('diamonds')
+      .upsert(chunk, { onConflict: 'stock_number', ignoreDuplicates: false });
+    if (error) failures.push({ from: i + 1, to: i + chunk.length, message: error.message });
+    else written += chunk.length;
+    onProgress?.({ done: Math.min(i + chunkSize, clean.length), total: clean.length, written, failures: failures.length });
+  }
+
+  await recordAudit({
+    action: 'import',
+    entityType: 'diamond',
+    entityId: 'stock-import',
+    entityLabel: `${written} of ${clean.length} stones`,
+    changes: null,
+  });
+
+  return { written, total: clean.length, failures };
 }

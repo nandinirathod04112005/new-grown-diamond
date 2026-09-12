@@ -1,0 +1,88 @@
+/* Sits inside an admin panel card, so it borrows that ground and only spaces
+   its own parts. */
+.root { display: grid; gap: .85rem; }
+
+.title { margin: 0; font-size: .95rem; font-weight: 500; color: var(--text); }
+
+.lead, .note {
+  margin: 0;
+  font-size: .78rem;
+  line-height: 1.55;
+  color: var(--text-muted);
+  text-wrap: pretty;
+}
+
+.lead code {
+  padding: .05rem .3rem;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--text) 10%, transparent);
+  font-size: .95em;
+}
+
+.file { font: inherit; font-size: .8rem; color: var(--text); }
+
+.problem, .result p { margin: 0; font-size: .8rem; line-height: 1.5; }
+.problem { color: #d9534f; }
+
+.preview, .result, .progress { display: grid; gap: .7rem; }
+
+.counts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: .6rem;
+  margin: 0;
+}
+
+.counts div {
+  padding: .55rem .7rem;
+  border: 1px solid var(--ink-line);
+  border-radius: 2px;
+}
+
+.counts dt {
+  font-size: .62rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.counts dd { margin: .2rem 0 0; font-size: .95rem; color: var(--text); }
+
+.go {
+  justify-self: start;
+  min-height: var(--target-min);
+  padding: 0 1.2rem;
+  border: 1px solid var(--accent);
+  border-radius: 2px;
+  background: var(--accent);
+  color: var(--ink);
+  font: inherit;
+  font-size: .75rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.go:disabled { opacity: .6; cursor: progress; }
+
+.bar {
+  height: 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text) 12%, transparent);
+  overflow: hidden;
+}
+
+.bar span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  transition: width .2s linear;
+}
+
+.failures {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: .75rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}

@@ -11,6 +11,8 @@
   grid-template-columns: repeat(5, 1fr);
   align-items: end;
   overflow: hidden;
+  perspective: 900px;
+  isolation: isolate;
 }
 
 /* Takes the pointer only while the cover is closing, so a second click cannot
@@ -33,7 +35,7 @@
   position: relative;
   height: 118%;
   transform-origin: 50% 100%;
-  scale: 1 0;
+  transform: translate3d(0, 0, 0) scaleY(0);
   border-radius: 50% 50% 0 0 / 30% 30% 0 0;
   /*
    * Lighter than the page it covers, not darker.
@@ -46,13 +48,25 @@
    * instead. The doorway reads, and nothing flashes.
    */
   background:
-    radial-gradient(76% 46% at 50% 8%, rgba(0, 206, 201, 0.22), transparent 70%),
-    linear-gradient(180deg, #2b313a 0%, #161a20 46%, #0b0d11 100%);
+    radial-gradient(76% 46% at 50% 8%, rgba(214, 179, 105, 0.18), transparent 66%),
+    radial-gradient(110% 72% at 50% 36%, rgba(18, 88, 72, 0.34), transparent 72%),
+    linear-gradient(180deg, #203b35 0%, #101c1a 48%, #070b0b 100%);
   /* The columns are drawn a hair wide so the seams between them never show as
      light lines when the sheet is fully closed. */
   /* A real gap between columns, so the colonnade reads as separate doorways
      rather than one lumpy sheet. */
   margin-inline: -1px;
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+/* Alternating light gives the colonnade real depth without adding a WebGL
+   scene to a transition that must stay instant on mid-range phones. */
+.arch:nth-child(even) {
+  background:
+    radial-gradient(76% 46% at 50% 8%, rgba(239, 210, 145, 0.2), transparent 66%),
+    radial-gradient(110% 72% at 50% 36%, rgba(11, 70, 58, 0.28), transparent 72%),
+    linear-gradient(180deg, #19322d 0%, #0d1816 48%, #060909 100%);
 }
 
 /* The drafting grid the rest of the site is built on, so even the cover is
@@ -77,10 +91,75 @@
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  border-top: 1px solid rgba(120, 245, 240, 0.75);
+  border-top: 1px solid rgba(229, 198, 128, 0.9);
   box-shadow:
-    0 -2px 22px rgba(0, 206, 201, 0.4),
-    inset 0 12px 34px rgba(0, 206, 201, 0.12);
+    0 -2px 22px rgba(222, 185, 105, 0.34),
+    inset 0 12px 34px rgba(213, 178, 103, 0.1);
+}
+
+.lightSweep {
+  position: absolute;
+  z-index: 2;
+  inset: -40% auto -40% -35%;
+  width: 24%;
+  opacity: 0;
+  transform: skewX(-16deg);
+  background: linear-gradient(90deg, transparent, rgba(255, 240, 198, 0.16), transparent);
+  filter: blur(10px);
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+.halo {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  top: 50%;
+  width: min(28rem, 72vw);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%) scale(0.7) rotate(18deg);
+  opacity: 0;
+  border: 1px solid rgba(229, 198, 128, 0.18);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.halo::before,
+.halo::after,
+.halo > i {
+  content: '';
+  position: absolute;
+  inset: 12%;
+  border: 1px solid rgba(229, 198, 128, 0.13);
+  transform: rotate(45deg);
+}
+
+.halo::after { inset: 27%; transform: rotate(22.5deg); }
+.halo > i:first-child { inset: 4%; border-radius: 50%; transform: none; }
+.halo > i:last-child { inset: 37%; transform: rotate(45deg); background: rgba(229, 198, 128, 0.025); }
+
+.sparkles {
+  position: absolute;
+  z-index: 4;
+  left: 50%;
+  top: 50%;
+  width: min(27rem, 76vw);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.sparkles > i {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  opacity: 0;
+  background: #fff3d2;
+  box-shadow: 0 0 9px 2px rgba(229, 198, 128, 0.65);
+  transform: rotate(calc(var(--spark) * 60deg)) translateY(-10rem) scale(0);
 }
 
 .mark {
@@ -89,11 +168,53 @@
   top: 50%;
   translate: -50% -50%;
   font-family: var(--font-display);
-  font-size: var(--t-sm);
-  letter-spacing: 0.34em;
+  z-index: 3;
+  display: grid;
+  justify-items: center;
+  gap: 0.72rem;
+  width: min(78vw, 31rem);
+  font-size: clamp(0.62rem, 1.1vw, 0.78rem);
+  letter-spacing: 0.38em;
   text-transform: uppercase;
   color: var(--ivory);
   opacity: 0;
+  text-align: center;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.8);
+}
+
+.gem {
+  width: clamp(2.15rem, 4vw, 3.1rem);
+  height: auto;
+  overflow: visible;
+  fill: rgba(229, 198, 128, 0.08);
+  stroke: var(--gold-lift);
+  stroke-width: 1;
+  filter: drop-shadow(0 0 12px rgba(229, 198, 128, 0.34));
+}
+
+.gemWrap {
+  position: relative;
+  display: grid;
+  place-items: center;
+  transform-style: preserve-3d;
+}
+
+.gemWrap > i {
+  position: absolute;
+  inset: -35%;
+  border-radius: 50%;
+  opacity: 0;
+  background: conic-gradient(from 20deg, transparent, rgba(255,255,255,0.65), transparent 18%, transparent 62%, rgba(229,198,128,0.45), transparent 78%);
+  filter: blur(5px);
+  mix-blend-mode: screen;
+}
+
+.mark > i {
+  display: block;
+  width: min(13rem, 42vw);
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold-lift), transparent);
+  transform: scaleX(0);
 }
 
 /*
@@ -115,22 +236,45 @@
 }
 
 @keyframes archUp {
-  from { scale: 1 0; }
-  to   { scale: 1 1; }
+  from { transform: translate3d(0, 4%, 0) scaleY(0); }
+  to   { transform: translate3d(0, 0, 0) scaleY(1); }
 }
 
 @keyframes archAway {
-  from { scale: 1 1; translate: 0 0; }
+  from { transform: translate3d(0, 0, 0) scaleY(1); }
   /* Scaled from the foot, so translating up by its own height clears the
      frame completely while the arch keeps its shape on the way out. */
-  to   { scale: 1 1; translate: 0 -118%; }
+  to   { transform: translate3d(0, -118%, 0) scaleY(1); }
 }
 
-.root[data-phase='out'] .mark { animation: markIn 360ms var(--ease-primary) forwards; }
+.root[data-phase='out'] .mark { animation: markIn 330ms 95ms var(--ease-primary) both; }
 .root[data-phase='in'] .mark { animation: markOut 220ms var(--ease-primary) forwards; }
+.root[data-phase='out'] .mark > i { animation: lineOpen 300ms 150ms var(--ease-primary) both; }
+.root[data-phase='in'] .mark > i { transform: scaleX(1); animation: lineClose 180ms var(--ease-primary) both; }
+.root[data-phase='in'] .lightSweep { animation: sweep 500ms 20ms var(--ease-primary) both; }
+.root[data-phase='out'] .halo { animation: haloIn 340ms 100ms var(--ease-primary) both; }
+.root[data-phase='in'] .halo { animation: haloOut 420ms var(--ease-primary) both; }
+.root[data-phase='out'] .gemWrap { animation: gemSet 360ms 80ms cubic-bezier(.2,.8,.2,1.25) both; }
+.root[data-phase='in'] .gemWrap { animation: gemLift 280ms var(--ease-primary) both; }
+.root[data-phase='in'] .gemWrap > i { animation: gemFlare 360ms 20ms ease-out both; }
+.root[data-phase='in'] .sparkles > i { animation: sparkle 430ms calc(var(--spark) * 24ms) ease-out both; }
 
-@keyframes markIn { from { opacity: 0; transform: translateY(0.6rem); } to { opacity: 0.85; transform: none; } }
-@keyframes markOut { to { opacity: 0; transform: translateY(-0.6rem); } }
+@keyframes markIn { from { opacity: 0; transform: translateY(0.65rem) scale(0.97); } to { opacity: 0.94; transform: none; } }
+@keyframes markOut { from { opacity: 0.94; } to { opacity: 0; transform: translateY(-0.7rem) scale(1.02); } }
+@keyframes lineOpen { to { transform: scaleX(1); } }
+@keyframes lineClose { to { transform: scaleX(0); } }
+@keyframes sweep {
+  0% { left: -35%; opacity: 0; }
+  18% { opacity: 0.7; }
+  75% { opacity: 0.35; }
+  100% { left: 118%; opacity: 0; }
+}
+@keyframes haloIn { to { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0); } }
+@keyframes haloOut { from { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0); } to { opacity: 0; transform: translate(-50%, -50%) scale(1.14) rotate(-14deg); } }
+@keyframes gemSet { from { opacity: 0; transform: translateY(0.8rem) rotateY(-45deg) scale(0.6); } to { opacity: 1; transform: none; } }
+@keyframes gemLift { to { transform: translateY(-0.5rem) rotateY(32deg) scale(1.12); } }
+@keyframes gemFlare { 35% { opacity: 0.9; transform: scale(1.15) rotate(80deg); } 100% { opacity: 0; transform: scale(1.65) rotate(150deg); } }
+@keyframes sparkle { 35% { opacity: 1; transform: rotate(calc(var(--spark) * 60deg)) translateY(-7rem) scale(1); } 100% { opacity: 0; transform: rotate(calc(var(--spark) * 60deg)) translateY(-12rem) scale(0); } }
 
 /*
  * Never rendered under reduced motion — the router skips the covered handover
@@ -147,4 +291,9 @@
   .arch:nth-child(n + 4) { display: none; }
   .arch:nth-child(1), .arch:nth-child(3) { --i: 1 !important; }
   .arch:nth-child(2) { --i: 0 !important; }
+  .grid { background-size: 56px 56px; }
+  .lightSweep { width: 34%; filter: blur(8px); }
+  .mark { letter-spacing: 0.27em; }
+  .halo { width: min(22rem, 82vw); }
+  .sparkles { display: none; }
 }

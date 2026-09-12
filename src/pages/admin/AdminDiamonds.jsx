@@ -9,6 +9,7 @@ import {
 import { diamondImageUrl } from '@/lib/supabase/storage.js';
 import DataTable from '@/components/admin/DataTable.jsx';
 import { ConfirmDialog, Toasts } from '@/components/admin/AdminFeedback.jsx';
+import StockImport from '@/components/admin/StockImport.jsx';
 import { useToasts } from '@/hooks/useAdminFeedback.js';
 import styles from './AdminDiamonds.module.css';
 
@@ -36,6 +37,7 @@ export default function AdminDiamonds() {
   const [error, setError] = useState(null);
   const [busyId, setBusyId] = useState(null);
   const [view, setView] = useState('current'); // current | archived | all
+  const [importing, setImporting] = useState(false);
   const [confirm, setConfirm] = useState(null);
   const [working, setWorking] = useState(false);
   const t = useToasts();
@@ -273,6 +275,11 @@ export default function AdminDiamonds() {
         <a className={styles.primary} href="/admin/diamonds/new"><Plus size={14} aria-hidden="true" /> Add a diamond</a>
       </header>
 
+      {/* Above the table, because what it does lands IN that table: the counts
+          in the header change the moment it finishes. `reload` re-reads the
+          stock so the new stones appear without a page refresh. */}
+      {importing && <StockImport onDone={() => { setImporting(false); fetchRows(); }} />}
+
       <DataTable
         rows={visible}
         columns={columns}
@@ -304,6 +311,11 @@ export default function AdminDiamonds() {
             </div>
             <button type="button" className={styles.toolBtn} onClick={exportCsv} disabled={!visible.length}>
               <Download size={13} aria-hidden="true" /> Export CSV
+            </button>
+            {/* Import sits beside export because they are the same job in two
+                directions, and whoever is looking for one is looking here. */}
+            <button type="button" className={styles.toolBtn} onClick={() => setImporting((v) => !v)} aria-expanded={importing}>
+              <Download size={13} aria-hidden="true" style={{ transform: 'rotate(180deg)' }} /> Import stock list
             </button>
           </>
         )}

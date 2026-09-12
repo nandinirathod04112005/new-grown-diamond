@@ -17,6 +17,7 @@
  */
 export default {
   en: {
+    forgotInstead: 'Forgot it and cannot sign in? Use the emailed link instead.',
     nav: { selection: 'Selection', wishlist: 'Wishlist', feedback: 'Feedback' },
     eyebrow: 'Customer dashboard',
     welcome: { lead: 'Welcome back, ', stop: '.', there: 'there' },
@@ -94,6 +95,7 @@ export default {
   },
 
   hi: {
+    forgotInstead: 'भूल गए हैं और साइन इन नहीं कर पा रहे? तब ईमेल वाले लिंक का उपयोग करें।',
     nav: { selection: 'चयन', wishlist: 'विशलिस्ट', feedback: 'फ़ीडबैक' },
     eyebrow: 'ग्राहक डैशबोर्ड',
     welcome: { lead: 'फिर से स्वागत है, ', stop: '।', there: 'मित्र' },
@@ -171,6 +173,7 @@ export default {
   },
 
   gu: {
+    forgotInstead: 'ભૂલી ગયા છો અને સાઇન ઇન નથી થઈ શકતું? તો ઈમેલવાળી લિંક વાપરો.',
     nav: { selection: 'પસંદગી', wishlist: 'વિશલિસ્ટ', feedback: 'પ્રતિસાદ' },
     eyebrow: 'ગ્રાહક ડેશબોર્ડ',
     welcome: { lead: 'ફરી સ્વાગત છે, ', stop: '.', there: 'મિત્ર' },
