@@ -87,7 +87,15 @@
   gap: 0.6rem;
   grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
   align-items: start;
+  /* Short panels back-fill the holes a wide one leaves, rather than leaving
+     a blank track beside it. */
+  grid-auto-flow: row dense;
 }
+
+/* A reload keeps the last answer on screen, dimmed, instead of flashing
+   skeletons over numbers that were already there. */
+.kpis[data-refreshing],
+.grid[data-refreshing] { opacity: 0.6; transition: opacity 160ms ease; }
 
 /* Spans two tracks where there are two to span; collapses on its own below. */
 .wide { grid-column: span 2; }
@@ -207,6 +215,98 @@ a.alert:hover { border-color: var(--accent-dim); color: var(--white); }
 
 .panelLink { color: var(--faint); text-decoration: none; font-size: 0.75rem; }
 .panelLink:hover { color: var(--accent); }
+
+.foot a { color: var(--dim); }
+.foot a:hover { color: var(--accent); }
+
+/* ---- figures inside a panel ---- */
+
+.figures {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7.25rem, 1fr));
+  gap: 0.8rem 1rem;
+}
+
+.figure { display: grid; gap: 0.2rem; min-width: 0; align-content: start; }
+
+.figure dt {
+  font-size: 0.625rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.figure dd { display: grid; gap: 0.1rem; min-width: 0; }
+.figureValue { font-size: 1.3rem; line-height: 1.1; letter-spacing: -0.01em; color: var(--white); }
+.figureNote { font-size: 0.6875rem; line-height: 1.35; color: var(--faint); overflow-wrap: anywhere; }
+.off { font-size: 0.8125rem; color: var(--bad); }
+
+/* Figures beside a chart where there is room, above it where there is not. */
+.split {
+  display: grid;
+  gap: 1.1rem 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  align-items: start;
+}
+
+.stack { display: grid; gap: 1rem; align-content: start; min-width: 0; }
+
+.subhead {
+  margin-bottom: 0.55rem;
+  font-size: 0.625rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+/* ---- open work ---- */
+
+.work { display: grid; gap: 0.35rem; }
+
+.work a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--line-soft);
+  border-radius: 3px;
+  color: var(--dim);
+  text-decoration: none;
+  font-size: 0.8125rem;
+}
+
+.work a:hover { border-color: var(--accent-dim); color: var(--white); }
+.work a:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.workLabel { display: grid; gap: 0.1rem; min-width: 0; }
+.workLabel small { font-size: 0.6875rem; color: var(--faint); }
+.workCount { font-weight: 400; font-size: 1.15rem; color: var(--white); font-variant-numeric: tabular-nums; }
+.workCount[data-zero] { color: var(--faint); }
+
+/* ---- website views ---- */
+
+.views { display: grid; gap: 0.35rem; }
+.viewsTotal { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0.25rem 0.5rem; }
+.viewsTotal b { font-weight: 400; font-size: 1.65rem; letter-spacing: -0.02em; color: var(--white); }
+.viewsTotal span { font-size: 0.75rem; color: var(--faint); }
+
+/* ---- revenue ---- */
+
+.money { display: grid; gap: 0.35rem; }
+
+.money li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.75rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid var(--line-soft);
+  font-size: 0.75rem;
+  color: var(--faint);
+}
+
+.money b { font-weight: 400; font-size: 1.05rem; color: var(--white); font-variant-numeric: tabular-nums; }
 
 @media (prefers-reduced-motion: reduce) {
   .kpis > *, .feedRow, [data-spin] { animation: none; }

@@ -1,0 +1,172 @@
+/*
+ * Transparency: a wide photograph with the copy on a card over its edge.
+ *
+ * The old site set this as a text card overlapping a coloured band and a
+ * photograph; this keeps that arrangement in the homepage's palette — the band
+ * is sage, the card is ivory with a gold edge — so it reads as the same idea
+ * rather than a copy of the old look.
+ */
+
+.section {
+  --gold-ink: #765923;
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  align-items: center;
+  max-width: 1700px;
+  margin: 0 auto;
+  padding: clamp(4rem, 8vw, 7rem) var(--gutter);
+  overflow: clip;
+}
+
+/* The band the card and photograph both sit across. */
+.band {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: clamp(7rem, 16vw, 12rem);
+  translate: 0 -50%;
+  background: linear-gradient(90deg, #dfe6d8, #e8ede2 60%, #edf0e7);
+  transform-origin: right center;
+}
+
+.media {
+  position: relative;
+  z-index: 1;
+  grid-column: 2;
+  grid-row: 1;
+  margin: 0;
+}
+
+.frame {
+  overflow: hidden;
+  aspect-ratio: 1672 / 941;
+  border-radius: 6px;
+  box-shadow: 0 40px 80px -40px rgba(24, 62, 53, 0.6);
+}
+
+.frame img { display: block; width: 100%; height: 100%; object-fit: cover; will-change: transform; }
+
+.card {
+  position: relative;
+  z-index: 2;
+  grid-column: 1;
+  grid-row: 1;
+  display: grid;
+  gap: 1rem;
+  margin-right: -14%;
+  padding: clamp(1.75rem, 3.4vw, 3rem);
+  background: var(--paper);
+  border-left: 2px solid var(--gold-ink);
+  box-shadow: 0 30px 70px -30px rgba(24, 62, 53, 0.35);
+}
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0;
+  font: 500 10px/1.6 var(--font-body);
+  letter-spacing: 0.19em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.rule { display: block; width: 2.6rem; height: 1px; background: var(--gold-ink); transform-origin: left center; }
+
+.title {
+  margin: 0;
+  font: 400 clamp(2.1rem, 1.3rem + 2.4vw, 3.6rem) / 1.05 var(--font-display);
+  letter-spacing: -0.03em;
+  color: var(--green);
+}
+
+.title em { color: var(--gold-ink); font-style: italic; }
+
+.mask { display: inline-block; overflow: hidden; vertical-align: top; padding-bottom: 0.06em; }
+.word { display: inline-block; }
+
+.card > p:not(.eyebrow) { margin: 0; font-size: 0.95rem; line-height: 1.8; color: var(--muted); }
+.card strong { font-weight: 600; color: var(--green); }
+
+.points {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: 0.4rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.points li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.55rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  color: var(--green);
+  background: #fbfaf6;
+}
+
+.points svg { color: var(--gold-ink); }
+
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.9rem 1.8rem; margin-top: 0.4rem; }
+
+.primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.9rem;
+  min-height: 3.1rem;
+  padding: 0 1.4rem;
+  background: var(--green);
+  color: var(--paper);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: background 300ms ease, translate 300ms ease;
+}
+
+.primary:hover, .primary:focus-visible { background: #2a5547; translate: 0 -2px; }
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid #a6b0a4;
+  font-size: 0.75rem;
+  color: var(--green);
+}
+
+.link svg { transition: translate 300ms ease; }
+.link:hover svg { translate: 4px 0; }
+.primary:focus-visible, .link:focus-visible { outline: 2px solid var(--gold-ink); outline-offset: 3px; }
+
+@media (max-width: 900px) {
+  .section { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .media { grid-column: 1; grid-row: 1; }
+  .card { grid-column: 1; grid-row: 2; margin: -2.5rem 0.5rem 0; }
+  .band { top: 30%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .primary, .link svg { transition: none; }
+}
+
+/* ================= theme-follow: dark mode ================= */
+:global(:root[data-theme='dark']) .section { --gold-ink: #d3bd90; }
+:global(:root[data-theme='dark']) .band { background: linear-gradient(90deg, #15181a, #121416 60%, #101213); }
+:global(:root[data-theme='dark']) .card { box-shadow: 0 30px 70px -30px rgba(0, 0, 0, 0.7); }
+:global(:root[data-theme='dark']) .points li { background: #15171a; }
+:global(:root[data-theme='dark']) .link { border-bottom-color: rgba(255, 255, 255, 0.3); }
+:global(:root[data-theme='dark']) .primary:hover, :global(:root[data-theme='dark']) .primary:focus-visible { background: #d3bd90; }
+
+/* ================= phones: legible text, tappable links ================= */
+/* Nothing under 11 px on a phone — the small uppercase labels were 8 to 10 px
+   and hard to read at arm's length. Measured with a 390 px audit. */
+@media (max-width: 600px) {
+  .eyebrow { font-size: 0.6875rem; }
+}

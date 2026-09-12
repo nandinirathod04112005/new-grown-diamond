@@ -12,6 +12,9 @@ import { authErrorMessage, isEmailDeliveryFailure } from './authErrors.js';
 import { authRedirectTo } from '@/lib/supabase/authRedirect.js';
 import { createEnquiry } from '@/lib/supabase/queries/enquiries.js';
 import { registerAdmin } from '@/lib/supabase/registerAdmin.js';
+import { interpolate, useLocale } from '@/i18n/localeContext.js';
+import { useCopy } from '@/i18n/useCopy.js';
+import COPY from './RegisterPage.copy.js';
 
 /**
  * Create an account.
@@ -40,6 +43,8 @@ import { registerAdmin } from '@/lib/supabase/registerAdmin.js';
  */
 export default function RegisterPage() {
   const { status: authStatus, profile, signOut } = useAuth();
+  const { t, locale, href } = useLocale();
+  const c = useCopy(COPY);
   const [kind, setKind] = useState('customer'); // 'customer' | 'admin'
   const [code, setCode] = useState('');
   const [fullName, setFullName] = useState('');
@@ -114,9 +119,9 @@ export default function RegisterPage() {
    */
   useEffect(() => {
     if (done !== 'session' && done !== 'admin') return undefined;
-    const timer = setTimeout(() => window.location.assign(done === 'admin' ? '/admin' : '/account'), 1400);
+    const timer = setTimeout(() => window.location.assign(done === 'admin' ? '/admin' : href('/account')), 1400);
     return () => clearTimeout(timer);
-  }, [done]);
+  }, [done, href]);
 
   /*
    * Staff. The function checks the code and creates the account confirmed,
@@ -139,18 +144,20 @@ export default function RegisterPage() {
         /* On the field it belongs to, kept and selected rather than wiped —
            a masked value the person cannot see should not have to be retyped
            blind after one slip. */
-        setFieldErrors({ code: err.message });
+        setFieldErrors({ code: t('validation.codeWrong') });
         requestAnimationFrame(() => { codeRef.current?.focus(); codeRef.current?.select?.(); });
         return;
       }
-      setError(err?.code ? err.message : authErrorMessage(err, 'That account could not be created. Please try again.'));
+      /* The function's reasons are worded by code in the visitor's language
+         (RegisterPage.copy.js); a code with no wording shows its own text. */
+      setError(err?.code ? (c.staffErrors[err.code] ?? err.message) : authErrorMessage(err, c.notCreatedRetry, locale));
       return;
     }
 
     const { data, error: err } = await supabase.auth.signInWithPassword({ email: normalizeEmail(email), password });
     if (err || !data?.session) {
       console.error('[NGD register] sign-in after staff registration failed:', err);
-      setError('Your staff account was created, but signing in did not complete. Go to Sign in and use the same email and password.');
+      setError(c.staffSignInFailed);
       return;
     }
     // They have just proved they hold the code, so the desk gate does not ask
@@ -178,25 +185,28 @@ export default function RegisterPage() {
      * say nothing the server does not say better, and would block a correct
      * code whenever the two were set differently.
      */
+    /* Whether a field is empty is validation.js's rule; the sentence that
+       says so is this page's, one per field (RegisterPage.copy.js, `need`). */
+    const need = (value, field) => (requiredError(value, field) ? c.need[field] : null);
     /* Two characters is the staff function's rule; a customer's name is
        whatever they gave, as it always was. */
-    const name = requiredError(fullName, 'full name')
-      ?? (kind === 'admin' && fullName.trim().length < 2 ? 'Enter your full name.' : null);
+    const name = need(fullName, 'fullName')
+      ?? (kind === 'admin' && fullName.trim().length < 2 ? c.need.fullName : null);
     const checks = kind === 'admin'
       ? [
-          ['code', code.trim() ? null : 'Enter the staff access code.'],
+          ['code', code.trim() ? null : t('validation.codeRequired')],
           ['fullName', name],
-          ['email', emailError(email)],
-          ['phone', requiredError(phone, 'phone number')],
-          ['country', requiredError(country, 'country')],
-          ['password', passwordError(password, { min: MIN_PASSWORD })],
-          ['confirm', confirmError(password, confirm)],
+          ['email', emailError(email, t)],
+          ['phone', need(phone, 'phone')],
+          ['country', need(country, 'country')],
+          ['password', passwordError(password, { min: MIN_PASSWORD }, t)],
+          ['confirm', confirmError(password, confirm, t)],
         ]
       : [
           ['fullName', name],
-          ['email', emailError(email)],
-          ['password', passwordError(password, { min: MIN_PASSWORD })],
-          ['confirm', confirmError(password, confirm)],
+          ['email', emailError(email, t)],
+          ['password', passwordError(password, { min: MIN_PASSWORD }, t)],
+          ['confirm', confirmError(password, confirm, t)],
         ];
     const bad = firstError(checks);
     setFieldErrors(toMap(checks));
@@ -271,16 +281,16 @@ export default function RegisterPage() {
         // Supabase's own message is surfaced because it covers real, actionable
         // cases — a weak password, a malformed address, rate limiting. It is not
         // extended with any check of our own for whether the email exists.
-        setError(authErrorMessage(err, err.message || 'That account could not be created.'));
+        setError(authErrorMessage(err, err.message || c.notCreated, locale));
         return;
       }
 
       if (!data.session && Array.isArray(data.user?.identities) && data.user.identities.length === 0) {
-        setError('This email may already be registered. Try signing in or use Forgot password. No new confirmation email was verified.');
+        setError(c.maybeRegistered);
         return;
       }
       if (!data.user) {
-        setError('The account service returned no account. Please try again.');
+        setError(c.noAccountReturned);
         return;
       }
 
@@ -288,7 +298,7 @@ export default function RegisterPage() {
       // means an email is on its way and nothing has happened yet.
       setDone(data.session ? 'session' : 'confirm');
     } catch (err) {
-      setError(authErrorMessage(err, 'That account could not be created. Please try again.'));
+      setError(authErrorMessage(err, c.notCreatedRetry, locale));
     } finally {
       setBusy(false);
     }
@@ -296,11 +306,11 @@ export default function RegisterPage() {
 
   if (done === 'admin') {
     return (
-      <AuthShell eyebrow="New Grown Diamond" title="Account created successfully" intro="You are signed in as an administrator. Opening the inventory desk…">
-        <div ref={outcome} tabIndex={-1} className={styles.outcome} role="status">Staff account created. You are signed in.</div>
+      <AuthShell eyebrow="New Grown Diamond" title={c.created.title} intro={c.created.adminIntro}>
+        <div ref={outcome} tabIndex={-1} className={styles.outcome} role="status">{c.created.adminStatus}</div>
         <div className={styles.actions}>
-          <a className={styles.submit} href="/admin">Open the inventory desk</a>
-          <a className={styles.ghost} href="/account">Go to your account</a>
+          <a className={styles.submit} href="/admin">{c.created.openDesk}</a>
+          <a className={styles.ghost} href="/account">{t('auth.goToAccount')}</a>
         </div>
       </AuthShell>
     );
@@ -308,7 +318,7 @@ export default function RegisterPage() {
 
   if (done === 'session') {
     return (
-      <AuthShell eyebrow="New Grown Diamond" title="Account created successfully" intro="You are signed in. Taking you to your account…">
+      <AuthShell eyebrow="New Grown Diamond" title={c.created.title} intro={c.created.sessionIntro}>
         {/*
           A session came back, so confirmation is off and the account is live.
           The redirect goes to /account — the same route sign-in uses — where
@@ -316,10 +326,10 @@ export default function RegisterPage() {
           confirmation is read and announced before the page changes underneath
           it; the links below are the fallback if the redirect is blocked.
         */}
-        <div ref={outcome} tabIndex={-1} className={styles.outcome} role="status">Account created. You are signed in.</div>
+        <div ref={outcome} tabIndex={-1} className={styles.outcome} role="status">{c.created.sessionStatus}</div>
         <div className={styles.actions}>
-          <a className={styles.submit} href="/account">Go to your account</a>
-          <a className={styles.ghost} href="/diamonds">Browse the inventory</a>
+          <a className={styles.submit} href="/account">{t('auth.goToAccount')}</a>
+          <a className={styles.ghost} href="/diamonds">{t('auth.browseInventory')}</a>
         </div>
       </AuthShell>
     );
@@ -335,23 +345,22 @@ export default function RegisterPage() {
     return (
       <AuthShell
         eyebrow="New Grown Diamond"
-        title={handed ? 'The desk has your request' : 'We could not finish just now'}
+        title={handed ? c.blocked.handedTitle : c.blocked.title}
         intro={handed
-          ? 'Someone will set your account up and email you directly.'
+          ? c.blocked.handedIntro
           : error}
-        aside={<>Already registered? <a href="/login">Sign in</a>.</>}
+        aside={<>{t('auth.alreadyRegistered')} <a href="/login">{t('auth.signInTitle')}</a>{c.stop}</>}
       >
         <div ref={outcome} tabIndex={-1} className={styles.outcome} role="status">
         {handed ? (
           <>
             <p className={styles.note} data-tone="good">
-              <strong>Reference {handed}.</strong>
-              We have your name and email. The desk will create your account and
-              contact you — usually the same working day.
+              <strong>{interpolate(c.blocked.reference, { ref: handed })}</strong>
+              {c.blocked.handedBody}
             </p>
             <div className={styles.actions}>
-              <a className={styles.submit} href="/diamonds">Browse the inventory</a>
-              <a className={styles.ghost} href="/contact">Contact the desk</a>
+              <a className={styles.submit} href="/diamonds">{t('auth.browseInventory')}</a>
+              <a className={styles.ghost} href="/contact">{c.blocked.contactDesk}</a>
             </div>
           </>
         ) : (
@@ -359,14 +368,11 @@ export default function RegisterPage() {
             {/* The intro above already carries `error`; this states the one
                 fact it does not — that nothing was created. */}
             <p className={styles.note} data-tone="error" role="alert">
-              <strong>No account was created.</strong>
-              The confirmation email could not be sent, and we could not verify
-              whether an account already exists for this address.
+              <strong>{c.blocked.none}</strong>
+              {c.blocked.noneBody}
             </p>
             <p className={styles.hint}>
-              We can pass your details to the desk instead — they will set the
-              account up by hand and email you. Only your name and email are
-              sent; your password is not, and never leaves this page.
+              {c.blocked.offer}
             </p>
             {handError && <p className={styles.note} data-tone="error" role="alert">{handError}</p>}
             <div className={styles.actions}>
@@ -396,16 +402,16 @@ export default function RegisterPage() {
                     setHanded(ref);
                   } catch (e) {
                     console.error('[NGD register handoff]', e);
-                    setHandError('That could not be sent either. Please email the desk directly.');
+                    setHandError(c.blocked.handFailed);
                   } finally {
                     setHanding(false);
                   }
                 }}
               >
-                {handing ? <><span className={styles.spinner} aria-hidden="true" />Sending…</> : 'Send my details to the desk'}
+                {handing ? <><span className={styles.spinner} aria-hidden="true" />{c.sending}</> : c.blocked.send}
               </button>
               <button type="button" className={styles.ghost} onClick={() => setBlocked(null)}>
-                Try again
+                {t('common.retry')}
               </button>
             </div>
           </>
@@ -419,14 +425,13 @@ export default function RegisterPage() {
     return (
       <AuthShell
         eyebrow="New Grown Diamond"
-        title="Check your email"
-        intro="Your account is not active yet."
+        title={t('auth.checkEmail')}
+        intro={t('auth.checkEmailBody')}
       >
         <div ref={outcome} tabIndex={-1} className={styles.outcome} role="status">
           <p className={styles.note} data-tone="good">
-            <strong>Confirmation email sent to {normalizeEmail(email)}.</strong>
-            Open it to finish creating your account. You are not signed in until
-            you do. Check your spam folder if it does not appear.
+            <strong>{interpolate(c.confirm.sent, { email: normalizeEmail(email) })}</strong>
+            {c.confirm.body}
           </p>
         </div>
         <div className={styles.actions}>
@@ -450,16 +455,16 @@ export default function RegisterPage() {
               if (err) throw err;
               setResent('sent');
               } catch (err) {
-                setResendError(authErrorMessage(err, err.message || 'The confirmation email could not be sent.'));
+                setResendError(authErrorMessage(err, err.message || c.confirm.resendFailed, locale));
                 setResent('failed');
               }
             }}
           >
-            {resent === 'sending' ? 'Sending…' : 'Resend confirmation email'}
+            {resent === 'sending' ? c.sending : c.confirm.resend}
           </button>
-          <a className={styles.ghost} href="/login">Back to sign in</a>
+          <a className={styles.ghost} href="/login">{c.confirm.back}</a>
         </div>
-        {resent === 'sent' && <p className={styles.hint} role="status">Confirmation email sent. Check your inbox and spam folder.</p>}
+        {resent === 'sent' && <p className={styles.hint} role="status">{c.confirm.resent}</p>}
         {resent === 'failed' && <p className={styles.note} data-tone="error" role="alert">{resendError}</p>}
       </AuthShell>
     );
@@ -475,12 +480,12 @@ export default function RegisterPage() {
     return (
       <AuthShell
         eyebrow="New Grown Diamond"
-        title="You are already signed in"
-        intro={profile?.email || profile?.full_name || 'This browser has an active account.'}
+        title={c.already.title}
+        intro={profile?.email || profile?.full_name || c.already.intro}
       >
         <div className={styles.actions}>
-          <a className={styles.submit} href="/account">Go to your account</a>
-          <button type="button" className={styles.ghost} onClick={signOut}>Sign out to create another</button>
+          <a className={styles.submit} href="/account">{t('auth.goToAccount')}</a>
+          <button type="button" className={styles.ghost} onClick={signOut}>{c.already.signOut}</button>
         </div>
       </AuthShell>
     );
@@ -493,15 +498,15 @@ export default function RegisterPage() {
   return (
     <AuthShell
       eyebrow="New Grown Diamond"
-      title="Create an account"
-      intro="For retailers, jewellers and trade partners. Track enquiries and request grading reports."
-      aside={<>Already registered? <a href="/login">Sign in</a>.</>}
+      title={t('auth.registerTitle')}
+      intro={t('auth.registerIntro')}
+      aside={<>{t('auth.alreadyRegistered')} <a href="/login">{t('auth.signInTitle')}</a>{c.stop}</>}
     >
       <form className={styles.body} onSubmit={onSubmit} noValidate data-tried={tried ? '' : undefined}>
         {!isConfigured && (
           <p className={styles.note} data-tone="error" role="alert">
-            <strong>Registration is unavailable.</strong>
-            The site is not connected to its database on this deployment.
+            <strong>{c.unavailable.title}</strong>
+            {c.unavailable.body}
           </p>
         )}
 
@@ -514,11 +519,11 @@ export default function RegisterPage() {
           screen reader announces once instead of twice.
         */}
         <fieldset className={styles.kinds} style={{ '--i': 0 }}>
-          <legend className={styles.label}>Account type</legend>
+          <legend className={styles.label}>{t('auth.accountType')}</legend>
           <div className={styles.kindRow}>
             {[
-              ['customer', 'Customer', 'Browse stock, send enquiries, keep your reports.'],
-              ['admin', 'Administrator', 'Staff only. Needs the staff access code.'],
+              ['customer', t('auth.customer'), t('auth.customerBlurb')],
+              ['admin', t('auth.administrator'), t('auth.administratorBlurb')],
             ].map(([value, title, blurb]) => (
               <label key={value} className={styles.kind} data-on={kind === value ? '' : undefined}>
                 <input
@@ -541,7 +546,7 @@ export default function RegisterPage() {
              in one character at a time, which is exactly when a reveal earns
              its place — so it gets one, worded for what it is. */
           <PasswordField
-            label="Staff access code"
+            label={t('auth.staffCode')}
             revealLabel="code"
             value={code}
             index={1}
@@ -551,26 +556,26 @@ export default function RegisterPage() {
             /* Not `one-time-code`: that invites the browser to offer an SMS
                passcode, which this is not. `off` keeps managers out of it. */
             autoComplete="off"
-            hint="Ask an existing administrator. The code is checked on the server before a staff account is created."
+            hint={t('auth.staffCodeHint')}
             onChange={(e) => { setCode(e.target.value); setError(''); clear('code'); }}
           />
         )}
 
         <TextField
-          label="Full name"
+          label={t('auth.fullName')}
           value={fullName}
           index={admin ? 2 : 1}
           required
           maxLength={160}
           autoComplete="name"
-          placeholder="Your name"
+          placeholder={t('auth.yourName')}
           inputRef={fullNameRef}
           error={fieldErrors.fullName}
           onChange={(e) => { setFullName(e.target.value); clear('fullName'); }}
         />
 
         <TextField
-          label="Email"
+          label={t('auth.email')}
           type="email"
           value={email}
           index={admin ? 3 : 2}
@@ -585,7 +590,7 @@ export default function RegisterPage() {
         {admin && (
           <>
             <TextField
-              label="Phone"
+              label={c.phone}
               type="tel"
               value={phone}
               index={4}
@@ -599,13 +604,13 @@ export default function RegisterPage() {
               onChange={(e) => { setPhone(e.target.value); clear('phone'); }}
             />
             <TextField
-              label="Country"
+              label={c.country}
               value={country}
               index={5}
               required
               maxLength={80}
               autoComplete="country-name"
-              placeholder="India"
+              placeholder={c.countryPlaceholder}
               inputRef={countryRef}
               error={fieldErrors.country}
               onChange={(e) => { setCountry(e.target.value); clear('country'); }}
@@ -614,20 +619,20 @@ export default function RegisterPage() {
         )}
 
         <PasswordField
-          label="Password"
+          label={t('auth.password')}
           value={password}
           index={admin ? 6 : 3}
           required
           minLength={MIN_PASSWORD}
           autoComplete="new-password"
-          hint={`At least ${MIN_PASSWORD} characters.`}
+          hint={t('auth.minChars', { n: MIN_PASSWORD })}
           inputRef={passwordRef}
           error={fieldErrors.password}
           onChange={(e) => { setPassword(e.target.value); clear('password'); }}
         />
 
         <PasswordField
-          label="Confirm password"
+          label={t('auth.confirmPassword')}
           value={confirm}
           index={admin ? 7 : 4}
           required
@@ -638,11 +643,11 @@ export default function RegisterPage() {
         />
 
         <button className={styles.submit} type="submit" disabled={busy || !isConfigured}>
-          {busy ? <><span className={styles.spinner} aria-hidden="true" />Creating…</> : 'Create account'}
+          {busy ? <><span className={styles.spinner} aria-hidden="true" />{t('auth.creating')}</> : c.submit}
         </button>
 
         <p className="u-visually-hidden" aria-live="polite">
-          {busy ? 'Creating your account' : error || ''}
+          {busy ? c.live : error || ''}
         </p>
       </form>
     </AuthShell>

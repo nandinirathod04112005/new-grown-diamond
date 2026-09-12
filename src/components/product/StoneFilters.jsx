@@ -1,12 +1,16 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
+import { useLocale, interpolate } from '@/i18n/localeContext.js';
+import { useCopy } from '@/i18n/useCopy.js';
 import ShapeGlyph from './ShapeGlyph.jsx';
+import { shapeName } from './shapeNames.js';
 import {
   CARAT_BANDS, CLARITIES, COLOURS, CUTS, EMPTY, FINISHES, FLUORESCENCES,
   GROWTHS, SHAPES, facetCounts, fluorCode, gradeCode, isActive,
   labCode, matches, shapeCode,
 } from './stoneFilter.js';
+import COPY from './StoneFilters.copy.js';
 import styles from './StoneFilters.module.css';
 
 /**
@@ -46,7 +50,8 @@ const band = (n) => n.toFixed(2);
 
 const WIDE = '(min-width: 1024px)';
 
-/* The codes a buyer scans for, spelled out beside them where a row has room. */
+/* The codes a buyer scans for, spelled out beside them where a row has room.
+   These are the grades' trade names and stay English in every language. */
 const GRADE_NAME = { ID: 'Ideal', EX: 'Excellent', VG: 'Very Good', G: 'Good' };
 const FLUOR_NAME = { NON: 'None', FNT: 'Faint', MED: 'Medium', STG: 'Strong', VST: 'Very Strong' };
 
@@ -67,11 +72,12 @@ const FLUOR_NAME = { NON: 'None', FNT: 'Faint', MED: 'Medium', STG: 'Strong', VS
  * already shows it.
  */
 function Group({ title, count = 0, defaultOpen = false, extra, children }) {
+  const c = useCopy(COPY);
   return (
     <details className={styles.group} open={defaultOpen || undefined}>
       <summary className={styles.summary}>
         <span className={styles.groupName}>{title}</span>
-        {count > 0 && <b className={styles.groupCount} aria-label={`${count} chosen`}>{count}</b>}
+        {count > 0 && <b className={styles.groupCount} aria-label={interpolate(c.chosen, { count })}>{count}</b>}
         <svg className={styles.chevron} viewBox="0 0 10 6" aria-hidden="true" focusable="false">
           <path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.2" />
         </svg>
@@ -104,6 +110,7 @@ function Group({ title, count = 0, defaultOpen = false, extra, children }) {
  * span to that one grade.
  */
 function ScaleRange({ label, items, value, onChange, counts, loading, format = (item) => item }) {
+  const words = useCopy(COPY);
   const n = items.length;
   const positions = value.map((v) => items.indexOf(v)).filter((i) => i >= 0);
   const chosen = positions.length > 0;
@@ -116,7 +123,7 @@ function ScaleRange({ label, items, value, onChange, counts, loading, format = (
     if (i > hi) return commit(lo, i);
     return commit(i, i);
   };
-  const reading = !chosen ? 'Any' : lo === hi ? format(items[lo]) : `${format(items[lo])} – ${format(items[hi])}`;
+  const reading = !chosen ? words.any : lo === hi ? format(items[lo]) : `${format(items[lo])} – ${format(items[hi])}`;
 
   return (
     <div className={styles.scale} style={{ '--n': n, '--lo': lo / (n - 1), '--hi': hi / (n - 1) }} data-chosen={chosen ? '' : undefined}>
@@ -131,7 +138,7 @@ function ScaleRange({ label, items, value, onChange, counts, loading, format = (
           max={n - 1}
           step={1}
           value={lo}
-          aria-label={`${label} from`}
+          aria-label={interpolate(words.from, { label })}
           aria-valuetext={format(items[lo])}
           onChange={(e) => commit(Math.min(Number(e.target.value), hi), hi)}
         />
@@ -142,12 +149,12 @@ function ScaleRange({ label, items, value, onChange, counts, loading, format = (
           max={n - 1}
           step={1}
           value={hi}
-          aria-label={`${label} to`}
+          aria-label={interpolate(words.to, { label })}
           aria-valuetext={format(items[hi])}
           onChange={(e) => commit(lo, Math.max(Number(e.target.value), lo))}
         />
       </div>
-      <ol className={styles.ticks} aria-label={`${label} grades`}>
+      <ol className={styles.ticks} aria-label={interpolate(words.grades, { label })}>
         {items.map((item, i) => {
           const c = counts?.get(item) ?? 0;
           const within = chosen && i >= lo && i <= hi;
@@ -176,13 +183,17 @@ const CARAT_HI = 10;
  * the same state as two empty boxes.
  */
 function CaratRange({ value, set }) {
+  const { t } = useLocale();
+  const c = useCopy(COPY);
+  const caratFrom = interpolate(c.from, { label: t('terms.carat') });
+  const caratTo = interpolate(c.to, { label: t('terms.carat') });
   const lo = value.caratMin === '' ? CARAT_LO : Math.min(Math.max(Number(value.caratMin) || CARAT_LO, CARAT_LO), CARAT_HI);
   const hi = value.caratMax === '' ? CARAT_HI : Math.min(Math.max(Number(value.caratMax) || CARAT_HI, CARAT_LO), CARAT_HI);
   const at = (v) => (v - CARAT_LO) / (CARAT_HI - CARAT_LO);
   return (
     <div className={styles.scale} style={{ '--lo': at(lo), '--hi': at(hi) }} data-chosen={value.caratMin !== '' || value.caratMax !== '' ? '' : undefined}>
       <p className={styles.reading}>
-        {value.caratMin === '' && value.caratMax === '' ? 'Any weight' : `${value.caratMin || CARAT_LO} – ${value.caratMax || `${CARAT_HI}+`} ct`}
+        {value.caratMin === '' && value.caratMax === '' ? c.anyWeight : `${value.caratMin || CARAT_LO} – ${value.caratMax || `${CARAT_HI}+`} ct`}
       </p>
       <div className={`${styles.track} ${styles.trackFull}`}>
         <span className={styles.fill} aria-hidden="true" />
@@ -193,8 +204,8 @@ function CaratRange({ value, set }) {
           max={CARAT_HI}
           step={0.01}
           value={lo}
-          aria-label="Carat from"
-          aria-valuetext={`${band(lo)} carat`}
+          aria-label={caratFrom}
+          aria-valuetext={interpolate(c.caratValue, { value: band(lo) })}
           onChange={(e) => {
             const v = Math.min(Number(e.target.value), hi);
             set({ caratMin: v <= CARAT_LO ? '' : band(v) });
@@ -207,8 +218,8 @@ function CaratRange({ value, set }) {
           max={CARAT_HI}
           step={0.01}
           value={hi}
-          aria-label="Carat to"
-          aria-valuetext={`${band(hi)} carat`}
+          aria-label={caratTo}
+          aria-valuetext={interpolate(c.caratValue, { value: band(hi) })}
           onChange={(e) => {
             const v = Math.max(Number(e.target.value), lo);
             set({ caratMax: v >= CARAT_HI ? '' : band(v) });
@@ -217,26 +228,26 @@ function CaratRange({ value, set }) {
       </div>
       <div className={styles.range}>
         <label>
-          <span className="u-visually-hidden">Carat from</span>
+          <span className="u-visually-hidden">{caratFrom}</span>
           <input
             type="number"
             inputMode="decimal"
             step="0.01"
             min="0"
-            placeholder="From"
+            placeholder={c.placeholderFrom}
             value={value.caratMin}
             onChange={(e) => set({ caratMin: e.target.value })}
           />
         </label>
         <span aria-hidden="true">–</span>
         <label>
-          <span className="u-visually-hidden">Carat to</span>
+          <span className="u-visually-hidden">{caratTo}</span>
           <input
             type="number"
             inputMode="decimal"
             step="0.01"
             min="0"
-            placeholder="To"
+            placeholder={c.placeholderTo}
             value={value.caratMax}
             onChange={(e) => set({ caratMax: e.target.value })}
           />
@@ -259,6 +270,8 @@ const SCALES = ['colour', 'clarity', 'cut', 'polish', 'symmetry', 'fluorescence'
  * `prev` takes each write from the state as it actually stands.
  */
 export default function StoneFilters({ stones, value, onChange, shown, loading = false }) {
+  const { locale, t } = useLocale();
+  const c = useCopy(COPY);
   const set = useCallback(
     (patch) => onChange((prev) => ({ ...prev, ...patch })),
     [onChange],
@@ -339,8 +352,15 @@ export default function StoneFilters({ stones, value, onChange, shown, loading =
    * every group. Each entry here removes exactly the one choice it names.
    */
   const GROUP_LABEL = {
-    colour: 'Colour', clarity: 'Clarity', cut: 'Cut', polish: 'Polish',
-    symmetry: 'Symmetry', fluorescence: 'Fluorescence', lab: 'Lab', growth: 'Growth',
+    colour: t('terms.colour'), clarity: t('terms.clarity'), cut: t('terms.cut'), polish: t('terms.polish'),
+    symmetry: t('terms.symmetry'), fluorescence: t('terms.fluorescence'), lab: t('terms.lab'), growth: c.groups.growth,
+  };
+  /* What a chip says for one chosen option. The option itself — the value
+     that is matched and removed — is untouched. */
+  const said = (key, item) => {
+    if (key === 'shape') return shapeName(item, locale);
+    if (key === 'lab' && item === 'NONE') return c.none;
+    return item;
   };
   const applied = [];
   const ORDER = { colour: COLOURS, clarity: CLARITIES, cut: CUTS, polish: FINISHES, symmetry: FINISHES, fluorescence: FLUORESCENCES };
@@ -359,7 +379,7 @@ export default function StoneFilters({ stones, value, onChange, shown, loading =
       continue;
     }
     for (const item of value[key]) {
-      applied.push({ id: `${key}:${item}`, label: label ? `${label} ${item}` : item, remove: () => toggle(key, item) });
+      applied.push({ id: `${key}:${item}`, label: label ? `${label} ${said(key, item)}` : said(key, item), remove: () => toggle(key, item) });
     }
   }
   if (value.caratMin !== '' || value.caratMax !== '') {
@@ -369,7 +389,7 @@ export default function StoneFilters({ stones, value, onChange, shown, loading =
       remove: () => set({ caratMin: '', caratMax: '' }),
     });
   }
-  if (value.inStockOnly) applied.push({ id: 'stock', label: 'In stock only', remove: () => set({ inStockOnly: false }) });
+  if (value.inStockOnly) applied.push({ id: 'stock', label: c.inStockOnly, remove: () => set({ inStockOnly: false }) });
   /* Choices, not grades: a span of five colours is one filter, said once. */
   const activeCount = applied.length;
 
@@ -476,18 +496,20 @@ export default function StoneFilters({ stones, value, onChange, shown, loading =
      is one choice however many grades it covers. */
   const chosen = (key) => (SCALES.includes(key) ? Math.min(1, value[key].length) : value[key].length);
 
-  const tally = loading ? 'Loading stock' : `${shown} of ${stones.length} ${stones.length === 1 ? 'stone' : 'stones'}`;
+  const tally = loading
+    ? c.loadingStock
+    : interpolate(stones.length === 1 ? c.tally.one : c.tally.other, { shown, total: stones.length });
 
   /* The results bar: what is being looked at, how many, what narrows it,
      and — in a hand — the way into the drawer. */
   const bar = (
     <div className={`${styles.f} ${styles.bar}`}>
       <div className={styles.head}>
-        <h2 className={styles.title}>Find a stone</h2>
+        <h2 className={styles.title}>{c.title}</h2>
         <p className={styles.tally} role="status">
           {tally}
           {!loading && activeCount > 0 && (
-            <span> · {activeCount} filter{activeCount === 1 ? '' : 's'}</span>
+            <span> · {interpolate(activeCount === 1 ? c.filterCount.one : c.filterCount.other, { n: activeCount })}</span>
           )}
         </p>
         <button
@@ -498,7 +520,7 @@ export default function StoneFilters({ stones, value, onChange, shown, loading =
           aria-controls={panelId}
           onClick={() => setOpen(true)}
         >
-          Filters
+          {c.filters}
           {activeCount > 0 && <b aria-hidden="true">{activeCount}</b>}
         </button>
         <button
@@ -507,15 +529,15 @@ export default function StoneFilters({ stones, value, onChange, shown, loading =
           onClick={clearAll}
           disabled={!active}
         >
-          Clear all
+          {c.clearAll}
         </button>
       </div>
 
       {applied.length > 0 && !loading && (
-        <ul className={styles.applied} aria-label="Applied filters">
+        <ul className={styles.applied} aria-label={c.applied}>
           {applied.map((chip) => (
             <li key={chip.id}>
-              <button type="button" onClick={chip.remove} aria-label={`Remove ${chip.label}`}>
+              <button type="button" onClick={chip.remove} aria-label={interpolate(c.remove, { label: chip.label })}>
                 <span>{chip.label}</span>
                 <em aria-hidden="true">×</em>
               </button>
@@ -558,16 +580,16 @@ export default function StoneFilters({ stones, value, onChange, shown, loading =
       inert={!wide && !open}
       role={wide ? undefined : 'dialog'}
       aria-modal={wide ? undefined : 'true'}
-      aria-label="Filters"
+      aria-label={c.filters}
     >
       <div className={styles.sideHead}>
-        <p className={styles.sideTitle}>Filters</p>
+        <p className={styles.sideTitle}>{c.filters}</p>
         {/* Two controls for two places: the desk's column offers Clear all
             at its top; the drawer offers the way out. CSS shows one each. */}
         <button type="button" className={styles.sideClear} onClick={clearAll} disabled={!active}>
-          Clear all
+          {c.clearAll}
         </button>
-        <button type="button" className={styles.closer} onClick={close} aria-label="Close filters">
+        <button type="button" className={styles.closer} onClick={close} aria-label={c.closeFilters}>
           <span aria-hidden="true">×</span>
         </button>
       </div>
@@ -577,7 +599,7 @@ export default function StoneFilters({ stones, value, onChange, shown, loading =
         onSubmit={(e) => e.preventDefault()}
         aria-busy={loading || undefined}
       >
-        <Group title="Shape" count={chosen('shape')} defaultOpen>
+        <Group title={t('terms.shape')} count={chosen('shape')} defaultOpen>
           <ul className={styles.shapes}>
             {shapes.map((item) => {
               const n = counts.shape.get(item) ?? 0;
@@ -592,7 +614,7 @@ export default function StoneFilters({ stones, value, onChange, shown, loading =
                     onClick={() => toggle('shape', item)}
                   >
                     <ShapeGlyph shape={item} className={styles.glyph} />
-                    <span>{item}</span>
+                    <span>{shapeName(item, locale)}</span>
                     <em aria-hidden="true">{loading ? '' : n}</em>
                   </button>
                 </li>
@@ -601,10 +623,10 @@ export default function StoneFilters({ stones, value, onChange, shown, loading =
           </ul>
         </Group>
 
-        <Group title="Weight" count={value.caratMin !== '' || value.caratMax !== '' ? 1 : 0} defaultOpen>
+        <Group title={c.groups.weight} count={value.caratMin !== '' || value.caratMax !== '' ? 1 : 0} defaultOpen>
           <CaratRange value={value} set={set} />
           {/* The bands a stock sheet is ruled in, as quick picks under the bar. */}
-          <ul className={styles.bands} aria-label="Weight bands">
+          <ul className={styles.bands} aria-label={c.weightBands}>
             {CARAT_BANDS.map(([lo, hi]) => {
               const on = value.caratMin === band(lo) && value.caratMax === band(hi);
               const n = caratPool.filter((s) => s.carat >= lo && s.carat <= hi).length;
@@ -629,30 +651,30 @@ export default function StoneFilters({ stones, value, onChange, shown, loading =
           </ul>
         </Group>
 
-        <Group title="Colour" count={chosen('colour')} defaultOpen>
-          <ScaleRange label="Colour" items={COLOURS} value={value.colour} onChange={(v) => set({ colour: v })} counts={counts.colour} loading={loading} />
+        <Group title={t('terms.colour')} count={chosen('colour')} defaultOpen>
+          <ScaleRange label={t('terms.colour')} items={COLOURS} value={value.colour} onChange={(v) => set({ colour: v })} counts={counts.colour} loading={loading} />
         </Group>
 
-        <Group title="Clarity" count={chosen('clarity')} defaultOpen>
-          <ScaleRange label="Clarity" items={CLARITIES} value={value.clarity} onChange={(v) => set({ clarity: v })} counts={counts.clarity} loading={loading} />
+        <Group title={t('terms.clarity')} count={chosen('clarity')} defaultOpen>
+          <ScaleRange label={t('terms.clarity')} items={CLARITIES} value={value.clarity} onChange={(v) => set({ clarity: v })} counts={counts.clarity} loading={loading} />
         </Group>
 
         <Group
-          title="Cut"
+          title={t('terms.cut')}
           count={chosen('cut')}
           extra={(
             <div className={styles.quick}>
               <button
                 type="button"
                 onClick={() => triple(['ID', 'EX'])}
-                title="Excellent or better in cut, polish and symmetry"
+                title={c.quick.tripleEx}
               >
                 3X
               </button>
               <button
                 type="button"
                 onClick={() => triple(['ID', 'EX', 'VG'])}
-                title="Very Good or better in cut, polish and symmetry"
+                title={c.quick.vgPlus}
               >
                 VG+
               </button>
@@ -660,37 +682,37 @@ export default function StoneFilters({ stones, value, onChange, shown, loading =
                 type="button"
                 onClick={() => set({ cut: [], polish: [], symmetry: [] })}
               >
-                Reset
+                {c.quick.reset}
               </button>
             </div>
           )}
         >
-          <ScaleRange label="Cut" items={CUTS} value={value.cut} onChange={(v) => set({ cut: v })} counts={counts.cut} loading={loading} format={(g) => GRADE_NAME[g] ?? g} />
+          <ScaleRange label={t('terms.cut')} items={CUTS} value={value.cut} onChange={(v) => set({ cut: v })} counts={counts.cut} loading={loading} format={(g) => GRADE_NAME[g] ?? g} />
         </Group>
 
-        <Group title="Polish" count={chosen('polish')}>
-          <ScaleRange label="Polish" items={FINISHES} value={value.polish} onChange={(v) => set({ polish: v })} counts={counts.polish} loading={loading} format={(g) => GRADE_NAME[g] ?? g} />
+        <Group title={t('terms.polish')} count={chosen('polish')}>
+          <ScaleRange label={t('terms.polish')} items={FINISHES} value={value.polish} onChange={(v) => set({ polish: v })} counts={counts.polish} loading={loading} format={(g) => GRADE_NAME[g] ?? g} />
         </Group>
 
-        <Group title="Symmetry" count={chosen('symmetry')}>
-          <ScaleRange label="Symmetry" items={FINISHES} value={value.symmetry} onChange={(v) => set({ symmetry: v })} counts={counts.symmetry} loading={loading} format={(g) => GRADE_NAME[g] ?? g} />
+        <Group title={t('terms.symmetry')} count={chosen('symmetry')}>
+          <ScaleRange label={t('terms.symmetry')} items={FINISHES} value={value.symmetry} onChange={(v) => set({ symmetry: v })} counts={counts.symmetry} loading={loading} format={(g) => GRADE_NAME[g] ?? g} />
         </Group>
 
-        <Group title="Fluorescence" count={chosen('fluorescence')}>
-          <ScaleRange label="Fluorescence" items={FLUORESCENCES} value={value.fluorescence} onChange={(v) => set({ fluorescence: v })} counts={counts.fluorescence} loading={loading} format={(f) => FLUOR_NAME[f] ?? f} />
+        <Group title={t('terms.fluorescence')} count={chosen('fluorescence')}>
+          <ScaleRange label={t('terms.fluorescence')} items={FLUORESCENCES} value={value.fluorescence} onChange={(v) => set({ fluorescence: v })} counts={counts.fluorescence} loading={loading} format={(f) => FLUOR_NAME[f] ?? f} />
         </Group>
 
-        <Group title="Laboratory" count={chosen('lab')}>
-          {rows('lab', labs, counts.lab, (l) => (l === 'NONE' ? 'No report' : l))}
+        <Group title={c.groups.laboratory} count={chosen('lab')}>
+          {rows('lab', labs, counts.lab, (l) => (l === 'NONE' ? c.noReport : l))}
         </Group>
 
         {/* Not on the sheet this answers to, because that sheet is not for
             lab-grown stock. Here it is among the first things asked. */}
-        <Group title="Growth" count={chosen('growth')}>
+        <Group title={c.groups.growth} count={chosen('growth')}>
           {rows('growth', GROWTHS, counts.growth)}
         </Group>
 
-        <Group title="Stone stage" count={value.inStockOnly ? 1 : 0}>
+        <Group title={c.groups.stage} count={value.inStockOnly ? 1 : 0}>
           <ul className={styles.rows}>
             <li>
               <label className={styles.row} data-on={value.inStockOnly ? '' : undefined}>
@@ -699,7 +721,7 @@ export default function StoneFilters({ stones, value, onChange, shown, loading =
                   checked={value.inStockOnly}
                   onChange={(e) => set({ inStockOnly: e.target.checked })}
                 />
-                <span>In stock only</span>
+                <span>{c.inStockOnly}</span>
               </label>
             </li>
           </ul>
@@ -710,10 +732,10 @@ export default function StoneFilters({ stones, value, onChange, shown, loading =
           primary action only takes the buyer back to what they narrowed. */}
       <div className={styles.sideFoot}>
         <button type="button" className={styles.clear} onClick={clearAll} disabled={!active}>
-          Clear all
+          {c.clearAll}
         </button>
         <button type="button" className={styles.apply} onClick={close}>
-          {loading ? 'Show stones' : `Show ${shown} ${shown === 1 ? 'stone' : 'stones'}`}
+          {loading ? c.showStones : interpolate(shown === 1 ? c.show.one : c.show.other, { n: shown })}
         </button>
       </div>
     </aside>

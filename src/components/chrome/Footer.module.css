@@ -1,1 +1,55 @@
 .root{position:relative;overflow:hidden;padding:var(--s-8) var(--gutter) var(--s-4);background:#08080a;color:var(--ivory);border-top:1px solid var(--ink-line)}.marquee{display:flex;width:max-content;margin-inline:calc(var(--gutter)*-1);font:300 clamp(4rem,10vw,11rem)/.8 var(--font-display);color:transparent;-webkit-text-stroke:1px rgba(255,255,255,.14);white-space:nowrap;animation:marquee 24s linear infinite}.pitch{display:grid;gap:var(--s-4);padding-block:var(--s-8)}.pitch h2{font:300 var(--t-3xl)/.88 var(--font-display);letter-spacing:-.04em}.pitch h2 em{color:var(--gold-lift);font-weight:300}.actions{display:flex;flex-wrap:wrap;gap:var(--s-3);margin-top:var(--s-4)}.actions a{min-width:min(100%,19rem);display:flex;justify-content:space-between;padding:1.2rem;border:1px solid var(--ink-line);text-transform:uppercase;letter-spacing:.13em;font-size:var(--t-xs);transition:background var(--dur-slow) var(--ease-primary),color var(--dur-slow) var(--ease-primary)}.actions a:first-child,.actions a:hover{background:var(--ivory);color:var(--text-invert)}.grid{display:grid;gap:var(--s-6);padding-block:var(--s-6);border-block:1px solid var(--ink-line)}.brand strong{font:300 var(--t-2xl)/1 var(--font-display);color:var(--gold-lift)}.brand>p{max-width:30ch;margin-top:var(--s-3);color:var(--text-muted);line-height:1.7}.grid nav,.grid address{display:grid;align-content:start;gap:var(--s-3);font-style:normal}.grid nav>p,.grid address>p{color:var(--gold);font-size:var(--t-xs);letter-spacing:.18em;text-transform:uppercase}.grid address span{max-width:24ch;color:var(--text-muted);line-height:1.6}.base{display:flex;flex-wrap:wrap;justify-content:space-between;gap:var(--s-3);padding-top:var(--s-4);color:var(--text-muted);font-size:var(--t-xs);letter-spacing:.1em;text-transform:uppercase}@keyframes marquee{to{transform:translateX(-50%)}}@media(min-width:900px){.grid{grid-template-columns:1.25fr repeat(3,1fr)}}@media(prefers-reduced-motion:reduce){.marquee{animation:none}}
+
+/* Match the footer ground to its foreground in both themes. */
+.root { background: var(--ink-raised); }
+.marquee { -webkit-text-stroke-color: var(--line-firm); }
+.pitch { padding-block: var(--section-space); }
+.pitch h2 { font-size: var(--t-banner); line-height: 1.05; }
+.grid a { overflow-wrap: anywhere; }
+.grid nav a, .grid address a { min-height: var(--target-min); display: flex; align-items: center; }
+@media (max-width: 599px) { .actions { flex-direction: column; } .actions a { width: 100%; } }
+
+/* A deliberate closing spread, with contact information on its own rail. */
+.root { padding-top: var(--showroom-space); background: var(--showroom-paper); color: var(--showroom-ink); --ivory: #23231f; --text-invert: #f5f0e7; --text-muted: #5d5a52; --gold: #765923; --gold-lift: #765923; --ink-line: #c8c0b1; --line-firm: #aca393; }
+.marquee { font-size: clamp(3rem, 8vw, 9rem); opacity: .55; }
+.pitch { padding-block: 4rem 5rem; }
+.pitch h2 { font-size: clamp(3.5rem, 7.5vw, 8rem); max-width: 17ch; letter-spacing: -.04em; }
+.actions a { border-color: #9b927f; border-radius: 0; min-height: 3.5rem; letter-spacing: .07em; }
+.grid { gap: 3rem; }
+.grid address { padding-left: 2rem; border-left: 1px solid #bfb6a4; }
+.grid address a { font-size: 1.05rem; }
+.grid nav > p, .grid address > p { letter-spacing: .12em; }
+@media(min-width:1100px) { .pitch { grid-template-columns: 1.6fr 1fr; align-items: end; } .pitch > p { grid-column: 1/-1; } .actions { flex-direction: column; justify-self: end; width: min(100%,22rem); } .grid { grid-template-columns: 1.2fr .7fr .7fr 1.4fr; } }
+@media(max-width:899px) { .grid address { padding: 2rem 0 0; border-left: 0; border-top: 1px solid #bfb6a4; } }
+/* An evergreen closing spread with a compact enquiry invitation. */
+.root{background:#183e35;color:#f8f6ef;--ivory:#f8f6ef;--text-invert:#183e35;--text-muted:#b9c6bb;--gold:#d3bd90;--gold-lift:#d3bd90;--ink-line:#476054;--line-firm:#476054;padding-top:55px}
+.marquee{display:none}.pitch{padding-block:0 55px}.pitch h2{font-size:clamp(3rem,5.3vw,5.5rem);max-width:20ch}.actions a{border-color:#789080;font-size:11px}.grid{padding-block:40px;gap:35px}.grid address{border-color:#476054}.grid a{font-size:13px}.brand strong{font-size:56px}.brand>p{font-size:13px}.base{font-size:10px;letter-spacing:.06em}
+
+/* Follow us, under the brand line: the brand column is the widest and was the
+   emptiest, and social links belong with the name rather than the address. */
+.social { margin-top: 1.6rem; }
+
+/* ================= theme-follow =================
+ * The footer was dark green on every page in both themes. Light mode gets a
+ * light sage footer with the same green ink; dark mode is unchanged. */
+:global(:root[data-theme='light']) .root {
+  background: #eef1ea;
+  color: #183e35;
+  --ivory: #183e35;
+  --text-invert: #f8f6ef;
+  --text-muted: #56645b;
+  --gold: #7a6030;
+  --gold-lift: #7a6030;
+  --ink-line: #cfd8cc;
+  --line-firm: #b9c2b4;
+}
+:global(:root[data-theme='light']) .marquee { -webkit-text-stroke-color: rgba(24, 62, 53, 0.18); }
+:global(:root[data-theme='light']) .actions a { border-color: #b9c2b4; }
+:global(:root[data-theme='light']) .grid address { border-color: #cfd8cc; }
+
+/* ================= phones: legible text, tappable links ================= */
+/* Nothing under 11 px on a phone — the small uppercase labels were 8 to 10 px
+   and hard to read at arm's length. Measured with a 390 px audit. */
+@media (max-width: 600px) {
+  .base { font-size: 0.6875rem; }
+}

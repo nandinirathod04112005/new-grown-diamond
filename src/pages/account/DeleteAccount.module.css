@@ -1,0 +1,77 @@
+/*
+ * The deletion panel: the account page's own panel look, with the one red
+ * accent kept to the edge and the final button, so it reads as serious
+ * without shouting from the side of an ordinary dashboard.
+ */
+.panel {
+  display: grid;
+  gap: 0.9rem;
+  padding: clamp(1.1rem, 2.2vw, 1.6rem);
+  border: 1px solid var(--ink-line);
+  border-left: 2px solid var(--feedback-error);
+  background: var(--surface-1, var(--ink));
+}
+
+.title { margin: 0; font: 400 1.35rem / 1.15 var(--font-display); color: var(--text); }
+
+.body, .confirm { margin: 0; color: var(--text-muted); font-size: 0.875rem; line-height: 1.65; }
+
+.open, .cancel {
+  justify-self: start;
+  min-height: 2.75rem;
+  padding: 0 1.1rem;
+  border: 1px solid var(--line-firm);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition: border-color 200ms ease, color 200ms ease;
+}
+
+.open:hover, .open:focus-visible { border-color: var(--feedback-error); color: var(--feedback-error); }
+.cancel:hover, .cancel:focus-visible { border-color: var(--text); }
+.open:focus-visible, .cancel:focus-visible, .danger:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+.form { display: grid; gap: 0.85rem; }
+
+.field { display: grid; gap: 0.4rem; }
+.field span { font-size: 0.75rem; color: var(--text-muted); }
+
+.field input, .field textarea {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--line-firm);
+  background: var(--ink);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.9375rem;
+}
+
+.field textarea { resize: vertical; }
+.field input[aria-invalid='true'] { border-color: var(--feedback-error); }
+.field input:focus-visible, .field textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+.hint, .error { margin: 0; font-size: 0.8125rem; color: var(--feedback-error); }
+
+.actions { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+
+.danger {
+  min-height: 2.75rem;
+  padding: 0 1.2rem;
+  border: 1px solid var(--feedback-error);
+  background: var(--feedback-error);
+  color: #fff;
+  font: inherit;
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.danger:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.sent { margin: 0; font-size: 0.9375rem; line-height: 1.65; color: var(--text); }
+
+@media (prefers-reduced-motion: reduce) {
+  .open, .cancel { transition: none; }
+}

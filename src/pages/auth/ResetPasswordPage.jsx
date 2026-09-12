@@ -1,11 +1,15 @@
 import { useEffect, useState } from 'react';
 
 import { supabase, isConfigured } from '@/lib/supabase/client.js';
+import { authErrorMessage } from './authErrors.js';
 import AuthShell from './AuthShell.jsx';
 import PasswordField from './PasswordField.jsx';
 import styles from './Auth.module.css';
 
 import { MIN_PASSWORD } from './validation.js';
+import { interpolate, useLocale } from '@/i18n/localeContext.js';
+import { useCopy } from '@/i18n/useCopy.js';
+import COPY from './ResetPasswordPage.copy.js';
 
 /**
  * A recovery token carried in the address, rather than in a session Supabase
@@ -35,34 +39,62 @@ function tokenFromUrl() {
 
 /** Finishes a recovery link using the session Supabase detects in the URL. */
 export default function ResetPasswordPage() {
+  const { t, locale } = useLocale();
+  const c = useCopy(COPY);
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [done, setDone] = useState(false);
   const [tried, setTried] = useState(false);
-  /* 'idle' when there is no token to exchange, which is the emailed-link path
-     and the page's original behaviour. */
-  const [exchange, setExchange] = useState(() => (tokenFromUrl() ? 'checking' : 'idle'));
+  /* Always check the recovery session before exposing a form that calls
+     updateUser. On another device the SDK may still be consuming the tokens
+     from the emailed URL; rendering immediately made that valid link look
+     broken when the form won the race against session initialization. */
+  const [exchange, setExchange] = useState(() => (isConfigured ? 'checking' : 'ready'));
 
   useEffect(() => {
     const token = tokenFromUrl();
-    if (!token || !supabase) return undefined;
+    if (!supabase) return undefined;
     let alive = true;
 
     (async () => {
-      const { error: verifyError } = await supabase.auth.verifyOtp({ token_hash: token, type: 'recovery' });
-      if (!alive) return;
-      if (verifyError) {
-        console.error('[NGD recovery token]', verifyError);
-        setExchange('invalid');
-        setError('This recovery link is invalid, has expired, or has already been used. Ask the desk for another.');
+      if (token) {
+        const { error: verifyError } = await supabase.auth.verifyOtp({ token_hash: token, type: 'recovery' });
+        if (!alive) return;
+        if (verifyError) {
+          console.error('[NGD recovery token]', verifyError);
+          setExchange('invalid');
+          return;
+        }
+        setExchange('ready');
+        /* The token is spent. Clearing it keeps it out of the address bar, the
+           browser's history, and anything the page is later shared into. */
+        window.history.replaceState({}, '', window.location.pathname);
         return;
       }
+
+      /* For the normal emailed-link path, detectSessionInUrl consumes the
+         fragment asynchronously. initialize() is idempotent and also safe
+         under React StrictMode, so wait for it rather than racing updateUser. */
+      const { error: initError } = await supabase.auth.initialize();
+      if (!alive) return;
+      if (initError) {
+        console.error('[NGD recovery session]', initError);
+        setExchange('invalid');
+        return;
+      }
+
+      const { data, error: sessionError } = await supabase.auth.getSession();
+      if (!alive) return;
+      if (sessionError || !data?.session) {
+        if (sessionError) console.error('[NGD recovery session]', sessionError);
+        setExchange('invalid');
+        return;
+      }
+
       setExchange('ready');
-      /* The token is spent. Clearing it keeps it out of the address bar, the
-         browser's history, and anything the page is later shared into. */
-      window.history.replaceState({}, '', window.location.pathname);
+      if (window.location.hash) window.history.replaceState({}, '', window.location.pathname);
     })();
 
     return () => { alive = false; };
@@ -77,11 +109,11 @@ export default function ResetPasswordPage() {
     }
     if (!isConfigured) return;
     if (password.length < MIN_PASSWORD) {
-      setError(`Use at least ${MIN_PASSWORD} characters for your password.`);
+      setError(interpolate(c.tooShort, { n: MIN_PASSWORD }));
       return;
     }
     if (password !== confirm) {
-      setError('The two passwords do not match.');
+      setError(t('validation.passwordsDiffer'));
       return;
     }
 
@@ -92,7 +124,16 @@ export default function ResetPasswordPage() {
 
     if (updateError) {
       console.error('[NGD password update]', updateError);
-      setError('This recovery link is invalid or has expired. Request a new link and try again.');
+      /*
+       * The reason, not just the fact.
+       *
+       * Every refusal used to come out as the same sentence, so the commonest
+       * one by far — "that is already your password" — told the person nothing
+       * and left them retyping the password they already had. authErrorMessage
+       * is the same classifier the callback screen uses; `c.updateFailed`
+       * remains the fallback for anything it does not recognise.
+       */
+      setError(authErrorMessage(updateError, c.updateFailed, locale));
       return;
     }
     setDone(true);
@@ -100,9 +141,9 @@ export default function ResetPasswordPage() {
 
   if (done) {
     return (
-      <AuthShell eyebrow="Account recovery" title="Password updated" intro="Your new password is active.">
+      <AuthShell eyebrow={c.eyebrow} title={c.done.title} intro={c.done.intro}>
         <div className={styles.actions}>
-          <a className={styles.submit} href="/account">Continue to your account</a>
+          <a className={styles.submit} href="/account">{c.done.continue}</a>
         </div>
       </AuthShell>
     );
@@ -110,10 +151,10 @@ export default function ResetPasswordPage() {
 
   if (exchange === 'checking') {
     return (
-      <AuthShell eyebrow="Account recovery" title="One moment" intro="Checking your recovery link.">
+      <AuthShell eyebrow={c.eyebrow} title={c.checking.title} intro={c.checking.intro}>
         <p className={styles.note} role="status">
           <span className={styles.spinner} aria-hidden="true" />
-          Checking…
+          {c.checking.status}
         </p>
       </AuthShell>
     );
@@ -128,14 +169,14 @@ export default function ResetPasswordPage() {
   if (exchange === 'invalid') {
     return (
       <AuthShell
-        eyebrow="Account recovery"
-        title="This link no longer works"
-        intro="Recovery links can be used once, and they expire."
+        eyebrow={c.eyebrow}
+        title={c.invalid.title}
+        intro={c.invalid.intro}
       >
-        <p className={styles.note} data-tone="error" role="alert">{error}</p>
+        <p className={styles.note} data-tone="error" role="alert">{c.tokenInvalid}</p>
         <div className={styles.actions}>
-          <a className={styles.submit} href="/forgot-password">Request another</a>
-          <a className={styles.ghost} href="/contact">Contact the desk</a>
+          <a className={styles.submit} href="/forgot-password">{c.another}</a>
+          <a className={styles.ghost} href="/contact">{c.invalid.contact}</a>
         </div>
       </AuthShell>
     );
@@ -143,30 +184,30 @@ export default function ResetPasswordPage() {
 
   return (
     <AuthShell
-      eyebrow="Account recovery"
-      title="Choose a new password"
-      intro="The recovery link must still be active in this browser."
-      aside={<>Link expired? <a href="/forgot-password">Request another</a>.</>}
+      eyebrow={c.eyebrow}
+      title={c.title}
+      intro={c.intro}
+      aside={<>{c.expired} <a href="/forgot-password">{c.another}</a>{c.stop}</>}
     >
       <form className={styles.body} onSubmit={onSubmit} noValidate data-tried={tried ? '' : undefined}>
         {!isConfigured && (
           <p className={styles.note} data-tone="error" role="alert">
-            Password updates are unavailable because this deployment is not connected to Supabase.
+            {c.unavailable}
           </p>
         )}
         {error && <p className={styles.note} data-tone="error" role="alert">{error}</p>}
         <PasswordField
-          label="New password"
+          label={c.newPassword}
           value={password}
           index={0}
           required
           minLength={MIN_PASSWORD}
           autoComplete="new-password"
-          hint={`At least ${MIN_PASSWORD} characters.`}
+          hint={t('auth.minChars', { n: MIN_PASSWORD })}
           onChange={(event) => setPassword(event.target.value)}
         />
         <PasswordField
-          label="Confirm password"
+          label={t('auth.confirmPassword')}
           value={confirm}
           index={1}
           required
@@ -174,7 +215,7 @@ export default function ResetPasswordPage() {
           onChange={(event) => setConfirm(event.target.value)}
         />
         <button className={styles.submit} type="submit" disabled={busy || !isConfigured}>
-          {busy ? <><span className={styles.spinner} aria-hidden="true" />Updating…</> : 'Update password'}
+          {busy ? <><span className={styles.spinner} aria-hidden="true" />{c.updating}</> : c.update}
         </button>
       </form>
     </AuthShell>

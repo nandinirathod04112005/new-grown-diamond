@@ -1,4 +1,4 @@
-import { ENQUIRY_DESK } from '@/pages/siteContent.js';
+import { getSiteSettings } from '@/lib/siteContentStore.js';
 
 /**
  * Enquiries that arrive on WhatsApp already knowing what they are about.
@@ -19,8 +19,15 @@ import { ENQUIRY_DESK } from '@/pages/siteContent.js';
  * worse than no line at all.
  */
 
-/* wa.me takes digits only: no plus, no spaces. */
-const DIGITS = ENQUIRY_DESK.tel.replace(/\D/g, '');
+/*
+ * wa.me takes digits only: no plus, no spaces.
+ *
+ * Read when a link is built, not once at import: the number is editable in the
+ * Control Centre (Settings), and the saved value — cached from an earlier
+ * visit, or arrived since the page loaded — is the one to use. Until anything
+ * is saved it is the desk line, as it always was.
+ */
+const digits = () => getSiteSettings().whatsapp.replace(/\D/g, '');
 
 const blank = (v) => v == null || v === '' || v === '—';
 
@@ -40,7 +47,7 @@ const lines = (list) => list
   .trim();
 
 function link(message) {
-  return `https://wa.me/${DIGITS}?text=${encodeURIComponent(message)}`;
+  return `https://wa.me/${digits()}?text=${encodeURIComponent(message)}`;
 }
 
 /** A field, or nothing at all — never a label with an em dash after it. */

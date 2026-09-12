@@ -20,7 +20,7 @@ export function storedTheme() {
 
 /** What the visitor is actually looking at right now. */
 export function resolvedTheme() {
-  return storedTheme() ?? 'dark';
+  return storedTheme() ?? 'light';
 }
 
 /**

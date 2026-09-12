@@ -1,156 +1,286 @@
-/* The journal's reading page: one column of measured type on the ink ground,
-   the cover held full-width above it, and the same states the index shows. */
+/*
+ * One journal article: a measured reading column with a drop cap, the share
+ * buttons held in a sticky rail beside it, then the articles either side,
+ * feedback on this piece, and more to read. Site tokens throughout, so both
+ * themes follow.
+ */
 .page {
   background: var(--ink);
   min-height: 100vh;
-  padding: calc(var(--s-8) + 1rem) var(--gutter) var(--s-8);
+  padding: 135px 0 clamp(4rem, 8vw, 6rem);
+  overflow-x: clip;
 }
 
 .article {
   display: grid;
-  gap: var(--s-6);
-  max-width: 72rem;
+  gap: clamp(1.8rem, 4vw, 3rem);
+  max-width: 76rem;
   margin: 0 auto;
+  padding-inline: var(--gutter);
 }
 
-.head {
-  display: grid;
-  gap: var(--s-4);
-  max-width: 60rem;
-}
+.head { display: grid; gap: 1.2rem; max-width: 62rem; }
 
-.eyebrow {
-  font-size: var(--t-xs);
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
-  color: var(--gold-lift);
-}
-
-.eyebrow a { color: inherit; }
-.eyebrow a:hover,
-.eyebrow a:focus-visible { text-decoration: underline; text-underline-offset: 0.3em; }
-
-.title {
-  font-family: var(--font-display);
-  font-weight: 300;
-  font-size: clamp(2.4rem, 1.4rem + 4vw, 5.2rem);
-  line-height: 1;
-  letter-spacing: -0.02em;
-  color: var(--ivory);
-  max-width: 18ch;
-  text-wrap: balance;
-}
-
-.standfirst {
-  max-width: var(--measure);
-  color: var(--text-muted);
-  font-size: var(--t-lg);
-  font-weight: 300;
-  line-height: 1.5;
-  text-wrap: pretty;
-}
-
-.cover {
-  margin: 0;
-  aspect-ratio: 16 / 9;
-  overflow: hidden;
-  border: 1px solid var(--ink-line);
-  background: linear-gradient(150deg, #23262c, #14161a);
-}
-
-.cover img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-/* The reading column. A step above body size, generous leading, and the
-   measure the rest of the site reads at. */
-.body {
-  display: grid;
-  gap: 1.25em;
-  max-width: var(--measure);
-  color: var(--text);
-  font-size: clamp(1.05rem, 1rem + 0.35vw, 1.2rem);
-  line-height: 1.75;
-  text-wrap: pretty;
-}
-
-.foot {
+.crumbs {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: var(--s-4);
-  padding-top: var(--s-5);
+  gap: 0.6rem;
+  margin: 0;
+  font-size: 0.6875rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  animation: rise 0.7s var(--ease-primary) both;
+}
+
+.crumbs a { color: var(--accent); }
+.crumbs a:hover, .crumbs a:focus-visible { text-decoration: underline; text-underline-offset: 0.3em; }
+.crumbs span[aria-hidden] { color: var(--line-firm); }
+
+.title {
+  margin: 0;
+  max-width: 20ch;
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: clamp(2.6rem, 1.5rem + 4vw, 5.2rem);
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  color: var(--ivory);
+  text-wrap: balance;
+  animation: rise 0.9s var(--ease-primary) 0.08s both;
+}
+
+.meta { animation: rise 0.9s var(--ease-primary) 0.16s both; }
+
+@keyframes rise { from { opacity: 0; transform: translateY(0.9rem); } }
+
+/* ---------------- cover ---------------- */
+.cover {
+  margin: 0;
+  aspect-ratio: 16 / 8;
+  overflow: hidden;
+  border: 1px solid var(--ink-line);
+  box-shadow: 0 40px 90px -50px rgba(0, 0, 0, 0.6);
+}
+
+/* A small original is shown whole on its black, at a height it can hold. */
+.cover[data-fit='contain'] { aspect-ratio: auto; height: clamp(14rem, 26vw, 20rem); background: #050506; }
+
+/* ---------------- text ---------------- */
+.layout {
+  display: grid;
+  grid-template-columns: 4.5rem minmax(0, 1fr);
+  gap: clamp(1.5rem, 4vw, 4rem);
+  align-items: start;
+}
+
+.aside { position: relative; height: 100%; }
+.asideInner { position: sticky; top: 120px; display: grid; justify-items: center; padding-top: 0.4rem; }
+
+.body {
+  display: grid;
+  gap: 1.3em;
+  max-width: var(--measure);
+  color: var(--text);
+  font-size: clamp(1.05rem, 1rem + 0.35vw, 1.22rem);
+  line-height: 1.8;
+  text-wrap: pretty;
+}
+
+.body p { margin: 0; }
+
+/* The opening letter, set large in the display face and in gold. */
+.opening::first-letter {
+  float: left;
+  margin: 0.08em 0.12em 0 0;
+  font-family: var(--font-display);
+  font-size: 4.3em;
+  line-height: 0.8;
+  color: var(--accent);
+}
+
+.figure { margin: 0.6em 0; aspect-ratio: 3 / 2; overflow: hidden; border: 1px solid var(--ink-line); }
+
+.shareRow { display: none; padding-top: 1.2rem; border-top: 1px solid var(--ink-line); }
+
+/* ---------------- newer / older ---------------- */
+.pager {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  padding-top: clamp(1.5rem, 3vw, 2.5rem);
   border-top: 1px solid var(--ink-line);
 }
 
-.actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--s-4);
-  margin-top: var(--s-2);
+.pagerLink {
+  display: grid;
+  gap: 0.6rem;
+  padding: 1.3rem 1.4rem;
+  border: 1px solid var(--ink-line);
+  background: var(--surface-1);
+  transition: border-color 300ms ease, translate 300ms ease;
 }
 
-.textLink {
-  color: var(--accent-lift);
-  font-size: var(--t-xs);
+.pagerLink[data-next] { text-align: right; justify-items: end; }
+.pagerLink:hover, .pagerLink:focus-visible { border-color: color-mix(in srgb, var(--accent) 50%, transparent); translate: 0 -2px; }
+.pagerLink:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+.pagerDir {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.6875rem;
   letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.pagerTitle { font-family: var(--font-display); font-size: clamp(1.15rem, 1rem + 0.5vw, 1.45rem); line-height: 1.25; color: var(--ivory); }
+
+/* ---------------- sections after the article ---------------- */
+.feedback, .related {
+  max-width: 1500px;
+  margin: clamp(4rem, 8vw, 6rem) auto 0;
+  padding: clamp(3rem, 6vw, 4.5rem) var(--gutter) 0;
+  border-top: 1px solid var(--ink-line);
+}
+
+.sectionHead { display: grid; gap: 0.6rem; margin-bottom: clamp(1.8rem, 4vw, 2.8rem); max-width: 46rem; }
+
+.sectionHead h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: clamp(2rem, 1.3rem + 2.2vw, 3.4rem);
+  line-height: 1.04;
+  letter-spacing: -0.03em;
+  color: var(--ivory);
+}
+
+.eyebrow { margin: 0; font-size: 0.6875rem; letter-spacing: 0.24em; text-transform: uppercase; color: var(--accent); }
+.sectionNote { margin: 0; color: var(--text-muted); line-height: 1.7; }
+
+.feedbackGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: clamp(1.5rem, 4vw, 3.5rem);
+  align-items: start;
+}
+
+/* One column of cards beside the form, not three. */
+.feedbackList > div { columns: 1; }
+
+.quiet {
+  margin: 0;
+  padding: 1.4rem 0;
+  border-top: 1px solid var(--ink-line);
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.backRow { margin: clamp(1.5rem, 3vw, 2.2rem) 0 0; }
+
+/* ---------------- links ---------------- */
+.ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 2.9rem;
+  padding: 0 1.2rem;
+  border: 1px solid var(--line-firm);
+  color: var(--text);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transition: border-color 260ms ease, background 260ms ease;
+}
+
+.ghost:hover, .ghost:focus-visible { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.ghost:focus-visible, .textLink:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+.textLink {
+  color: var(--accent);
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   border-bottom: 1px solid currentColor;
   padding-bottom: 2px;
 }
 
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem 1.5rem; margin-top: 0.5rem; }
+
 /* ---------------- states ---------------- */
 .notice {
   display: grid;
-  gap: var(--s-3);
+  gap: 0.9rem;
   justify-items: start;
   max-width: 44rem;
-  padding: var(--s-5);
+  padding: clamp(1.5rem, 3vw, 2.4rem);
   border: 1px solid var(--ink-line);
   border-left: 2px solid var(--accent);
-  background: rgba(19, 19, 23, 0.5);
+  background: var(--surface-1);
 }
 
-.notice[data-tone='error'] { border-left-color: #e06c6c; }
+.notice[data-tone='error'] { border-left-color: var(--feedback-error); }
+.notice h1 { margin: 0; font-family: var(--font-display); font-weight: 300; font-size: clamp(1.8rem, 1.4rem + 1.4vw, 2.6rem); line-height: 1.1; color: var(--ivory); }
+.notice p { margin: 0; color: var(--text-muted); line-height: 1.7; max-width: 52ch; }
 
-.notice h1 {
-  font-family: var(--font-display);
-  font-weight: 300;
-  font-size: var(--t-xl);
-  line-height: 1.1;
-  color: var(--ivory);
-}
-
-.notice p { color: var(--text-muted); line-height: 1.7; max-width: 52ch; }
-
-/* Shaped like the head it stands in for, so nothing jumps when the post lands. */
-.skeleton {
-  display: grid;
-  gap: var(--s-4);
-  max-width: 60rem;
-}
+.skeleton { display: grid; gap: 1rem; max-width: 60rem; }
 
 .skeleton span {
   display: block;
   height: 1.2rem;
   border-radius: 2px;
-  background: linear-gradient(100deg, rgba(255, 255, 255, 0.03) 30%, rgba(255, 255, 255, 0.07) 50%, rgba(255, 255, 255, 0.03) 70%);
+  background: linear-gradient(100deg,
+    color-mix(in srgb, var(--text) 4%, transparent) 30%,
+    color-mix(in srgb, var(--text) 9%, transparent) 50%,
+    color-mix(in srgb, var(--text) 4%, transparent) 70%);
   background-size: 220% 100%;
   animation: shimmer 1.5s var(--ease-inout) infinite;
 }
 
 .skeleton span:first-child { height: 3.4rem; width: 70%; }
 .skeleton span:nth-child(2) { width: 55%; }
-.skeleton span:nth-child(3) { height: 12rem; }
+.skeleton span:nth-child(3) { height: 14rem; }
 
-@keyframes shimmer {
-  from { background-position: 140% 0; }
-  to { background-position: -40% 0; }
+@keyframes shimmer { from { background-position: 140% 0; } to { background-position: -40% 0; } }
+
+/* ---------------- entrances ---------------- */
+/* The wipe is on the image inside the observed figure, never on the figure:
+   a figure clipped to nothing has no visible area and would never be
+   reported on screen, so it would never open. */
+@media (prefers-reduced-motion: no-preference) {
+  .cover [data-cover], .figure [data-cover] {
+    transition: clip-path 1.3s cubic-bezier(0.77, 0, 0.18, 1);
+    clip-path: inset(0 0 0 0);
+  }
+  .cover[data-rv]:not([data-in]) [data-cover] { clip-path: inset(0 0 100% 0); }
+  .figure[data-rv]:not([data-in]) [data-cover] { clip-path: inset(0 100% 0 0); }
+}
+
+/* ---------------- narrower ---------------- */
+@media (max-width: 980px) {
+  .feedbackGrid { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 760px) {
+  .page { padding-top: 115px; }
+  .layout { grid-template-columns: minmax(0, 1fr); }
+  .aside { display: none; }
+  .shareRow { display: block; }
+  .cover { aspect-ratio: 4 / 3; }
+  .pager { grid-template-columns: minmax(0, 1fr); }
+  .pagerLink[data-next] { text-align: left; justify-items: start; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .skeleton span { animation: none; }
+  .crumbs, .title, .meta, .skeleton span { animation: none; }
+  .pagerLink, .ghost { transition: none; }
+}
+
+/* ================= phones: legible text, tappable links ================= */
+/* Nothing under 11 px on a phone — the small uppercase labels were 8 to 10 px
+   and hard to read at arm's length. Measured with a 390 px audit. */
+@media (max-width: 600px) {
+  .crumbs a { display: inline-block; padding-block: 0.5rem; }
 }

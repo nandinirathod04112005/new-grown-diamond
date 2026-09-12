@@ -1,0 +1,143 @@
+/*
+ * Website Analytics. Built from the admin shell's tokens only (see
+ * AdminLayout.module.css), so it sits in the same dark console whatever the
+ * storefront theme is. Header and range control match the Overview.
+ */
+.page { display: grid; gap: 1rem; align-content: start; min-width: 0; }
+
+.head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.eyebrow {
+  font-size: 0.5625rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.head h1 { font-size: 1.45rem; letter-spacing: -0.02em; color: var(--white); }
+.sub { margin-top: 0.2rem; font-size: 0.75rem; color: var(--faint); }
+
+.controls { display: flex; align-items: center; gap: 0.5rem; }
+
+.ranges { display: flex; border: 1px solid var(--line); border-radius: 3px; overflow: hidden; }
+
+.range {
+  padding: 0.4rem 0.7rem;
+  border: 0;
+  background: transparent;
+  color: var(--faint);
+  font: inherit;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.range + .range { border-left: 1px solid var(--line); }
+.range:hover { color: var(--white); }
+.range[data-on] { background: var(--panel-2); color: var(--accent); }
+.range:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+.refresh {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--dim);
+  font: inherit;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.refresh:hover:not(:disabled) { color: var(--white); border-color: var(--accent-dim); }
+.refresh:disabled { opacity: 0.5; cursor: progress; }
+.refresh:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+[data-spin] { animation: spin 900ms linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.kpis {
+  display: grid;
+  gap: 0.6rem;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+}
+
+.grid {
+  display: grid;
+  gap: 0.6rem;
+  grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+  align-items: start;
+  grid-auto-flow: row dense;
+}
+
+.kpis[data-refreshing],
+.grid[data-refreshing] { opacity: 0.6; transition: opacity 160ms ease; }
+
+.full { grid-column: 1 / -1; }
+.wide { grid-column: span 2; }
+@media (max-width: 46rem) { .wide { grid-column: span 1; } }
+
+.lead { font-size: 0.9375rem; line-height: 1.55; color: var(--white); }
+.note { font-size: 0.8125rem; line-height: 1.6; color: var(--dim); max-width: 46rem; }
+
+.notice {
+  padding: 0.6rem 0.8rem;
+  border: 1px solid rgba(224, 177, 103, 0.35);
+  border-radius: 4px;
+  color: var(--warn);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+.rate {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.6rem;
+  padding-top: 0.25rem;
+}
+
+.rate b { font-weight: 400; font-size: 1.65rem; letter-spacing: -0.02em; color: var(--white); }
+.rate span { flex: 1 1 12rem; font-size: 0.75rem; line-height: 1.45; color: var(--faint); }
+
+.facts { display: grid; gap: 0.55rem; max-width: 62rem; }
+
+.facts li {
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: var(--dim);
+}
+
+.facts b { font-weight: 400; color: var(--white); margin-right: 0.25rem; }
+
+.facts code,
+.foot code {
+  padding: 0 0.25rem;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: var(--panel-2);
+  color: var(--dim);
+  font-size: 0.6875rem;
+}
+
+.foot {
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--line-soft);
+  font-size: 0.6875rem;
+  line-height: 1.5;
+  color: var(--faint);
+}
+
+.small { font-size: 0.6875rem; color: var(--faint); }
+
+@media (prefers-reduced-motion: reduce) {
+  [data-spin] { animation: none; }
+  .kpis[data-refreshing], .grid[data-refreshing] { transition: none; }
+}

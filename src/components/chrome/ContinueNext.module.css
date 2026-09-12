@@ -127,3 +127,10 @@
   .root { transition: opacity var(--dur-base) linear; translate: none; }
   .root[data-on] { translate: none; }
 }
+
+/* ================= phones: legible text, tappable links ================= */
+/* Nothing under 11 px on a phone — the small uppercase labels were 8 to 10 px
+   and hard to read at arm's length. Measured with a 390 px audit. */
+@media (max-width: 600px) {
+  .text b { font-size: 0.6875rem; }
+}

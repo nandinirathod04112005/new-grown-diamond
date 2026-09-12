@@ -110,9 +110,16 @@
   translate: -50% 0.5rem;
   padding: 0.25rem 0.5rem;
   border-radius: 999px;
-  background: rgba(10, 18, 24, 0.82);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  /*
+   * Opaque, NOT a backdrop blur.
+   *
+   * This pill rides inside the gem, which is rewritten on every pointer move.
+   * A backdrop-filter on a moving element makes the browser re-snapshot and
+   * re-blur whatever is behind it every single frame the pointer travels — and
+   * it is behind a 0.5rem label on a near-black ground, where nobody can tell a
+   * blur from a flat fill. The cost was real and the effect was not.
+   */
+  background: rgb(10, 18, 24);
   border: 1px solid rgba(120, 214, 245, 0.3);
   color: #cfeeff;
   font-style: normal;
@@ -122,12 +129,26 @@
   white-space: nowrap;
   opacity: 0;
   scale: 0.85;
+  /* Taken out of the paint entirely between labels, rather than drawn at zero
+     opacity on every frame the pointer moves. `visibility` is switched with a
+     zero-length step held back until the fade has finished, so it disappears
+     after the animation rather than instead of it. */
+  visibility: hidden;
   transition:
     opacity var(--dur-base, 0.3s) var(--ease-primary, ease),
-    scale var(--dur-base, 0.3s) var(--ease-primary, ease);
+    scale var(--dur-base, 0.3s) var(--ease-primary, ease),
+    visibility 0s linear var(--dur-base, 0.3s);
 }
 
-.root[data-label] .label { opacity: 1; scale: 1; }
+.root[data-label] .label {
+  opacity: 1;
+  scale: 1;
+  visibility: visible;
+  transition:
+    opacity var(--dur-base, 0.3s) var(--ease-primary, ease),
+    scale var(--dur-base, 0.3s) var(--ease-primary, ease),
+    visibility 0s;
+}
 
 /* ---------------- the click burst ---------------- */
 .burst {

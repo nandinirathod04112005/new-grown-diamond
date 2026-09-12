@@ -1,6 +1,8 @@
 import ScrollScene from '@/components/scroll/ScrollScene.jsx';
 import Reveal from '@/components/motion/Reveal.jsx';
 import SplitHeading from '@/components/motion/SplitHeading.jsx';
+import { useCopy } from '@/i18n/useCopy.js';
+import COPY from './Credentials.copy.js';
 import styles from './Credentials.module.css';
 
 /**
@@ -51,32 +53,8 @@ const PHOTOS = Object.fromEntries(
   ]),
 );
 
-const AWARDS = [
-  {
-    id: 'carats-2025',
-    event: 'CARATS 2025 Diamond Expo',
-    place: 'Surat',
-    photoAlt:
-      'The CARATS 2025 award: a hinged wooden frame holding a gold handshake relief beside a '
-      + 'brass plate presented to New Grown Diamond by the Surat Diamond Association.',
-    body:
-      'An appreciation award received at CARATS 2025 Diamond Expo (Surat), organised by the ' +
-      'Surat Diamond Association, for our participation and contribution to the evolving ' +
-      'lab-grown diamond industry.',
-  },
-  {
-    id: 'ugjis-2024',
-    event: 'Unique Gems & Jewellery International Show',
-    place: 'Pune · 2024',
-    photoAlt:
-      'The UGJIS 2024 award: a hexagonal wooden plaque reading "Heartfelt Appreciation", '
-      + 'presented to New Grown Diamond in Pune.',
-    body:
-      'An appreciation award received at UGJIS 2024, Pune, for our participation and ' +
-      'contribution to the lab-grown diamond industry — recognising our work on quality ' +
-      'craftsmanship, innovation and trust in modern diamond jewellery.',
-  },
-];
+/* The awards themselves — `id`, event, place, photograph description and
+   citation — are `awards` in Credentials.copy.js. */
 
 const CONNECTED = [
   { slug: 'gjepc', name: 'GJEPC India' },
@@ -122,11 +100,12 @@ function Marks({ items, label, id }) {
 }
 
 export default function Credentials() {
+  const c = useCopy(COPY);
   return (
     <ScrollScene
       phases={PHASES}
       id="recognition"
-      label="Awards and recognition"
+      label={c.label}
       /*
        * Pinned on a desk, ordinary reading flow on a phone.
        *
@@ -141,12 +120,12 @@ export default function Credentials() {
         <div className={styles.inner}>
           <div className={styles.awards}>
             <Reveal as="header" className={styles.head}>
-              <p className={styles.kicker}>Recognition</p>
-              <SplitHeading as="h2" className={styles.title} text="Awards & recognition" />
+              <p className={styles.kicker}>{c.kicker}</p>
+              <SplitHeading as="h2" className={styles.title} text={c.title} />
             </Reveal>
 
             <ol className={styles.list}>
-              {AWARDS.map((a, i) => (
+              {c.awards.map((a, i) => (
                 /* Each award arrives on its own, a beat after the one above —
                    two plaques landing together reads as a banner. */
                 <Reveal as="li" key={a.id} className={styles.award} delay={i * 140}>
@@ -173,8 +152,8 @@ export default function Credentials() {
           </div>
 
           <div className={styles.affiliations}>
-            <Marks items={CONNECTED} label="Connected with" id="cred-connected" />
-            <Marks items={CERTIFIED} label="Certified by" id="cred-certified" />
+            <Marks items={CONNECTED} label={c.connected} id="cred-connected" />
+            <Marks items={CERTIFIED} label={c.certified} id="cred-certified" />
           </div>
         </div>
       </div>

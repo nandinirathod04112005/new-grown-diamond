@@ -1,0 +1,216 @@
+/*
+ * The journal editor and the feedback queue: the parts the shared console
+ * styles (AdminDiamonds.module.css) do not already cover. Console tokens only
+ * (--panel, --line, --white, --faint, --accent, --warn, --bad), because the
+ * console is its own dark room whatever the storefront theme.
+ */
+
+/* ---------------- the archive panel on the list ---------------- */
+.panel {
+  display: grid;
+  gap: 0.8rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--panel);
+}
+
+.panelHead { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0.5rem 1rem; }
+.panelHead h2 { font-size: 0.9375rem; color: var(--white); letter-spacing: -0.01em; }
+.panelHead p { font-size: 0.75rem; color: var(--faint); max-width: 70ch; line-height: 1.55; }
+
+.archiveList { display: grid; margin: 0; padding: 0; list-style: none; }
+
+.archiveList li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.4rem 1rem;
+  padding: 0.65rem 0;
+  border-top: 1px solid var(--line);
+  font-size: 0.8125rem;
+}
+
+.archiveList b { color: var(--white); font-weight: 500; }
+.archiveList small { display: block; color: var(--faint); font-size: 0.6875rem; margin-top: 0.15rem; }
+
+.titleCell b { display: block; color: var(--white); font-weight: 500; }
+
+.count {
+  margin-left: 0.6rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #08201f;
+  font-size: 0.625rem;
+  font-weight: 600;
+  vertical-align: middle;
+}
+
+.preview2 { max-width: 80ch; line-height: 1.5; }
+.empty { font-size: 0.8125rem; color: var(--faint); }
+.titleCell a { color: var(--faint); font-size: 0.6875rem; text-decoration: none; }
+.titleCell a:hover { color: var(--accent); }
+
+/* ---------------- the editor ---------------- */
+.editor {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(18rem, 22rem);
+  gap: 1.2rem;
+  align-items: start;
+}
+
+.form { display: grid; gap: 1rem; min-width: 0; }
+
+.box {
+  display: grid;
+  gap: 0.9rem;
+  padding: 1rem 1.1rem 1.1rem;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--panel);
+}
+
+.box > h2 {
+  font-size: 0.5625rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.field { display: grid; gap: 0.35rem; min-width: 0; }
+
+.field > span {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+  color: var(--faint);
+}
+
+.field input, .field textarea {
+  width: 100%;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--ink);
+  color: var(--white);
+  font: inherit;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.field textarea { resize: vertical; }
+.field .body { min-height: 22rem; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.8125rem; }
+.field input:focus, .field textarea:focus { outline: none; border-color: var(--accent-dim); box-shadow: 0 0 0 2px rgba(127, 216, 210, 0.15); }
+.field [aria-invalid='true'] { border-color: var(--bad); }
+.hint { font-size: 0.6875rem; color: var(--faint); line-height: 1.5; }
+.fieldError { font-size: 0.6875rem; color: var(--bad); }
+
+.slugRow { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; border: 1px solid var(--line); border-radius: 3px; background: var(--ink); }
+.slugRow span { padding-left: 0.65rem; font-size: 0.8125rem; color: var(--faint); }
+.slugRow input { border: 0; background: transparent; padding-left: 0.1rem; }
+.slugRow:focus-within { border-color: var(--accent-dim); }
+
+.check { display: flex; align-items: center; gap: 0.55rem; font-size: 0.8125rem; color: var(--white); cursor: pointer; }
+.check input { width: 1rem; height: 1rem; accent-color: var(--accent); }
+
+.coverPreview {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--ink);
+}
+
+.coverEmpty {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 16 / 10;
+  border: 1px dashed var(--line);
+  border-radius: 3px;
+  font-size: 0.75rem;
+  color: var(--faint);
+  text-align: center;
+  padding: 1rem;
+}
+
+.fileRow { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+.fileRow input[type='file'] { font-size: 0.75rem; color: var(--faint); max-width: 100%; }
+
+.progress { height: 3px; border-radius: 2px; background: var(--line); overflow: hidden; }
+.progress i { display: block; height: 100%; background: var(--accent); transform-origin: left; transform: scaleX(var(--p, 0)); transition: transform 120ms linear; }
+
+.actions { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+
+.save {
+  padding: 0.6rem 1rem;
+  border: 1px solid var(--accent);
+  border-radius: 3px;
+  background: var(--accent);
+  color: #08201f;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+
+.save:disabled { opacity: 0.5; cursor: progress; }
+
+.ghostBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  gap: 0.4rem;
+  padding: 0.6rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--white);
+  font: inherit;
+  font-size: 0.75rem;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.ghostBtn:hover { border-color: var(--accent-dim); }
+.save:focus-visible, .ghostBtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.msgOk, .msgBad {
+  padding: 0.55rem 0.7rem;
+  border-radius: 3px;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+.msgOk { border: 1px solid var(--accent-dim); color: var(--accent); }
+.msgBad { border: 1px solid rgba(224, 141, 122, 0.45); color: var(--bad); }
+
+/* The preview: the article roughly as a reader will see it. */
+.preview {
+  display: grid;
+  gap: 0.8rem;
+  padding: 1.2rem 1.3rem;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: #f7f6f3;
+  color: #16161c;
+}
+
+.preview h3 { font-family: var(--font-display, Georgia, serif); font-weight: 400; font-size: 1.7rem; line-height: 1.1; }
+.preview .standfirst { color: #55555f; font-size: 0.95rem; line-height: 1.6; }
+.preview p { font-size: 0.9rem; line-height: 1.7; white-space: pre-line; }
+.preview img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; }
+.previewTag { font-size: 0.5625rem; letter-spacing: 0.22em; text-transform: uppercase; color: #80602d; }
+
+/* ---------------- the feedback queue ---------------- */
+.stars { color: var(--warn); letter-spacing: 0.08em; white-space: nowrap; }
+.message { display: block; max-width: 44ch; color: var(--white); white-space: normal; line-height: 1.5; }
+.topic { display: block; margin-top: 0.25rem; font-size: 0.6875rem; color: var(--faint); }
+
+@media (max-width: 64rem) {
+  .editor { grid-template-columns: minmax(0, 1fr); }
+}

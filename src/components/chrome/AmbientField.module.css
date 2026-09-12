@@ -158,3 +158,8 @@
     animation: none;
   }
 }
+
+/* Fixed blurred layers are expensive on phone GPUs and add no useful content. */
+@media (max-width: 767px), (pointer: coarse) {
+  .field { display: none; }
+}

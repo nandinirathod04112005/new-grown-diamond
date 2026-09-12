@@ -142,3 +142,146 @@
    some 130px of blank above and below the stone. The attributes still reserve
    the ratio before it loads; the box now follows it. */
 .proof img { height: auto; }
+
+.hero { min-height: 88svh; padding-block: 8rem 4rem; gap: 4vw; }
+.hero h1 { font-size: clamp(3.5rem, 7vw, 8rem); line-height: .94; letter-spacing: -.045em; }
+.hero figure { border: 1px solid var(--ink-line); background: var(--surface-1); padding: 2rem; max-width: 36rem; }
+.orbit { display: none; }
+.finder { padding-block: var(--showroom-space); }
+.grid { gap: 2rem; }
+@media(min-width:900px) { .hero { grid-template-columns: minmax(0,.9fr) minmax(0,1.1fr); } }
+
+/*
+ * Three across beside the filters on a laptop, four on a wide screen. A stock
+ * list is scanned rather than read, and at two across a buyer scrolled a full
+ * screen for every pair of stones. The card now carries its report strip and
+ * price, so it holds together at this width.
+ */
+@media (min-width: 1024px) {
+  .grid { grid-template-columns: repeat(auto-fill, minmax(clamp(220px, 16vw, 290px), 1fr)); }
+}
+.hero{min-height:680px;padding-block:135px 65px;background:var(--ink)}.hero h1{font-size:clamp(3.5rem,5.8vw,6.5rem);line-height:1.03}.hero figure{border-radius:180px 180px 3px 3px;background:var(--surface-2);overflow:hidden}.finder{border-top:1px solid var(--ink-line)}
+@media(max-width:899px){.hero{min-height:0;padding-top:115px;padding-bottom:45px}.hero h1{font-size:clamp(3rem,10vw,4.5rem)}}
+
+/* ---------------- photographic 4D hero stone ---------------- */
+.hero figure.diamondStage {
+  position: relative;
+  isolation: isolate;
+  min-height: min(34rem, 68vh);
+  padding: clamp(1.25rem, 4vw, 3rem);
+  border-color: color-mix(in srgb, var(--accent) 24%, var(--ink-line));
+  background:
+    radial-gradient(circle at 50% 38%, rgba(255,255,255,.1), transparent 24%),
+    radial-gradient(circle at 50% 55%, color-mix(in srgb, var(--accent) 13%, transparent), transparent 52%),
+    linear-gradient(155deg, color-mix(in srgb, var(--surface-2) 92%, #fff 8%), var(--surface-2));
+  perspective: 1000px;
+  overflow: hidden;
+}
+
+.diamondStage::before {
+  content: '';
+  position: absolute;
+  inset: -35%;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(112deg, transparent 43%, rgba(255,255,255,.3) 49%, transparent 55%);
+  transform: translateX(-58%) rotate(8deg);
+  animation: stageLight 7s ease-in-out infinite;
+}
+
+.realDiamond {
+  position: relative;
+  z-index: 3;
+  display: block;
+  width: min(92%, 31rem);
+  aspect-ratio: 1;
+  background-image: var(--diamond-spin);
+  background-repeat: no-repeat;
+  background-size: 3000% 100%;
+  background-position: 0 0;
+  filter: brightness(1.2) contrast(1.06) saturate(.48) drop-shadow(0 2.2rem 1.6rem rgba(0,0,0,.42));
+  animation: photographicSpin 4.2s steps(29, end) infinite, diamondFloat 3.8s ease-in-out infinite alternate;
+  transform: translateZ(34px);
+  will-change: background-position, transform;
+}
+
+.realDiamond i {
+  position: absolute;
+  inset: 4%;
+  border-radius: 50%;
+  pointer-events: none;
+  background: conic-gradient(from 30deg, transparent, rgba(184,220,255,.14), transparent 25%, rgba(255,220,155,.16), transparent 52%);
+  mix-blend-mode: screen;
+  animation: fireTurn 6s linear infinite;
+}
+
+.diamondShadow {
+  position: absolute;
+  z-index: 1;
+  left: 23%;
+  right: 23%;
+  bottom: 21%;
+  height: 8%;
+  border-radius: 50%;
+  background: rgba(0,0,0,.42);
+  filter: blur(18px);
+  animation: shadowPulse 3.8s ease-in-out infinite alternate;
+}
+
+.orbit,
+.orbitInner {
+  position: absolute;
+  z-index: 1;
+  inset: 13%;
+  display: block;
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  border-radius: 50%;
+  transform: rotate(-18deg) scaleY(.72);
+  animation: heroOrbit 18s linear infinite;
+}
+.orbitInner { inset: 24%; opacity: .6; animation-duration: 12s; animation-direction: reverse; }
+.orbit::after, .orbitInner::after {
+  content: '';
+  position: absolute;
+  left: 8%;
+  top: 18%;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--gold-lift);
+  box-shadow: 0 0 14px var(--gold-lift);
+}
+
+.spinLabel {
+  position: absolute;
+  z-index: 4;
+  left: 1.5rem;
+  bottom: 1.35rem;
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+  color: var(--text-muted);
+  font-size: .62rem;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+}
+.spinLabel span { width: 1.5rem; height: 1px; background: var(--accent); }
+
+@keyframes photographicSpin { to { background-position: 100% 0; } }
+@keyframes diamondFloat { from { transform: translate3d(0,-5px,34px); } to { transform: translate3d(0,7px,46px); } }
+@keyframes shadowPulse { to { scale: .84; opacity: .65; } }
+@keyframes heroOrbit { to { rotate: 360deg; } }
+@keyframes fireTurn { to { rotate: 360deg; } }
+@keyframes stageLight { 0%,22% { transform: translateX(-58%) rotate(8deg); } 68%,100% { transform: translateX(58%) rotate(8deg); } }
+
+@media (max-width: 899px) {
+  .hero figure.diamondStage { min-height: min(28rem, 110vw); }
+  .realDiamond { width: min(100%, 27rem); animation-duration: 4.8s, 4.5s; }
+  .orbit { inset: 10%; }
+  .orbitInner { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .diamondStage::before, .realDiamond, .realDiamond i, .diamondShadow, .orbit, .orbitInner { animation: none; }
+  .realDiamond { background-position: 48.27% 0; transform: none; }
+}

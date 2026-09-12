@@ -1,0 +1,387 @@
+/*
+ * Our Story: the company's words and the illustrations drawn for them.
+ *
+ * The same ground and ink as the banner and the journey either side of it
+ * (#101113 / #eeeae2 in dark, #f1efe9 / #1d1d22 in light), so the page reads
+ * as one piece. Every entrance is CSS keyed to `data-in`, which useReveal sets
+ * as a block comes on screen; nothing is hidden unless motion is allowed.
+ */
+.root {
+  --a-bg: #101113;
+  --a-ink: #eeeae2;
+  --a-muted: #b8b9bc;
+  --a-line: #2c2d31;
+  --a-gold: #d3bd90;
+  --a-plate: #17181c;
+  --a-plate-2: #1d1e23;
+  --a-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  background: var(--a-bg);
+  color: var(--a-ink);
+  padding: 0 var(--gutter);
+  overflow-x: clip;
+}
+
+/* ---------------- shared ---------------- */
+.block {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  align-items: center;
+  gap: clamp(2.5rem, 6vw, 6rem);
+  max-width: 1500px;
+  margin: 0 auto;
+  padding-block: clamp(4rem, 9vw, 7.5rem);
+  border-top: 1px solid var(--a-line);
+}
+
+.copy { display: grid; gap: 1.2rem; align-content: start; min-width: 0; }
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin: 0;
+  font-size: 0.6875rem;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--a-gold);
+}
+
+.eyebrow span { display: block; width: 2.4rem; height: 1px; background: currentColor; }
+
+.title {
+  margin: 0;
+  max-width: 18ch;
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: clamp(2.2rem, 1.3rem + 3vw, 4.2rem);
+  line-height: 1.04;
+  letter-spacing: -0.03em;
+  color: var(--a-ink);
+  text-wrap: balance;
+}
+
+.title em { font-style: italic; color: var(--a-gold); }
+
+.body { margin: 0; max-width: 62ch; font-size: clamp(0.98rem, 0.94rem + 0.2vw, 1.08rem); line-height: 1.85; color: var(--a-muted); }
+
+.lead {
+  margin: 0;
+  max-width: 34ch;
+  font-family: var(--font-display);
+  font-size: clamp(1.35rem, 1.1rem + 1vw, 1.9rem);
+  line-height: 1.35;
+  color: var(--a-ink);
+}
+
+.tags { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.4rem 0 0; padding: 0; list-style: none; }
+
+.tags li {
+  padding: 0.5rem 0.85rem;
+  border: 1px solid color-mix(in srgb, var(--a-gold) 45%, transparent);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  color: var(--a-ink);
+  background: color-mix(in srgb, var(--a-gold) 7%, transparent);
+}
+
+/* ---------------- illustrations ---------------- */
+.art { position: relative; margin: 0; min-width: 0; }
+.art > svg { display: block; width: 100%; height: auto; overflow: visible; }
+
+.artCaption {
+  position: absolute;
+  right: 0;
+  bottom: -0.2rem;
+  font-size: 0.5625rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--a-muted);
+  opacity: 0.8;
+}
+
+/* journey */
+.jTrack { fill: none; stroke: var(--a-line); stroke-width: 1.4; stroke-dasharray: 0.006 0.012; }
+.jPath { fill: none; stroke: var(--a-gold); stroke-width: 2.2; stroke-linecap: round; filter: drop-shadow(0 0 6px color-mix(in srgb, var(--a-gold) 60%, transparent)); }
+.jHalo { fill: color-mix(in srgb, var(--a-gold) 9%, transparent); stroke: color-mix(in srgb, var(--a-gold) 40%, transparent); stroke-width: 1; }
+.jOrbit { fill: none; stroke: color-mix(in srgb, var(--a-gold) 55%, transparent); stroke-width: 1; stroke-dasharray: 3 7; transform-origin: 452px 86px; animation: spin 26s linear infinite; }
+.jMoon { fill: var(--a-gold); transform-origin: 452px 86px; animation: spin 9s linear infinite; }
+.jYear { font-family: var(--font-display); font-size: 30px; fill: var(--a-ink); }
+.jNote { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; fill: var(--a-muted); }
+.jSpark { fill: #fff; filter: drop-shadow(0 0 6px var(--a-gold)) drop-shadow(0 0 12px var(--a-gold)); }
+.jSparkWrap, .rTravelWrap { opacity: 0; }
+
+/* reach */
+.reachArt { justify-self: stretch; }
+.rDot { fill: var(--a-muted); opacity: 0.32; }
+.rGrid { stroke: var(--a-line); stroke-width: 1; }
+.rTropic { stroke: color-mix(in srgb, var(--a-gold) 40%, transparent); stroke-width: 1; stroke-dasharray: 4 6; }
+.rArc { fill: none; stroke: var(--a-gold); stroke-width: 1.6; stroke-linecap: round; filter: drop-shadow(0 0 4px color-mix(in srgb, var(--a-gold) 55%, transparent)); }
+.rTravel { fill: #fff; filter: drop-shadow(0 0 5px var(--a-gold)); }
+.rPulse { fill: color-mix(in srgb, var(--a-gold) 16%, transparent); stroke: color-mix(in srgb, var(--a-gold) 55%, transparent); stroke-width: 1; transform-box: fill-box; transform-origin: center; }
+.rCore { fill: var(--a-gold); }
+.rPin[data-hub] .rCore { fill: #fff; stroke: var(--a-gold); stroke-width: 2; }
+.rLabel { font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; fill: var(--a-ink); paint-order: stroke; stroke: var(--a-bg); stroke-width: 4px; }
+
+/* mission */
+.missionArt { display: grid; place-items: center; }
+.missionArt > svg { max-width: 30rem; }
+
+.rays {
+  position: absolute;
+  inset: 8%;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg,
+    transparent 0 8%, color-mix(in srgb, var(--a-gold) 16%, transparent) 10%, transparent 13% 33%,
+    color-mix(in srgb, var(--a-gold) 12%, transparent) 36%, transparent 40% 60%,
+    color-mix(in srgb, var(--a-gold) 16%, transparent) 63%, transparent 67% 85%,
+    color-mix(in srgb, var(--a-gold) 10%, transparent) 88%, transparent 92%);
+  filter: blur(6px);
+  animation: spin 40s linear infinite;
+}
+
+.mOrbit { fill: none; stroke: color-mix(in srgb, var(--a-gold) 45%, transparent); stroke-width: 1; stroke-dasharray: 2 9; transform-origin: 200px 200px; animation: spin 60s linear infinite; }
+.mOrbitInner { fill: none; stroke: var(--a-line); stroke-width: 1; }
+.spark { fill: #fff; opacity: 0.85; transform-box: fill-box; transform-origin: center; animation: twinkle 3.2s ease-in-out infinite; animation-delay: calc(var(--i) * 0.7s); }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes twinkle { 0%, 100% { opacity: 0.1; transform: scale(0.4) rotate(0deg); } 50% { opacity: 1; transform: scale(1) rotate(45deg); } }
+
+/* ---------------- facts ---------------- */
+.facts {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 0;
+  border-top: 1px solid var(--a-line);
+}
+
+.facts > div {
+  display: grid;
+  gap: 0.4rem;
+  padding: clamp(1.4rem, 3vw, 2.2rem) clamp(0.8rem, 2vw, 1.6rem);
+  border-left: 1px solid var(--a-line);
+}
+
+.facts > div:first-child { border-left: 0; padding-left: 0; }
+.facts dt { font-size: 0.625rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--a-muted); }
+.facts dd { margin: 0; font-family: var(--font-display); font-weight: 300; font-size: clamp(2rem, 1.3rem + 2.4vw, 3.4rem); line-height: 1; color: var(--a-ink); }
+.facts small { font-size: 0.6em; color: var(--a-gold); margin: 0 0.08em; }
+
+/* ---------------- range ---------------- */
+.range { grid-template-columns: minmax(0, 1fr); gap: clamp(2rem, 4vw, 3.2rem); }
+.range .copy { max-width: 56rem; }
+.range .title { max-width: 22ch; }
+
+.shapes {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: clamp(0.8rem, 2vw, 1.6rem);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.shapes li { display: grid; justify-items: center; gap: 0.8rem; }
+
+.shapePlate {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border: 1px solid var(--a-line);
+  border-radius: 50%;
+  background: radial-gradient(60% 60% at 50% 42%, var(--a-plate-2), var(--a-plate) 75%);
+  transition: translate 500ms var(--a-ease), border-color 400ms ease, box-shadow 500ms ease;
+}
+
+.shapes li:hover .shapePlate {
+  translate: 0 -6px;
+  border-color: color-mix(in srgb, var(--a-gold) 55%, transparent);
+  box-shadow: 0 22px 40px -24px rgba(0, 0, 0, 0.7);
+}
+
+.shapeArt { width: 64%; height: 64%; filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.45)); transition: transform 900ms var(--a-ease); }
+.shapes li:hover .shapeArt { transform: rotate(-8deg) scale(1.06); }
+
+/* A band of light that crosses each stone once as it arrives. */
+.shapeSheen {
+  position: absolute;
+  inset: -20%;
+  background: linear-gradient(115deg, transparent 40%, rgba(255, 255, 255, 0.35) 50%, transparent 60%);
+  translate: -120% 0;
+  pointer-events: none;
+}
+
+.shapeName { font-size: 0.6875rem; letter-spacing: 0.14em; text-transform: uppercase; text-align: center; color: var(--a-ink); }
+
+.scales { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: clamp(1.5rem, 4vw, 3rem); }
+
+.scale {
+  display: grid;
+  gap: 1.1rem;
+  margin: 0;
+  padding: clamp(1.2rem, 2.4vw, 1.8rem);
+  border: 1px solid var(--a-line);
+  background: color-mix(in srgb, var(--a-plate) 70%, transparent);
+  min-width: 0;
+}
+
+.scale figcaption { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 0.4rem 1rem; }
+.scale figcaption b { font-family: var(--font-display); font-weight: 400; font-size: 1.4rem; color: var(--a-ink); }
+.scale figcaption span { font-size: 0.625rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--a-muted); }
+
+.colours { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 0.4rem; margin: 0; padding: 0; list-style: none; }
+.colours li { display: grid; justify-items: center; gap: 0.4rem; }
+.colours svg { width: min(100%, 3.2rem); }
+.colourStone { fill: var(--tint); stroke: color-mix(in srgb, var(--a-gold) 50%, transparent); stroke-width: 1.5; }
+.colourFacet { fill: none; stroke: rgba(255, 255, 255, 0.9); stroke-width: 1.5; opacity: 0.7; }
+.colours span { font-family: var(--font-display); font-size: 1.15rem; color: var(--a-ink); }
+
+.caratsWrap { min-width: 0; }
+.carats { display: block; width: 100%; height: auto; overflow: visible; }
+.caratBase { stroke: var(--a-line); stroke-width: 1; }
+.caratCt { font-size: 11px; fill: var(--a-ink); letter-spacing: 0.04em; }
+.caratMm { font-size: 9px; fill: var(--a-muted); }
+
+/* ---------------- reach ---------------- */
+.reach { grid-template-columns: minmax(0, 0.75fr) minmax(0, 1.25fr); }
+
+/* ---------------- mission ---------------- */
+.mission { grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); }
+
+.pillars {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(0.8rem, 2vw, 1.4rem);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pillars li {
+  position: relative;
+  display: grid;
+  gap: 0.6rem;
+  align-content: start;
+  padding: clamp(1.2rem, 2.2vw, 1.7rem);
+  border: 1px solid var(--a-line);
+  background: linear-gradient(160deg, color-mix(in srgb, var(--a-gold) 8%, transparent), transparent 60%), var(--a-plate);
+  transition: translate 500ms var(--a-ease), border-color 400ms ease;
+}
+
+.pillars li:hover { translate: 0 -4px; border-color: color-mix(in srgb, var(--a-gold) 50%, transparent); }
+.pillarNo { font-family: var(--font-display); font-size: 1.6rem; color: var(--a-gold); line-height: 1; }
+.pillars h3 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 1.35rem; color: var(--a-ink); }
+.pillars p { margin: 0; font-size: 0.875rem; line-height: 1.65; color: var(--a-muted); font-style: italic; }
+
+/* ================= entrances ================= */
+@media (prefers-reduced-motion: no-preference) {
+  .copy[data-rv], .facts[data-rv] > div, .shapes > li[data-rv], .scale[data-rv], .pillars > li[data-rv] {
+    transition: opacity 1s var(--a-ease), transform 1s var(--a-ease);
+    transition-delay: calc(var(--i, 0) * 80ms);
+  }
+
+  .copy[data-rv]:not([data-in]),
+  .scale[data-rv]:not([data-in]),
+  .pillars > li[data-rv]:not([data-in]) { opacity: 0; transform: translateY(32px); }
+
+  .facts[data-rv]:not([data-in]) > div { opacity: 0; transform: translateY(20px); }
+  .shapes > li[data-rv]:not([data-in]) { opacity: 0; transform: translateY(26px) scale(0.9); }
+
+  /* The sheen crosses once each stone has landed. */
+  .shapes > li[data-in] .shapeSheen { animation: sheen 1.4s var(--a-ease) forwards; animation-delay: calc(400ms + var(--i, 0) * 80ms); }
+
+  /* Journey: the route draws, the stops arrive in order, a spark travels. */
+  .art[data-kind='journey'] .jPath { stroke-dasharray: 1; stroke-dashoffset: 1; }
+  .art[data-kind='journey'][data-in] .jPath { animation: draw 2s cubic-bezier(0.65, 0, 0.35, 1) 0.2s forwards; }
+  .art[data-kind='journey'] .jNode { opacity: 0; transform: translateY(14px); transition: opacity 0.8s var(--a-ease), transform 0.8s var(--a-ease); transition-delay: calc(0.3s + var(--d) * 0.7s); }
+  .art[data-kind='journey'][data-in] .jNode { opacity: 1; transform: none; }
+  .art[data-kind='journey'][data-in] .jSparkWrap { opacity: 1; transition: opacity 0.6s ease 2.2s; }
+
+  /* Reach: arcs fly out from Surat, pins pulse, sparks keep travelling. */
+  .art[data-kind='reach'] .rArc { stroke-dasharray: 1; stroke-dashoffset: 1; }
+  .art[data-kind='reach'][data-in] .rArc { animation: draw 1.6s cubic-bezier(0.65, 0, 0.35, 1) forwards; animation-delay: calc(0.4s + var(--i) * 0.35s); }
+  .art[data-kind='reach'] .rPin { opacity: 0; transition: opacity 0.6s ease; transition-delay: calc(var(--i) * 0.35s); }
+  .art[data-kind='reach'][data-in] .rPin { opacity: 1; }
+  .art[data-kind='reach'][data-in] .rPulse { animation: pulse 2.6s ease-out infinite; animation-delay: calc(var(--i) * 0.4s); }
+  .art[data-kind='reach'][data-in] .rTravelWrap { opacity: 1; transition: opacity 0.6s ease; transition-delay: calc(2s + var(--i) * 0.4s); }
+
+  /* Mission: the stone is built facet by facet, from the table outwards. */
+  .art[data-kind='mission'] .facet { opacity: 0; transform-box: fill-box; transform-origin: center; transform: scale(0.6); transition: opacity 0.5s ease, transform 0.7s var(--a-ease); transition-delay: calc(0.2s + var(--i) * 28ms); }
+  .art[data-kind='mission'][data-in] .facet { opacity: 1; transform: none; }
+}
+
+@keyframes draw { to { stroke-dashoffset: 0; } }
+@keyframes pulse { 0% { transform: scale(0.6); opacity: 0.9; } 100% { transform: scale(1.9); opacity: 0; } }
+@keyframes sheen { to { translate: 120% 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .jOrbit, .jMoon, .rays, .mOrbit, .spark { animation: none; }
+  /* SMIL motion cannot be paused from CSS, so the travelling sparks go. */
+  .jSparkWrap, .rTravelWrap { display: none; }
+  .shapePlate, .shapeArt, .pillars li { transition: none; }
+}
+
+/* ================= narrower ================= */
+@media (max-width: 1100px) {
+  .shapes { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .pillars { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 900px) {
+  .block, .reach, .mission { grid-template-columns: minmax(0, 1fr); }
+  .scales { grid-template-columns: minmax(0, 1fr); }
+  .facts { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .facts > div:nth-child(4) { border-left: 0; padding-left: 0; }
+  .facts > div:nth-child(n + 4) { border-top: 1px solid var(--a-line); }
+  .mission .missionArt { order: 2; }
+}
+
+@media (max-width: 600px) {
+  .shapes { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem 0.7rem; }
+  .shapeName { font-size: 0.625rem; letter-spacing: 0.08em; }
+  .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .facts > div { padding-inline: 0.9rem; }
+  .facts > div:nth-child(odd) { border-left: 0; padding-left: 0; }
+  .facts > div:nth-child(4) { border-left: 1px solid var(--a-line); padding-left: 0.9rem; }
+  .facts > div:nth-child(n + 3) { border-top: 1px solid var(--a-line); }
+  .pillars { grid-template-columns: minmax(0, 1fr); }
+  .colours { gap: 0.2rem; }
+  .colours span { font-size: 1rem; }
+  /* Shrunk to a phone's width the carat labels fell to about five pixels.
+     The scale keeps a readable size instead and scrolls sideways in its card. */
+  .caratsWrap { overflow-x: auto; margin-inline: -0.4rem; padding: 0 0.4rem 0.4rem; scrollbar-width: thin; }
+  .carats { width: 36rem; max-width: none; }
+  .jYear { font-size: 34px; }
+  .jNote { font-size: 14px; }
+  .rLabel { font-size: 16px; }
+}
+
+/* ================= theme-follow: light mode ================= */
+:global(:root[data-theme='light']) .root {
+  --a-bg: #f1efe9;
+  --a-ink: #1d1d22;
+  --a-muted: #4d4d56;
+  --a-line: #d9d4c9;
+  --a-gold: #80602d;
+  --a-plate: #fbfaf7;
+  --a-plate-2: #ffffff;
+}
+
+:global(:root[data-theme='light']) .shapePlate { background: radial-gradient(60% 60% at 50% 42%, #2a2c31, #121316 75%); border-color: #cfc8ba; }
+:global(:root[data-theme='light']) .jSpark,
+:global(:root[data-theme='light']) .rTravel { fill: #fff8e8; }
+/* Where motion is allowed the sparks wait for their route; without it they
+   never appear, so this only matters for the no-preference case above. */
+
+/* ================= phones: legible text, tappable links ================= */
+/* Nothing under 11 px on a phone — the small uppercase labels were 8 to 10 px
+   and hard to read at arm's length. Measured with a 390 px audit. */
+@media (max-width: 600px) {
+  .artCaption, .facts dt, .scale figcaption span, .shapeName { font-size: 0.6875rem; }
+}

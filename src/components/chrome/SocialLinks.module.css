@@ -1,0 +1,70 @@
+/*
+ * Follow us: five round marks in the footer.
+ *
+ * Quiet at rest, in the footer's own ink; on hover each lifts and takes its
+ * network's colour, which is the one moment the footer carries brand colour at
+ * all. The colours are the networks' own; every one of them clears 3:1 against
+ * white as a non-text control, which is what the filled hover state sits on.
+ */
+
+.root { display: grid; gap: 0.9rem; }
+
+.title {
+  margin: 0;
+  font-size: 0.625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  opacity: 0.78;
+}
+
+.list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.link {
+  --brand: currentColor;
+  display: grid;
+  place-items: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  border: 1px solid color-mix(in srgb, currentColor 28%, transparent);
+  border-radius: 50%;
+  color: inherit;
+  transition: translate 300ms var(--ease-primary), background 300ms var(--ease-primary),
+    border-color 300ms var(--ease-primary), color 300ms var(--ease-primary);
+}
+
+.link svg { fill: currentColor; }
+
+.link[data-network='facebook'] { --brand: #0866ff; }
+.link[data-network='linkedin'] { --brand: #0a66c2; }
+.link[data-network='instagram'] { --brand: #e4405f; }
+.link[data-network='x'] { --brand: #000000; }
+.link[data-network='pinterest'] { --brand: #bd081c; }
+
+.link:hover,
+.link:focus-visible {
+  translate: 0 -3px;
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+}
+
+.link:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .link { transition: none; }
+  .link:hover, .link:focus-visible { translate: none; }
+}
+
+/* ================= phones: legible text, tappable links ================= */
+/* Nothing under 11 px on a phone — the small uppercase labels were 8 to 10 px
+   and hard to read at arm's length. Measured with a 390 px audit. */
+@media (max-width: 600px) {
+  .title { font-size: 0.6875rem; }
+}

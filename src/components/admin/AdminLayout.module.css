@@ -169,6 +169,30 @@
 }
 
 .tag { color: var(--warn); border: 1px solid rgba(224, 177, 103, 0.3); }
+
+/* Unread arrivals on the Notifications link and the bell. */
+.count {
+  margin-left: auto;
+  min-width: 1.15rem;
+  padding: 0.05rem 0.35rem;
+  border-radius: 999px;
+  background: var(--warn);
+  color: #111;
+  font-size: 0.625rem;
+  font-weight: 600;
+  line-height: 1.4;
+  text-align: center;
+}
+.iconBtn { position: relative; }
+.dot {
+  position: absolute;
+  top: 0.3rem;
+  right: 0.3rem;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: var(--warn);
+}
 .tagSoft { color: var(--faint); border: 1px solid var(--line); }
 
 .noHits { padding: 0.6rem 0.55rem; color: var(--faint); font-size: 0.75rem; }
@@ -192,7 +216,8 @@
 .shell:not([data-wide]) .brandText,
 .shell:not([data-wide]) .linkLabel,
 .shell:not([data-wide]) .tag,
-.shell:not([data-wide]) .tagSoft { display: none; }
+.shell:not([data-wide]) .tagSoft,
+.shell:not([data-wide]) .count { display: none; }
 
 .shell:not([data-wide]) .brand { grid-template-columns: 1fr; justify-items: center; }
 .shell:not([data-wide]) .railToggle { display: none; }
@@ -208,7 +233,11 @@
   top: 0;
   z-index: 20;
   display: grid;
-  grid-template-columns: auto auto 1fr auto auto auto;
+  /* Crumbs, search (the stretch), create, bell, account. The burger is a
+     sixth column only where it is shown (narrow screens, below); counting
+     it here while it was hidden shifted every item one track left and
+     stretched "New diamond" across the bar instead of the search. */
+  grid-template-columns: auto 1fr auto auto auto;
   align-items: center;
   gap: 0.75rem;
   padding: 0.7rem 1.1rem;
@@ -362,12 +391,15 @@
 
   .shell[data-drawer] .rail { transform: none; }
 
+  .bar { grid-template-columns: auto auto 1fr auto auto auto; }
+
   /* Labels come back in the drawer even if the desktop rail was collapsed —
      the collapsed state is a desktop preference, not a phone one. */
   .shell:not([data-wide]) .linkLabel,
   .shell:not([data-wide]) .brandText,
   .shell:not([data-wide]) .tag,
-  .shell:not([data-wide]) .tagSoft { display: revert; }
+  .shell:not([data-wide]) .tagSoft,
+  .shell:not([data-wide]) .count { display: revert; }
   .shell:not([data-wide]) .link,
   .shell:not([data-wide]) .exit { grid-template-columns: auto 1fr auto; justify-items: start; }
   .shell:not([data-wide]) .brand { grid-template-columns: auto 1fr auto; justify-items: start; }

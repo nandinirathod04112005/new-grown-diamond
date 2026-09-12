@@ -2,7 +2,11 @@ export const PAGES = {
   '/about': {
     eyebrow: 'The house / Since the 1980s',
     title: 'Four decades in diamonds. A new way of growing them.',
-    intro: 'New Grown Diamond is a Surat-based manufacturer, wholesaler and global supplier of polished laboratory-grown diamonds.',
+    /* The owner's opening paragraph (content/aboutCompany.js, ABOUT_INTRO). The
+       sections below are no longer drawn on the page — Our Story sets them in
+       full in sections/about/AboutCompany.jsx — and stay as plain text for
+       anything that reads this table. */
+    intro: 'Built on the legacy of integrity and honesty, New Grown Diamond is synonymous with excellence and innovation in diamond manufacturing, catering customers worldwide with the finest qualitative lab-grown diamonds and simultaneously elevating the norms of paramount business values.',
     sections: [
       ['Our story', 'The business began with earth-mined diamonds and moved into polished laboratory-grown diamond manufacturing in 2012, combining an established cutting tradition with CVD and HPHT technology.'],
       ['Manufacturing', 'State-of-the-art production in Surat supports certified and non-certified CVD and HPHT diamonds for B2B clients, retailers and jewellery traders worldwide.'],
@@ -125,6 +129,14 @@ export const EDUCATION_TOPICS = [
   },
 ];
 
+/**
+ * The dictionary key a topic's label is translated under
+ * (`educationTopics` in src/i18n/dictionary/*.js): its route without the
+ * slash. One derivation, shared by the header and the Education page, so the
+ * two cannot name the same page differently.
+ */
+export const topicKey = (href) => `educationTopics.${href.slice(1)}`;
+
 export const FAQS = [
   ['What does CVD mean?', 'CVD stands for Chemical Vapour Deposition, a process that grows diamond crystal from activated carbon-containing gas.'],
   ['Which gases are commonly used?', 'CVD growth commonly uses a mixture dominated by hydrogen with a smaller quantity of methane.'],
@@ -148,14 +160,14 @@ export const FAQS = [
  * printed number is a guess about formatting and this way the href is stated.
  */
 export const ENQUIRY_DESK = {
-  phone: '+91 733 922 0840',
-  tel: '+917339220840',
+  phone: '+91 99139 99794',
+  tel: '+919913999794',
   label: 'Diamond and custom jewellery enquiries',
 };
 
 export const OFFICES = [
   { city: 'Surat', address: 'SY No. 310, 2nd Floor, Chinaiwala Complex, near Mehta Petrol Pump, Amroli Road, Katargam, Surat 395004', phone: '+91 99139 99794', tel: '+919913999794', email: 'newgrowndiamonds@gmail.com' },
-  { city: 'Mumbai', address: 'GW-2100, 2nd Floor, Bharat Diamond Bourse, BKC, Mumbai 400051', phone: '+91 87992 36510', tel: '+918799236510', email: 'newgrowndiamonds@gmail.com' },
+  { city: 'Mumbai', address: 'EC4012, 4th Floor, Bharat Diamond Bourse, BKC, Mumbai 400051', phone: '+91 87992 36510', tel: '+918799236510', email: 'newgrowndiamonds@gmail.com' },
   { city: 'New York', address: '15 West 47th Street, Suite 1802, New York, NY 10036', phone: '+1 551 325 8210', tel: '+15513258210', email: 'ngd.usa1@gmail.com' },
   { city: 'Hong Kong', address: 'Room 901, 9/F, Workingport Commercial Building, 3 Hau Fook Street, Tsim Sha Tsui, Kowloon', phone: '+852 9140 0857', tel: '+85291400857' },
 ];

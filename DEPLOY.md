@@ -108,14 +108,21 @@ npm run build                 # must exit 0
 npx oxlint src/               # must report no errors
 ```
 
-Then confirm no secret material reached the bundle:
+Then confirm no secret material reached the bundle. The check looks for actual
+key VALUES — an `sb_secret_` key or a JWT whose role is `service_role` — not for
+the words themselves: the Supabase library names both key types in its own
+code, and the site's fetch helpers contain a guard that refuses to send a
+secret key, so a plain text search reports a "leak" that is not one.
 
 ```bash
 node -e "const fs=require('fs'),p=require('path');const f=[];\
 (function w(d){for(const n of fs.readdirSync(d)){const q=p.join(d,n);\
-fs.statSync(q).isDirectory()?w(q):/\.(js|css|html|map)$/.test(n)&&f.push(q)}})('dist');\
-const bad=f.filter(x=>/service_role|sb_secret_|SUPABASE_SERVICE/i.test(fs.readFileSync(x,'utf8')));\
-console.log(bad.length?'LEAK: '+bad.join(', '):'PASS: no secret material in dist')"
+fs.statSync(q).isDirectory()?w(q):/\.(js|css|html|map|json)$/.test(n)&&f.push(q)}})('dist');\
+const hits=[];for(const x of f){const s=fs.readFileSync(x,'utf8');\
+if(/sb_secret_[A-Za-z0-9_-]{16,}/.test(s))hits.push(x);\
+for(const m of s.matchAll(/eyJ[\w-]{10,}\.eyJ[\w-]{10,}\.[\w-]{10,}/g)){try{\
+if(JSON.parse(Buffer.from(m[0].split('.')[1],'base64url')).role==='service_role')hits.push(x)}catch{}}}\
+console.log(hits.length?'LEAK: '+hits.join(', '):'PASS: no secret key in dist')"
 ```
 
 Finally, serve `dist/` and load `/blogs` **directly** (not by clicking through).

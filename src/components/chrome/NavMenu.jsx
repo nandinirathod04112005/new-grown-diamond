@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
+import { useT } from '@/i18n/localeContext.js';
 import styles from './NavMenu.module.css';
 
 /**
@@ -27,6 +28,7 @@ export default function NavMenu({ label, href, items, className, linkClassName, 
   const trigger = useRef(null);
   const shut = useRef(null);
   const id = useId();
+  const t = useT();
 
   /* Measured on open rather than tracked, because the header is fixed and the
      panel is only ever on screen while it is being pointed at. */
@@ -101,7 +103,7 @@ export default function NavMenu({ label, href, items, className, linkClassName, 
         className={styles.chevron}
         aria-expanded={open}
         aria-controls={id}
-        aria-label={`${label} pages`}
+        aria-label={t('nav.subPages', { label })}
         /*
          * Opened by press, never by focus. Opening on focus made Escape
          * useless: closing returns focus to this button, which immediately

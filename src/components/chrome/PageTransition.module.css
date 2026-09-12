@@ -145,4 +145,6 @@
 @media (max-width: 720px) {
   .root { grid-template-columns: repeat(3, 1fr); }
   .arch:nth-child(n + 4) { display: none; }
+  .arch:nth-child(1), .arch:nth-child(3) { --i: 1 !important; }
+  .arch:nth-child(2) { --i: 0 !important; }
 }

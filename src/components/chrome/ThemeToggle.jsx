@@ -1,18 +1,22 @@
 import { useState } from 'react';
 
 import { applyTheme, storedTheme } from '@/lib/theme.js';
+import { interpolate } from '@/i18n/localeContext.js';
+import { useCopy } from '@/i18n/useCopy.js';
+import COPY from './ThemeToggle.copy.js';
 import styles from './ThemeToggle.module.css';
 
 /**
  * The light / dark control.
  *
- * Dark is the authored default and light is an explicit visitor option.
+ * Dark is the authored default and light is an explicit visitor option. The
+ * words for each mode are in ThemeToggle.copy.js.
  */
 const ORDER = ['dark', 'light'];
-const LABEL = { light: 'Light', dark: 'Dark' };
 
 export default function ThemeToggle() {
-  const [choice, setChoice] = useState(() => storedTheme() ?? 'dark');
+  const c = useCopy(COPY);
+  const [choice, setChoice] = useState(() => storedTheme() ?? 'light');
 
   function cycle() {
     const next = ORDER[(ORDER.indexOf(choice) + 1) % ORDER.length];
@@ -20,7 +24,7 @@ export default function ThemeToggle() {
     setChoice(next);
   }
 
-  const label = LABEL[String(choice)];
+  const label = c.modes[String(choice)];
 
   return (
     <button
@@ -30,8 +34,8 @@ export default function ThemeToggle() {
       data-mode={choice}
       // The accessible name carries the current setting AND what pressing it
       // does, because the glyph alone cannot say "following your system".
-      aria-label={`Theme: ${label}. Change theme.`}
-      title={`Theme: ${label}`}
+      aria-label={interpolate(c.aria, { mode: label })}
+      title={interpolate(c.title, { mode: label })}
     >
       <span className={styles.dial} aria-hidden="true">
         {/*

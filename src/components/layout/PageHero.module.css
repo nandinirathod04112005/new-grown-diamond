@@ -220,3 +220,44 @@
 /* A shade brighter over a photograph than over the plain ground, where the
    muted grey was measured. */
 .hero[data-backdrop] .intro { color: color-mix(in srgb, var(--text) 74%, var(--text-muted)); }
+
+/* The photograph supplies the depth; keep the reading plane steady. */
+.hero[data-backdrop] .depth, .hero[data-backdrop] .copy { transform: none; }
+.hero[data-backdrop] .field { display: none; }
+.hero[data-backdrop] .grain { opacity: 0.025; }
+.hero[data-backdrop] .motif > svg { opacity: 0.28; }
+.title { text-wrap: balance; }
+.intro { font-size: clamp(1rem, 0.95rem + 0.3vw, 1.2rem); line-height: 1.65; }
+.action { min-height: var(--target-min); display: inline-flex; align-items: center; gap: 0.65rem; }
+@media (max-width: 899px) {
+  .hero, .hero[data-backdrop] { min-height: 36rem; padding: 7rem var(--gutter) 4rem; }
+  .hero[data-backdrop] .motif { display: none; }
+  .depth { gap: var(--s-4); }
+  .title { max-width: 18ch; font-size: clamp(2.2rem, 8vw, 3.6rem); }
+}
+
+/* Framed editorial opening: clear reading column, photograph to the right. */
+.hero, .hero[data-backdrop] { min-height: min(56rem, 94svh); padding-block: 9rem 5rem; align-items: center; background: var(--ink); }
+.hero[data-backdrop] .backdrop { inset: 6.8rem var(--gutter) 2.5rem 45%; z-index: -1; border: 1px solid var(--ink-line); }
+.hero[data-backdrop] .depth { grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); }
+.hero[data-backdrop] .copy { position: relative; padding-block: 2rem; }
+.title { font-size: var(--t-banner); line-height: .95; letter-spacing: -.045em; max-width: 13ch; }
+.hero[data-backdrop] .motif { width: min(14vw, 12rem); justify-self: end; align-self: end; opacity: .4; }
+.hero[data-backdrop] .intro { max-width: 39ch; font-size: var(--t-body); color: var(--text-muted); padding-right: 1rem; }
+.rule { width: 5rem; background: var(--accent); }
+.action { padding: 1rem 1.4rem; min-height: 3.4rem; border: 1px solid var(--text); background: var(--text); color: var(--ink); letter-spacing: .07em; }
+.action:hover { background: var(--accent); border-color: var(--accent); color: var(--ink); }
+@media (max-width: 899px) {
+ .hero, .hero[data-backdrop] { min-height: 0; padding-top: 7rem; padding-bottom: 18rem; }
+ .hero[data-backdrop] .depth { grid-template-columns: 1fr; }
+ .hero[data-backdrop] .copy { padding: 0; }
+ .hero[data-backdrop] .backdrop { inset: auto var(--gutter) 1.5rem; height: 14rem; }
+ .title { font-size: clamp(2.8rem, 10vw, 4.5rem); max-width: 15ch; }
+ .hero[data-backdrop] .intro { max-width: 48ch; padding-right: 0; }
+}
+/* The reading pages share the storefront's quieter proportions. */
+.hero,.hero[data-backdrop]{min-height:650px;padding-top:135px;padding-bottom:65px}
+.title{font-size:clamp(3.3rem,5.8vw,6.3rem);line-height:1.02}
+.hero[data-backdrop] .backdrop{inset:120px var(--gutter) 50px 51%;border-radius:180px 180px 2px 2px;overflow:hidden}
+.hero[data-backdrop] .depth{grid-template-columns:1fr 1fr;gap:5vw}
+@media(max-width:899px){.hero,.hero[data-backdrop]{min-height:0;padding-top:115px;padding-bottom:285px}.title{font-size:clamp(2.8rem,9vw,4.4rem)}.hero[data-backdrop] .depth{grid-template-columns:1fr}.hero[data-backdrop] .backdrop{inset:auto var(--gutter) 25px;height:225px;border-radius:75px 75px 2px 2px}}

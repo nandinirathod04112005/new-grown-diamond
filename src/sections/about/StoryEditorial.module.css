@@ -1,0 +1,54 @@
+.banner,.journey { color:#eeeae2; background:#101113; }
+.banner { position:relative; display:grid; grid-template-columns:1.15fr 1fr; gap:4vw; padding:clamp(7rem,13vw,12rem) var(--gutter) 5rem; overflow:hidden; }
+.bannerCopy { position:relative; z-index:1; align-self:center; }
+.label { font-size:.65rem; letter-spacing:.18em; text-transform:uppercase; color:#c2b9a8; line-height:1.8; }
+.banner h1 { max-width:15ch; font-family:var(--font-display,Georgia,serif); font-size:clamp(2.8rem,5.7vw,7rem); font-weight:400; line-height:1.02; letter-spacing:-.055em; margin:1.5rem 0 2rem; }
+.intro { max-width:40ch; color:#b8b9bc; font-size:clamp(1rem,1.2vw,1.2rem); line-height:1.8; }
+.link { display:inline-flex; gap:2rem; align-items:center; padding:1rem 0; margin-top:1.5rem; border-bottom:1px solid #85817a; text-decoration:none; color:inherit; font-size:.85rem; }
+.link span { transition:transform .25s; }.link:hover span { transform:translate(3px,-3px); }
+.link:focus-visible,.index a:focus-visible { outline:2px solid #f1e4c7; outline-offset:6px; }
+.bannerMedia { margin:0; align-self:center; min-width:0; }
+.bannerMedia img { width:100%; aspect-ratio:1; object-fit:contain; display:block; mix-blend-mode:screen; animation:arrive 1.3s ease-out both; }
+.bannerMedia figcaption,.bannerFoot { display:flex; justify-content:space-between; gap:1rem; font-size:.6rem; letter-spacing:.14em; text-transform:uppercase; color:#aaa; }
+.bannerMedia figcaption { padding:1.5rem 0; border-top:1px solid #343538; }
+.bannerFoot { grid-column:1/-1; border-top:1px solid #343538; padding-top:1.5rem; margin-top:2rem; }
+.journey { display:grid; grid-template-columns:.85fr 1.15fr; gap:8vw; padding:7rem var(--gutter); scroll-margin-top:6rem; }
+.index { position:sticky; top:7rem; align-self:start; }
+.index h2 { font-family:var(--font-display,Georgia,serif); font-size:clamp(2rem,3.2vw,4rem); font-weight:400; line-height:1.15; letter-spacing:-.04em; margin:1.5rem 0; }
+.index h2 em { color:#a6a6ab; font-weight:400; }.index>p:not(.label) { max-width:34ch; line-height:1.8; color:#b8b9bc; }
+.index nav { display:grid; margin-top:2rem; }.index nav a { display:flex; gap:1.5rem; color:#ddd; text-decoration:none; padding:.65rem 0; font-size:.8rem; }.index nav span { color:#8c8d93; font-size:.65rem; }
+.stone { display:block; width:8rem; height:6rem; object-fit:contain; margin-top:1.5rem; mix-blend-mode:screen; }
+.chapters { position:relative; padding-left:2.5rem; }
+.thread { position:absolute; top:0; bottom:0; left:0; width:1px; background:#343538; }.thread span { display:block; width:1px; height:100%; background:#dbd3c4; transform-origin:top; transform:scaleY(var(--journey,0)); }.thread::after { content:''; position:absolute; top:calc(var(--journey,0)*100%); left:-3px; width:7px; height:7px; border-radius:50%; background:#eae3d5; box-shadow:0 0 15px #aaa7; }
+.chapter { position:relative; min-height:20rem; padding:3rem 0 4rem; border-top:1px solid #343538; scroll-margin-top:7rem; }.number { position:absolute; right:0; top:3rem; color:#73767c; font-size:.7rem; }.chapter .label { padding-right:2rem; }.chapter h3 { font-family:var(--font-display,Georgia,serif); font-weight:400; font-size:clamp(2rem,3.5vw,4.5rem); letter-spacing:-.045em; margin:1.3rem 0; }.chapterBody { max-width:43ch; color:#bfc0c4; font-size:1.05rem; line-height:1.85; }
+@keyframes arrive { from { opacity:0; transform:translateY(20px) scale(.97); } to { opacity:1; transform:none; } }
+@media(max-width:767px) { .banner { grid-template-columns:1fr; padding-top:7rem; gap:1rem; }.banner h1 { font-size:clamp(2.9rem,9vw,4.5rem); }.bannerMedia { max-width:26rem; width:100%; margin:auto; }.bannerMedia img { aspect-ratio:1.4; }.journey { grid-template-columns:1fr; padding-top:4rem; gap:3rem; }.index { position:static; }.index nav { grid-template-columns:1fr 1fr; gap:.5rem; }.stone { display:none; }.chapter { min-height:0; }.chapters { padding-left:1.5rem; } }
+@media(prefers-reduced-motion:reduce) { .bannerMedia img { animation:none; }.link span { transition:none; }.thread span { transform:none; }.thread::after { display:none; } }
+
+/* ================= theme-follow: light mode =================
+ * The banner and the journey were near-black in both themes. The banner's
+ * photograph is a diamond on black blended in with `screen`, which would wash
+ * out on a light ground, so in light mode it is shown as a framed photograph. */
+:global(:root[data-theme='light']) .banner, :global(:root[data-theme='light']) .journey { background: #f1efe9; color: #1d1d22; }
+:global(:root[data-theme='light']) .index nav a { color: #55555f; }
+:global(:root[data-theme='light']) .bannerMedia img { mix-blend-mode: normal; border-radius: 8px; }
+:global(:root[data-theme='light']) .bannerMedia figcaption, :global(:root[data-theme='light']) .bannerFoot { color: #6b6b74; border-top-color: #d9d4c9; }
+:global(:root[data-theme='light']) .thread { background: #d9d4c9; }
+:global(:root[data-theme='light']) .thread span { background: #8c7751; }
+:global(:root[data-theme='light']) .thread::after { background: #b39d6c; }
+/* The copy greys were chosen against black; on the light ground they are
+   darkened to keep the same hierarchy at readable contrast. */
+:global(:root[data-theme='light']) .label { color: #6f6450; }
+:global(:root[data-theme='light']) .intro, :global(:root[data-theme='light']) .index > p:not(.label), :global(:root[data-theme='light']) .chapterBody { color: #4d4d56; }
+:global(:root[data-theme='light']) .index h2 em { color: #7a7a82; }
+:global(:root[data-theme='light']) .index nav span, :global(:root[data-theme='light']) .number { color: #6b6b74; }
+:global(:root[data-theme='light']) .chapter { border-top-color: #d9d4c9; }
+:global(:root[data-theme='light']) .link:focus-visible, :global(:root[data-theme='light']) .index a:focus-visible { outline-color: #8c7751; }
+:global(:root[data-theme='light']) .stone { mix-blend-mode: normal; }
+
+/* ================= phones: legible text, tappable links ================= */
+/* Nothing under 11 px on a phone — the small uppercase labels were 8 to 10 px
+   and hard to read at arm's length. Measured with a 390 px audit. */
+@media (max-width: 600px) {
+  .bannerMedia figcaption, .bannerFoot, .index nav span, .label { font-size: 0.6875rem; }
+}

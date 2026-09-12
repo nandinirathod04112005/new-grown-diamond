@@ -2,6 +2,7 @@ import { useRef } from 'react';
 
 import { gsap, useGSAP } from '@/lib/motion/gsap.js';
 import { prefersReducedMotion } from '@/lib/motion/media.js';
+import { lettersOf } from '@/i18n/letters.js';
 import styles from './SplitHeading.module.css';
 
 /**
@@ -46,9 +47,6 @@ export default function SplitHeading({ as: Tag = 'h2', text, className, ...rest 
       const chars = el.querySelectorAll(`.${styles.char}`);
       if (!chars.length) return;
 
-      // Already on screen at mount — an anchor jump or a restored scroll lands
-      // here — so it is arrived, not pending. Without this the observer never
-      // fires and the heading would sit hidden for ever.
       const play = contextSafe(() => gsap.fromTo(
         chars,
         { yPercent: 108, rotate: 2, opacity: 0 },
@@ -56,14 +54,21 @@ export default function SplitHeading({ as: Tag = 'h2', text, className, ...rest 
           stagger: { amount: Math.min(0.32, chars.length * 0.012) } },
       ));
 
-      if (el.getBoundingClientRect().top < window.innerHeight * 0.92) {
-        play();
-        return;
-      }
-
+      /*
+       * Where the heading is comes from the observer's first report, not from
+       * getBoundingClientRect() here. Asking here forced the whole page's first
+       * layout in the middle of React's commit, before the rest of the page
+       * had finished writing its styles: about 100 ms in a profile at phone CPU
+       * speed (4x slowdown), on every page with one of these headings. The
+       * observer reports on the next frame, from the layout the browser does
+       * anyway.
+       */
       gsap.set(chars, { yPercent: 108, rotate: 2, opacity: 0 });
       const io = new IntersectionObserver(([entry]) => {
-        if (!entry.isIntersecting) return;
+        // On screen, or already scrolled past — an anchor jump or a restored
+        // scroll lands below it — so it is arrived, not pending. Without the
+        // second case the heading would sit hidden above the reader for ever.
+        if (!entry.isIntersecting && entry.boundingClientRect.top >= 0) return;
         io.disconnect();
         play();
       }, { rootMargin: '0px 0px -10% 0px', threshold: 0.2 });
@@ -77,12 +82,13 @@ export default function SplitHeading({ as: Tag = 'h2', text, className, ...rest 
   const words = String(text).split(' ');
 
   return (
-    <Tag ref={scope} className={className} aria-label={text} {...rest}>
+    <Tag ref={scope} className={className} {...rest}>
+      <span className="u-visually-hidden">{text}</span>
       <span aria-hidden="true">
         {words.map((word, wi) => (
           <span key={`${word}-${wi}`}>
             <span className={styles.word}>
-              {[...word].map((ch, ci) => (
+              {lettersOf(word).map((ch, ci) => (
                 <span key={`${ch}-${ci}`} className={styles.char}>{ch}</span>
               ))}
             </span>

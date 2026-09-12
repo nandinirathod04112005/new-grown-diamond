@@ -1,0 +1,57 @@
+.share { position: relative; display: flex; align-items: center; gap: 0.9rem; flex-wrap: wrap; }
+
+.share[data-layout='column'] { flex-direction: column; align-items: center; gap: 0.7rem; }
+
+.label {
+  margin: 0;
+  font-size: 0.625rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.share[data-layout='column'] .label { writing-mode: vertical-rl; transform: rotate(180deg); }
+
+.list { display: flex; gap: 0.45rem; margin: 0; padding: 0; list-style: none; }
+
+.share[data-layout='column'] .list { flex-direction: column; }
+
+.btn {
+  display: grid;
+  place-items: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  border: 1px solid var(--line-firm);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  transition: background 240ms ease, color 240ms ease, border-color 240ms ease, translate 240ms ease;
+}
+
+.btn svg { fill: currentColor; }
+.btn:hover, .btn:focus-visible { background: var(--accent); border-color: var(--accent); color: var(--ink); translate: 0 -2px; }
+.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+.toast {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 0.4rem);
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.share[data-layout='column'] .toast { left: 50%; translate: -50% 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .btn { transition: none; }
+}
+
+/* ================= phones: legible text, tappable links ================= */
+/* Nothing under 11 px on a phone — the small uppercase labels were 8 to 10 px
+   and hard to read at arm's length. Measured with a 390 px audit. */
+@media (max-width: 600px) {
+  .label { font-size: 0.6875rem; }
+}

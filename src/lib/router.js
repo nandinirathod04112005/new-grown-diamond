@@ -177,8 +177,15 @@ export function useRouter() {
 
       // Reduced motion gets the navigation without the theatre. The cover is
       // decoration; the page change is the function, and it still happens.
+      /*
+       * The #fragment travels too. It used to be dropped here, so a link such
+       * as /feedback#wall landed at the top of the page with the fragment gone
+       * from the address — and App's scroll-to-fragment effect, which exists
+       * for exactly these links, never had one to read. Route matching is
+       * unaffected: commit() keys the route on the pathname alone.
+       */
       if (prefersReducedMotion()) {
-        commit(target.pathname + target.search, push);
+        commit(target.pathname + target.search + target.hash, push);
         return;
       }
 
@@ -186,7 +193,7 @@ export function useRouter() {
       setPhase('out');
       await new Promise((r) => setTimeout(r, COVER_OUT_MS));
 
-      commit(target.pathname + target.search, push);
+      commit(target.pathname + target.search + target.hash, push);
 
       setPhase('in');
       await new Promise((r) => setTimeout(r, COVER_IN_MS));

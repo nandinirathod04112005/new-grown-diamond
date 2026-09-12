@@ -17,9 +17,11 @@
    * these, so the accent is changed in one place rather than in twenty-two
    * stylesheets.
    */
-  --accent: #00cec9;
-  --accent-lift: #5cf0ec;
-  --accent-deep: #00918d;
+  --accent: #bda06a;
+  --accent-lift: #dfc797;
+  --accent-deep: #765923;
+  --accent-technical: #6d8fc4;
+  --feedback-error: #e68b8b;
 
   /* ---- ground: dark-first, ivory is the deliberate vitrine ---- */
   --ink: #0c0c0e;
@@ -44,10 +46,7 @@
   --text-invert: #17171b;
 
   /*
-   * The accent flows through the three gold tokens rather than replacing them
-   * at 77 call sites. The names are historical — they were a metallic gold
-   * (#b48c47 / #d9c08a / #8f6d31) — and pointing them back at those three hex
-   * values is the entire cost of reverting the house colour.
+   * Gold aliases keep existing components on the shared accent scale.
    */
   --gold: var(--accent);
   --gold-lift: var(--accent-lift);
@@ -56,7 +55,7 @@
   /* Scrims and glows, so a stage can be darkened without hard-coding a black
      that stays black when the page turns light. */
   --scrim: 12 12 14;
-  --glow: 92 240 236;
+  --glow: 189 160 106;
 
   /* How far forward the fixed backdrop film comes. It is atmosphere behind the
      chapters, and a photograph carries much further on a light ground than on
@@ -126,6 +125,9 @@
    */
   --t-body: clamp(1rem, 0.96rem + 0.2vw, 1.0625rem);
   --control-h: 3rem;
+  --target-min: 2.75rem;
+  --t-banner: clamp(2.35rem, 1.1rem + 4.4vw, 5.5rem);
+  --section-space: clamp(3.5rem, 7vw, 7rem);
   --radius-control: 2px;
   --line-firm: color-mix(in srgb, var(--text) 28%, transparent);
   --surface-1: var(--ink-raised);
@@ -142,18 +144,17 @@
  * that happens to be. Renaming them per mode would mean editing every
  * stylesheet; swapping the roles consistently means none.
  *
- * The accent darkens here. #00cec9 is a bright cyan built to sit on near
- * black; on white it fails contrast for text outright, so light mode uses the
- * deeper steps of the same family and keeps the bright one for fills.
+ * Light mode uses deeper gold for readable labels and links on ivory.
  */
 /* An explicit choice wins in both directions, so the toggle can override the
    operating system either way. */
 :root[data-theme='light'] {
   color-scheme: light;
 
-  --accent: #00807c;
-  --accent-lift: #00a49f;
-  --accent-deep: #005f5c;
+  --accent: #80602d;
+  --accent-lift: #735324;
+  --accent-deep: #624719;
+  --feedback-error: #a13232;
 
   --ink: #f7f6f3;
   --ink-raised: #ffffff;
@@ -167,7 +168,7 @@
   --text-invert: #faf9f7;
 
   --scrim: 247 246 243;
-  --glow: 0 128 124;
+  --glow: 128 96 45;
   --film-poster: 0.14;
 }
 
@@ -177,9 +178,10 @@
   :root:not([data-theme='dark']) {
     color-scheme: light;
 
-    --accent: #00807c;
-    --accent-lift: #00a49f;
-    --accent-deep: #005f5c;
+    --accent: #80602d;
+    --accent-lift: #735324;
+    --accent-deep: #624719;
+    --feedback-error: #a13232;
 
     --ink: #f7f6f3;
     --ink-raised: #ffffff;
@@ -193,7 +195,33 @@
     --text-invert: #faf9f7;
 
     --scrim: 247 246 243;
-    --glow: 0 128 124;
+    --glow: 128 96 45;
     --film-poster: 0.14;
   }
+}
+
+/* Showroom composition tokens shared by editorial and task pages. */
+:root {
+ --showroom-space: clamp(4rem, 9vw, 9rem);
+ --showroom-paper: #ece6da;
+ --showroom-ink: #23231f;
+ --t-banner: clamp(3.2rem, 6.7vw, 7.8rem);
+ --t-body: clamp(1rem, .95rem + .3vw, 1.125rem);
+ --gutter: clamp(1.25rem, 4.5vw, 5.5rem);
+}
+/* Shared palette for the redesigned storefront. */
+:root, :root[data-theme='light'] {
+ --showroom-paper:#f8f6f0; --showroom-ink:#183e35;
+ --accent:#71582d; --accent-lift:#654b26; --accent-deep:#543b1b;
+ --ink:#f8f6f0; --ink-raised:#eef1e8; --ink-line:#d7ddd1;
+ --ivory:#183e35; --pearl:#29493e; --text:#183e35; --text-muted:#526059; --text-invert:#f8f6f0;
+ --surface-1:#ffffff; --surface-2:#edf0e7; --line-firm:#aab7a6; --scrim:248 246 240;
+ --gold:var(--accent); --gold-lift:var(--accent-lift); --gold-deep:var(--accent-deep);
+ color-scheme:light;
+}
+:root[data-theme='dark'] {
+ --ink:#10251f; --ink-raised:#19342b; --ink-line:#3a5144;
+ --ivory:#f7f5ed; --pearl:#e4e9df; --text:#f7f5ed; --text-muted:#b4c0b4; --text-invert:#10251f;
+ --surface-1:#19342b; --surface-2:#203b31; --line-firm:#60735f; --scrim:16 37 31;
+ --accent:#d1b581; --accent-lift:#e0c698; --accent-deep:#aa905d; color-scheme:dark;
 }

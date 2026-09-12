@@ -51,6 +51,8 @@ export default {
     blogs: 'ब्लॉग',
     contact: 'संपर्क',
     account: 'खाता',
+    login: 'लॉग इन',
+    logout: 'लॉग आउट',
     signIn: 'साइन इन',
     signOut: 'साइन आउट',
     register: 'खाता बनाएँ',
@@ -60,6 +62,27 @@ export default {
     language: 'भाषा',
     changeLanguage: 'भाषा बदलें',
     backToSite: 'वेबसाइट पर वापस',
+    primary: 'मुख्य',
+    openMenu: 'मेन्यू खोलें',
+    closeMenu: 'मेन्यू बंद करें',
+    siteMenu: 'साइट मेन्यू',
+    cart: 'कार्ट',
+    wishlist: 'विशलिस्ट',
+    wishlistSaved: 'विशलिस्ट, {count} सहेजे गए',
+    subPages: '{label} के पेज',
+  },
+
+  educationTopics: {
+    'price-and-size': 'हीरे की कीमत और साइज़',
+    'cvd-vs-natural': 'CVD और प्राकृतिक हीरे की तुलना',
+    'why-lab-grown': 'लैब-ग्रोन हीरा क्यों चुनें?',
+    shapes: 'शेप',
+    faq: 'सामान्य सवाल',
+  },
+
+  continueNext: {
+    continue: 'आगे बढ़ें',
+    journal: 'जर्नल',
   },
 
   common: {
@@ -147,6 +170,11 @@ export default {
     shapeGuide: 'शेप गाइड',
     whyNgd: 'NGD क्यों',
     faq: 'सामान्य सवाल',
+    privacy: 'गोपनीयता नीति',
+    terms: 'नियम और शर्तें',
+    follow: 'हमें फ़ॉलो करें',
+    journal: 'जर्नल',
+    feedback: 'ग्राहक प्रतिक्रिया',
     rights: 'सटीकता से तैयार · प्रमाण के साथ प्रस्तुत',
     tagline: 'सूरत में बने CVD और HPHT लैब-ग्रोन हीरे, दुनिया भर के ग्राहकों के लिए।',
   },

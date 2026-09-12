@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 
-import { prefersReducedMotion } from '@/lib/motion/media.js';
+import useReducedMotion from '@/hooks/useReducedMotion.js';
 
 /**
  * Pulls its child toward the cursor once the cursor is close enough.
@@ -12,11 +12,12 @@ import { prefersReducedMotion } from '@/lib/motion/media.js';
  */
 export default function Magnetic({ children, radius = 110, pull = 0.32 }) {
   const ref = useRef(null);
+  const reduced = useReducedMotion();
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return undefined;
-    if (prefersReducedMotion()) return undefined;
+    if (reduced) return undefined;
     if (window.matchMedia?.('(pointer: coarse)').matches) return undefined;
 
     let tx = 0, ty = 0, cx = 0, cy = 0, frame = 0, lastTime = 0;
@@ -37,6 +38,7 @@ export default function Magnetic({ children, radius = 110, pull = 0.32 }) {
     };
 
     const onMove = (e) => {
+      if (document.hidden || el.contains(document.activeElement)) return;
       const r = el.getBoundingClientRect();
       // Measure from the resting position; moving the target must not feed
       // back into the next pointer measurement and produce oscillation.
@@ -44,8 +46,8 @@ export default function Magnetic({ children, radius = 110, pull = 0.32 }) {
       const dy = e.clientY - (r.top - cy + r.height / 2);
       const dist = Math.hypot(dx, dy);
       if (dist < radius + Math.max(r.width, r.height) / 2) {
-        tx = dx * pull;
-        ty = dy * pull;
+        tx = Math.max(-12, Math.min(12, dx * pull));
+        ty = Math.max(-8, Math.min(8, dy * pull));
       } else {
         tx = 0;
         ty = 0;
@@ -53,13 +55,24 @@ export default function Magnetic({ children, radius = 110, pull = 0.32 }) {
       if (!frame) frame = requestAnimationFrame(tick);
     };
 
+    const reset = () => {
+      cancelAnimationFrame(frame);
+      frame = lastTime = tx = ty = cx = cy = 0;
+      el.style.transform = '';
+    };
+    el.addEventListener('focusin', reset);
+    window.addEventListener('blur', reset);
+    document.addEventListener('visibilitychange', reset);
     window.addEventListener('pointermove', onMove, { passive: true });
     return () => {
+      el.removeEventListener('focusin', reset);
+      window.removeEventListener('blur', reset);
+      document.removeEventListener('visibilitychange', reset);
       window.removeEventListener('pointermove', onMove);
       cancelAnimationFrame(frame);
       el.style.transform = '';
     };
-  }, [radius, pull]);
+  }, [radius, pull, reduced]);
 
   return (
     <span ref={ref} style={{ display: 'inline-block', willChange: 'transform' }}>

@@ -1,6 +1,5 @@
 import Lenis from 'lenis';
 
-import { gsap, ScrollTrigger } from './gsap.js';
 import { prefersReducedMotion } from './media.js';
 
 /**
@@ -39,27 +38,21 @@ export function createSmoothScroll() {
 
   active = lenis;
 
-  const raf = (time) => { if (!document.hidden) lenis.raf(time * 1000); };
-  gsap.ticker.add(raf);
-  gsap.ticker.lagSmoothing(0);
-
-  /*
-   * ScrollTrigger reads window.scrollY, and Lenis moves the page without the
-   * browser firing a native scroll event ScrollTrigger would notice in time.
-   * Without this line a pinned section lags the smoother by a frame or two and
-   * visibly judders. A scrollerProxy is NOT needed on top of it: Lenis is
-   * scrolling the window here, not a custom container.
-   */
-  const sync = () => ScrollTrigger.update();
-  lenis.on('scroll', sync);
+  /* Native rAF keeps the 70 kB smoother independent of the much larger GSAP
+     animation bundle. Routes that actually use GSAP load it in their own lazy
+     chunk; ordinary browsing never downloads it just to move the scrollbar. */
+  let frame = 0;
+  const raf = (time) => {
+    if (!document.hidden) lenis.raf(time);
+    frame = requestAnimationFrame(raf);
+  };
+  frame = requestAnimationFrame(raf);
 
   return {
     lenis,
     destroy() {
       if (active === lenis) active = null;
-      lenis.off('scroll', sync);
-      gsap.ticker.remove(raf);
-      gsap.ticker.lagSmoothing(500, 33);
+      cancelAnimationFrame(frame);
       lenis.destroy();
     },
   };

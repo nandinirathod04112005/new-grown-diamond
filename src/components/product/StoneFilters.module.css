@@ -831,3 +831,11 @@
 @media (max-width: 599px) {
   .bar { top: 6rem; }
 }
+
+.bar { padding-block: 1.5rem; border-block: 1px solid var(--f-line-firm); }
+.title { font-size: clamp(2rem,3vw,3rem); letter-spacing: -.025em; }
+.tally { letter-spacing: .07em; }
+.side { background: var(--surface-1); border: 1px solid var(--ink-line); padding: 1.25rem; }
+.group { padding-block: 1rem; }
+.shapes button { min-height: 4rem; border-radius: 0; }
+.clear, .opener { min-height: 3rem; letter-spacing: .07em; }

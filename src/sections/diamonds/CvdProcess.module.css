@@ -343,6 +343,19 @@
   color: var(--text-muted);
 }
 
+/* The step's own words. Only phones show them: everywhere else the plate is
+   drawn whole and carries the same text in the artwork. */
+.hudCopy {
+  display: none;
+  grid-column: 1 / -1;
+  margin-top: var(--s-2);
+  max-width: 44ch;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--text-muted);
+  will-change: transform, opacity;
+}
+
 .note {
   max-width: 68ch;
   padding-top: var(--s-3);
@@ -414,5 +427,191 @@
     gap: var(--s-3);
     grid-auto-rows: min-content;
     align-content: center;
+    /* Clear of the fixed header, which sits over the top of the pinned pane. */
+    padding-top: 4.5rem;
   }
+
+  /*
+   * Phones: the photograph, edge to edge, with the words set beneath it.
+   *
+   * Drawn whole, a 1536 x 1024 slide at 350 px wide was a strip a third of the
+   * screen tall, most of the pane left empty around it, and its type about
+   * 5 px high. The slide's left quarter is that type; the rest is photograph.
+   * So here the plate runs the full width of the screen, the picture is
+   * cropped from the right to the photograph, and the step's own title and
+   * copy (cvdSteps.js) sit underneath at reading size. The height gives way on
+   * a short screen so the readout below always fits in the pane.
+   */
+  .pinArea { margin-inline: calc(-1 * var(--gutter)); }
+  .plates { max-width: 100%; }
+  .plate {
+    aspect-ratio: auto;
+    height: min(calc(100vw * 7 / 8), calc(100vh - 22rem));
+    border-inline: 0;
+    border-radius: 0;
+  }
+  .plate img {
+    object-fit: cover;
+    object-position: 100% 50%;
+    /* On a short screen the crop is wider than the photograph half and the
+       last letters of the slide's own type show at the left edge; they fade
+       out into the plate instead of being cut through. */
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, transparent 5%, #000 20%);
+    mask-image: linear-gradient(90deg, transparent 0, transparent 5%, #000 20%);
+  }
+  .hud { padding-inline: var(--gutter); }
+  .hudLabel {
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+    font-weight: 300;
+    letter-spacing: -0.01em;
+    text-transform: none;
+    line-height: 1.2;
+    color: var(--text);
+  }
+  .hudCopy { display: block; }
+  /* Reduced motion has no readout to carry the words, so there the plate
+     stays whole. */
+  .stillMode .plate { aspect-ratio: 3 / 2; height: auto; }
+  .stillMode .plate img { object-fit: contain; -webkit-mask-image: none; mask-image: none; }
+  .stillMode .stage { padding-top: 0; }
+  .chapters { margin-top: var(--s-3); }
+  .chapters span span { font-size: 0.6875rem; }
+  .introEyebrow { font-size: 0.6875rem; }
+  .introPhase, .scrollCue { font-size: 0.6875rem; }
+}
+
+/* ================= the opening film (CvdFilm.jsx) =================
+ * A lit window rather than a video dropped on the page: rounded, edged in the
+ * house gold with a soft glow, a slow sheen crossing it, a vignette that
+ * sinks the corners, viewfinder ticks, and the journey's progress drawn along
+ * its foot (--film, 0..1, written by CvdFilm on this element only). The
+ * timeline opens it out of a smaller aperture (clip-path) as the pane pins.
+ */
+.film {
+  position: absolute;
+  left: 50%;
+  top: 57%;
+  width: min(80vw, 58rem, calc((100vh - 23rem) * 16 / 9));
+  aspect-ratio: 16 / 9;
+  translate: -50% -50%;
+  z-index: 0;
+  overflow: hidden;
+  border-radius: 22px;
+  background: #07090c;
+  box-shadow:
+    0 44px 100px -44px rgba(0, 0, 0, 0.8),
+    0 0 0 1px rgba(214, 190, 140, 0.3),
+    0 0 80px -22px rgba(214, 190, 140, 0.42);
+  --film: 0;
+}
+
+.filmVideo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform-origin: 50% 55%;
+  will-change: transform;
+}
+
+.filmSheen,
+.filmVignette,
+.filmCorners,
+.filmProgress { position: absolute; pointer-events: none; }
+
+.filmVignette {
+  inset: 0;
+  background:
+    radial-gradient(120% 90% at 50% 45%, transparent 55%, rgba(4, 6, 9, 0.55) 100%),
+    linear-gradient(180deg, rgba(4, 6, 9, 0.28), transparent 22%, transparent 78%, rgba(4, 6, 9, 0.35));
+}
+
+.filmSheen {
+  inset: -30% -60%;
+  background: linear-gradient(105deg, transparent 42%, rgba(255, 246, 226, 0.13) 49%, rgba(255, 255, 255, 0.2) 50%, rgba(255, 246, 226, 0.1) 51%, transparent 58%);
+  animation: filmSheen 7s ease-in-out infinite;
+}
+
+@keyframes filmSheen {
+  0%, 15% { transform: translateX(-38%); }
+  60%, 100% { transform: translateX(38%); }
+}
+
+.filmCorners { inset: 14px; }
+.filmCorners i {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border: 1.5px solid rgba(233, 214, 170, 0.85);
+}
+.filmCorners i:nth-child(1) { top: 0; left: 0; border-right: 0; border-bottom: 0; border-top-left-radius: 8px; }
+.filmCorners i:nth-child(2) { top: 0; right: 0; border-left: 0; border-bottom: 0; border-top-right-radius: 8px; }
+.filmCorners i:nth-child(3) { bottom: 0; left: 0; border-right: 0; border-top: 0; border-bottom-left-radius: 8px; }
+.filmCorners i:nth-child(4) { bottom: 0; right: 0; border-left: 0; border-top: 0; border-bottom-right-radius: 8px; }
+
+.filmProgress {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.12);
+}
+.filmProgress::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, var(--gold), var(--gold-lift));
+  box-shadow: 0 0 12px rgba(233, 214, 170, 0.7);
+  transform: scaleX(var(--film, 0));
+  transform-origin: left center;
+}
+
+/*
+ * Desktop: the words stand clear of the fixed header (88 px), and the film
+ * hangs below the caption with a clear gap instead of being centred in the
+ * pane, where on a laptop-height window it rode up over the caption. The
+ * 13.5rem is the gap under the header, the eyebrow, the two-line title and the
+ * caption; the film then takes the height that is left above the scroll cue,
+ * and its width follows at 16:9, so a short window gets a smaller film rather
+ * than one cut off at the foot.
+ */
+@media (min-width: 768px) {
+  .intro { inset: calc(88px + 1rem) 0 4%; }
+  .film {
+    top: calc(88px + 13.5rem);
+    translate: -50% 0;
+    width: min(80vw, 60rem, calc((100vh - 88px - 13.5rem - 4vh - 4rem) * 16 / 9));
+  }
+}
+
+/* Reduced motion: the film as an ordinary player. */
+.filmStill { margin: 0 0 var(--s-7); border-radius: 18px; overflow: hidden; border: 1px solid var(--ink-line); background: #07090c; }
+.filmStill video { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; }
+
+/* Light theme: the window keeps its dark glass; only the glow warms. */
+:global(:root[data-theme='light']) .film {
+  box-shadow:
+    0 40px 90px -46px rgba(30, 28, 22, 0.55),
+    0 0 0 1px rgba(150, 120, 60, 0.35),
+    0 0 70px -26px rgba(170, 135, 70, 0.4);
+}
+
+@media (max-width: 767px) {
+  /* Phones: edge to edge and a little taller than the film's own shape, so
+     the picture fills the pane between the title and the scroll cue. */
+  .film {
+    top: 56%;
+    width: 100vw;
+    aspect-ratio: 4 / 3;
+    max-height: calc(100vh - 22rem);
+    border-radius: 0;
+    box-shadow: 0 0 0 1px rgba(214, 190, 140, 0.22);
+  }
+  .filmCorners { inset: 10px; }
+  .filmCorners i { width: 16px; height: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .filmSheen { animation: none; opacity: 0; }
 }

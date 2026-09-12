@@ -1,4 +1,6 @@
 import ScrollScene from '@/components/scroll/ScrollScene.jsx';
+import { useCopy } from '@/i18n/useCopy.js';
+import COPY from './Reasons.copy.js';
 import styles from './Reasons.module.css';
 
 /**
@@ -75,69 +77,9 @@ const ICONS = {
 };
 
 /*
- * The claims, as the company makes them.
- *
- * `lead` is what a skim reads; `body` is what a crawler and a serious buyer
- * read. Keeping the specific numbers — IGI, GIA, 40 to 50 percent, 100 sq ft,
- * 6000 lbs — matters twice over: they are the substance of the claim, and they
- * are the long-tail phrases people actually type into a search box.
+ * The claims, as the company makes them, are in Reasons.copy.js — each card's
+ * `id` there picks its icon above.
  */
-const REASONS = [
-  {
-    id: 'certified',
-    title: 'Certified',
-    lead: 'Graded by an independent laboratory.',
-    body:
-      'New Grown Diamonds are graded by the independent diamond grading laboratory ' +
-      'International Gemological Institute (IGI). If you are looking for real lab grown ' +
-      'diamonds that are GIA certified, you can always contact New Grown Diamond.',
-  },
-  {
-    id: 'quality',
-    title: 'Quality',
-    lead: 'The same hardness, stiffness and thermal conductivity.',
-    body:
-      'We bring you the best lab manufactured diamonds, with the same exceptional hardness, ' +
-      'stiffness and thermal conductivity as their earth-mined counterparts. They are created ' +
-      'to last for years, exactly as an earth-mined diamond does.',
-  },
-  {
-    id: 'value',
-    title: 'Value',
-    lead: 'Around 40 to 50 percent less, like for like.',
-    body:
-      'Lab created diamonds offer excellent value and are more affordable than natural ' +
-      'diamonds of comparable size and quality. Our lab-manufactured diamonds are priced ' +
-      'around 40 to 50 percent less, and are free of humanitarian and environmental concerns.',
-  },
-  {
-    id: 'conflict',
-    title: 'Conflict-free',
-    lead: 'No negative environmental or social impact.',
-    body:
-      'Our collection of ethical, affordable, conflict-free grown diamonds is more beautiful ' +
-      'than anything we will ever take out of the earth, and comes free of any negative ' +
-      'environmental or social impact.',
-  },
-  {
-    id: 'genuine',
-    title: 'Genuine',
-    lead: '100% crystallised carbon, certificate included.',
-    body:
-      'Our grown diamonds are 100% pure crystallised carbon and identical in every way to ' +
-      'earth-mined diamonds. You can trust New Grown Diamond to buy wholesale lab diamonds ' +
-      'that are 100 percent real. We supply a certificate with every diamond.',
-  },
-  {
-    id: 'eco',
-    title: 'Eco-conscious',
-    lead: 'Mining one carat disturbs nearly 100 sq ft of land.',
-    body:
-      'For every carat of diamond mined, nearly 100 sq ft of land is disturbed and almost ' +
-      '6,000 lbs (2.7 tonnes) of mineral waste is created. Every purchase at New Grown Diamond ' +
-      'funds the foundation that helps restore diamond communities.',
-  },
-];
 
 /*
  * Six cards need room to arrive without the section overstaying. `view` is
@@ -150,11 +92,12 @@ const PHASES = [
 ];
 
 export default function Reasons() {
+  const c = useCopy(COPY);
   return (
     <ScrollScene
       phases={PHASES}
       id="why-lab-grown"
-      label="Why lab-grown diamonds"
+      label={c.label}
       /* Six claims with their figures do not fit one phone viewport: the last
          card's copy was cut mid-sentence by the pinned pane. Stacked, the six
          are read rather than glimpsed. */
@@ -162,12 +105,12 @@ export default function Reasons() {
     >
       <div className={styles.stage}>
         <header className={styles.head}>
-          <p className={styles.kicker}>The case</p>
-          <h2 className={styles.title}>Why lab-grown diamonds</h2>
+          <p className={styles.kicker}>{c.kicker}</p>
+          <h2 className={styles.title}>{c.title}</h2>
         </header>
 
         <ul className={styles.grid}>
-          {REASONS.map((r, i) => (
+          {c.reasons.map((r, i) => (
             <li key={r.id} className={styles.cell} style={{ '--i': i }}>
               <article className={styles.card}>
                 <span className={styles.icon} aria-hidden="true">

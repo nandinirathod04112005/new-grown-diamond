@@ -1,9 +1,12 @@
 import { useId } from 'react';
+import { useCopy } from '@/i18n/useCopy.js';
+import COPY from './CvdReactor.copy.js';
 import styles from './CvdProcess.module.css';
 
 // Illustrative geometry, animated by the parent section's single playhead.
 export default function CvdReactor() {
   const id = useId().replace(/:/g, '');
+  const c = useCopy(COPY);
   return (
     <svg className={styles.reactor} viewBox="0 0 800 460" aria-hidden="true">
       <defs>
@@ -68,10 +71,10 @@ export default function CvdReactor() {
         <path data-glint="" d="M495 145 V195 M470 170 H520 M481 156 L509 184 M481 184 L509 156" fill="none" stroke="#fff" />
       </g>
       <g className={styles.reactorLabels} fill="#c9b797">
-        <text x="75" y="348">DIAMOND SEED</text>
-        <text x="620" y="275">PLASMA FIELD</text>
-        <text x="75" y="108">GAS INLET</text>
-        <text x="620" y="108">VACUUM</text>
+        <text x="75" y="348">{c.seed}</text>
+        <text x="620" y="275">{c.plasma}</text>
+        <text x="75" y="108">{c.inlet}</text>
+        <text x="620" y="108">{c.vacuum}</text>
       </g>
     </svg>
   );

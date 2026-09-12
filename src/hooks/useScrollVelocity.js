@@ -12,11 +12,12 @@ import { prefersReducedMotion } from '@/lib/motion/media.js';
  * yourself down the page, and a heavy object should not behave identically to
  * a flicked one.
  *
- * Three values land on the root element, and every consumer is pure CSS:
+ * One value lands on the root element, and its consumers are pure CSS:
  *
- *   --vel     signed velocity, -1..1, damped     (direction and force)
- *   --speed   absolute velocity, 0..1, damped    (force alone)
  *   data-scroll-dir  'down' | 'up'               (for direction-aware reveals)
+ *
+ * The damped velocity is still computed below, but no longer published as
+ * --vel / --speed on the root (see the note in the loop for why).
  *
  * ONE loop and ONE writer for the whole site. Velocity is the sort of thing
  * every component wants its own copy of, and twenty listeners each
@@ -48,7 +49,6 @@ export function useScrollVelocity() {
     let raf = 0;
     let dir = 'down';
     let lastTime = 0;
-    let published = '';
 
     const tick = (time) => {
       const dt = lastTime ? Math.min(64, Math.max(1, time - lastTime)) : 16.667;
@@ -69,12 +69,15 @@ export function useScrollVelocity() {
       if (raw > 0.5 && dir !== 'down') { dir = 'down'; root.dataset.scrollDir = dir; }
       else if (raw < -0.5 && dir !== 'up') { dir = 'up'; root.dataset.scrollDir = dir; }
 
-      const value = smooth.toFixed(4);
-      if (published !== value) {
-        root.style.setProperty('--vel', value);
-        root.style.setProperty('--speed', Math.abs(smooth).toFixed(4));
-        published = value;
-      }
+      /*
+       * --vel and --speed are no longer written to the root. Nothing on the
+       * site reads them (their only readers, Chapter and Reel and the
+       * .u-vel-stretch class, are not rendered anywhere), and a custom
+       * property set on <html> is inherited by every element, so each scroll
+       * frame restyled the whole page for nothing: a real share of a phone's
+       * frame budget. Should a component want the velocity again, set it on
+       * that component's own element, not on the root.
+       */
       raf = smooth !== 0 || raw !== 0 ? requestAnimationFrame(tick) : 0;
       if (!raf) lastTime = 0;
     };
@@ -88,8 +91,6 @@ export function useScrollVelocity() {
     return () => {
       cancelAnimationFrame(raf);
       window.removeEventListener('scroll', wake);
-      root.style.removeProperty('--vel');
-      root.style.removeProperty('--speed');
       delete root.dataset.scrollDir;
     };
   }, []);

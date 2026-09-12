@@ -111,8 +111,8 @@ function Changes({ entry }) {
 export default function AdminAudit() {
   const [state, setState] = useState({ status: 'loading', entries: [], missing: false, error: null });
 
-  const load = useCallback(async () => {
-    setState((s) => ({ ...s, status: 'loading' }));
+  const load = useCallback(async (showLoading = true) => {
+    if (showLoading) setState((s) => ({ ...s, status: 'loading' }));
     try {
       const { entries, missing } = await listAuditLog({ limit: 300 });
       setState({ status: 'ready', entries, missing, error: null });
@@ -122,7 +122,13 @@ export default function AdminAudit() {
     }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  // oxlint-disable react-hooks/set-state-in-effect -- `load(false)` starts an
+  // external request and leaves the already-loading initial state unchanged.
+  // `load(false)` starts an external request; it does not synchronously change
+  // the already-loading initial state.
+  // oxlint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { load(false); }, [load]);
+  // oxlint-enable react-hooks/set-state-in-effect
 
   const columns = useMemo(() => [
     {

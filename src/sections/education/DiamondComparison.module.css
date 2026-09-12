@@ -366,3 +366,10 @@
   .split { grid-template-columns: 1fr 1fr; gap: var(--s-8); }
   .envRow { grid-template-columns: 14rem 1fr; align-items: start; gap: var(--s-5); }
 }
+
+/* ================= phones: legible text, tappable links ================= */
+/* Nothing under 11 px on a phone — the small uppercase labels were 8 to 10 px
+   and hard to read at arm's length. Measured with a 390 px audit. */
+@media (max-width: 600px) {
+  .caption, .envWho, .table thead th { font-size: 0.6875rem; }
+}

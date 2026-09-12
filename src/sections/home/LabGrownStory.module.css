@@ -1,0 +1,231 @@
+/*
+ * "The Lab-Grown Diamonds" / "Uniqueness".
+ *
+ * Built in the homepage's own palette (--paper, --green, --muted, --line, set
+ * on the page root), so it reads as part of the page rather than a block
+ * dropped into it. The one departure is the heading accent: the page's pale
+ * gold (#d3bd90) measures about 1.7:1 on this ivory, so these headings use a
+ * deeper gold of the same hue that clears the 3:1 large-text threshold.
+ */
+
+.story {
+  --gold-ink: #765923;
+  --gold-soft: #d9c49b;
+  display: grid;
+  gap: clamp(4rem, 9vw, 8rem);
+  max-width: 1700px;
+  margin: 0 auto;
+  padding: clamp(4.5rem, 9vw, 8rem) var(--gutter);
+  overflow: clip;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr);
+  align-items: center;
+  gap: clamp(2.5rem, 6vw, 6rem);
+}
+
+.flip { grid-template-columns: minmax(0, 0.75fr) minmax(0, 1.25fr); }
+
+/* ---------------- copy ---------------- */
+.copy { display: grid; gap: 1.4rem; max-width: 46rem; }
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0;
+  font: 500 10px/1.6 var(--font-body);
+  letter-spacing: 0.19em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.rule {
+  display: block;
+  width: 2.6rem;
+  height: 1px;
+  background: var(--gold-ink);
+  transform-origin: left center;
+}
+
+.title {
+  margin: 0;
+  font: 400 clamp(2.4rem, 1.4rem + 3.2vw, 4.4rem) / 1.04 var(--font-display);
+  letter-spacing: -0.03em;
+  color: var(--green);
+}
+
+.title em { color: var(--gold-ink); font-style: italic; }
+
+/* One mask per word; the word rises inside it. */
+.mask { display: inline-block; overflow: hidden; vertical-align: top; padding-bottom: 0.06em; }
+.word { display: inline-block; }
+
+.body { display: grid; gap: 1rem; }
+
+.body p {
+  margin: 0;
+  font-size: 0.975rem;
+  line-height: 1.85;
+  color: var(--muted);
+}
+
+/*
+ * The phrases the old site emphasised. They underline in gold once the block
+ * is on screen, left to right, which is the one movement in the paragraph and
+ * the reason a reader's eye finds them.
+ */
+.body strong {
+  font-weight: 600;
+  color: var(--green);
+  background: linear-gradient(var(--gold-soft), var(--gold-soft)) 0 92% / 0% 0.32em no-repeat;
+  transition: background-size 1.1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.lit .body strong { background-size: 100% 0.32em; }
+
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.9rem 1.8rem; margin-top: 0.4rem; }
+
+.primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.9rem;
+  min-height: 3.1rem;
+  padding: 0 1.4rem;
+  background: var(--green);
+  color: var(--paper);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: background 300ms ease, translate 300ms ease;
+}
+
+.primary:hover, .primary:focus-visible { background: #2a5547; translate: 0 -2px; }
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid #a6b0a4;
+  font-size: 0.75rem;
+  color: var(--green);
+}
+
+.link svg { transition: translate 300ms ease; }
+.link:hover svg { translate: 4px 0; }
+
+.primary:focus-visible, .link:focus-visible { outline: 2px solid var(--gold-ink); outline-offset: 3px; }
+
+/* ---------------- photographs ---------------- */
+/*
+ * Capped near the photographs' own 351 px width: they are the old site's
+ * images, and stretching them across half a laptop screen would soften them.
+ */
+.media {
+  position: relative;
+  justify-self: center;
+  width: min(100%, 25rem);
+  margin: 0;
+}
+
+/* The gold plate offset behind the photograph; it slides against it on scroll. */
+.plate {
+  position: absolute;
+  inset: 12% -10% -8% 18%;
+  z-index: 0;
+  background: linear-gradient(150deg, #efe3c8, #e3d2ad 55%, #d6c197);
+  border-radius: 2px;
+}
+
+.flip .plate { inset: 12% 18% -8% -10%; }
+
+.frame {
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  aspect-ratio: 351 / 439;
+  background: #1a1a1d;
+  box-shadow: 0 36px 70px -34px rgba(24, 62, 53, 0.55);
+}
+
+.frame img { display: block; width: 100%; height: 100%; object-fit: cover; will-change: transform; }
+
+/* ---------------- the comparison ---------------- */
+.compareWrap { overflow-x: auto; margin-top: 0.4rem; }
+
+.compare { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }
+
+.compare thead th {
+  padding: 0 0.6rem 0.7rem;
+  font: 500 10px/1.4 var(--font-body);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--muted);
+}
+
+.compare thead th:nth-child(2) { color: var(--green); }
+
+.compare tbody th {
+  padding: 0.8rem 1rem 0.8rem 0;
+  font-weight: 400;
+  text-align: left;
+  color: var(--green);
+  border-top: 1px solid var(--line);
+}
+
+.compare td {
+  padding: 0.8rem 0.6rem;
+  text-align: center;
+  color: var(--muted);
+  border-top: 1px solid var(--line);
+  line-height: 1.4;
+}
+
+/* The lab-grown column carries a faint wash, so the eye reads down it. */
+.compare td:nth-of-type(1) { background: rgba(211, 189, 144, 0.14); color: var(--green); }
+.compare td[data-yes] { color: #2f6b4f; }
+.compare td[data-no] { color: #a4574e; }
+.compare td svg { display: inline-block; vertical-align: middle; }
+
+.vh {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ---------------- narrower ---------------- */
+@media (max-width: 900px) {
+  .row, .flip { grid-template-columns: minmax(0, 1fr); }
+  /* The photograph leads on a phone, above its words. */
+  .row .media { order: -1; width: min(78%, 22rem); }
+  .compare tbody th { font-size: 0.75rem; }
+  .compare td { font-size: 0.75rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .body strong { background-size: 100% 0.32em; transition: none; }
+  .primary, .link svg { transition: none; }
+}
+
+/* ================= theme-follow: dark mode ================= */
+:global(:root[data-theme='dark']) .story { --gold-ink: #d3bd90; --gold-soft: rgba(211, 189, 144, 0.45); }
+:global(:root[data-theme='dark']) .plate { background: linear-gradient(150deg, #3a3122, #2b2519 55%, #211c13); }
+:global(:root[data-theme='dark']) .frame { box-shadow: 0 36px 70px -34px rgba(0, 0, 0, 0.8); }
+:global(:root[data-theme='dark']) .link { border-bottom-color: rgba(255, 255, 255, 0.3); }
+:global(:root[data-theme='dark']) .primary:hover, :global(:root[data-theme='dark']) .primary:focus-visible { background: #d3bd90; }
+:global(:root[data-theme='dark']) .compare td[data-yes] { color: #8fd1ae; }
+:global(:root[data-theme='dark']) .compare td[data-no] { color: #e8a39b; }
+
+/* ================= phones: legible text, tappable links ================= */
+/* Nothing under 11 px on a phone — the small uppercase labels were 8 to 10 px
+   and hard to read at arm's length. Measured with a 390 px audit. */
+@media (max-width: 600px) {
+  .compare thead th, .eyebrow { font-size: 0.6875rem; }
+}

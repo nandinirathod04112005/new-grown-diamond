@@ -8,13 +8,23 @@
   width: 100%;
   height: 100%;
   display: grid;
-  grid-template-rows: auto auto 1fr auto;
+  /* Masthead, cuts, mission. The cuts take the free height and sit in its
+     middle; they were the fourth of five rows before the panels came out. */
+  grid-template-rows: auto 1fr auto;
+  align-items: center;
   gap: clamp(0.5rem, 2vh, 1.5rem);
   padding: clamp(1rem, 5vh, 3rem) var(--gutter);
+  /* Pinned to the top of the viewport, under the site's fixed header (88px,
+     80px below 900px), so the masthead starts beneath it, not behind it. */
+  padding-top: calc(5.5rem + clamp(0.5rem, 3vh, 2rem));
   background:
     radial-gradient(120% 80% at 50% 0%, #14161c 0%, transparent 60%),
     linear-gradient(180deg, #0b0c10 0%, #08080a 100%);
   overflow: hidden;
+}
+
+@media (max-width: 899px) {
+  .stage { padding-top: calc(5rem + clamp(0.5rem, 3vh, 2rem)); }
 }
 
 /* ---------------- masthead ---------------- */
@@ -434,8 +444,10 @@
   .stage {
     height: auto;
     min-height: 0;
-    grid-template-rows: auto auto auto auto;
+    grid-template-rows: auto auto auto;
     overflow: visible;
+    /* In the reading flow the header no longer sits over the stage. */
+    padding-top: clamp(1rem, 5vh, 3rem);
      /*
      * Unpinned, the scroll progress that drives every reveal in this scene
      * never advances, so its content would sit for ever at the opacity of its
@@ -476,3 +488,13 @@
   object-fit: cover;
   display: block;
 }
+
+/* ================= theme-follow: light mode ================= */
+:global(:root[data-theme='light']) .stage {
+  background:
+    radial-gradient(120% 80% at 50% 0%, rgba(189, 160, 106, 0.14) 0%, transparent 60%),
+    linear-gradient(180deg, #f7f6f3 0%, #f1efe9 100%);
+}
+:global(:root[data-theme='light']) .cutGem { color: rgba(30, 34, 40, 0.8); }
+:global(:root[data-theme='light']) .cut[data-hero] .cutGem { color: #16161c; }
+:global(:root[data-theme='light']) .cutGlow { background: radial-gradient(circle, rgba(189, 160, 106, calc(0.22 * var(--lit))), transparent 68%); }

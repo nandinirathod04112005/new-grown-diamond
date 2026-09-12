@@ -1,0 +1,215 @@
+/*
+ * Website Content — the parts the shared console styles (AdminDiamonds.module.css,
+ * AdminJournal.module.css) do not already cover. Console tokens (--panel,
+ * --panel-2, --line, --white, --dim, --faint, --accent, --accent-dim, --warn,
+ * --bad) everywhere except inside a preview frame, which is the storefront
+ * and wears the storefront's own light or dark palette.
+ */
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.column { display: grid; gap: 1rem; min-width: 0; }
+
+/* The shared ghost button has no disabled look of its own. */
+.column button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.boxHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+}
+
+.boxHead h2 {
+  font-size: 0.5625rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.status { font-size: 0.8125rem; line-height: 1.5; color: var(--dim); }
+
+.inline { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: stretch; }
+.inline > input { flex: 1 1 12rem; min-width: 0; }
+.inline > button { flex: none; }
+
+.controls { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+.secondary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--line);
+}
+
+/* An unsaved-edit or error dot on a language tab or a page. */
+.mark {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-left: 0.4rem;
+  border-radius: 50%;
+  background: var(--warn);
+  vertical-align: middle;
+}
+
+.mark[data-tone='bad'] { background: var(--bad); }
+
+/* ---------------- page picker ---------------- */
+
+.introWrap { display: grid; gap: 1rem; min-width: 0; }
+
+.routes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 9.5rem), 1fr));
+  gap: 0.5rem;
+}
+
+.route {
+  display: grid;
+  gap: 0.3rem;
+  justify-items: start;
+  min-width: 0;
+  padding: 0.6rem 0.75rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--panel);
+  color: var(--white);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.route:hover { border-color: var(--accent-dim); }
+.route[data-on] { border-color: var(--accent-dim); background: var(--panel-2); box-shadow: inset 2px 0 0 var(--accent); }
+.route:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.routeName { font-size: 0.8125rem; }
+.routePath { font-size: 0.6875rem; color: var(--faint); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
+/* ---------------- previews ---------------- */
+
+/*
+ * The storefront, in miniature. The palette mirrors the final "shared palette"
+ * block of src/styles/tokens.css; if the site's colours change there, change
+ * them here too. `announce` is the container the bar's own stylesheet queries,
+ * so a phone-width frame gets the phone type size on any screen.
+ */
+.frame {
+  --ink: #f8f6f0;
+  --ink-raised: #eef1e8;
+  --ink-line: #d7ddd1;
+  --text: #183e35;
+  --text-muted: #526059;
+  --accent: #71582d;
+  --gutter: clamp(1rem, 4%, 2.5rem);
+
+  container: announce / inline-size;
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--ink);
+  color: var(--text);
+  color-scheme: light;
+  font-family: var(--font-body);
+}
+
+.frame[data-look='dark'] {
+  --ink: #10251f;
+  --ink-raised: #19342b;
+  --ink-line: #3a5144;
+  --text: #f7f5ed;
+  --text-muted: #b4c0b4;
+  --accent: #d1b581;
+  color-scheme: dark;
+}
+
+.frame[data-width='phone'] { max-width: 390px; --gutter: 1.25rem; }
+
+.fakeHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  height: 2.75rem;
+  padding-inline: var(--gutter);
+  border-bottom: 1px solid var(--ink-line);
+  background: var(--ink);
+}
+
+.fakeHeader span { flex: 1; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.05em; }
+.fakeHeader i { display: block; width: 1.5rem; height: 2px; background: color-mix(in srgb, var(--text) 35%, transparent); }
+.frame[data-width='phone'] .fakeHeader i:not(:last-child) { display: none; }
+
+.fakePage { display: grid; gap: 0.5rem; padding: 1.3rem var(--gutter) 1.5rem; }
+.fakePage b { display: block; width: 55%; height: 0.9rem; border-radius: 2px; background: color-mix(in srgb, var(--text) 16%, transparent); }
+.fakePage i { display: block; width: 80%; height: 0.45rem; border-radius: 2px; background: color-mix(in srgb, var(--text) 9%, transparent); }
+.fakePage i + i { width: 62%; }
+
+.frameEmpty {
+  padding: 0.55rem var(--gutter);
+  border-bottom: 1px dashed var(--ink-line);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.hero { display: grid; gap: 0.75rem; padding: 1.6rem var(--gutter) 1.9rem; }
+
+.heroEyebrow {
+  font-size: 0.625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.heroTitle {
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 1.2rem + 1.2vw, 2.3rem);
+  line-height: 1.06;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+.heroIntro { max-width: 52ch; font-size: 0.875rem; line-height: 1.7; color: var(--text-muted); }
+
+/* Per-language verdicts under a preview. */
+.fits { display: grid; gap: 0.3rem; margin: 0; padding: 0; list-style: none; font-size: 0.75rem; color: var(--faint); }
+
+.fits li::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 0.45rem;
+  border-radius: 50%;
+  background: var(--faint);
+  vertical-align: middle;
+}
+
+.fits li[data-tone='ok'] { color: var(--dim); }
+.fits li[data-tone='ok']::before { background: var(--accent); }
+.fits li[data-tone='bad'] { color: var(--bad); }
+.fits li[data-tone='bad']::before { background: var(--bad); }
+
+/* Off-screen copies of the bar at exactly 390 px, measured for fit. */
+.measure {
+  position: fixed;
+  top: 0;
+  left: -10000px;
+  width: 390px;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.measureFrame { width: 390px; container: announce / inline-size; --gutter: 1.25rem; font-family: var(--font-body); }
+
+@media (max-width: 64rem) {
+  .layout { grid-template-columns: minmax(0, 1fr); }
+}

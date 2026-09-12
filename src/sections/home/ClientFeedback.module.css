@@ -1,0 +1,74 @@
+/*
+ * Client feedback, in the homepage's own palette (--paper, --green, --muted,
+ * --line, set on the page root and flipped for dark by Home.module.css).
+ */
+.section {
+  --gold-ink: #765923;
+  max-width: 1700px;
+  margin: 0 auto;
+  padding: clamp(4rem, 8vw, 7rem) var(--gutter);
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1.5rem 3rem;
+  margin-bottom: clamp(2rem, 4vw, 3rem);
+}
+
+.eyebrow {
+  margin: 0 0 0.9rem;
+  font: 500 10px/1.6 var(--font-body);
+  letter-spacing: 0.19em;
+  color: var(--muted);
+}
+
+.head h2 {
+  margin: 0;
+  font: 400 clamp(2.4rem, 1.4rem + 3.2vw, 4.4rem) / 1.04 var(--font-display);
+  letter-spacing: -0.03em;
+  color: var(--green);
+}
+
+.head h2 em { color: var(--gold-ink); font-style: italic; }
+
+.score { display: flex; align-items: center; gap: 0.8rem; margin: 0; color: var(--muted); font-size: 0.75rem; letter-spacing: 0.08em; }
+.score b { font: 300 2.6rem/1 var(--font-display); color: var(--green); }
+
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.9rem 1.8rem; margin-top: clamp(1.6rem, 3vw, 2.4rem); }
+
+.primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.9rem;
+  min-height: 3.1rem;
+  padding: 0 1.4rem;
+  background: var(--green);
+  color: var(--paper);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: background 300ms ease, translate 300ms ease;
+}
+
+.primary:hover, .primary:focus-visible { background: #2a5547; translate: 0 -2px; }
+
+.textLink {
+  padding: 0.6rem 0;
+  border-bottom: 1px solid #a6b0a4;
+  font-size: 0.75rem;
+  color: var(--green);
+}
+
+.primary:focus-visible, .textLink:focus-visible { outline: 2px solid var(--gold-ink); outline-offset: 3px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .primary { transition: none; }
+}
+
+/* ================= theme-follow: dark mode ================= */
+:global(:root[data-theme='dark']) .section { --gold-ink: #d3bd90; }
+:global(:root[data-theme='dark']) .textLink { border-bottom-color: rgba(255, 255, 255, 0.3); }
+:global(:root[data-theme='dark']) .primary:hover, :global(:root[data-theme='dark']) .primary:focus-visible { background: #d3bd90; }

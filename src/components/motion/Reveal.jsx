@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react';
 
-import { prefersReducedMotion } from '@/lib/motion/media.js';
-import { onPageProgress } from '@/lib/motion/pageProgress.js';
+import useReducedMotion from '@/hooks/useReducedMotion.js';
 
 /**
  * Reveals its children once, when they first come into view.
@@ -18,59 +17,47 @@ import { onPageProgress } from '@/lib/motion/pageProgress.js';
  */
 export default function Reveal({ children, as: Tag = 'div', className, delay = 0, ...rest }) {
   const ref = useRef(null);
+  const reduced = useReducedMotion();
 
   useEffect(() => {
     const el = ref.current;
-    if (!el || prefersReducedMotion()) return undefined;
-
-    // Already on screen or already scrolled past at mount — an anchor link or a
-    // restored scroll position lands here — so it is arrived, not pending.
-    // Without this an instant jump produces no intersection callback at all and
-    // the content stays invisible permanently.
-    const box = el.getBoundingClientRect();
-    if (box.top < window.innerHeight * 0.9) {
-      el.dataset.reveal = 'in';
+    if (!el) return undefined;
+    if (reduced || typeof IntersectionObserver === 'undefined') {
+      delete el.dataset.reveal;
       return undefined;
     }
 
     el.dataset.reveal = 'pending';
+    /*
+     * One observer answers both questions, and nothing measures itself.
+     *
+     * Its area runs from a line 12% above the bottom of the window up past the
+     * top of the page, so the element counts as arrived either when it comes
+     * into view or when it has already been carried above the window. The
+     * second case matters: an anchor link, a restored scroll position or a
+     * fast flick can cross a section without it ever being "in view", and it
+     * would then stay pending for good. That case used to be caught by every
+     * pending section calling getBoundingClientRect() on every scroll frame,
+     * and by one more call per section at mount, each forcing a layout; on a
+     * phone that was a steady share of every scroll frame. The observer
+     * answers from the layout the browser has already done, and its first
+     * report (next frame) also covers a section that is on screen at mount.
+     */
     const io = new IntersectionObserver(
       ([entry]) => {
-        // Reveal when it comes into view, but ALSO when it is already above the
-        // viewport: an anchor jump or a fast flick can carry content past
-        // without ever intersecting, and it would then stay invisible forever.
-        const passed = entry.boundingClientRect.bottom < 0;
-        if (!entry.isIntersecting && !passed) return;
+        if (!entry.isIntersecting) return;
         el.dataset.reveal = 'in';
-        io.unobserve(el);
+        io.disconnect();
       },
-      { rootMargin: '0px 0px -12% 0px', threshold: 0.15 },
+      { rootMargin: '100000px 0px -12% 0px', threshold: 0.15 },
     );
     io.observe(el);
 
-    // Safety net. An instant jump — an anchor link, a restored position, a fast
-    // flick — can cross a section without ever producing an intersection
-    // callback, and the content would then stay invisible for good. This rides
-    // the page's existing scroll subscription rather than adding a listener per
-    // section, and unsubscribes the moment it fires.
-    let stop = () => {};
-    stop = onPageProgress(() => {
-      if (el.dataset.reveal === 'in') {
-        stop();
-        return;
-      }
-      if (el.getBoundingClientRect().top < window.innerHeight * 0.9) {
-        el.dataset.reveal = 'in';
-        io.unobserve(el);
-        stop();
-      }
-    });
-
     return () => {
       io.disconnect();
-      stop();
+      delete el.dataset.reveal;
     };
-  }, []);
+  }, [reduced]);
 
   return (
     /* Remaining props are forwarded so callers can attach data attributes and

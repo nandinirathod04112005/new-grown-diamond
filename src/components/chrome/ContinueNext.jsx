@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { navigateTo } from '@/lib/router.js';
 import { prefersReducedMotion } from '@/lib/motion/media.js';
+import { useT } from '@/i18n/localeContext.js';
 import styles from './ContinueNext.module.css';
 
 /**
@@ -9,15 +10,18 @@ import styles from './ContinueNext.module.css';
  * The order is the tour a trade buyer actually walks: what we sell, what we
  * make with it, who we are, the shapes, the science, the journal, then how to
  * reach us. Contact is the end of the line and advances to nothing.
+ *
+ * Each stop names its destination by dictionary KEY, the same keys the nav
+ * uses, so the pill and the menu call a page the same thing in every language.
  */
 const JOURNEY = [
-  { path: '/', label: 'Diamonds', next: '/diamonds' },
-  { path: '/diamonds', label: 'Jewellery', next: '/jewellery' },
-  { path: '/jewellery', label: 'Our story', next: '/about' },
-  { path: '/about', label: 'Shapes', next: '/shapes' },
-  { path: '/shapes', label: 'Education', next: '/education' },
-  { path: '/education', label: 'The journal', next: '/blogs' },
-  { path: '/blogs', label: 'Contact', next: '/contact' },
+  { path: '/', key: 'nav.diamonds', next: '/diamonds' },
+  { path: '/diamonds', key: 'nav.jewellery', next: '/jewellery' },
+  { path: '/jewellery', key: 'nav.ourStory', next: '/about' },
+  { path: '/about', key: 'educationTopics.shapes', next: '/shapes' },
+  { path: '/shapes', key: 'nav.education', next: '/education' },
+  { path: '/education', key: 'continueNext.journal', next: '/blogs' },
+  { path: '/blogs', key: 'nav.contact', next: '/contact' },
 ];
 /**
  * How much over-scroll past the foot of the page counts as "yes, continue".
@@ -29,7 +33,7 @@ const JOURNEY = [
  * be produced by accident, cannot fire while anyone is reading the middle of a
  * page, and is abandoned the instant they scroll back up.
  */
-const INTENT_PX = 620;
+const INTENT_PX = 180;
 /**
  * Wheel deltas decay, so a single flick cannot coast into a navigation.
  *
@@ -39,7 +43,7 @@ const INTENT_PX = 620;
  * still could. At 420 a real gesture accumulates, and a single 300px flick
  * still drains away inside a second.
  */
-const DECAY_PER_SECOND = 420;
+const DECAY_PER_SECOND = 120;
 /*
  * How close to the foot still counts as "at the end", and how far back up
  * counts as having changed your mind.
@@ -51,11 +55,12 @@ const DECAY_PER_SECOND = 420;
  * while being used. Arriving needs slack, and abandoning needs a deliberate
  * distance rather than a rounding error.
  */
-const AT_END_PX = 28;
-const ABANDON_PX = 160;
+const AT_END_PX = 72;
+const ABANDON_PX = 220;
 
 export default function ContinueNext({ path }) {
   const stop = JOURNEY.find((s) => s.path === path);
+  const t = useT();
   const [progress, setProgress] = useState(0);
   const [atEnd, setAtEnd] = useState(false);
   const intent = useRef(0);
@@ -71,8 +76,6 @@ export default function ContinueNext({ path }) {
     // A new page is a fresh decision.
     intent.current = 0;
     fired.current = false;
-    setProgress(0);
-    setAtEnd(false);
   }, [path]);
 
   useEffect(() => {
@@ -125,7 +128,7 @@ export default function ContinueNext({ path }) {
       const dy = touchY - y;
       touchY = y;
       if (dy <= 0) return;
-      intent.current = Math.min(INTENT_PX, intent.current + dy * 2.4);
+      intent.current = Math.min(INTENT_PX, intent.current + dy * 2.6);
       setProgress(intent.current / INTENT_PX);
       if (intent.current >= INTENT_PX) go();
     };
@@ -156,7 +159,7 @@ export default function ContinueNext({ path }) {
       window.removeEventListener('touchmove', onTouchMove);
       cancelAnimationFrame(raf);
     };
-  }, [stop, atEnd, go, path]);
+  }, [stop, go, path]);
 
   if (!stop) return null;
 
@@ -191,8 +194,8 @@ export default function ContinueNext({ path }) {
       </span>
 
       <span className={styles.text}>
-        <b>Continue</b>
-        <em>{stop.label}</em>
+        <b>{t('continueNext.continue')}</b>
+        <em>{t(stop.key)}</em>
       </span>
     </a>
   );

@@ -1,0 +1,10 @@
+﻿import {chromium} from 'playwright';
+const b=await chromium.launch({channel:'msedge'});
+const p=await b.newPage({viewport:{width:390,height:844},reducedMotion:'reduce'});
+await p.goto('http://127.0.0.1:5173');await p.locator('h1').waitFor();
+console.log(await p.getByRole('button').evaluateAll(bs=>bs.map(b=>({text:b.textContent,label:b.getAttribute('aria-label')}))));
+await p.screenshot({path:'tests-e2e/redesign/mobile-top.png'});
+await p.locator('#jewellery').scrollIntoViewIfNeeded();await p.waitForTimeout(700);await p.screenshot({path:'tests-e2e/redesign/jewellery-mobile.png'});
+const menu=p.getByRole('button',{name:/menu/i}).first();await menu.click();console.log('Menu opened',await menu.getAttribute('aria-expanded'));await p.keyboard.press('Escape');console.log('Menu closed',await menu.getAttribute('aria-expanded'));
+await p.setViewportSize({width:1440,height:950});await p.goto('http://127.0.0.1:5173');await p.locator('h1').waitFor();for(let y=0;y<5500;y+=700){await p.evaluate(y=>scrollTo(0,y),y);await p.waitForTimeout(120)}await p.evaluate(()=>scrollTo(0,0));await p.waitForTimeout(300);await p.screenshot({path:'tests-e2e/redesign/home-1440.png',fullPage:true});
+await b.close();

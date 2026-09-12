@@ -19,6 +19,19 @@
  * to the field it belongs to.
  */
 
+import en from '@/i18n/dictionary/en.js';
+import { interpolate, lookup } from '@/i18n/localeContext.js';
+
+/**
+ * The words, in the visitor's language.
+ *
+ * Every message below is a `validation.*` key in the site dictionaries, read
+ * through `t` — the translator from useLocale(). A caller that passes none
+ * gets English, in exactly the sentences these functions always returned.
+ * The rules themselves never depend on the language.
+ */
+const english = (key, vars) => interpolate(lookup(en, key), vars);
+
 /**
  * Email, checked for the shape that can possibly be delivered to.
  *
@@ -48,11 +61,11 @@ export function normalizeEmail(value) {
 }
 
 /** Trimmed, because a trailing space in an email field is a typo, not intent. */
-export function emailError(value) {
+export function emailError(value, t = english) {
   const v = String(value ?? '').trim();
-  if (!v) return 'Enter your email address.';
-  if (!EMAIL.test(v)) return 'That does not look like an email address.';
-  if (v.length > 254) return 'That email address is too long.';
+  if (!v) return t('validation.emailRequired');
+  if (!EMAIL.test(v)) return t('validation.emailInvalid');
+  if (v.length > 254) return t('validation.emailTooLong');
   return null;
 }
 
@@ -63,25 +76,26 @@ export function emailError(value) {
  * silently stripping it would let someone set a password they can then never
  * type back in.
  */
-export function passwordError(value, { min = MIN_PASSWORD, existing = false } = {}) {
+export function passwordError(value, { min = MIN_PASSWORD, existing = false } = {}, t = english) {
   const v = String(value ?? '');
-  if (!v) return 'Enter your password.';
+  if (!v) return t('validation.passwordRequired');
   /* An existing password is checked for presence only. Applying today's length
      rule to an account created under an older one would lock that person out
      of their own account at the login screen, with a message telling them
      their correct password is too short. */
-  if (!existing && v.length < min) return `Use at least ${min} characters.`;
+  if (!existing && v.length < min) return t('validation.passwordShort', { n: min });
   return null;
 }
 
-export function confirmError(password, confirm) {
-  if (!confirm) return 'Repeat your password.';
-  if (password !== confirm) return 'The two passwords do not match.';
+export function confirmError(password, confirm, t = english) {
+  if (!confirm) return t('validation.confirmRequired');
+  if (password !== confirm) return t('validation.passwordsDiffer');
   return null;
 }
 
-export function requiredError(value, label) {
-  return String(value ?? '').trim() ? null : `Enter your ${label}.`;
+/** `label` is the field's name in the visitor's language. */
+export function requiredError(value, label, t = english) {
+  return String(value ?? '').trim() ? null : t('validation.fieldRequired', { field: label });
 }
 
 /**

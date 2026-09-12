@@ -1,0 +1,103 @@
+/*
+ * The rail: a native horizontal scroller with snap points, and under it the
+ * old journal's arrows-and-line, drawn in the house's gold hairline.
+ */
+.rail { display: grid; gap: clamp(1.4rem, 3vw, 2.2rem); min-width: 0; }
+
+.track {
+  display: flex;
+  gap: clamp(1rem, 2vw, 1.75rem);
+  margin: 0;
+  padding: 0.25rem 0.1rem 0.5rem;
+  list-style: none;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: 0.1rem;
+  /* The line below reports position, so the bar would only say it twice. */
+  scrollbar-width: none;
+}
+
+.track::-webkit-scrollbar { display: none; }
+
+/* Too few to scroll: centre them, rather than leaving a gap on one side. */
+.rail:not([data-scrollable]) .track { justify-content: center; }
+
+.track:focus-visible { outline: 2px solid var(--accent); outline-offset: 6px; }
+
+.item {
+  flex: 0 0 auto;
+  width: clamp(16.5rem, 30vw, 25rem);
+  scroll-snap-align: start;
+  min-width: 0;
+}
+
+/* Titles only: narrower columns parted by a hairline, as the old list was. */
+.rail[data-variant='titles'] .track { gap: 0; }
+
+.rail[data-variant='titles'] .item {
+  width: clamp(13rem, 24vw, 19rem);
+  padding-inline: clamp(1rem, 2vw, 1.6rem);
+  border-left: 1px solid var(--line-firm);
+}
+
+.rail[data-variant='titles'] .item:first-child { border-left: 0; padding-left: 0.1rem; }
+
+/* ---------------- controls ---------------- */
+.controls {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: clamp(0.8rem, 2vw, 1.4rem);
+  width: min(100%, 40rem);
+  margin-inline: auto;
+}
+
+/* Nothing to scroll: no arrows. The display above would otherwise beat the
+   attribute, which only carries the browser's own weakest rule. */
+.controls[hidden] { display: none; }
+
+.arrow {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 60%, transparent);
+  border-radius: 50%;
+  color: var(--accent);
+  background: transparent;
+  cursor: pointer;
+  transition: background 260ms ease, color 260ms ease, border-color 260ms ease, translate 260ms ease, opacity 260ms ease;
+}
+
+.arrow:hover:not(:disabled),
+.arrow:focus-visible {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--ink);
+}
+
+.arrow:first-child:hover:not(:disabled) { translate: -2px 0; }
+.arrow:last-child:hover:not(:disabled) { translate: 2px 0; }
+.arrow:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.arrow:disabled { opacity: 0.35; cursor: default; }
+
+.line {
+  position: relative;
+  height: 1px;
+  background: var(--ink-line);
+  overflow: hidden;
+}
+
+.fill {
+  position: absolute;
+  inset: 0;
+  background: var(--accent);
+  transform-origin: left center;
+  transform: scaleX(max(0.08, var(--p, 0)));
+  transition: transform 180ms linear;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arrow, .fill { transition: none; }
+}

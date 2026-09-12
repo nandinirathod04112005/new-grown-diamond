@@ -5,9 +5,12 @@ import ThemeToggle from './ThemeToggle.jsx';
 import LanguageSwitch from './LanguageSwitch.jsx';
 import { useT } from '@/i18n/localeContext.js';
 import NavMenu from './NavMenu.jsx';
-import { EDUCATION_TOPICS } from '@/pages/siteContent.js';
+import { EDUCATION_TOPICS, topicKey } from '@/pages/siteContent.js';
 
 import styles from './Header.module.css';
+import { useCart } from '@/cart/useCart.js';
+import { useWishlist } from '@/wishlist/useWishlist.js';
+import { useSignedIn } from '@/hooks/useSignedIn.js';
 
 /*
  * Shapes is no longer its own top-level entry.
@@ -22,9 +25,10 @@ import styles from './Header.module.css';
  * here and in the footer and the sitemap, which is how a menu ends up saying
  * "Our story" in one place and "Our Story" in another.
  *
- * `items` (the education submenu) still carries its own labels: those come
- * from siteContent and are part of the editorial copy, which is out of scope
- * for this first translation pass and falls back to English by design.
+ * `items` (the education submenu) comes from siteContent with English labels;
+ * the header shows each one through the dictionaries' `educationTopics` keys
+ * (see topicKey), so the menu is translated without pulling the editorial
+ * pages' translations into the main bundle.
  */
 const NAV = [
   { key: 'nav.diamonds', href: '/diamonds' },
@@ -46,6 +50,13 @@ const NAV = [
  */
 const ACCOUNT = { key: 'nav.account', href: '/account' };
 
+/*
+ * Account and Login are two separate controls, not one "Login / Account"
+ * button: Account always opens the account page; the second control is Login
+ * while nobody is signed in and Logout once someone is.
+ */
+const LOGIN = { key: 'nav.login', href: '/login' };
+
 /**
  * Site header.
  *
@@ -58,12 +69,24 @@ const ACCOUNT = { key: 'nav.account', href: '/account' };
  * together are what separate a menu from a trap.
  */
 export default function Header() {
+  const cart = useCart();
+  const wishlist = useWishlist();
   const t = useT();
+  const { signedIn, signOut } = useSignedIn();
   const [open, setOpen] = useState(false);
   const panel = useRef(null);
   const toggle = useRef(null);
 
   const close = useCallback(() => setOpen(false), []);
+
+  /* A submenu topic's label in the visitor's language. A topic added to
+     siteContent before it has a dictionary key keeps its English label
+     rather than showing the raw key. */
+  const topicLabel = (sub) => {
+    const key = topicKey(sub.href);
+    const label = t(key);
+    return label === key ? sub.label : label;
+  };
 
   /*
    * Which page is this. Read from the router's store rather than from a prop,
@@ -105,7 +128,7 @@ export default function Header() {
         return;
       }
       if (event.key !== 'Tab') return;
-      const items = panel.current?.querySelectorAll('a, button');
+      const items = [...(panel.current?.querySelectorAll('a, button') ?? []), toggleButton].filter(Boolean);
       if (!items?.length) return;
       const first = items[0];
       const last = items[items.length - 1];
@@ -119,7 +142,10 @@ export default function Header() {
     };
 
     document.addEventListener('keydown', onKey);
+    const onResize = () => { if (window.innerWidth >= 900) close(); };
+    window.addEventListener('resize', onResize);
     return () => {
+      window.removeEventListener('resize', onResize);
       document.removeEventListener('keydown', onKey);
       document.body.style.overflow = prev;
       toggleButton?.focus();
@@ -131,16 +157,19 @@ export default function Header() {
       {/* Outside the header, because the header blends with `difference` and
           a background inside it would be inverted along with the type. */}
       <div className={styles.scrim} data-on={scrolled && !open ? '' : undefined} aria-hidden="true" />
-      <header className={styles.root} data-open={open ? '' : undefined}>
-        <a className={styles.mark} href="/">New Grown Diamond</a>
+      <header className={styles.root} data-open={open ? '' : undefined} data-scrolled={scrolled ? '' : undefined}>
+        <a className={styles.mark} href="/" aria-label="New Grown Diamond — home">
+          <span className={styles.markGlyph} aria-hidden="true">N</span>
+          <span className={styles.markWords}>New Grown <b>Diamond</b></span>
+        </a>
 
-        <nav className={styles.nav} aria-label="Primary">
+        <nav className={styles.nav} aria-label={t('nav.primary')}>
           {NAV.map((item) => (item.items ? (
             <NavMenu
               key={item.href}
               label={t(item.key)}
               href={item.href}
-              items={item.items}
+              items={item.items.map((sub) => ({ ...sub, label: topicLabel(sub) }))}
               linkClassName={styles.link}
               current={isCurrent(item)}
             />
@@ -156,12 +185,48 @@ export default function Header() {
           )))}
         </nav>
 
-        <a
-          className={styles.account}
-          href={ACCOUNT.href}
-          aria-current={at(ACCOUNT.href) ? 'page' : undefined}
-        >
-          {t(ACCOUNT.key)}
+        <div className={styles.utilities}>
+          {/* A heart rather than a word: the row already carries Cart and the
+              account link, and a third label pushed it into the language control
+              at laptop widths. The count and the accessible name say the rest. */}
+          {wishlist && (
+            <a
+              className={`${styles.cart} ${styles.wish}`}
+              href="/wishlist"
+              aria-current={at('/wishlist') ? 'page' : undefined}
+              aria-label={t('nav.wishlistSaved', { count: wishlist.count })}
+            >
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true" focusable="false">
+                <path d="M12 20.5s-7.5-4.6-9.3-9.2C1.5 8 3.6 4.5 7.1 4.5c2 0 3.6 1.1 4.9 2.9 1.3-1.8 2.9-2.9 4.9-2.9 3.5 0 5.6 3.5 4.4 6.8-1.8 4.6-9.3 9.2-9.3 9.2z" />
+              </svg>
+              <b>{wishlist.count}</b>
+            </a>
+          )}
+          <a className={styles.cart} href="/cart" aria-current={at('/cart') ? 'page' : undefined}>{t('nav.cart')} <b>{cart.count}</b></a>
+          {/* Between 900 and 1199 px the word gives way to a figure — the bar
+              holds Account and Login as separate controls now, and at those
+              widths the words pushed the theme control off the screen. The
+              name stays in the text for screen readers. */}
+          <a className={`${styles.account} ${styles.accountLink}`} href={ACCOUNT.href} aria-current={at(ACCOUNT.href) ? 'page' : undefined}>
+            <svg className={styles.accountIcon} viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true" focusable="false">
+              <circle cx="12" cy="8" r="3.6" />
+              <path d="M4.5 20c1.4-3.6 4.2-5.4 7.5-5.4s6.1 1.8 7.5 5.4" />
+            </svg>
+            <span className={styles.accountText}>{t(ACCOUNT.key)}</span>
+          </a>
+          {signedIn ? (
+            <button type="button" className={`${styles.account} ${styles.logout}`} onClick={signOut}>{t('nav.logout')}</button>
+          ) : (
+            <a className={`${styles.account} ${styles.login}`} href={LOGIN.href} aria-current={at(LOGIN.href) ? 'page' : undefined}>{t(LOGIN.key)}</a>
+          )}
+        </div>
+
+        <a className={styles.mobileCart} href="/cart" aria-label={`${t('nav.cart')} (${cart.count})`}>
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M3 4h2l2.1 10.1a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 2-1.6L20 8H6" />
+            <circle cx="9.5" cy="19.5" r="1" /><circle cx="17" cy="19.5" r="1" />
+          </svg>
+          <b>{cart.count}</b>
         </a>
 
         <div className={styles.theme}>
@@ -177,7 +242,7 @@ export default function Header() {
           className={styles.burger}
           aria-expanded={open}
           aria-controls="site-menu"
-          aria-label={open ? 'Close menu' : 'Open menu'}
+          aria-label={open ? t('nav.closeMenu') : t('nav.openMenu')}
           onClick={() => setOpen((v) => !v)}
         >
           <span /><span />
@@ -191,7 +256,7 @@ export default function Header() {
         data-open={open ? '' : undefined}
         role="dialog"
         aria-modal="true"
-        aria-label="Site menu"
+        aria-label={t('nav.siteMenu')}
         hidden={!open}
       >
         <nav className={styles.sheetNav}>
@@ -215,7 +280,7 @@ export default function Header() {
                 <ul className={styles.subList}>
                   {item.items.map((sub) => (
                     <li key={sub.href}>
-                      <a href={sub.href} aria-current={at(sub.href) ? 'page' : undefined} onClick={close}>{sub.label}</a>
+                      <a href={sub.href} aria-current={at(sub.href) ? 'page' : undefined} onClick={close}>{topicLabel(sub)}</a>
                     </li>
                   ))}
                 </ul>
@@ -232,6 +297,27 @@ export default function Header() {
           <span className={styles.sheetIndex}>{String(NAV.length + 1).padStart(2, '0')}</span>
           <span className={styles.sheetLabel}>{t(ACCOUNT.key)}</span>
         </a>
+        {signedIn ? (
+          <button type="button" className={`${styles.sheetLink} ${styles.sheetButton}`} onClick={() => { close(); signOut(); }}>
+            <span className={styles.sheetIndex}>{String(NAV.length + 2).padStart(2, '0')}</span>
+            <span className={styles.sheetLabel}>{t('nav.logout')}</span>
+          </button>
+        ) : (
+          <a className={styles.sheetLink} href={LOGIN.href} onClick={close}>
+            <span className={styles.sheetIndex}>{String(NAV.length + 2).padStart(2, '0')}</span>
+            <span className={styles.sheetLabel}>{t(LOGIN.key)}</span>
+          </a>
+        )}
+        <a className={styles.sheetLink} href="/cart" onClick={close}>
+          <span className={styles.sheetIndex}>{String(NAV.length + 3).padStart(2, '0')}</span>
+          <span className={styles.sheetLabel}>{t('nav.cart')} ({cart.count})</span>
+        </a>
+        {wishlist && (
+          <a className={styles.sheetLink} href="/wishlist" onClick={close}>
+            <span className={styles.sheetIndex}>{String(NAV.length + 4).padStart(2, '0')}</span>
+            <span className={styles.sheetLabel}>{t('nav.wishlist')} ({wishlist.count})</span>
+          </a>
+        )}
 
         <div className={styles.sheetLang}>
           <LanguageSwitch />

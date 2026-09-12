@@ -23,12 +23,18 @@
  * backend being broken. A stale claim in a file whose whole purpose is honesty
  * is worse than no claim at all.
  *
+ * RE-VERIFIED 11 September 2026: orders and order_items answer "permission
+ * denied" to an anonymous read (42501), not "not found", so migration 0005
+ * is applied and Orders & Sales is built on them. Categories, collections and
+ * settings are still absent; those modules are built on existing tables
+ * instead (jewellery.category and site_content), with no migration.
+ *
  * Verified present : diamonds, jewellery, profiles, enquiries, blogs, quotes,
  *                    holds, inspections, favourites, media, audit_log,
  *                    notifications, site_content, homepage_sections,
- *                    seo_settings, analytics_events
- * Verified absent  : orders, categories, collections, activity_log,
- *                    page_views, settings, saved_searches
+ *                    seo_settings, analytics_events, orders, order_items
+ * Verified absent  : categories, collections, activity_log, page_views,
+ *                    settings, saved_searches
  *
  * A module in 'setup' renders its requirement rather than a dashboard full of
  * plausible zeros. A zero and a missing table look the same on screen and mean
@@ -44,7 +50,11 @@ export const MODULES = [
     href: '/admin',
     icon: 'grid',
     state: 'ready',
-    tables: ['diamonds', 'jewellery', 'profiles', 'enquiries', 'quotes', 'holds', 'inspections'],
+    tables: ['diamonds', 'jewellery', 'profiles', 'enquiries', 'quotes', 'holds', 'inspections', 'favourites', 'orders', 'order_items', 'analytics_events'],
+    note:
+      'Stock, jewellery, enquiries by day and kind, customers and favourites, '
+      + 'open work, orders and revenue by currency, and website views — all read '
+      + 'live; each panel fails on its own.',
   },
   {
     key: 'diamonds',
@@ -72,13 +82,13 @@ export const MODULES = [
     label: 'Categories & Collections',
     href: '/admin/catalogue',
     icon: 'layers',
-    state: 'setup',
-    missing: ['categories', 'collections'],
+    state: 'ready',
+    tables: ['jewellery', 'site_content', 'diamonds'],
     note:
-      'jewellery.category exists as a free-text column, so categories can be '
-      + 'listed from the values in use. A managed taxonomy — renaming a '
-      + 'category everywhere, ordering it, giving it a description — needs '
-      + 'categories and collections tables.',
+      'Categories are read from jewellery.category; rename and merge rewrite '
+      + 'that field on every matching piece. Collections are site_content rows '
+      + '(page = collections) with an ordered member list in draft. Nothing on '
+      + 'the storefront shows collections yet.',
   },
   {
     key: 'customers',
@@ -111,25 +121,55 @@ export const MODULES = [
     label: 'Orders & Sales',
     href: '/admin/orders',
     icon: 'cart',
-    state: 'setup',
-    missing: ['orders'],
+    state: 'ready',
+    tables: ['orders', 'order_items'],
     note:
-      'There is no orders or sales table. diamonds.availability records that a '
-      + 'stone is sold, but not to whom, when, or for how much — so a sales '
-      + 'module here would be a guess dressed as a report.',
+      'Record sales, move them through confirmed → invoiced → paid → shipped → '
+      + 'delivered or cancelled, and see revenue per currency. Uses orders and '
+      + 'order_items (migration 0005) under their admin policies; creates and '
+      + 'status changes are audit-logged.',
   },
   {
     key: 'content',
     label: 'Website Content',
     href: '/admin/content',
     icon: 'doc',
-    state: 'partial',
+    state: 'ready',
     tables: ['site_content'],
     note:
-      'The site_content table exists (migration 0001 is applied). The public '
-      + 'pages still render their copy from src/pages/siteContent.js at build '
-      + 'time, so an editor here would change a row that nothing reads. The '
-      + 'remaining work is the read path on the storefront, not the table.',
+      'Announcement bar (en/hi/gu, optional link and end date) and the '
+      + 'introductions of the six editorial pages, with draft, preview, publish '
+      + 'and revert to built-in. Rows under page = content; page = feedback '
+      + 'remains the client feedback.',
+  },
+  {
+    key: 'journal',
+    label: 'Journal',
+    href: '/admin/journal',
+    icon: 'pen',
+    state: 'ready',
+    tables: ['blogs'],
+    note:
+      'Write, publish, take down and delete journal posts, with covers in '
+      + 'site-media. public.blogs and its admin-write policy were read back from '
+      + 'the live project on 11 September 2026.',
+  },
+  {
+    /*
+     * Built on tables that already exist, with their existing policies:
+     * feedback arrives as enquiries (guest and customer insert), and approved
+     * feedback is published as site_content rows under page = 'feedback'
+     * (public read of published rows, admin write). No feedback table.
+     */
+    key: 'feedback',
+    label: 'Feedback',
+    href: '/admin/feedback',
+    icon: 'message',
+    state: 'ready',
+    tables: ['enquiries', 'site_content'],
+    note:
+      'Approve or reject client feedback. Approved feedback is published on the '
+      + 'homepage, journal and feedback page as site_content rows (page = feedback).',
   },
   {
     key: 'media',
@@ -137,40 +177,38 @@ export const MODULES = [
     href: '/admin/media',
     icon: 'image',
     state: 'ready',
-    tables: [],
+    tables: ['media'],
     note:
       'Browsing, upload with progress, and a live in-use check against '
-      + 'diamonds.image_path and blogs.cover_path all work today. The media '
-      + 'table now exists (migration 0001 is applied), so alt text and captions '
-      + 'have somewhere to live; this screen does not write them yet.',
+      + 'diamonds.image_path, blogs.cover_path and collection covers. Alt text '
+      + 'and captions are saved to the media table, keyed by bucket and path. '
+      + 'The storefront does not read them yet.',
   },
   {
     key: 'homepage',
     label: 'Homepage Manager',
     href: '/admin/homepage',
     icon: 'home',
-    state: 'partial',
+    state: 'ready',
     tables: ['homepage_sections'],
     note:
-      'The homepage_sections table exists (migration 0001 is applied). Section '
-      + 'order and visibility are still compiled into the bundle, so the table '
-      + 'is not read yet. Featured stock is the part that already works from '
-      + 'data — diamonds.featured and jewellery.featured — and is editable from '
-      + 'those modules today.',
+      'Reorder, show and hide the homepage sections after the hero, which stays '
+      + 'first. The site reads the saved layout after the page loads, so '
+      + 'visitors get it on their next page load.',
   },
   {
     key: 'seo',
     label: 'SEO Manager',
     href: '/admin/seo',
     icon: 'search',
-    state: 'partial',
+    state: 'ready',
     tables: ['seo_settings'],
     note:
-      'The seo_settings table exists (migration 0001 is applied). Titles, '
-      + 'descriptions and canonicals are still generated at build time by '
-      + 'src/config/seo.js and scripts/generate-seo-pages.mjs, and the '
-      + 'prerendered shells are written by that script — so editing a row here '
-      + 'would not change what a crawler sees until the storefront reads it.',
+      'Title, description, share image, noindex and canonical for each page, '
+      + 'over the built-in values in src/config/seo.js, with drafts. Published '
+      + 'changes show on the live site within minutes; titles, descriptions and '
+      + 'share images reach the prerendered English pages at the next deploy. '
+      + 'Noindex and canonical apply in the browser only.',
   },
   {
     key: 'monitoring',
@@ -185,15 +223,15 @@ export const MODULES = [
     label: 'Website Analytics',
     href: '/admin/analytics',
     icon: 'chart',
-    state: 'partial',
+    state: 'ready',
     tables: ['analytics_events'],
     note:
-      'The analytics_events table exists (migration 0002 is applied) and is '
-      + 'ready to receive page views. Nothing sends them: the site carries no '
-      + 'analytics tag and no first-party event call, so the table is empty and '
-      + 'every figure would be zero. Switching collection on is a decision '
-      + 'about visitor data, not a missing table, so it is left to be made '
-      + 'deliberately rather than turned on by a screen.',
+      'First-party, anonymous visit counting: page views (with language prefix), '
+      + 'device size class, the referring site on a visit’s first page, and the '
+      + 'contact-form funnel. Sent only from newgrowndiamond.com (or '
+      + 'VITE_ANALYTICS_HOSTS), never from /admin or when Do Not Track / Global '
+      + 'Privacy Control is on. No cookies, IP or account id. Empty until the '
+      + 'site runs on that domain.',
   },
   {
     key: 'audit',
@@ -215,24 +253,26 @@ export const MODULES = [
     label: 'Notifications',
     href: '/admin/notifications',
     icon: 'bell',
-    state: 'partial',
-    tables: ['notifications'],
+    state: 'ready',
+    tables: ['notifications', 'enquiries', 'quotes', 'holds', 'inspections', 'profiles', 'orders'],
     note:
-      'The notifications table exists (migration 0002 is applied), with admin '
-      + 'read, insert, update and delete policies. Nothing writes to it yet: '
-      + 'arrivals are read live from the queue tables, which is why the queues '
-      + 'are accurate and this list is empty.',
+      'One inbox of new enquiries, feedback, article submissions, account '
+      + 'deletion requests, quotes, holds, inspections, sign-ups and orders, read '
+      + 'live from those tables. Read markers are stored in notifications '
+      + '(kind = read) and are shared by all admins.',
   },
   {
     key: 'settings',
     label: 'Settings',
     href: '/admin/settings',
     icon: 'cog',
-    state: 'setup',
-    missing: ['settings'],
+    state: 'ready',
+    tables: ['site_content'],
     note:
-      'Contact details and office addresses are in src/pages/siteContent.js. '
-      + 'A settings table would let them be edited without a deploy.',
+      'Enquiry desk, WhatsApp number, the four offices and social links, saved '
+      + 'as one published site_content row (page = settings, section = '
+      + 'business). No settings table. Read by the storefront after first paint '
+      + 'and cached per visitor.',
   },
 ];
 

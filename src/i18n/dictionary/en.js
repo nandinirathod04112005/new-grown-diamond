@@ -6,12 +6,13 @@
  * string; a key missing from HERE renders the key itself, which is why the
  * provider logs that case as an error rather than a warning.
  *
- * SCOPE. Site chrome, the forms, the auth pages and the key commercial pages
- * are translated. The long editorial pages — education, the CVD-vs-natural
- * comparison, the price and size guides — are deliberately not, and carry a
- * visible notice in Hindi and Gujarati saying so. Half-translating a
- * 2,000-word technical article is worse than not starting it: a reader gets
- * two paragraphs in their language and then hits a wall with no warning.
+ * SCOPE. These dictionaries hold the site chrome (header, menu, footer), the
+ * trade terms and the shared form and auth wording. Each page's own text lives
+ * beside the page in a `<Name>.copy.js` file ({ en, hi, gu }, read with
+ * src/i18n/useCopy.js), and the editorial pages' text in
+ * src/pages/siteContent.i18n.js, so a page's paragraphs load only with that
+ * page. Every public page is translated except the privacy policy and terms,
+ * whose legal text stays in English with a notice in Hindi and Gujarati.
  */
 export default {
   terms: {
@@ -52,6 +53,8 @@ export default {
     blogs: 'Blogs',
     contact: 'Contact',
     account: 'Account',
+    login: 'Login',
+    logout: 'Logout',
     signIn: 'Sign in',
     signOut: 'Sign out',
     register: 'Create an account',
@@ -61,6 +64,36 @@ export default {
     language: 'Language',
     changeLanguage: 'Change language',
     backToSite: 'Back to the site',
+    primary: 'Primary',
+    openMenu: 'Open menu',
+    closeMenu: 'Close menu',
+    siteMenu: 'Site menu',
+    cart: 'Cart',
+    wishlist: 'Wishlist',
+    wishlistSaved: 'Wishlist, {count} saved',
+    /* The chevron beside a nav item that opens its list of pages. */
+    subPages: '{label} pages',
+  },
+
+  /*
+   * The Education submenu (EDUCATION_TOPICS in pages/siteContent.js), keyed by
+   * each page's route without its leading slash. Here rather than in the page
+   * copy because the header is on every page and must not pull the editorial
+   * translations into the main bundle to name five links.
+   */
+  educationTopics: {
+    'price-and-size': 'Diamond price and size',
+    'cvd-vs-natural': 'Comparison between CVD & natural diamond',
+    'why-lab-grown': 'Why choose a lab-grown diamond?',
+    shapes: 'Shapes',
+    faq: 'FAQ',
+  },
+
+  /* The "Continue →" pill at the foot of a page (chrome/ContinueNext.jsx).
+     Its destinations reuse the nav labels; only these two are its own. */
+  continueNext: {
+    continue: 'Continue',
+    journal: 'The journal',
   },
 
   common: {
@@ -149,6 +182,11 @@ export default {
     shapeGuide: 'Shape guide',
     whyNgd: 'Why NGD',
     faq: 'FAQ',
+    privacy: 'Privacy policy',
+    terms: 'Terms & conditions',
+    follow: 'Follow us',
+    journal: 'Journal',
+    feedback: 'Client feedback',
     rights: 'Grown with precision · Presented with proof',
     tagline: 'CVD and HPHT laboratory-grown diamonds manufactured in Surat for clients worldwide.',
   },

@@ -24,7 +24,7 @@ export function lookup(dict, key) {
 /** {name}-style placeholders. Values land as TEXT wherever React renders them. */
 export function interpolate(str, vars) {
   if (!vars) return str;
-  return String(str).replace(/{(w+)}/g, (m, k) => (k in vars ? String(vars[k]) : m));
+  return String(str).replace(/{(\w+)}/g, (m, k) => (k in vars ? String(vars[k]) : m));
 }
 
 /**

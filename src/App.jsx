@@ -1,40 +1,47 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
 import Header from '@/components/chrome/Header.jsx';
-import DiamondComparison from '@/sections/education/DiamondComparison.jsx';
-import SizeGuide from '@/sections/education/SizeGuide.jsx';
+import AnnouncementBar from '@/components/chrome/AnnouncementBar.jsx';
 import seedToStone from '@/assets/process/seed-to-stone.webp';
 import latticeCut from '@/assets/process/lattice-cut.webp';
 import gradingBench from '@/assets/process/grading-bench.webp';
 import suratToWorld from '@/assets/process/surat-to-world.webp';
 import cutStone from '@/assets/process/cut-stone.webp';
 import Footer from '@/components/chrome/Footer.jsx';
-import Preloader from '@/components/chrome/Preloader.jsx';
+import Preloader from '@/components/chrome/FastPreloader.jsx';
 import SiteExperience from '@/components/chrome/SiteExperience.jsx';
 import SmoothScrollProvider from '@/providers/SmoothScrollProvider.jsx';
-import AmbientField from '@/components/chrome/AmbientField.jsx';
 import PageTransition from '@/components/chrome/PageTransition.jsx';
 import DiamondCursor from '@/components/cursor/DiamondCursor.jsx';
 import ContinueNext from '@/components/chrome/ContinueNext.jsx';
 import { useRouter } from '@/lib/router.js';
 import { LocaleProvider } from '@/i18n/LocaleProvider.jsx';
 import { splitLocale } from '@/i18n/locales.js';
+import { useLocale } from '@/i18n/localeContext.js';
 import { useScrollVelocity } from '@/hooks/useScrollVelocity.js';
 import usePageAnimations from '@/hooks/usePageAnimations.js';
+import { usePageViews } from '@/hooks/usePageViews.js';
 import { PAGES } from '@/pages/siteContent.js';
 import SeoHead from '@/components/seo/SeoHead.jsx';
 import Home from '@/pages/Home.jsx';
 
 const EditorialPage = lazy(() => import('@/pages/EditorialPage.jsx'));
+const DiamondComparison = lazy(() => import('@/sections/education/DiamondComparison.jsx'));
+const SizeGuide = lazy(() => import('@/sections/education/SizeGuide.jsx'));
 const FaqPage = lazy(() => import('@/pages/FaqPage.jsx'));
 const ContactPage = lazy(() => import('@/pages/ContactPage.jsx'));
 const InventoryPage = lazy(() => import('@/pages/InventoryPage.jsx'));
 const JewelleryPage = lazy(() => import('@/pages/JewelleryPage.jsx'));
 const BlogsPage = lazy(() => import('@/pages/BlogsPage.jsx'));
 const BlogPostPage = lazy(() => import('@/pages/BlogPostPage.jsx'));
+const FeedbackPage = lazy(() => import('@/pages/FeedbackPage.jsx'));
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage.jsx'));
 const SignInPage = lazy(() => import('@/pages/auth/SignInPage.jsx'));
 const RegisterPage = lazy(() => import('@/pages/auth/RegisterPage.jsx'));
 const ProfilePage = lazy(() => import('@/pages/auth/ProfilePage.jsx'));
+const CartPage = lazy(() => import('@/pages/CartPage.jsx'));
+const WishlistPage = lazy(() => import('@/pages/WishlistPage.jsx'));
+const PrivacyPage = lazy(() => import('@/pages/PrivacyPage.jsx'));
+const TermsPage = lazy(() => import('@/pages/TermsPage.jsx'));
 const ForgotPasswordPage = lazy(() => import('@/pages/auth/ForgotPasswordPage.jsx'));
 const ResetPasswordPage = lazy(() => import('@/pages/auth/ResetPasswordPage.jsx'));
 const AuthCallbackPage = lazy(() => import('@/pages/auth/AuthCallbackPage.jsx'));
@@ -50,8 +57,21 @@ const AdminMedia = lazy(() => import('@/pages/admin/AdminMedia.jsx'));
 const AdminMonitoring = lazy(() => import('@/pages/admin/AdminMonitoring.jsx'));
 const AdminAudit = lazy(() => import('@/pages/admin/AdminAudit.jsx'));
 const AdminDiamondForm = lazy(() => import('@/pages/admin/AdminDiamondForm.jsx'));
+const AdminJournal = lazy(() => import('@/pages/admin/AdminJournal.jsx'));
+const AdminJournalForm = lazy(() => import('@/pages/admin/AdminJournalForm.jsx'));
+const AdminFeedbackQueue = lazy(() => import('@/pages/admin/AdminFeedbackQueue.jsx'));
+const AdminOrders = lazy(() => import('@/pages/admin/AdminOrders.jsx'));
+const AdminOrderForm = lazy(() => import('@/pages/admin/AdminOrderForm.jsx'));
+const AdminNotifications = lazy(() => import('@/pages/admin/AdminNotifications.jsx'));
+const AdminAnalytics = lazy(() => import('@/pages/admin/AdminAnalytics.jsx'));
+const AdminSettings = lazy(() => import('@/pages/admin/AdminSettings.jsx'));
+const AdminContent = lazy(() => import('@/pages/admin/AdminContent.jsx'));
+const AdminCatalogue = lazy(() => import('@/pages/admin/AdminCatalogue.jsx'));
+const AdminHomepage = lazy(() => import('@/pages/admin/AdminHomepage.jsx'));
+const AdminSeo = lazy(() => import('@/pages/admin/AdminSeo.jsx'));
 const Story = lazy(() => import('@/sections/about/Story.jsx'));
-const Exhibit = lazy(() => import('@/sections/about/Exhibit.jsx'));
+const StoryBanner = lazy(() => import('@/sections/about/StoryBanner.jsx'));
+const AboutCompany = lazy(() => import('@/sections/about/AboutCompany.jsx'));
 const ShapeWheel = lazy(() => import('@/sections/shapes/ShapeWheel.jsx'));
 const EducationIndex = lazy(() => import('@/sections/education/EducationIndex.jsx'));
 
@@ -69,6 +89,7 @@ const PAGE_MOTIF = {
   '/education': {
     motif: 'facets', accent: '#6d8fc4',
     image: seedToStone,
+    focus: '65% 45%', mobileFocus: '70% 42%',
     imageAlt: 'A carbon lattice resolving into a finished round brilliant diamond.',
   },
   /* The comparison sits under Education and reads as part of it, so it
@@ -76,6 +97,7 @@ const PAGE_MOTIF = {
   '/cvd-vs-natural': {
     motif: 'facets', accent: '#6d8fc4',
     image: latticeCut,
+    focus: '65% 50%', mobileFocus: '60% 45%',
     imageAlt: 'A diamond crystal held in a laboratory growth chamber.',
   },
   '/price-and-size': {
@@ -83,16 +105,19 @@ const PAGE_MOTIF = {
        stone looks like rather than how it was made. */
     motif: 'arcs', accent: '#9c8ab8',
     image: cutStone,
+    focus: '42% 55%', mobileFocus: '42% 45%',
     imageAlt: 'A cut diamond photographed from above beside a scale, showing its face-up size.',
   },
   '/shapes': {
     motif: 'arcs', accent: '#9c8ab8',
     image: cutStone,
+    focus: '72% 40%', mobileFocus: '65% 40%',
     imageAlt: 'A cut diamond photographed from above, showing its facet pattern and outline.',
   },
   '/why-lab-grown': {
     motif: 'rings', accent: '#6fb392',
     image: gradingBench,
+    focus: '68% 50%', mobileFocus: '72% 42%',
     imageAlt: 'A diamond under a grading microscope beside a laboratory report and loose stones.',
   },
 };
@@ -127,13 +152,30 @@ function adminRoute(path) {
   if (path === '/admin/customers') return <AdminCustomers />;
   if (path === '/admin/media') return <AdminMedia />;
   if (path === '/admin/monitoring') return <AdminMonitoring />;
+  if (path === '/admin/audit') return <AdminAudit />;
+  if (path === '/admin/journal') return <AdminJournal />;
+  if (path === '/admin/feedback') return <AdminFeedbackQueue />;
+  if (path === '/admin/orders') return <AdminOrders />;
+  if (path === '/admin/orders/new') return <AdminOrderForm key="new" />;
+  if (path === '/admin/notifications') return <AdminNotifications />;
+  if (path === '/admin/analytics') return <AdminAnalytics />;
+  if (path === '/admin/settings') return <AdminSettings />;
+  if (path === '/admin/content') return <AdminContent />;
+  if (path === '/admin/catalogue') return <AdminCatalogue />;
+  if (path === '/admin/homepage') return <AdminHomepage />;
+  if (path === '/admin/seo') return <AdminSeo />;
+  /* Keyed by post, so moving from /new to the new post's own address — or
+     between two posts — starts a fresh form rather than carrying one
+     post's fields into another's. */
+  if (path === '/admin/journal/new') return <AdminJournalForm key="new" />;
+  const journalEdit = path.match(/^\/admin\/journal\/([^/]+)\/edit$/);
+  if (journalEdit) return <AdminJournalForm key={journalEdit[1]} id={journalEdit[1]} />;
 
   /*
    * The four work queues share one screen. They differ only in which date
    * matters and which product they point at, and both of those are declared
    * per queue in adminQueues.js rather than branched on in the component —
    * so a fifth queue would be a data entry, not another page.
-  if (path === '/admin/audit') return <AdminAudit />;
    *
    * Keyed by name so React remounts on the way between them: they hold their
    * own filter tab and open drawer, and carrying those across from Holds into
@@ -172,6 +214,10 @@ export default function App() {
   const { path: rawPath, phase } = useRouter();
   const { locale, path } = splitLocale(rawPath);
   usePageAnimations(path);
+  /* Anonymous visit counting (lib/analytics.js): the full address, with its
+     /hi or /gu prefix, so languages can be told apart. It sends only from the
+     live domain, never from /admin, and never with Do Not Track on. */
+  usePageViews(rawPath);
 
   /*
    * One writer of scroll velocity for the whole site. Mounted here rather than
@@ -272,20 +318,21 @@ export default function App() {
       <PageTransition phase={phase} />
       {/* Where you ARRIVED, announced once. A screen reader gets the
           destination; the cover itself is decoration and stays hidden. */}
-      <p className="u-visually-hidden" aria-live="polite">
-        {content?.title || (path === '/' ? 'Home' : path.slice(1).replaceAll('-', ' '))}
-      </p>
+      <RouteAnnouncer path={path} title={content?.title} />
       <Preloader onDone={() => setReady(true)} />
-      <SiteExperience />
-      <DiamondCursor />
-      <Header />
-      {/*
-        The fixed diamond backdrop is gone.
-        
       {/* The room the whole site sits in: two slow light masses and a turning
           lattice, fixed behind every page. Pure CSS, so it cannot fail, and it
           stops entirely under reduced motion. */}
-      <AmbientField />
+      <SiteExperience />
+      <DiamondCursor />
+      <Header />
+      {/* Website Content's announcement, when one is published: hung under
+          the fixed header, drawn from cache on first paint, so it never
+          pushes the page down. */}
+      <AnnouncementBar />
+      {/*
+        The fixed diamond backdrop is gone.
+        
         It sat at 55% opacity behind every chapter — a single macro photograph
         blown across the whole viewport and blurred, which read as a grey smear
         rather than as atmosphere, and competed with the actual subject of each
@@ -303,9 +350,13 @@ export default function App() {
         {path === '/' && <Home />}
         {content && (
           <EditorialPage
+            /* Which page this is, so the page can find its own words in the
+               visitor's language (pages/siteContent.i18n.js). */
+            path={path}
+            hero={path === '/about' ? <StoryBanner page={content} /> : null}
             /* Shapes states every cut beside its turning wheel, so the
                numbered list underneath would repeat it in a weaker form. */
-            page={path === '/shapes' ? { ...content, sections: [] } : content}
+            page={path === '/shapes' || path === '/about' ? { ...content, sections: [] } : content}
             motif={PAGE_MOTIF[path]?.motif}
             accent={PAGE_MOTIF[path]?.accent}
             /*
@@ -316,9 +367,13 @@ export default function App() {
              * mark. A route with no photograph listed keeps the motif alone.
              */
             backdrop={PAGE_MOTIF[path]?.image}
+            backdropFocus={PAGE_MOTIF[path]?.focus}
+            backdropMobileFocus={PAGE_MOTIF[path]?.mobileFocus}
             after={path === '/education' ? <EducationIndex /> : null}
           >
-            {path === '/about' ? <><Exhibit /><Story /></> : null}
+            {/* The "Four decades of diamond excellence" exhibit was removed at
+                the owner's request; the story follows the banner directly. */}
+            {path === '/about' ? <><AboutCompany /><Story /></> : null}
             {path === '/shapes' ? <ShapeWheel /> : null}
             {/*
               * Tables before the numbered prose: a reader who came to compare
@@ -339,18 +394,26 @@ export default function App() {
         )}
         {path === '/faq' && <FaqPage />}
         {path === '/contact' && <ContactPage />}
+        {path === '/cart' && <CartPage />}
+        {path === '/wishlist' && <WishlistPage />}
+        {/* /Privacy is where the previous site kept it; old links still land here. */}
+        {['/privacy-policy', '/privacy', '/Privacy'].includes(path) && <PrivacyPage />}
+        {/* /Terms is where the previous site kept it; old links still land here. */}
+        {['/terms-and-conditions', '/terms', '/Terms'].includes(path) && <TermsPage />}
         {path === '/diamonds' && <InventoryPage />}
         {path === '/jewellery' && <JewelleryPage />}
-        {path === '/blogs' && <BlogsPage />}
-        {path !== '/'
-          && !content
+        {/* /blog and /Blog were the previous site's address; old links still land here. */}
+        {['/blogs', '/blog', '/Blog'].includes(path) && <BlogsPage />}
+        {path === '/feedback' && <FeedbackPage />}
         {/* The page the journal cards have always pointed at. */}
         {path.startsWith('/blogs/') && (
           <BlogPostPage slug={decodeURIComponent(path.slice('/blogs/'.length))} />
         )}
-          && !['/faq', '/contact', '/diamonds', '/jewellery', '/blogs'].includes(path)
-          && <NotFoundPage />}
+        {path !== '/'
+          && !content
           && !path.startsWith('/blogs/')
+          && !['/faq', '/contact', '/diamonds', '/jewellery', '/blogs', '/blog', '/Blog', '/feedback', '/cart', '/wishlist', '/privacy-policy', '/privacy', '/Privacy', '/terms-and-conditions', '/terms', '/Terms'].includes(path)
+          && <NotFoundPage />}
         </Suspense>
         <Footer />
       </div>
@@ -364,4 +427,45 @@ export default function App() {
     </SmoothScrollProvider>
     </LocaleProvider>
   );
+}
+
+/*
+ * The page just arrived at, named for a screen reader in the visitor's
+ * language. English keeps what it always said (the page's own title, or its
+ * address as words); Hindi and Gujarati use the menu's name for the page,
+ * which the site dictionaries already carry, rather than reading an English
+ * address aloud in a Hindi voice. A page with no menu name falls back as
+ * English does.
+ */
+const ROUTE_NAMES = {
+  '/diamonds': 'nav.diamonds',
+  '/jewellery': 'nav.jewellery',
+  '/about': 'nav.ourStory',
+  '/education': 'nav.education',
+  '/blogs': 'nav.blogs',
+  '/contact': 'nav.contact',
+  '/account': 'nav.account',
+  '/login': 'nav.login',
+  '/register': 'nav.register',
+  '/feedback': 'footer.feedback',
+  '/faq': 'footer.faq',
+  '/why-lab-grown': 'footer.whyNgd',
+  '/shapes': 'footer.shapeGuide',
+  '/cvd-vs-natural': 'educationTopics.cvd-vs-natural',
+  '/price-and-size': 'educationTopics.price-and-size',
+  '/cart': 'nav.cart',
+  '/wishlist': 'nav.wishlist',
+  '/privacy-policy': 'footer.privacy',
+  '/terms-and-conditions': 'footer.terms',
+};
+
+function RouteAnnouncer({ path, title }) {
+  const { locale, t, has } = useLocale();
+  /* An article is announced as the journal it belongs to. */
+  const key = ROUTE_NAMES[path] ?? (path.startsWith('/blogs/') ? 'nav.blogs' : undefined);
+  let name;
+  if (path === '/') name = locale === 'en' ? 'Home' : 'New Grown Diamond';
+  else if (locale !== 'en' && key && has(key)) name = t(key);
+  else name = title || path.slice(1).replaceAll('-', ' ');
+  return <p className="u-visually-hidden" aria-live="polite">{name}</p>;
 }

@@ -1,15 +1,22 @@
 import { supabase } from '../client.js';
 
 /**
- * Every read against public.blogs lives here, following the same shape as
- * queries/diamonds.js: no component calls supabase.from() directly, and the
- * column list is frozen in one reviewable place.
+ * Every public read against public.blogs lives here, following the same shape
+ * as queries/diamonds.js: no component calls supabase.from() directly, and the
+ * column list is frozen in one reviewable place. The editor's writes are in
+ * queries/adminBlogs.js, so none of that code ships to a reader.
  *
- * IMPORTANT: at the time of writing, public.blogs DOES NOT EXIST. The table is
- * proposed in supabase/blogs.sql and has deliberately not been applied — this
- * project is not permitted to alter the database. Until someone runs that file,
- * every call here resolves to `{ missing: true }` rather than throwing, so the
- * page can say "not published yet" instead of showing a fault.
+ * public.blogs EXISTS on the live project (verified 11 September 2026:
+ * id, slug, title, excerpt, body, cover_path, author_name, published,
+ * published_at, created_at, updated_at). Its policies, read back from the
+ * project, are exactly the ones proposed in supabase/blogs.sql:
+ *
+ *   select — anyone, published rows only;
+ *   select, insert, update, delete — an active admin (profiles.role = 'admin'
+ *   and account_status = 'active').
+ *
+ * The missing-table handling is kept all the same: a rolled-back table must
+ * read as "nothing published" on the storefront rather than as a fault.
  */
 
 export const BLOG_CARD_COLUMNS =
@@ -24,16 +31,20 @@ export const BLOG_DETAIL_COLUMNS =
  * PGRST205 ("Could not find the table") long before Postgres ever sees the
  * query, so the Postgres code 42P01 never appears. Both are checked, plus the
  * message text, because this decides whether a visitor sees a calm "not
- * published yet" or a red failure.
+ * published yet" or a red failure. PGRST202 is the same answer for a missing
+ * database function.
  */
-function isMissingTable(error) {
+export function isMissingTable(error) {
   const code = error?.code;
-  if (code === 'PGRST205' || code === 'PGRST202' || code === '42P01' || code === '42703') return true;
-  return /could not find the table|relation .* does not exist/i.test(error?.message ?? '');
+  if (code === 'PGRST205' || code === 'PGRST202' || code === '42P01' || code === '42703' || code === '42883') return true;
+  return /could not find the (table|function)|relation .* does not exist|function .* does not exist/i.test(error?.message ?? '');
 }
 
 /**
- * Published posts, newest first.
+ * Published posts, newest first, WITH their bodies.
+ *
+ * The body comes along because the journal searches it and states a reading
+ * time for every card; a journal is a few dozen rows, not a feed.
  *
  * `published` is filtered here as well as in RLS. The policy is the
  * enforcement; stating it at the call site keeps the intent readable without
@@ -44,9 +55,9 @@ export async function listPublishedBlogs() {
 
   const { data, error } = await supabase
     .from('blogs')
-    .select(BLOG_CARD_COLUMNS)
+    .select(BLOG_DETAIL_COLUMNS)
     .eq('published', true)
-    .order('published_at', { ascending: false });
+    .order('published_at', { ascending: false, nullsFirst: false });
 
   if (error) {
     if (isMissingTable(error)) return { posts: [], missing: true };

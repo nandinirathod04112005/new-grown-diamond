@@ -3,10 +3,13 @@ import { useRef } from 'react';
 import { usePointerParallax } from '@/hooks/usePointerParallax.js';
 import HeroBackdrop from '@/components/layout/HeroBackdrop.jsx';
 import stoneInHand from '@/assets/company/custom-jewellery-optimized.jpg';
+import { useCopy } from '@/i18n/useCopy.js';
+import COPY from './AuthShell.copy.js';
 import styles from './Auth.module.css';
 
 /*
- * What the panel says, and why every line of it is true.
+ * What the panel says (AuthShell.copy.js, `panel`), and why every line of it
+ * is true.
  *
  * The account page's activity widgets are favourites, quotes, holds,
  * inspections and enquiries (queries/account.js), enquiries carry a public
@@ -14,15 +17,6 @@ import styles from './Auth.module.css';
  * inspection media on request. Nothing here promises anything the site does
  * not already do.
  */
-const PANEL = {
-  eyebrow: 'Trade desk',
-  title: 'The stones you asked about, in one place.',
-  points: [
-    'Enquiries with a reference you can quote to the desk',
-    'Quotes, holds and inspections you have requested',
-    'Grading reports and inspection media, on request',
-  ],
-};
 
 /**
  * The frame every account page is set in.
@@ -48,20 +42,25 @@ const PANEL = {
  * mark and the title; the three lines return when there is room for them. On
  * the wide account workspace the band stays short so the work has the width.
  */
-export default function AuthShell({ eyebrow, title, intro, children, aside, wide = false, panel = PANEL }) {
+export default function AuthShell({ eyebrow, title, intro, children, aside, wide = false, panel: panelProp }) {
   const stage = useRef(null);
   usePointerParallax(stage, 1);
+  const c = useCopy(COPY);
+  const panel = panelProp ?? c.panel;
 
   return (
-    <main ref={stage} className={`${styles.stage} u-stage-dark`} data-wide={wide ? '' : undefined}>
-      <aside className={styles.panel} aria-label="About your account">
+    <main ref={stage} className={styles.stage} data-wide={wide ? '' : undefined}>
+      <aside className={styles.panel} aria-label={c.about}>
         <HeroBackdrop src={stoneInHand} focus="62% 46%" mobileFocus="58% 42%" />
 
         {/* The way back. These pages render outside the site shell, so
             without this there is no route home except the browser's back
             button — and someone who arrived at /register from a link has no
             back button worth pressing. */}
-        <a className={styles.mark} href="/">New Grown Diamond</a>
+        <a className={styles.mark} href="/" aria-label="New Grown Diamond — home">
+          <span className={styles.markGlyph} aria-hidden="true">N</span>
+          <span>New Grown Diamond</span>
+        </a>
 
         <div className={styles.panelCopy}>
           <p className={styles.panelEyebrow}>{panel.eyebrow}</p>
@@ -81,7 +80,19 @@ export default function AuthShell({ eyebrow, title, intro, children, aside, wide
         <div className={styles.pool} aria-hidden="true" />
         <div className={styles.grain} aria-hidden="true" />
 
+        <div className={styles.dimension} aria-hidden="true">
+          <span className={styles.orbit} />
+          <span className={styles.orbit} />
+          <span className={styles.orbit} />
+          <span className={styles.gem}>
+            <span className={styles.gemCore} />
+          </span>
+        </div>
+
         <div className={`${styles.frame} ${wide ? styles.frameWide : ''}`}>
+          <a className={styles.back} href="/">
+            <span aria-hidden="true">←</span> Back to collection
+          </a>
           <div className={styles.card}>
             <header className={styles.head}>
               <p className={styles.eyebrow}>{eyebrow}</p>
@@ -99,6 +110,10 @@ export default function AuthShell({ eyebrow, title, intro, children, aside, wide
             {/* Forward of the surface, so it parts from the card as it turns. */}
             <span className={styles.rim} aria-hidden="true" />
           </div>
+
+          <p className={styles.security}>
+            <span aria-hidden="true">◇</span> Secure account access
+          </p>
         </div>
       </section>
     </main>

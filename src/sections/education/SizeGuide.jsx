@@ -1,7 +1,9 @@
 import Reveal from '@/components/motion/Reveal.jsx';
 import SplitHeading from '@/components/motion/SplitHeading.jsx';
 import ShapeGlyph from '@/components/product/ShapeGlyph.jsx';
-import { MELEE, PROPORTIONS, RATIO, ROUND_MM, SHAPE_GRID } from './sizeData.js';
+import { useCopy } from '@/i18n/useCopy.js';
+import { MELEE, ROUND_MM, SHAPE_GRID } from './sizeData.js';
+import COPY from './SizeGuide.copy.js';
 import styles from './SizeGuide.module.css';
 
 /**
@@ -31,7 +33,7 @@ const step = (i) => Math.min(i, STAGGER_CAP);
 function Table({ caption, head, rows, className }) {
   return (
     <Reveal>
-      <div className={`${styles.tableWrap} ${className ?? ''}`}>
+      <div className={`${styles.tableWrap} ${className ?? ''}`} role="region" aria-label={caption} tabIndex={0}>
         <span className={styles.rule} aria-hidden="true" />
         <table className={styles.table}>
           <caption className={styles.caption}>{caption}</caption>
@@ -55,73 +57,64 @@ function Table({ caption, head, rows, className }) {
 }
 
 export default function SizeGuide() {
+  const c = useCopy(COPY);
+
   return (
     <section className={styles.root} aria-labelledby="size-guide">
       <Reveal as="header" className={styles.head}>
-        <p className="u-eyebrow">Carat to millimetre</p>
-        <SplitHeading as="h2" className={styles.title} id="size-guide" text="Diamond sizes in millimetres" />
-        <p className={styles.lede}>
-          Carat is a weight, not a width. These are the sizes a well-cut stone
-          tends to produce, the shapes we cut, and the proportions that decide
-          whether a given weight spreads across the finger or hides below the
-          girdle.
-        </p>
+        <p className="u-eyebrow">{c.head.eyebrow}</p>
+        <SplitHeading as="h2" className={styles.title} id="size-guide" text={c.head.title} />
+        <p className={styles.lede}>{c.head.lede}</p>
       </Reveal>
 
       {/* The shape set. Outlines rather than photographs: at this size the job
           is telling twenty-three silhouettes apart, which a drawing does and a
           rendered stone does not. */}
       <Reveal>
-        <h3 className={styles.subTitle}>The shapes we cut</h3>
+        <h3 className={styles.subTitle}>{c.shapesTitle}</h3>
         <ul className={styles.shapes}>
           {SHAPE_GRID.map((shape, i) => (
             <li key={shape} style={{ '--i': step(i) }}>
               <ShapeGlyph shape={shape} className={styles.glyph} />
-              <span>{shape}</span>
+              {/* The English name is the glyph's key; only the label changes. */}
+              <span>{c.shapes[shape] ?? shape}</span>
             </li>
           ))}
         </ul>
       </Reveal>
 
       <Table
-        caption="Brilliant round cut — 0.21 to 5.20 ct"
-        head={['Carat weight (ct)', 'Diameter (mm)']}
+        caption={c.round.caption}
+        head={c.round.head}
         rows={ROUND_MM}
       />
 
       <Table
-        caption="Round melee — 0.005 to 0.20 ct, with sieve sizes"
-        head={['Carat weight (ct)', 'Size (mm)', 'Stones per carat', 'Sieve size']}
+        caption={c.melee.caption}
+        head={c.melee.head}
         rows={MELEE}
         className={styles.wide}
       />
 
       <Table
-        caption="Ideal table and depth, brilliant round cut"
-        head={['Proportion', 'Excellent', 'Very good', 'Good']}
-        rows={PROPORTIONS}
+        caption={c.proportionsTable.caption}
+        head={c.proportionsTable.head}
+        rows={c.proportions}
         className={styles.wide}
       />
 
       <Table
-        caption="Ideal length to width ratio"
-        head={['Measure', 'Excellent / very good', 'Good']}
-        rows={RATIO}
+        caption={c.ratioTable.caption}
+        head={c.ratioTable.head}
+        rows={c.ratio}
       />
 
-      <Reveal as="p" className={styles.caveat}>
-        Sizes are approximate and follow cut proportions rather than weight
-        alone — a deeper stone of the same carat measures smaller across the
-        top. Exact measurements for any individual stone are recorded on its
-        grading report.
-      </Reveal>
+      <Reveal as="p" className={styles.caveat}>{c.caveat}</Reveal>
 
       <Reveal as="p" className={styles.quote}>
-        Per-carat rates are not published here because they move. For a current
-        figure on a specific shape, weight and quality, or for a size not listed
-        above,{' '}
-        <a href="/contact">tell the desk what you need</a> or{' '}
-        <a href="/diamonds">search live stock</a>.
+        {c.quote.before}
+        <a href="/contact">{c.quote.desk}</a>{c.quote.or}
+        <a href="/diamonds">{c.quote.stock}</a>{c.quote.after}
       </Reveal>
     </section>
   );

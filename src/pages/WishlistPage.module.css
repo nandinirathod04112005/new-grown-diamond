@@ -1,0 +1,256 @@
+/*
+ * Saved stones.
+ *
+ * Built in the same language as the selection (cart) page beside it — ink
+ * ground, a small spaced eyebrow, one large display line — so moving between
+ * the two reads as moving between rooms of one house. Every colour is a theme
+ * token, so the page follows light and dark with the rest of the site.
+ */
+
+.page {
+  min-height: 100vh;
+  padding: 135px var(--gutter) 90px;
+  background: var(--ink);
+  color: var(--text);
+}
+
+/* ---------------- the opening ---------------- */
+.hero { max-width: 850px; margin-bottom: 48px; }
+
+.eyebrow {
+  margin: 0;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.hero h1 {
+  margin: 18px 0;
+  font: 400 clamp(3.6rem, 7vw, 7.5rem) / 0.94 var(--font-display);
+  letter-spacing: -0.04em;
+}
+
+.hero em { color: var(--accent); font-weight: 400; }
+
+.hero > span {
+  display: block;
+  max-width: 560px;
+  color: var(--text-muted);
+  line-height: 1.8;
+}
+
+/* ---------------- the toolbar ---------------- */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px 24px;
+  padding: 18px 0;
+  margin-bottom: 28px;
+  border-block: 1px solid var(--ink-line);
+}
+
+.status { margin: 0; font-size: 12px; color: var(--text-muted); }
+
+.toolActions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
+
+.primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 18px;
+  background: var(--text);
+  color: var(--text-invert);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transition: opacity var(--dur-base) var(--ease-primary), translate var(--dur-base) var(--ease-primary);
+}
+
+.primary:hover:not(:disabled) { translate: 0 -2px; }
+.primary:disabled { opacity: 0.45; cursor: default; }
+
+.quiet {
+  font-size: 11px;
+  color: var(--text-muted);
+  border-bottom: 1px solid transparent;
+  padding-bottom: 2px;
+  transition: color var(--dur-base) var(--ease-primary), border-color var(--dur-base) var(--ease-primary);
+}
+
+.quiet:hover, .quiet:focus-visible { color: var(--text); border-bottom-color: currentColor; }
+
+/* ---------------- the stones ---------------- */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+  gap: 24px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  background: var(--surface-2, var(--ink));
+  border: 1px solid var(--ink-line);
+  transition: border-color var(--dur-base) var(--ease-primary), translate 500ms var(--ease-primary),
+    box-shadow 500ms var(--ease-primary);
+  animation: cardIn 0.6s var(--ease-primary) both;
+  animation-delay: calc(var(--i, 0) * 60ms);
+}
+
+.card:hover { translate: 0 -4px; border-color: color-mix(in srgb, var(--accent) 45%, transparent); box-shadow: 0 20px 44px -26px rgba(0, 0, 0, 0.6); }
+
+@keyframes cardIn { from { opacity: 0; translate: 0 14px; } }
+
+/* A stone that has left the inventory stays, but reads as past. */
+.card[data-gone] { opacity: 0.62; }
+.card[data-gone]:hover { translate: none; box-shadow: none; }
+
+.shot {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  padding: 0;
+  overflow: hidden;
+  background: #ecebe6;
+  cursor: zoom-in;
+}
+
+.shot:disabled { cursor: default; }
+.shot:focus-visible { outline: 2px solid var(--accent); outline-offset: -4px; }
+
+.shot img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 1.1s var(--ease-primary);
+}
+
+.card:hover .shot:not(:disabled) img { transform: scale(1.05); }
+.card[data-gone] .shot img { filter: grayscale(1); }
+
+.badge, .badgeGone {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 4px 8px;
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.badge { background: rgba(255, 255, 255, 0.92); border: 1px solid rgba(0, 0, 0, 0.14); color: #2f6b4f; }
+.badgeGone { background: #17171b; color: #f0e6cf; }
+
+.body { display: grid; align-content: start; gap: 6px; padding: 18px; }
+
+.ref {
+  margin: 0;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.title {
+  margin: 2px 0 0;
+  font: 400 1.9rem / 1.05 var(--font-display);
+  font-variant-numeric: tabular-nums;
+}
+
+.title span { font-style: italic; color: var(--text-muted); }
+
+.grades { margin: 0; font-size: 12px; letter-spacing: 0.04em; color: var(--text-muted); }
+
+.price, .priceAsk {
+  margin: 10px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--ink-line);
+  font-variant-numeric: tabular-nums;
+}
+
+.price { font: 400 1.45rem / 1 var(--font-display); }
+.priceAsk { font: italic 400 1.05rem / 1.2 var(--font-display); color: var(--text-muted); }
+
+.actions { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+
+.add {
+  flex: 1;
+  min-height: 42px;
+  padding: 0 14px;
+  border: 1px solid var(--line-firm, var(--ink-line));
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  transition: background var(--dur-base) var(--ease-primary), color var(--dur-base) var(--ease-primary);
+}
+
+.add:hover:not(:disabled), .add:focus-visible { background: var(--text); color: var(--text-invert); }
+.add:disabled { opacity: 0.55; cursor: default; }
+
+.remove {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--ink-line);
+  color: var(--text-muted);
+  transition: color var(--dur-base) var(--ease-primary), border-color var(--dur-base) var(--ease-primary);
+}
+
+.remove:hover, .remove:focus-visible { color: #b4423a; border-color: currentColor; }
+
+.note { margin: 32px 0 14px; font-size: 12px; color: var(--text-muted); }
+
+.back { display: inline-flex; gap: 9px; align-items: center; font-size: 11px; }
+
+/* ---------------- nothing saved ---------------- */
+.empty {
+  display: grid;
+  justify-items: center;
+  gap: 17px;
+  padding: 80px 30px;
+  text-align: center;
+  border: 1px solid var(--ink-line);
+}
+
+.empty h2 { margin: 0; font: 400 40px var(--font-display); }
+.empty p { margin: 0; color: var(--text-muted); }
+
+.empty a {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  padding: 16px 20px;
+  background: var(--text);
+  color: var(--text-invert);
+}
+
+@media (max-width: 850px) {
+  .page { padding-top: 110px; }
+  .hero { margin-bottom: 32px; }
+  .hero h1 { font-size: clamp(3.2rem, 14vw, 5.5rem); }
+  .toolbar { align-items: stretch; }
+  .toolActions { width: 100%; justify-content: space-between; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card { animation: none; transition: none; }
+  .card:hover { translate: none; }
+  .shot img, .primary, .add { transition: none; }
+  .card:hover .shot:not(:disabled) img { transform: none; }
+}
+
+/* ================= phones: legible text, tappable links ================= */
+/* Nothing under 11 px on a phone — the small uppercase labels were 8 to 10 px
+   and hard to read at arm's length. Measured with a 390 px audit. */
+@media (max-width: 600px) {
+  .eyebrow { font-size: 0.6875rem; }
+}

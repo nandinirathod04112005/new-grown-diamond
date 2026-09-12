@@ -1,4 +1,7 @@
 .root {
+  min-width: var(--target-min);
+  min-height: var(--target-min);
+  justify-content: center;
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
@@ -93,4 +96,12 @@
 @media (prefers-reduced-motion: reduce) {
   .sun,
   .moon { transition: none; }
+}
+
+/* Laptop widths in the header: the word goes, as on a phone, so Account and
+   Login can sit apart without pushing this control off the bar. The button
+   keeps its full accessible name. */
+@media (min-width: 900px) and (max-width: 1199px) {
+  .root { padding: 0.4rem; gap: 0; }
+  .label { display: none; }
 }

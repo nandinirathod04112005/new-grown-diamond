@@ -23,7 +23,7 @@
   color: inherit;
 }
 
-.close div > p.callLine span { opacity: 0.62; }
+.close div > p.callLine span { opacity: 1; }
 
 .close div > p.callLine a {
   width: auto;
@@ -52,3 +52,25 @@
 
 /* Same letterboxing as the inventory's closing image, same fix. */
 .close img { height: auto; }
+
+/* The closing panel has its own paired foreground, including its links. */
+.close div > p:not(.u-eyebrow) { color: inherit; opacity: 1; }
+.close a, .close .u-eyebrow { color: inherit; border-color: currentColor; }
+.process { padding-block: var(--section-space); }
+
+.process { padding-block: var(--showroom-space); }
+.process > :global(.u-eyebrow) { color: var(--accent-deep); }
+.process article { padding-block: 2.5rem; }
+.process article > span { font-family: var(--font-display); font-size: 2.5rem; letter-spacing: -.04em; }
+.process h2 { font-size: clamp(2.4rem, 4vw, 4rem); }
+.close { padding-block: var(--showroom-space); gap: 5vw; }
+.close img { border: 1px solid var(--ink-line); padding: 2rem; background: #08090a; }
+.close h2 { font-size: clamp(3rem, 5vw, 6rem); }
+.process{background:var(--surface-2);padding-inline:var(--gutter)}.process h2{font-size:clamp(2.2rem,3.3vw,3.6rem)}.close img{border-radius:150px 150px 3px 3px;padding:0}.close h2{font-size:clamp(2.8rem,4.6vw,5rem)}
+
+/* ================= theme-follow =================
+ * The closing band used --pearl and --text-invert, which flip the OTHER way:
+ * it was light in dark mode and dark in light mode. It now takes the raised
+ * surface and the normal text colour, so it follows the page. */
+.close { background: var(--ink-raised); color: var(--text); }
+.close div > p:not(.u-eyebrow) { color: var(--text-muted); }

@@ -41,8 +41,8 @@ export default function Chapter({ index, title, lines, image, alt, mediaLabel, i
   ], [lines.length]);
 
   return (
-    <ScrollScene phases={phases} id={id} label={title}>
-      <div className={styles.wrap} data-flip={flip ? '' : undefined}>
+    <ScrollScene phases={phases} id={id} label={title} className={styles.scene} mobileStack>
+      <div className={styles.wrap} data-chapter={id} data-flip={flip ? '' : undefined}>
         <div className={styles.text} style={{ order: flip ? 2 : 1 }}>
           <p className={styles.index}>{index}</p>
           {/*

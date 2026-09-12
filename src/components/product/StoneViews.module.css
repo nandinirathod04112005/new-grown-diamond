@@ -1,0 +1,310 @@
+/*
+ * The stone's other views: measured drawings, size on a finger, the grading
+ * scales and the 360° model.
+ *
+ * All of them live inside the stone dialog, which defines its own ink (--sv-*)
+ * for each theme. They use that ink, with fallbacks, so the drawings follow the
+ * dialog: light lines on dark, dark lines on light.
+ */
+
+/* ---------------- drawings ---------------- */
+.diagram {
+  position: relative;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 1.2rem 1.2rem 0.9rem;
+}
+
+.diagram svg { width: 100%; height: 100%; overflow: visible; }
+
+.diagram figcaption, .size figcaption, .spin figcaption {
+  font-size: 0.6875rem;
+  line-height: 1.5;
+  text-align: center;
+  color: var(--sv-quiet, #8e8d96);
+}
+
+.facetLines path {
+  fill: none;
+  stroke: var(--sv-muted, #a4a3ab);
+  stroke-width: 0.45;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  /* Drawn on, facet by facet, as the view opens. 300 is longer than any
+     single facet path here, so every one completes. */
+  stroke-dasharray: 300;
+  stroke-dashoffset: 0;
+  animation: draw 1.1s var(--ease-primary) both;
+  animation-delay: calc(var(--i, 0) * 14ms);
+}
+
+.outline {
+  fill: none;
+  stroke: var(--sv-ink, #f4f1ea);
+  stroke-width: 1.4;
+  vector-effect: non-scaling-stroke;
+  stroke-linejoin: round;
+}
+
+@keyframes draw { from { stroke-dashoffset: 300; } }
+
+.dim line {
+  stroke: var(--sv-gold, #c9a766);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.dimText {
+  fill: var(--sv-ink, #f4f1ea);
+  font-family: var(--font-body);
+  font-size: 4.2px;
+  letter-spacing: 0.02em;
+}
+
+/* ---------------- size on a finger ---------------- */
+.size {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto auto;
+  gap: 0.6rem;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 1rem 1.2rem 0.9rem;
+}
+
+.size svg { width: 100%; height: 100%; }
+
+.finger { fill: #e9d8c8; stroke: #b49c88; stroke-width: 0.6; }
+.nail { fill: #f3e6dc; stroke: #c9b1a0; stroke-width: 0.5; }
+.crease { fill: none; stroke: #c2a893; stroke-width: 0.45; stroke-linecap: round; }
+.band { fill: #d8bd83; stroke: #9f834a; stroke-width: 0.5; }
+.prong { fill: #e7cf98; stroke: #9f834a; stroke-width: 0.3; }
+
+/* The stone resizes smoothly as the slider moves, rather than jumping. */
+.sizeStone { transition: transform 220ms var(--ease-primary); }
+.sizeStone path { vector-effect: non-scaling-stroke; }
+.sizeGirdle { fill: #d9e2ee; stroke: #eef3fa; stroke-width: 0.8; }
+
+.sizeControls { display: grid; gap: 0.45rem; }
+
+.sizeRead {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.6rem;
+  margin: 0;
+  color: var(--sv-ink, #f4f1ea);
+}
+
+.sizeRead b { font: 400 1.2rem var(--font-display); font-variant-numeric: tabular-nums; }
+.sizeRead span { font-size: 0.75rem; color: var(--sv-muted, #a4a3ab); }
+
+.slider {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.55rem 0.9rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.94);
+  font-size: 0.6875rem;
+  color: #3a3a40;
+}
+
+.slider input {
+  appearance: none;
+  width: 100%;
+  height: 2px;
+  margin: 0;
+  background: linear-gradient(90deg, #17171b var(--p, 0%), rgba(23, 23, 27, 0.18) var(--p, 0%));
+  cursor: pointer;
+}
+
+.slider input::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #17171b;
+  box-shadow: 0 0 0 3px #fff, 0 1px 4px rgba(0, 0, 0, 0.35);
+}
+
+.slider input::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border: 0;
+  border-radius: 50%;
+  background: #17171b;
+  box-shadow: 0 0 0 3px #fff, 0 1px 4px rgba(0, 0, 0, 0.35);
+}
+
+.slider input:focus-visible { outline: 2px solid var(--sv-gold, #c9a766); outline-offset: 6px; }
+
+.resetSize {
+  justify-self: center;
+  font-size: 0.6875rem;
+  color: var(--sv-gold-lift, #e4ca92);
+  border-bottom: 1px solid currentColor;
+}
+
+.vh {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ---------------- grading scales ---------------- */
+.scales { display: grid; gap: 1.1rem; margin-top: 0.4rem; }
+
+.scale { display: grid; gap: 0.45rem; animation: scaleIn 600ms var(--ease-primary) both; animation-delay: calc(200ms + var(--i, 0) * 90ms); }
+
+@keyframes scaleIn { from { opacity: 0; translate: 0 8px; } }
+
+.scaleHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 0.78rem;
+  color: var(--sv-muted, #a4a3ab);
+}
+
+.scaleHead b { font: 400 1.05rem var(--font-display); color: var(--sv-ink, #f4f1ea); }
+
+.steps {
+  display: flex;
+  gap: 3px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.steps li {
+  position: relative;
+  flex: 1 1 0;
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  height: 1.7rem;
+  border: 1px solid var(--sv-line, rgba(255, 255, 255, 0.1));
+  font-size: 0.5625rem;
+  letter-spacing: 0.04em;
+  color: var(--sv-quiet, #8e8d96);
+  transition: background var(--dur-base) var(--ease-primary);
+}
+
+.steps li span { overflow: hidden; text-overflow: clip; white-space: nowrap; }
+
+/* Better grades than this stone read as a lit run up to it. */
+.steps li[data-past] { background: rgba(217, 192, 138, 0.07); }
+
+.steps li[data-on] {
+  background: var(--sv-gold, #c9a766);
+  border-color: var(--sv-gold, #c9a766);
+  color: #16140f;
+  font-weight: 600;
+}
+
+.steps li[data-on]::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  translate: -50% 0;
+  border: 4px solid transparent;
+  border-top-color: var(--sv-gold, #c9a766);
+}
+
+.groups {
+  display: flex;
+  gap: 3px;
+  font-size: 0.5625rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sv-quiet, #8e8d96);
+}
+
+.groups span { min-width: 0; padding-top: 0.25rem; border-top: 1px solid var(--sv-line, rgba(255, 255, 255, 0.1)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ---------------- 360 ---------------- */
+.spin {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+.spin > div, .spin canvas { width: 100% !important; height: 100% !important; }
+
+.spin figcaption {
+  position: absolute;
+  inset: auto 1rem 0.8rem;
+  pointer-events: none;
+}
+
+.spinLoading {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sv-muted, #a4a3ab);
+}
+
+/* The hint sits over the stone until the first touch, then gets out of the way. */
+.dragHint {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  display: grid;
+  justify-items: center;
+  gap: 0.6rem;
+  padding: 1rem 1.3rem;
+  border-radius: 12px;
+  background: rgba(10, 10, 13, 0.55);
+  backdrop-filter: blur(6px);
+  font-size: 0.9rem;
+  color: var(--sv-ink, #f4f1ea);
+  pointer-events: none;
+  animation: hintPulse 2.4s ease-in-out infinite;
+}
+
+.dragHint svg { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+
+@keyframes hintPulse {
+  0%, 100% { opacity: 0.85; }
+  50% { opacity: 1; }
+}
+
+.spinOff {
+  display: grid;
+  place-content: center;
+  gap: 0.4rem;
+  height: 100%;
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.spinOff p { margin: 0; font-size: 0.875rem; color: var(--sv-muted, #a4a3ab); }
+.spinOff p:first-child { color: var(--sv-ink, #f4f1ea); }
+
+@media (prefers-reduced-motion: reduce) {
+  .facetLines path, .scale { animation: none; }
+  .sizeStone, .steps li { transition: none; }
+  .dragHint { animation: none; }
+}
+
+/* ================= theme-follow: light mode ================= */
+:global(:root[data-theme='light']) .steps li[data-on] { color: #ffffff; }
+:global(:root[data-theme='light']) .steps li[data-past] { background: rgba(128, 96, 45, 0.08); }
+:global(:root[data-theme='light']) .slider { box-shadow: 0 0 0 1px rgba(18, 18, 22, 0.12); }
+/* The 360 caption sits on the model's dark canvas, so it stays light. */
+:global(:root[data-theme='light']) .spin figcaption { color: rgba(244, 241, 234, 0.75); }

@@ -55,6 +55,23 @@ export function useToasts() {
   };
 }
 
+/*
+ * A message carried across one in-app navigation — "Created" after a new
+ * record moves to its own edit address and the screen remounts. Put before
+ * navigating, taken once on arrival.
+ */
+let pendingFlash = '';
+
+export function putFlash(text) {
+  pendingFlash = text;
+}
+
+export function takeFlash() {
+  const text = pendingFlash;
+  pendingFlash = '';
+  return text;
+}
+
 /**
  * Warns before a tab close or reload while a form is dirty.
  *

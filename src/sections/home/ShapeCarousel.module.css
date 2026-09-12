@@ -1,0 +1,322 @@
+/*
+ * The turning ring of cuts.
+ *
+ * In the homepage's own palette (--paper, --green, --muted, --line from the
+ * page root) with the house gold on the track. Positions are written by the
+ * component every frame as translate + scale; everything that depends on how
+ * near the front a stone is reads one number, --d, from 0 (behind) to 1
+ * (front), so depth is one value styled several ways rather than several
+ * values kept in step.
+ */
+
+.carousel {
+  --gold-ink: #765923;
+  display: grid;
+  gap: clamp(0.5rem, 2vw, 1.25rem);
+  margin-top: clamp(1rem, 3vw, 2.5rem);
+}
+
+/* ---------------- the stage ---------------- */
+.stage {
+  position: relative;
+  height: clamp(300px, 34vw, 460px);
+  /* Vertical scrolling still belongs to the page; only a sideways drag turns the ring. */
+  touch-action: pan-y;
+  user-select: none;
+  cursor: grab;
+  /*
+   * Clipped sideways only. A stone turning on its axis sweeps a box 1.41×
+   * its own width at 45°, and the two at the sides of the ring pushed the
+   * phone page 9 px wider than the screen. `clip` (not hidden) keeps it from
+   * becoming a scroll container and leaves the vertical axis open.
+   */
+  overflow-x: clip;
+  overflow-y: visible;
+  --rx: 400px;
+  --ry: 60px;
+  --spin: 0deg;
+  background:
+    radial-gradient(50% 58% at 50% 62%, rgba(211, 189, 144, 0.22), transparent 70%),
+    radial-gradient(70% 40% at 50% 100%, rgba(24, 62, 53, 0.06), transparent 70%);
+}
+
+.stage:active { cursor: grabbing; }
+
+/* The track the stones run on, and a fainter one outside it. Centred on the
+   same point the stones orbit, sized from the radii the component writes. */
+.track, .trackOuter, .spark {
+  position: absolute;
+  left: 50%;
+  top: 44%;
+  pointer-events: none;
+}
+
+.track {
+  width: calc(var(--rx) * 2);
+  height: calc(var(--ry) * 2);
+  translate: -50% -50%;
+  border: 1px solid rgba(156, 120, 58, 0.45);
+  border-radius: 50%;
+}
+
+.trackOuter {
+  width: calc(var(--rx) * 2.24);
+  height: calc(var(--ry) * 2.9);
+  translate: -50% -50%;
+  border: 1px dashed rgba(156, 120, 58, 0.18);
+  border-radius: 50%;
+}
+
+/* A point of light running round the inner track. */
+.spark {
+  width: 8px;
+  height: 8px;
+  margin: -4px 0 0 -4px;
+  border-radius: 50%;
+  background: #fff8e6;
+  box-shadow: 0 0 10px 3px rgba(211, 189, 144, 0.9), 0 0 24px 8px rgba(211, 189, 144, 0.35);
+}
+
+/* ---------------- the stones ---------------- */
+.ring { position: absolute; inset: 0; margin: 0; padding: 0; list-style: none; }
+
+.item {
+  --d: 0;
+  position: absolute;
+  left: 50%;
+  top: 44%;
+  width: clamp(116px, 14vw, 190px);
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  /* Behind the ring a stone is a pale ghost; at the front it is the stone. */
+  opacity: calc(0.16 + 0.84 * var(--d));
+  will-change: transform, opacity;
+}
+
+.stone {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.stone:focus-visible { outline: 2px solid var(--gold-ink); outline-offset: 6px; }
+
+/* The shadow each stone casts on the "floor" under the track, stronger in
+   front where the stone is nearest the light. */
+.floor {
+  position: absolute;
+  left: 50%;
+  bottom: -14%;
+  width: 70%;
+  height: 16%;
+  translate: -50% 0;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(24, 62, 53, 0.35), transparent);
+  opacity: calc(var(--d) * 0.9);
+  filter: blur(4px);
+}
+
+/*
+ * The photograph, turning slowly on its own axis. Each stone starts its turn
+ * at a different angle (--o), so nine stones never rotate in step and read as
+ * a display rather than a pattern.
+ */
+.stone img {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transform: rotate(calc(var(--spin) + var(--o, 0deg)));
+  filter: drop-shadow(0 12px 16px rgba(24, 62, 53, 0.18));
+  -webkit-user-drag: none;
+}
+
+/* A four-point glint that flares on the stone at the front. */
+.glint {
+  position: absolute;
+  right: 18%;
+  top: 14%;
+  width: 22%;
+  aspect-ratio: 1;
+  opacity: 0;
+  background:
+    linear-gradient(90deg, transparent 46%, #fffdf6 50%, transparent 54%),
+    linear-gradient(0deg, transparent 46%, #fffdf6 50%, transparent 54%);
+  filter: drop-shadow(0 0 4px rgba(255, 244, 214, 0.95));
+  pointer-events: none;
+}
+
+.item[data-front] .glint { animation: glint 3.2s ease-in-out infinite 0.6s; }
+
+@keyframes glint {
+  0%, 62%, 100% { opacity: 0; scale: 0.4; rotate: 0deg; }
+  72% { opacity: 1; scale: 1; rotate: 45deg; }
+  84% { opacity: 0; scale: 0.6; rotate: 90deg; }
+}
+
+.hint {
+  position: absolute;
+  left: 50%;
+  bottom: 0.4rem;
+  translate: -50% 0;
+  margin: 0;
+  font: 500 10px/1.6 var(--font-body);
+  letter-spacing: 0.19em;
+  text-transform: uppercase;
+  color: var(--muted);
+  pointer-events: none;
+}
+
+/* ---------------- the caption ---------------- */
+.panel {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: clamp(0.75rem, 3vw, 2.5rem);
+  max-width: 52rem;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.caption { text-align: center; min-height: 9.5rem; }
+
+.count {
+  margin: 0 0 0.35rem;
+  font: 500 10px/1.6 var(--font-body);
+  letter-spacing: 0.24em;
+  color: var(--muted);
+}
+
+.count b { color: var(--gold-ink); font-weight: 600; }
+
+/* Keyed on the cut's name, so each change replays the entrance. */
+.swap { animation: swap 0.7s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+@keyframes swap {
+  from { opacity: 0; translate: 0 12px; filter: blur(4px); }
+}
+
+.name {
+  margin: 0;
+  font: 400 clamp(2.2rem, 1.5rem + 2.4vw, 3.6rem) / 1 var(--font-display);
+  letter-spacing: -0.02em;
+  color: var(--green);
+}
+
+.desc {
+  max-width: 34rem;
+  margin: 0.7rem auto 0;
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: var(--muted);
+}
+
+.arrow {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  color: var(--green);
+  background: rgba(255, 255, 255, 0.5);
+  transition: background 250ms ease, color 250ms ease, border-color 250ms ease, scale 250ms ease;
+}
+
+.arrow:hover { background: var(--green); color: var(--paper); border-color: var(--green); scale: 1.06; }
+.arrow:focus-visible, .pause:focus-visible, .explore:focus-visible { outline: 2px solid var(--gold-ink); outline-offset: 3px; }
+
+.foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem 1.6rem;
+}
+
+.explore {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid #a6b0a4;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  color: var(--green);
+}
+
+.explore svg { transition: translate 250ms ease; }
+.explore:hover svg { translate: 3px -3px; }
+
+.pause {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.45rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  transition: color 250ms ease, border-color 250ms ease;
+}
+
+.pause:hover { color: var(--green); border-color: #a6b0a4; }
+
+.vh {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (max-width: 700px) {
+  .stage { height: 290px; }
+  /*
+   * Smaller stones, and a much steeper fade with depth: on a 350 px ring the
+   * neighbours overlap the front stone whatever their size, so they have to
+   * recede to near-ghosts (d^4) for the front one to read at all.
+   */
+  .item {
+    top: 42%;
+    width: 25vw;
+    opacity: calc(0.06 + 0.94 * var(--d) * var(--d) * var(--d) * var(--d));
+  }
+  .track, .trackOuter, .spark { top: 42%; }
+  .caption { min-height: 11rem; }
+  .arrow { width: 2.6rem; height: 2.6rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .item[data-front] .glint, .swap { animation: none; }
+  .spark { display: none; }
+  .arrow, .explore svg, .pause { transition: none; }
+}
+
+/* ================= theme-follow: dark mode ================= */
+:global(:root[data-theme='dark']) .carousel { --gold-ink: #d3bd90; }
+:global(:root[data-theme='dark']) .stage { background: radial-gradient(50% 58% at 50% 62%, rgba(211, 189, 144, 0.12), transparent 70%); }
+:global(:root[data-theme='dark']) .arrow { background: rgba(255, 255, 255, 0.06); }
+:global(:root[data-theme='dark']) .explore { border-bottom-color: rgba(255, 255, 255, 0.3); }
+:global(:root[data-theme='dark']) .pause:hover { border-color: rgba(255, 255, 255, 0.3); }
+
+/* ================= phones: a lighter ring =================
+ * Each stone turns continuously, and a drop shadow on a turning picture has
+ * to be drawn again on every frame — nine of them at once is more than a
+ * phone's graphics chip keeps up with while the page scrolls. On a phone the
+ * stones turn without it (the floor shadow under the ring stays), and the
+ * caption changes without the blur. */
+@media (max-width: 767px), (pointer: coarse) {
+  .stone img { filter: none; }
+  .swap { animation-name: swapLite; }
+}
+@keyframes swapLite {
+  from { opacity: 0; translate: 0 12px; }
+  to { opacity: 1; translate: 0 0; }
+}

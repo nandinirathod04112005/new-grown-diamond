@@ -4,6 +4,9 @@ import ScrollScene from '@/components/scroll/ScrollScene.jsx';
 import ShapeGlyph from '@/components/product/ShapeGlyph.jsx';
 import { prefersReducedMotion } from '@/lib/motion/media.js';
 import { listShapePhotos } from '@/lib/supabase/queries/diamonds.js';
+import { interpolate } from '@/i18n/localeContext.js';
+import { useCopy } from '@/i18n/useCopy.js';
+import COPY from './ShapeWheel.copy.js';
 import styles from './ShapeWheel.module.css';
 
 /**
@@ -23,18 +26,12 @@ import styles from './ShapeWheel.module.css';
  * caption has to know the REAL angle or it will name a stone that is not
  * there. So one loop owns the angle: a slow constant drift so the wheel is
  * never dead, plus the scene's own scroll progress so the visitor drives it.
+ *
+ * The cuts in wheel order, by their English names — the id each photograph,
+ * outline and stock lookup is keyed by. What each is called on screen, and its
+ * description, are in ShapeWheel.copy.js in every language.
  */
-const CUTS = [
-  ['Round', 'The classic 360-degree symmetrical outline, selected for strong light return and compatibility with almost every setting.'],
-  ['Oval', 'An elongated brilliant. The silhouette creates visual length while keeping brilliant-style faceting.'],
-  ['Emerald', 'A step cut. Parallel facets foreground clarity rather than sparkle, so the stone is chosen for what it shows.'],
-  ['Pear', 'A round end meeting a single point, combining brilliant faceting with an elongated outline.'],
-  ['Princess', 'Crisp square geometry with brilliant-style faceting and sharp, uncropped corners.'],
-  ['Cushion', 'Softened corners and larger facets give it a vintage-inflected character.'],
-  ['Radiant', 'A rectangular outline with cropped corners, combined with brilliant-style faceting.'],
-  ['Marquise', 'Two points and a broad face-up area, the navette outline, cut for length.'],
-  ['Heart', 'A cleft brilliant. It demands precise symmetry above every other consideration.'],
-];
+const CUTS = ['Round', 'Oval', 'Emerald', 'Pear', 'Princess', 'Cushion', 'Radiant', 'Marquise', 'Heart'];
 
 /*
  * The house photographs of each cut — the same nine the homepage collection
@@ -88,6 +85,7 @@ export default function ShapeWheel() {
   const root = useRef(null);
   const ring = useRef(null);
   const [active, setActive] = useState(0);
+  const c = useCopy(COPY);
 
   /*
    * Real stones, keyed by cut, from live inventory. A cut with stock shows a
@@ -168,10 +166,11 @@ export default function ShapeWheel() {
     };
   }, []);
 
-  const [name, copy] = CUTS[active];
+  const activeCut = CUTS[active];
+  const { name, note } = c.cuts[activeCut];
 
   return (
-    <ScrollScene phases={PHASES} id="the-cuts" label="The cuts we grow" progressRef={progress}>
+    <ScrollScene phases={PHASES} id="the-cuts" label={c.label} progressRef={progress}>
       <div ref={root} className={`${styles.stage} u-stage-dark`}>
         <span className={styles.disc} aria-hidden="true" />
 
@@ -209,7 +208,7 @@ export default function ShapeWheel() {
 
         <div className={styles.wheel} aria-hidden="true">
           <div ref={ring} className={styles.ring}>
-            {CUTS.map(([cut], i) => (
+            {CUTS.map((cut, i) => (
               <div
                 key={cut}
                 className={styles.seg}
@@ -251,14 +250,14 @@ export default function ShapeWheel() {
 
         {/* The caption for whatever the wheel has brought round. */}
         <div className={styles.copy}>
-          <p className={styles.kicker}>The cuts we grow</p>
+          <p className={styles.kicker}>{c.label}</p>
 
-          <div className={styles.readout} key={name}>
+          <div className={styles.readout} key={activeCut}>
             <h2 className={styles.title}>{name}</h2>
-            <p className={styles.note}>{copy}</p>
-            {photos[name] ? (
+            <p className={styles.note}>{note}</p>
+            {photos[activeCut] ? (
               <p className={styles.stock}>
-                Shown: a {photos[name].carat.toFixed(2)} ct {name.toLowerCase()} in current stock
+                {interpolate(c.shown, { carat: photos[activeCut].carat.toFixed(2), name: name.toLowerCase() })}
               </p>
             ) : null}
           </div>
@@ -272,10 +271,10 @@ export default function ShapeWheel() {
             copy would have quietly deleted the page's content.
           */}
           <ol className={styles.index}>
-            {CUTS.map(([cut, text], i) => (
-              <li key={cut} data-on={i === active ? '' : undefined}>
-                <b>{cut}</b>
-                <span className="u-visually-hidden">{text}</span>
+            {CUTS.map((id, i) => (
+              <li key={id} data-on={i === active ? '' : undefined}>
+                <b>{c.cuts[id].name}</b>
+                <span className="u-visually-hidden">{c.cuts[id].note}</span>
               </li>
             ))}
           </ol>

@@ -1,5 +1,15 @@
 # NGD Design System
 
+## Current showroom composition (September 10 refresh)
+
+The implemented showroom refresh supersedes earlier composition descriptions below. The homepage Atelier uses a 40/60 editorial split with a framed, always-visible existing brilliant photograph (desktop width capped at 580px), oversized sentence-case headings and italic gold payoff lines. All four original text phases remain; their combined scroll distance is now 242vh. Mobile stacks the headline, stone, supporting line and existing actions.
+
+Homepage chapters use ordinary reading flow instead of repeated full-screen sticky cards. Origin pairs a narrow reading column with a wide image; grading uses an ivory spread; material truth places its text above a broad image; jewellery uses a larger framed plate; supply emphasizes its existing chapter label. Copy, media and section order are unchanged. Shared `--showroom-space`, `--showroom-paper` and `--showroom-ink` tokens set the rhythm.
+
+The header uses normal compositing with a transparent opening and solid theme ground after scrolling. PageHero places its photograph inside a frame beside the heading on desktop and below the copy on mobile; `contain` preserves the complete image. The footer is a warm ivory closing spread in both themes. Journal cards use open editorial surfaces. Catalogue specifications retain all fields inside larger media-led cards. Authentication follows the selected theme with quiet opaque controls; its shell no longer forces dark tokens over light surfaces.
+
+The hero has a brief frame reveal, chapter plates have short entrances and desktop hover movement, and existing route/headline motion remains. Reduced-motion paths retain a still presentation. See `tests-e2e/showroom/` for screenshots and checks. This refresh does not modify backend behavior or deploy the site.
+
 This document is the reference for extending New Grown Diamond without weakening its visual identity, accessibility, or performance.
 
 ## Design intent
@@ -117,7 +127,7 @@ Photographic shared headers extend to the page edges and own their top spacing; 
 
 Every page opening except the homepage stands in front of a full-bleed photograph. One component does it everywhere — `components/layout/HeroBackdrop.jsx` — inside `PageHero`, the journal's opening, and the inventory's opening, so the pictures move the same way on every page.
 
-**Layers, back to front:** photograph → accent wash (`soft-light`, from the page accent) → legibility scrim built from `--ink`, heavy on the left and at the bottom edge, open on the right → the page's tinted field and grain, settled lower over a photograph → the drawn motif as an etched ornament (`opacity .55`) → copy. Building the scrim from `--ink` is what makes one treatment hold in both themes; do not introduce a hard-coded dark overlay.
+**Layers, back to front:** photograph → accent wash (`soft-light`, from the page accent) → legibility scrim built from `--ink`, heavy on the left and at the bottom edge, open on the right → restrained grain and a faint desktop motif → copy. Photographic PageHero banners hide the ambient field; phones also hide the motif and use a stronger vertical scrim. Building the scrim from `--ink` keeps the treatment paired with both themes.
 
 **Motion:** the photograph is visible immediately and settles with a small 0.8-second scale change. Continuous drift, blur opening, and the light sweep are disabled. Pointer/scroll transforms remain on the photograph; copy in photographic PageHero banners stays on a steady reading plane with brief, fully opaque entrance offsets. `useHeroProgress` schedules a frame on scroll or resize only while the banner intersects the viewport, and reacts to live reduced-motion preference changes. No ScrollTrigger scrub or pin is involved.
 
@@ -161,6 +171,12 @@ Form conventions established on the sign-up and sign-in pages:
 - Sign-in reports "Email or password is incorrect." for either mistake; the unconfirmed-address case is named, with a resend that happens only on its button.
 - "Administrator" on sign-up asks for the staff access code, phone, and country; the code is checked on the server. The desk's own gate is labelled "Desk unlock code" so the two codes are not confused, and an active administrator lands on `/admin` directly after sign-in.
 
+The console states what the database can actually do, and the statement has to stay true. Each module in `adminModules.js` carries a state — `ready` (the tables exist and a screen reads them), `partial` (the tables exist, the screen does not), `setup` (the table is absent, and the module names it). The sidebar marks `partial` as "Soon" and keeps the link live; `setup` is disabled. Re-verified against the live project on 10 September 2026, after migrations 0001 and 0002 were applied: `media`, `audit_log`, `notifications`, `site_content`, `homepage_sections`, `seo_settings` and `analytics_events` exist and moved out of `setup`; `orders`, `categories`, `collections`, `activity_log`, `page_views` and `settings` are still absent. A stale claim here is worse than none, because "no migration has been applied" about a table the operator already added reads as the backend being broken.
+
+Activity & Audit Log is live. Every publish, edit, archive and restore the console makes writes one `audit_log` row naming who made it and which columns moved, as `{column: [before, after]}` over an allow-list that excludes internal notes and anything a customer wrote. The table is append-only by policy — no update, no delete, for anyone — so the screen is a reading surface with no actions on it. The audit write happens after the operation and can never fail it: a refused entry warns to the console and the save still succeeds, which is verified in the console harness alongside the refusal cases.
+
+Analytics and Notifications stay `partial` on purpose. Both tables exist and are empty because nothing writes to them, and both would need a decision rather than a screen: analytics means turning on visitor collection, notifications means writing rows the queues already answer live. Neither is switched on by a screen that happens to exist.
+
 ## Component boundaries
 
 - `components/chrome`: navigation, footer, theme, preload, transitions, continuation.
@@ -170,12 +186,6 @@ Form conventions established on the sign-up and sign-in pages:
 - `components/product`: comparison, shapes, and diamond inspection.
 - `components/three`: optional WebGL enhancement and fallback.
 - `sections`: page-specific narrative compositions.
-
-The console states what the database can actually do, and the statement has to stay true. Each module in `adminModules.js` carries a state â€” `ready` (the tables exist and a screen reads them), `partial` (the tables exist, the screen does not), `setup` (the table is absent, and the module names it). The sidebar marks `partial` as "Soon" and keeps the link live; `setup` is disabled. Re-verified against the live project on 10 September 2026, after migrations 0001 and 0002 were applied: `media`, `audit_log`, `notifications`, `site_content`, `homepage_sections`, `seo_settings` and `analytics_events` exist and moved out of `setup`; `orders`, `categories`, `collections`, `activity_log`, `page_views` and `settings` are still absent. A stale claim here is worse than none, because "no migration has been applied" about a table the operator already added reads as the backend being broken.
-
-Activity & Audit Log is live. Every publish, edit, archive and restore the console makes writes one `audit_log` row naming who made it and which columns moved, as `{column: [before, after]}` over an allow-list that excludes internal notes and anything a customer wrote. The table is append-only by policy â€” no update, no delete, for anyone â€” so the screen is a reading surface with no actions on it. The audit write happens after the operation and can never fail it: a refused entry warns to the console and the save still succeeds, which is verified in the console harness alongside the refusal cases.
-
-Analytics and Notifications stay `partial` on purpose. Both tables exist and are empty because nothing writes to them, and both would need a decision rather than a screen: analytics means turning on visitor collection, notifications means writing rows the queues already answer live. Neither is switched on by a screen that happens to exist.
 
 General components should not own page-specific copy. Pages and sections assemble primitives and content.
 
@@ -248,9 +258,9 @@ Public marketing routes should be prerendered or server-rendered. Authentication
 - Replace the 754 × 541 brilliant macro behind the 404 banner with a banner-grade photograph when one exists.
 - Give Price & size, Shapes, and Inventory (cut stone) and Why lab-grown and Journal (grading bench) distinct photographs so adjacent pages do not share an opening.
 - Run the full adversarial review of the banner change; the first run did not complete.
+- Give Website Content, Homepage Manager and SEO Manager a screen, or a storefront read path; their tables exist and nothing reads them.
+- Record media upload and delete in the audit log; the actions exist and the log already allows them.
 
 ## Governance
 
 Treat `tokens.css`, this document, and established reusable components as the default system. Make one-off exceptions only for clear narrative or functional needs. When an exception repeats, promote it into a token or reusable component and update this document.
-- Give Website Content, Homepage Manager and SEO Manager a screen, or a storefront read path; their tables exist and nothing reads them.
-- Record media upload and delete in the audit log; the actions exist and the log already allows them.

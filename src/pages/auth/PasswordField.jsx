@@ -1,6 +1,9 @@
 import { useId, useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 
+import { interpolate } from '@/i18n/localeContext.js';
+import { useCopy } from '@/i18n/useCopy.js';
+import COPY from './PasswordField.copy.js';
 import styles from './Auth.module.css';
 
 /**
@@ -52,6 +55,9 @@ export default function PasswordField({
   const id = useId();
   const errId = `${id}-err`;
   const hintId = `${id}-hint`;
+  const c = useCopy(COPY);
+  const thing = c.things[revealLabel] ?? revealLabel;
+  const toggleLabel = interpolate(shown ? c.hide : c.show, { thing });
 
   return (
     <div className={styles.field2} style={{ '--i': index }}>
@@ -87,8 +93,8 @@ export default function PasswordField({
           onClick={() => setShown((s) => !s)}
           aria-pressed={shown}
           aria-controls={id}
-          aria-label={shown ? `Hide ${revealLabel}` : `Show ${revealLabel}`}
-          title={shown ? `Hide ${revealLabel}` : `Show ${revealLabel}`}
+          aria-label={toggleLabel}
+          title={toggleLabel}
         >
           {shown ? <EyeOff size={16} strokeWidth={1.6} /> : <Eye size={16} strokeWidth={1.6} />}
         </button>
@@ -99,7 +105,7 @@ export default function PasswordField({
 
       {/* Spoken on change, for anyone who cannot see the characters appear. */}
       <span className="u-visually-hidden" aria-live="polite">
-        {shown ? `${label} is visible` : ''}
+        {shown ? interpolate(c.visible, { label }) : ''}
       </span>
     </div>
   );

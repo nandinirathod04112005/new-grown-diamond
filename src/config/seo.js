@@ -1,3 +1,7 @@
+/* Relative, not '@/': scripts/generate-seo-pages.mjs imports this file in
+   plain Node, where the bundler's alias does not exist. */
+import { archiveDescription, JOURNAL_ARCHIVE } from '../content/journalPosts.js';
+
 export const SITE_NAME = 'New Grown Diamond';
 export const SITE_URL = 'https://newgrowndiamond.com';
 export const DEFAULT_DESCRIPTION = 'New Grown Diamond manufactures and supplies CVD and HPHT lab-grown diamonds from Surat, India, for B2B buyers worldwide.';
@@ -20,7 +24,12 @@ export const OG_IMAGE_WIDTH = 1200;
 export const OG_IMAGE_HEIGHT = 630;
 export const OG_IMAGE_ALT = 'A New Grown Diamond round brilliant laboratory-grown diamond photographed against black.';
 
-export const PUBLIC_ROUTES = ['/', '/diamonds', '/jewellery', '/about', '/education', '/price-and-size', '/cvd-vs-natural', '/shapes', '/why-lab-grown', '/faq', '/blogs', '/contact'];
+/* The journal's archive articles ship with the site, so each gets a real,
+   indexable page of its own. Posts written in the editor are loaded at run
+   time and are not prerendered here. */
+const ARTICLE_ROUTES = JOURNAL_ARCHIVE.map((p) => `/blogs/${p.slug}`);
+
+export const PUBLIC_ROUTES = ['/', '/diamonds', '/jewellery', '/about', '/education', '/price-and-size', '/cvd-vs-natural', '/shapes', '/why-lab-grown', '/faq', '/blogs', '/feedback', '/contact', '/cart', '/wishlist', '/privacy-policy', '/terms-and-conditions', ...ARTICLE_ROUTES];
 export const PRIVATE_ROUTES = ['/login', '/register', '/account', '/forgot-password', '/reset-password'];
 
 export const SEO_BY_ROUTE = {
@@ -35,6 +44,16 @@ export const SEO_BY_ROUTE = {
   '/why-lab-grown': { title: 'Why Choose Lab Grown Diamonds? | New Grown Diamond', description: 'Learn how measurable quality, independent certification, inspection support and direct supply inform a lab-grown diamond purchase.' },
   '/faq': { title: 'Lab Grown Diamond FAQ | CVD, Certification & Durability', description: 'Clear answers about CVD diamond growth, lab-grown diamond certification, durability, simulants and how diamond origin is verified.' },
   '/blogs': { title: 'Lab Grown Diamond Journal | New Grown Diamond', description: 'Read notes from Surat about lab-grown diamond manufacturing, cutting, grading, certification and questions from the diamond trade.' },
+  '/feedback': { title: 'Client Feedback | New Grown Diamond', description: 'Read reviewed feedback from New Grown Diamond clients, and leave your own about our lab-grown diamonds, jewellery, service or website.' },
+  '/cart': { title: 'Your Diamond Selection | New Grown Diamond', description: 'Review the lab-grown diamonds in your selection and contact the New Grown Diamond team for availability and pricing.' },
+  '/wishlist': { title: 'Saved Lab Grown Diamonds | New Grown Diamond', description: 'Review your saved lab-grown diamonds and move available stones into your selection.' },
+  ...Object.fromEntries(JOURNAL_ARCHIVE.map((p) => [`/blogs/${p.slug}`, {
+    title: `${p.title.replace(/[?!]$/, '')} | NGD Journal`,
+    description: archiveDescription(p),
+    article: { headline: p.title },
+  }])),
+  '/terms-and-conditions': { title: 'Terms & Conditions | New Grown Diamond', description: 'The terms that govern use of the New Grown Diamond website, pricing, cancellations and returns, and the laws that apply.' },
+  '/privacy-policy': { title: 'Privacy Policy | New Grown Diamond', description: 'How New Grown Diamond collects, uses, shares and protects your personal data, and how to contact us about your privacy.' },
   '/contact': { title: 'Contact New Grown Diamond | Surat Diamond Supplier', description: 'Contact New Grown Diamond in Surat, Mumbai, New York or Hong Kong for loose lab-grown diamonds, wholesale supply and custom jewellery enquiries.' },
 };
 
@@ -64,7 +83,7 @@ export function organizationSchema() {
     /* Two points, because they are answered for different things. Both are
        real published numbers; nothing here is inferred. */
     contactPoint: [
-      { '@type': 'ContactPoint', telephone: '+91-7339220840', contactType: 'sales', areaServed: 'Worldwide', availableLanguage: ['en', 'hi', 'gu'] },
+      { '@type': 'ContactPoint', telephone: '+91-9913999794', contactType: 'sales', areaServed: 'Worldwide', availableLanguage: ['en', 'hi', 'gu'] },
       { '@type': 'ContactPoint', telephone: '+91-99139-99794', email: 'newgrowndiamonds@gmail.com', contactType: 'sales', areaServed: 'Worldwide' },
     ],
   };
@@ -77,6 +96,23 @@ export function pageSchemas(pathname) {
     { '@context': 'https://schema.org', '@type': 'WebSite', '@id': `${SITE_URL}/#website`, url: `${SITE_URL}/`, name: SITE_NAME, publisher: { '@id': `${SITE_URL}/#organization` } },
     { '@context': 'https://schema.org', '@type': 'WebPage', '@id': `${seo.canonical}#webpage`, url: seo.canonical, name: seo.title, description: seo.description, isPartOf: { '@id': `${SITE_URL}/#website` }, about: { '@id': `${SITE_URL}/#organization` } },
   ];
+  if (seo.article) {
+    schemas.push({
+      '@context': 'https://schema.org', '@type': 'BlogPosting', '@id': `${seo.canonical}#article`,
+      headline: seo.article.headline, description: seo.description, url: seo.canonical,
+      mainEntityOfPage: { '@id': `${seo.canonical}#webpage` }, inLanguage: 'en',
+      author: { '@id': `${SITE_URL}/#organization` }, publisher: { '@id': `${SITE_URL}/#organization` },
+    });
+    schemas.push({
+      '@context': 'https://schema.org', '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE_URL}/` },
+        { '@type': 'ListItem', position: 2, name: 'Journal', item: `${SITE_URL}/blogs` },
+        { '@type': 'ListItem', position: 3, name: seo.article.headline, item: seo.canonical },
+      ],
+    });
+    return schemas;
+  }
   if (seo.path !== '/') schemas.push({
     '@context': 'https://schema.org', '@type': 'BreadcrumbList',
     itemListElement: [

@@ -1,0 +1,108 @@
+/*
+ * The announcement bar.
+ *
+ * Absolutely positioned against the document, directly under the fixed
+ * header, so it occupies no layout space: it lies over the top padding every
+ * page leaves beneath the header (at least ~30 px on a phone, more on a desk),
+ * and scrolls away behind the header (z-index 40) like an ordinary top bar.
+ *
+ * `top` repeats the header's own height from Header.module.css — 88 px from
+ * 900 px up, 80 px below. If the header's height changes, change it here too.
+ *
+ * One line, fixed height, always: a bar that could wrap to two lines on a
+ * narrow phone would reach down into the first line of the page. A long
+ * message is ellipsised on screen; the whole of it stays in the accessible
+ * name, and the Control Centre's preview says when it will not fit.
+ *
+ * Storefront tokens only, so it follows the light and dark themes.
+ */
+.root {
+  position: absolute;
+  top: 88px;
+  left: 0;
+  right: 0;
+  z-index: 39;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 1.875rem;
+  padding-inline: var(--gutter) calc(var(--gutter) - 0.55rem);
+  background: color-mix(in srgb, var(--accent) 13%, var(--ink));
+  border-bottom: 1px solid var(--ink-line);
+  color: var(--text);
+  font-size: 0.75rem;
+  line-height: 1.3;
+  letter-spacing: 0.02em;
+}
+
+@media (max-width: 899px) {
+  .root { top: 80px; font-size: 0.6875rem; }
+}
+
+.text {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.75rem;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.message {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.link {
+  flex: none;
+  color: var(--accent);
+  font-weight: 500;
+  border-bottom: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  transition: color var(--dur-base) var(--ease-primary), border-color var(--dur-base) var(--ease-primary);
+}
+
+a.link:hover,
+a.link:focus-visible { color: var(--text); border-color: currentColor; }
+
+.close {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 1.875rem;
+  height: 1.875rem;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color var(--dur-base) var(--ease-primary);
+}
+
+.close:hover,
+.close:focus-visible { color: var(--text); }
+
+.root :focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; }
+
+/* A first-time visitor's bar arrives after idle: it slides down from behind
+   the header. Transform and opacity only, so nothing on the page shifts. */
+.root[data-enter] { animation: announceIn 420ms var(--ease-primary) both; }
+
+@keyframes announceIn {
+  from { opacity: 0; transform: translateY(-100%); }
+}
+
+/* The Control Centre's preview: the same strip, in the flow of its frame. The
+   frame is a size container named `announce`, so a phone-width frame gets the
+   phone type size even on a wide screen. */
+.root[data-preview] { position: relative; top: auto; z-index: auto; }
+
+@container announce (max-width: 899px) {
+  .root[data-preview] { font-size: 0.6875rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .root[data-enter] { animation: none; }
+  .link, .close { transition: none; }
+}

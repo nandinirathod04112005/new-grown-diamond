@@ -8,9 +8,13 @@ import StoneViewer from '@/components/product/StoneViewer.jsx';
 import { listDiamonds } from '@/lib/supabase/queries/diamonds.js';
 import { isConfigured } from '@/lib/supabase/client.js';
 import macro from '@/assets/diamonds/ngd-brilliant-macro.webp';
+import diamondSpin from '@/assets/diamonds/ngd-brilliant-spin.webp';
 import cutStone from '@/assets/process/cut-stone.webp';
 import HeroBackdrop from '@/components/layout/HeroBackdrop.jsx';
+import { useLocale } from '@/i18n/localeContext.js';
+import { useCopy } from '@/i18n/useCopy.js';
 import { ENQUIRY_DESK } from './siteContent.js';
+import COPY from './InventoryPage.copy.js';
 import styles from './InventoryPage.module.css';
 
 /**
@@ -28,6 +32,8 @@ export default function InventoryPage() {
   const [stage, setStage] = useState(() => (isConfigured ? 'loading' : 'unconfigured'));
   const [filters, setFilters] = useState(EMPTY);
   const [viewing, setViewing] = useState(null);
+  const { t } = useLocale();
+  const c = useCopy(COPY);
 
   // The fetch never sets state synchronously: the effect's first write happens
   // after the await, and Retry sets the loading state from the click that
@@ -70,23 +76,33 @@ export default function InventoryPage() {
             below the copy and the hero stone. */}
         <HeroBackdrop src={cutStone} focus="55% 50%" className={styles.backdrop} />
         <div>
-          <p className="u-eyebrow">Diamond inventory / Trade &amp; retail</p>
+          <p className="u-eyebrow">{c.hero.eyebrow}</p>
           {/* The space is explicit: a <br> yields nothing in textContent, so
               without it the extracted heading reads "stone.See the proof." */}
-          <h1>Find the stone.{' '}<br /><em>See the proof.</em></h1>
-          <p>
-            Live stock with grading, growth method and photography. Request
-            availability, videos and certificates from the desk.
-          </p>
-          <a href="/contact">Request current inventory →</a>
+          <h1>{c.hero.title}{' '}<br /><em>{c.hero.titleEm}</em></h1>
+          <p>{c.hero.intro}</p>
+          <a href="/contact">{t('common.requestInventory')} →</a>
           <p className={styles.callLine}>
-            <span>Or call the desk</span>{' '}
+            <span>{t('common.callTheDesk')}</span>{' '}
             <a href={`tel:${ENQUIRY_DESK.tel}`}>{ENQUIRY_DESK.phone}</a>
           </p>
         </div>
-        <figure>
-          <span className={styles.orbit} />
-          <img src={macro} alt="A real New Grown Diamond round brilliant photographed loose against black" width="754" height="541" />
+        <figure className={styles.diamondStage}>
+          <span className={styles.orbit} aria-hidden="true" />
+          <span className={styles.orbitInner} aria-hidden="true" />
+          <span className={styles.diamondShadow} aria-hidden="true" />
+          <span
+            className={styles.realDiamond}
+            role="img"
+            aria-label={c.hero.alt}
+            style={{ '--diamond-spin': `url(${diamondSpin})` }}
+          >
+            <i aria-hidden="true" />
+          </span>
+          <figcaption className={styles.spinLabel}>
+            <span aria-hidden="true" />
+            Real diamond · 360° light study
+          </figcaption>
         </figure>
       </header>
 
@@ -123,29 +139,29 @@ export default function InventoryPage() {
 
         {stage === 'error' && (
           <div className={styles.state}>
-            <h2>The inventory could not be loaded</h2>
-            <p>This is on our side. Please try again in a moment.</p>
-            <button type="button" onClick={retry}>Retry</button>
+            <h2>{c.error.title}</h2>
+            <p>{c.error.body}</p>
+            <button type="button" onClick={retry}>{c.error.retry}</button>
           </div>
         )}
 
         {stage === 'unconfigured' && (
           <div className={styles.state}>
-            <h2>Inventory is not connected</h2>
-            <p>Add the Supabase project details to .env.local to show live stock.</p>
+            <h2>{c.unconfigured.title}</h2>
+            <p>{c.unconfigured.body}</p>
           </div>
         )}
 
         {stage === 'ready' && rows.length === 0 && (
           <div className={styles.state}>
-            <h2>{stones.length === 0 ? 'No stones published yet' : 'No stones match these filters'}</h2>
+            <h2>{stones.length === 0 ? c.empty.noneTitle : c.empty.noMatchTitle}</h2>
             <p>
               {stones.length === 0
-                ? 'Stock added in the admin appears here immediately.'
-                : 'Widen the search, or ask the desk what is arriving.'}
+                ? c.empty.noneBody
+                : c.empty.noMatchBody}
             </p>
             {isActive(filters) && (
-              <button type="button" onClick={() => setFilters(EMPTY)}>Clear all filters</button>
+              <button type="button" onClick={() => setFilters(EMPTY)}>{c.empty.clear}</button>
             )}
           </div>
         )}
@@ -162,12 +178,13 @@ export default function InventoryPage() {
       {viewing && <StoneViewer stone={viewing} onClose={() => setViewing(null)} />}
 
       <section className={styles.proof}>
-        <img src={macro} alt="Close view of a round brilliant laboratory-grown diamond" width="754" height="541" />
+        <img src={macro} alt={c.proof.alt} width="754" height="541" />
         <div>
-          <p className="u-eyebrow">What accompanies a stone</p>
-          <h2>Certificate. Video. A direct answer.</h2>
-          <p>Ask for current availability with the grading information and inspection material needed to evaluate the diamond.</p>
-          <a href="mailto:newgrowndiamonds@gmail.com?subject=Current diamond inventory">Email the diamond desk →</a>
+          <p className="u-eyebrow">{c.proof.eyebrow}</p>
+          <h2>{c.proof.title}</h2>
+          <p>{c.proof.body}</p>
+          {/* The subject is what the desk reads, so it stays English. */}
+          <a href="mailto:newgrowndiamonds@gmail.com?subject=Current diamond inventory">{c.proof.email} →</a>
         </div>
       </section>
     </main>

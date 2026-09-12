@@ -1,15 +1,17 @@
 import { useRef } from 'react';
 
 import { gsap, useGSAP } from '@/lib/motion/gsap.js';
-import { prefersReducedMotion } from '@/lib/motion/media.js';
+import useReducedMotion from '@/hooks/useReducedMotion.js';
 import { usePointerParallax } from '@/hooks/usePointerParallax.js';
+import { lettersOf } from '@/i18n/letters.js';
 import HeroBackdrop from './HeroBackdrop.jsx';
 import Motif from './Motif.jsx';
 import styles from './PageHero.module.css';
 
-/** Words stay whole so wrapping still behaves; characters are the animated unit. */
+/** Words stay whole so wrapping still behaves; characters are the animated
+    unit, except in Hindi and Gujarati, where a word is (see lettersOf). */
 function toWords(text) {
-  return String(text).split(' ').map((word) => ({ word, chars: [...word] }));
+  return String(text).split(' ').map((word) => ({ word, chars: lettersOf(word) }));
 }
 
 /**
@@ -43,15 +45,18 @@ export default function PageHero({
   backdrop,
   /* Where the crop keeps its subject as the frame changes shape. */
   backdropFocus = '50% 50%',
+  backdropMobileFocus = backdropFocus,
 }) {
   const scope = useRef(null);
+  const reduced = useReducedMotion();
 
   usePointerParallax(scope, 1);
 
   useGSAP(
     () => {
-      if (prefersReducedMotion()) return;
+      if (reduced) return;
       const q = gsap.utils.selector(scope);
+      const mobile = window.matchMedia('(pointer: coarse)').matches;
       const tl = gsap.timeline({ defaults: { ease: 'expo.out', duration: 1.3 } });
 
       /* Over a photograph the field is the light on it, not a glow beside
@@ -60,33 +65,42 @@ export default function PageHero({
       tl.fromTo(q(`.${styles.field}`), { opacity: 0 }, { opacity: backdrop ? 0.45 : 1, duration: 1.6 }, 0)
         .fromTo(
           q(`.${styles.brow} span`),
-          { yPercent: 130, opacity: 0 },
-          { yPercent: 0, opacity: 1, duration: 0.9, stagger: 0.05 },
-          0.15,
+          { y: 5, opacity: 1 },
+          { y: 0, opacity: 1, duration: 0.45, stagger: 0.015 },
+          0,
         )
         .fromTo(
           q(`.${styles.char}`),
-          { yPercent: 118, rotate: 3, opacity: 0 },
-          { yPercent: 0, rotate: 0, opacity: 1, duration: 1.4, stagger: { each: 0.016 } },
-          0.25,
+          { y: mobile ? 3 : 6, opacity: 1 },
+          { y: 0, opacity: 1, duration: 0.55, stagger: { amount: 0.12 } },
+          0,
         )
         .fromTo(q(`.${styles.rule}`), { scaleX: 0 }, { scaleX: 1, duration: 1.3 }, 0.75)
         .fromTo(
           q(`.${styles.introLine}`),
-          { yPercent: 110, opacity: 0 },
-          { yPercent: 0, opacity: 1, duration: 1.2 },
-          0.85,
+          { y: 5, opacity: 1 },
+          { y: 0, opacity: 1, duration: 0.5 },
+          0,
         )
-        .fromTo(q(`.${styles.action}`), { y: 22, opacity: 0 }, { y: 0, opacity: 1, duration: 1.1 }, 1)
+        .fromTo(q(`.${styles.action}`), { y: 3, opacity: 1 }, { y: 0, opacity: 1, duration: 0.45 }, 0)
         .fromTo(q(`.${styles.motif}`), { opacity: 0, scale: 0.86 }, { opacity: backdrop ? 0.55 : 1, scale: 1, duration: 1.8 }, 0.3)
         .fromTo(
           q(`.${styles.shot}`),
-          { clipPath: 'inset(0 0 100% 0)' },
-          { clipPath: 'inset(0 0 0% 0)', duration: 1.8, ease: 'expo.inOut' },
+          { clipPath: 'inset(12% 0 88% 0)' },
+          { clipPath: 'inset(0 0 0% 0)', duration: 1.35, ease: 'expo.inOut' },
           0.3,
         );
+      const focus = () => tl.progress(1);
+      const visibility = () => { if (document.hidden) tl.pause(); else tl.resume(); };
+      const node = scope.current;
+      node.addEventListener('focusin', focus);
+      document.addEventListener('visibilitychange', visibility);
+      return () => {
+        node.removeEventListener('focusin', focus);
+        document.removeEventListener('visibilitychange', visibility);
+      };
     },
-    { scope, dependencies: [title, backdrop] },
+    { scope, dependencies: [title, backdrop, reduced], revertOnUpdate: true },
   );
 
   return (
@@ -96,7 +110,7 @@ export default function PageHero({
       data-backdrop={backdrop ? '' : undefined}
       style={{ '--accent-page': accent }}
     >
-      <HeroBackdrop src={backdrop} focus={backdropFocus} className={styles.backdrop} />
+      <HeroBackdrop src={backdrop} focus={backdropFocus} mobileFocus={backdropMobileFocus} className={styles.backdrop} />
       {/* Ambient field, tinted per page — the cheapest way to make two pages
           with the same structure feel like different rooms. */}
       <div className={styles.field} aria-hidden="true">
@@ -120,7 +134,8 @@ export default function PageHero({
             * string with the text present exactly once, and keeping the spaces
             * as real text nodes means what is extracted is a sentence.
             */}
-          <p className={`u-eyebrow ${styles.brow}`} aria-label={eyebrow}>
+          <p className={`u-eyebrow ${styles.brow}`}>
+            <span className="u-visually-hidden">{eyebrow}</span>
             {/*
               * The space is a SIBLING of the word, not inside it.
               *
@@ -189,7 +204,7 @@ export default function PageHero({
               src={image}
               alt={imageAlt}
               loading="eager"
-              fetchPriority="high"
+              fetchPriority={backdrop ? 'auto' : 'high'}
               decoding="async"
             />
           </figure>

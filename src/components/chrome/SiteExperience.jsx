@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react';
 
 import { onPageProgress } from '@/lib/motion/pageProgress.js';
-import { prefersReducedMotion } from '@/lib/motion/media.js';
 import styles from './SiteExperience.module.css';
 
 /**
@@ -21,59 +20,86 @@ import styles from './SiteExperience.module.css';
  */
 export default function SiteExperience() {
   const progress = useRef(null);
-  const cursor = useRef(null);
-  const halo = useRef(null);
+  const depth = useRef(null);
+  const world = useRef(null);
 
+  /*
+   * Written onto the two layers that read them, never onto the root.
+   *
+   * `--journey` used to be set on <html> on every scroll frame. A custom
+   * property on the root is inherited by every element on the page, so each
+   * frame re-computed the style of the whole document, up to 800 elements,
+   * and the next frame's scroll measurement forced it to happen at once.
+   * Traced on a phone-speed CPU that was most of every scroll frame on the
+   * home page. Only the depth light below uses it (the About page's timeline
+   * sets its own on its own element).
+   */
   useEffect(() => onPageProgress((value) => {
     progress.current?.style.setProperty('--page-progress', value.toFixed(4));
+    depth.current?.style.setProperty('--journey', value.toFixed(4));
   }), []);
 
-
+  /* One compositor-only pointer writer for the global room. It updates the
+     fixed visual layer itself, never <html>, so moving a pointer cannot force
+     the whole application to recalculate styles. Low-power/coarse devices get
+     the same depth as a still composition with no tracking cost. */
   useEffect(() => {
-    if (prefersReducedMotion() || !window.matchMedia?.('(pointer: fine)').matches) return undefined;
-    const dot = cursor.current;
-    const ring = halo.current;
-    if (!dot || !ring) return undefined;
+    const node = world.current;
+    if (!node) return undefined;
+    const coarse = matchMedia('(pointer: coarse)').matches;
+    const compact = matchMedia('(max-width: 767px)').matches;
+    const lite = coarse || compact || (navigator.deviceMemory && navigator.deviceMemory <= 4);
+    if (lite) node.dataset.lite = '';
 
     let frame = 0;
-    let x = -100;
-    let y = -100;
-    let rx = -100;
-    let ry = -100;
-
+    let x = 0;
+    let y = 0;
     const paint = () => {
-      rx += (x - rx) * 0.16;
-      ry += (y - ry) * 0.16;
-      dot.style.transform = `translate3d(${x}px,${y}px,0)`;
-      ring.style.transform = `translate3d(${rx}px,${ry}px,0)`;
-      frame = requestAnimationFrame(paint);
+      frame = 0;
+      node.style.setProperty('--world-x', x.toFixed(3));
+      node.style.setProperty('--world-y', y.toFixed(3));
     };
-    const move = (event) => { x = event.clientX; y = event.clientY; };
-    const over = (event) => {
-      const active = Boolean(event.target.closest?.('a,button,input,textarea,select,[role="button"]'));
-      ring.dataset.active = active ? '' : undefined;
+    const move = (event) => {
+      x = (event.clientX / innerWidth - 0.5) * 2;
+      y = (event.clientY / innerHeight - 0.5) * 2;
+      if (!frame) frame = requestAnimationFrame(paint);
     };
-    const visibility = () => {
-      const hidden = document.hidden;
-      dot.hidden = hidden;
-      ring.hidden = hidden;
-    };
+    const visibility = () => { node.toggleAttribute('data-paused', document.hidden); };
 
-    document.addEventListener('pointermove', move, { passive: true });
-    document.addEventListener('pointerover', over, { passive: true });
+    if (!lite) addEventListener('pointermove', move, { passive: true });
     document.addEventListener('visibilitychange', visibility);
-    frame = requestAnimationFrame(paint);
+    visibility();
     return () => {
-      document.removeEventListener('pointermove', move);
-      document.removeEventListener('pointerover', over);
+      removeEventListener('pointermove', move);
       document.removeEventListener('visibilitychange', visibility);
       cancelAnimationFrame(frame);
     };
   }, []);
 
+
+  /*
+   * THE POINTER IS NOT TRACKED HERE any more, and the ring this file used to
+   * draw is gone with it.
+   *
+   * When the pointer mark moved to components/cursor/DiamondCursor, the gem
+   * element went with it but its ring and the code that moved them both stayed
+   * behind. That code opened with `if (!dot || !ring) return` and the gem was
+   * no longer rendered, so it returned on the first line every time — while the
+   * ring itself was still in the markup. The result was a 34px gold ring parked
+   * at the top-left corner of every desktop page for the whole visit, measured
+   * at 34x34 at (-17,-17), never once moved.
+   *
+   * The same dead effect also wrote --pointer-x/y/nx/ny onto <html> on every
+   * mousemove, which is the pattern this file removed from --journey above: a
+   * custom property on the root restyles the entire document. It never ran, so
+   * it cost nothing — but it was a loaded gun, and the three rules in
+   * global.css that read those variables now state their resting values
+   * outright instead of waiting for a writer that no longer exists.
+   */
+
   return (
     <>
-      <div className={styles.worldBackground} aria-hidden="true">
+      <div ref={world} className={styles.worldBackground} aria-hidden="true">
         <span className={styles.deepField} />
         <span className={styles.prismBeam} />
         <span className={styles.prismBeam} />
@@ -85,10 +111,7 @@ export default function SiteExperience() {
         <span className={styles.dust} />
       </div>
       <div ref={progress} className={styles.progress} aria-hidden="true"><span /></div>
-      {/* The pointer mark now lives in components/cursor/DiamondCursor,
-          which owns the gem, the trailing ring, the label and the click
-          burst. Two components chasing the same pointer would draw two. */}
-      <span ref={halo} className={styles.halo} aria-hidden="true" />
+      <div ref={depth} className={styles.depthLight} aria-hidden="true"><span /><span /><i /></div>
     </>
   );
 }

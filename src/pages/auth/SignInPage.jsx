@@ -10,6 +10,9 @@ import { emailError, firstError, normalizeEmail, passwordError, toMap } from './
 import styles from './Auth.module.css';
 import { authErrorMessage } from './authErrors.js';
 import { loginDestination } from '@/lib/supabase/loginDestination.js';
+import { useLocale } from '@/i18n/localeContext.js';
+import { useCopy } from '@/i18n/useCopy.js';
+import COPY from './SignInPage.copy.js';
 
 /**
  * Sign in.
@@ -27,6 +30,8 @@ import { loginDestination } from '@/lib/supabase/loginDestination.js';
  */
 export default function SignInPage() {
   const { status, isAdmin, profile, signOut } = useAuth();
+  const { t, locale, href } = useLocale();
+  const c = useCopy(COPY);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
@@ -73,7 +78,7 @@ export default function SignInPage() {
       if (err) throw err;
       setResent('sent');
     } catch (err) {
-      setResendError(authErrorMessage(err, err.message || 'The confirmation email could not be sent.'));
+      setResendError(authErrorMessage(err, err.message || c.resendFailed, locale));
       setResent('failed');
     }
   }
@@ -102,8 +107,8 @@ export default function SignInPage() {
      * password is too short.
      */
     const checks = [
-      ['email', emailError(email)],
-      ['password', passwordError(password, { existing: true })],
+      ['email', emailError(email, t)],
+      ['password', passwordError(password, { existing: true }, t)],
     ];
     const bad = firstError(checks);
     setFieldErrors(toMap(checks));
@@ -135,14 +140,17 @@ export default function SignInPage() {
         }
         setUnconfirmed(false);
         setError(authErrorMessage(err, err.code === 'invalid_credentials'
-          ? 'Email or password is incorrect.'
-          : 'Sign-in could not be completed. Please try again.'));
+          ? c.incorrect
+          : c.failed, locale));
         return;
       }
 
-      window.location.assign(await loginDestination(supabase, data.session));
+      /* The account page in the visitor's own language; the admin area has
+         only the one, English, address. */
+      const destination = await loginDestination(supabase, data.session);
+      window.location.assign(destination === '/account' ? href(destination) : destination);
     } catch (err) {
-      setError(authErrorMessage(err, 'Sign-in could not be completed. Please try again.'));
+      setError(authErrorMessage(err, c.failed, locale));
     } finally {
       setBusy(false);
     }
@@ -152,16 +160,16 @@ export default function SignInPage() {
     return (
       <AuthShell
         eyebrow="New Grown Diamond"
-        title="You are signed in"
-        intro={profile?.email || profile?.full_name || 'Your account is active.'}
-        aside={<>Not you? <a href="/register">Create a different account</a>.</>}
+        title={c.signedIn.title}
+        intro={profile?.email || profile?.full_name || c.signedIn.intro}
+        aside={<>{c.signedIn.notYou} <a href="/register">{c.signedIn.createDifferent}</a>{c.stop}</>}
       >
         <div className={styles.actions}>
-          <a className={styles.submit} href="/account">Go to your account</a>
+          <a className={styles.submit} href="/account">{t('auth.goToAccount')}</a>
           {isAdmin ? (
-            <a className={styles.ghost} href="/admin/diamonds">Inventory desk</a>
+            <a className={styles.ghost} href="/admin/diamonds">{t('nav.admin')}</a>
           ) : null}
-          <button type="button" className={styles.ghost} onClick={signOut}>Sign out</button>
+          <button type="button" className={styles.ghost} onClick={signOut}>{t('nav.signOut')}</button>
         </div>
       </AuthShell>
     );
@@ -170,15 +178,15 @@ export default function SignInPage() {
   return (
     <AuthShell
       eyebrow="New Grown Diamond"
-      title="Sign in"
-      intro="Access your account, saved enquiries and grading reports."
-      aside={<>No account yet? <a href="/register">Create one</a>.</>}
+      title={t('auth.signInTitle')}
+      intro={t('auth.signInIntro')}
+      aside={<>{t('auth.noAccount')} <a href="/register">{t('auth.createOne')}</a>{c.stop}</>}
     >
       <form className={styles.body} onSubmit={onSubmit} noValidate data-tried={tried ? '' : undefined}>
         {!isConfigured && (
           <p className={styles.note} data-tone="error" role="alert">
-            <strong>Sign-in is unavailable.</strong>
-            The site is not connected to its database on this deployment.
+            <strong>{c.unavailable.title}</strong>
+            {c.unavailable.body}
           </p>
         )}
 
@@ -188,9 +196,9 @@ export default function SignInPage() {
 
         {unconfirmed && (
           <div className={styles.note} role="alert">
-            <strong>Your email address has not been confirmed yet.</strong>
-            Open the confirmation link sent to
-            {' '}{email}{' '}to finish setting up the account.
+            <strong>{c.unconfirmed.title}</strong>
+            {c.unconfirmed.before}
+            {' '}{email}{' '}{c.unconfirmed.after}
             <span className={styles.actions}>
               <button
                 type="button"
@@ -198,16 +206,16 @@ export default function SignInPage() {
                 onClick={resend}
                 disabled={resent === 'sending'}
               >
-                {resent === 'sending' ? 'Sending…' : 'Resend confirmation email'}
+                {resent === 'sending' ? c.sending : c.resend}
               </button>
             </span>
-            {resent === 'sent' && <em role="status">Confirmation email sent. Check your inbox and spam folder.</em>}
+            {resent === 'sent' && <em role="status">{c.resent}</em>}
             {resent === 'failed' && <em>{resendError}</em>}
           </div>
         )}
 
         <TextField
-          label="Email"
+          label={t('auth.email')}
           type="email"
           value={email}
           index={0}
@@ -224,7 +232,7 @@ export default function SignInPage() {
         />
 
         <PasswordField
-          label="Password"
+          label={t('auth.password')}
           value={password}
           index={1}
           required
@@ -235,14 +243,14 @@ export default function SignInPage() {
         />
 
         <button className={styles.submit} type="submit" disabled={busy || !isConfigured}>
-          {busy ? <><span className={styles.spinner} aria-hidden="true" />Signing in…</> : 'Sign in'}
+          {busy ? <><span className={styles.spinner} aria-hidden="true" />{t('auth.signingIn')}</> : t('auth.signInTitle')}
         </button>
 
-        <a className={styles.recovery} href="/forgot-password">Forgot your password?</a>
+        <a className={styles.recovery} href="/forgot-password">{t('auth.forgotPassword')}</a>
 
         {/* Announced without stealing focus from the field being corrected. */}
         <p className="u-visually-hidden" aria-live="polite">
-          {busy ? 'Signing in' : error || ''}
+          {busy ? c.live : error || ''}
         </p>
       </form>
     </AuthShell>

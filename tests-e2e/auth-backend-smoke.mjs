@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
 
 const origin = process.env.TEST_ORIGIN || 'http://127.0.0.1:4182';
+const authOrigin = process.env.AUTH_REDIRECT_ORIGIN || 'https://newgrowndiamond.com';
 const browser = await chromium.launch({ headless: true });
 try {
   const page = await browser.newPage({ reducedMotion: 'reduce' });
@@ -39,7 +40,7 @@ try {
   response = { status: 200, body: {} };
   await page.getByRole('button', { name: 'Resend confirmation email' }).click();
   await page.getByText('Confirmation email sent. Check your inbox and spam folder.').waitFor();
-  assert.equal(new URL(requests.at(-1).url).searchParams.get('redirect_to'), `${origin}/auth/callback`);
+  assert.equal(new URL(requests.at(-1).url).searchParams.get('redirect_to'), `${authOrigin}/auth/callback`);
   await page.getByLabel('Email', { exact: true }).fill('different@example.com');
   assert.equal(await page.getByRole('button', { name: 'Resend confirmation email' }).count(), 0);
   console.log('Passed rate limits and confirmation resend.');
@@ -75,7 +76,9 @@ try {
   ]) {
     response = { status, body: { code, message } };
     await page.getByRole('button', { name: 'Create account', exact: true }).click();
-    await page.getByRole('alert').filter({ hasText: expected }).waitFor();
+    // Delivery failures switch to the recovery screen; its explanatory intro
+    // is intentionally outside the alert that announces "No account was created".
+    await page.getByText(expected, { exact: false }).first().waitFor();
     const retry = page.getByRole('button', { name: 'Try again', exact: true });
     if (await retry.count()) await retry.click();
   }
@@ -90,7 +93,7 @@ try {
   assert.equal(signup.body.password, ' password123 ');
   assert.equal(signup.body.data.full_name, 'Test Customer');
   assert.equal(signup.body.data.role, undefined);
-  assert.equal(new URL(signup.url).searchParams.get('redirect_to'), `${origin}/auth/callback`);
+  assert.equal(new URL(signup.url).searchParams.get('redirect_to'), `${authOrigin}/auth/callback`);
   response = { status: 500, body: { code: 'unexpected_failure', message: 'Error sending confirmation email' } };
   await page.getByRole('button', { name: 'Resend confirmation email' }).click();
   await page.getByRole('alert').filter({ hasText: 'could not be sent' }).waitFor();
@@ -98,7 +101,7 @@ try {
   response = { status: 200, body: {} };
   await page.getByRole('button', { name: 'Resend confirmation email' }).click();
   await page.getByText('Confirmation email sent. Check your inbox and spam folder.', { exact: true }).waitFor();
-  assert.equal(new URL(requests.at(-1).url).searchParams.get('redirect_to'), `${origin}/auth/callback`);
+  assert.equal(new URL(requests.at(-1).url).searchParams.get('redirect_to'), `${authOrigin}/auth/callback`);
   await page.goto(`${origin}/auth/callback#error=access_denied&error_code=otp_expired&error_description=Email+link+expired`);
   await page.getByRole('heading', { name: 'This link has expired' }).waitFor();
   console.log('Passed auth browser checks: validation, normalized payloads, credentials, rate limits, confirmation, resend, failed-request recovery, registration.');

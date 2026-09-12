@@ -8,8 +8,22 @@
   gap: var(--s-5);
   padding: clamp(2rem, 8vh, 4.5rem) var(--gutter);
   overflow: hidden;
+  /*
+   * The homepage keeps its own ivory palette in both themes, and this section
+   * was built for the old dark homepage: its dark lighting sat on the ivory as
+   * a grey smudge, and in dark mode the whole block turned dark on an ivory
+   * page. The site tokens are re-pointed at the homepage palette here, so every
+   * rule below reads the page it now sits on, in either theme.
+   */
+  --ink: var(--paper, #f8f6f0);
+  --ink-raised: #fbfaf6;
+  --ink-line: var(--line, #dce0d6);
+  --ivory: var(--green, #183e35);
+  --text-muted: var(--muted, #68726b);
+  --slate: #78807a;
+  --accent-lift: #86652d; /* 4.9:1 on the ivory, for the small spaced labels */
   background:
-    radial-gradient(120% 80% at 50% 0%, #15181d 0%, transparent 62%),
+    radial-gradient(120% 80% at 50% 0%, rgba(211, 189, 144, 0.2) 0%, transparent 62%),
     var(--ink);
 }
 
@@ -78,7 +92,10 @@
   padding: clamp(1rem, 2vw, 1.6rem);
   border: 1px solid var(--ink-line);
   border-radius: 3px;
-  background: linear-gradient(165deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.012));
+  /* A near-white plate on the ivory: the old 4% white wash was made for a dark
+     page and vanished here, leaving the cards as outlines. */
+  background: linear-gradient(165deg, #fdfcf8, #f6f3ea);
+  box-shadow: 0 18px 40px -30px rgba(24, 62, 53, 0.35);
 }
 
 .icon {
@@ -143,4 +160,15 @@
 
 @media (prefers-reduced-motion: reduce) {
   .cell { opacity: 1; translate: none; }
+}
+
+/* ================= theme-follow: dark mode for the six reasons ================= */
+:global(:root[data-theme='dark']) .stage { --accent-lift: #d3bd90; --ink-raised: #15171a; --slate: #8f978f; }
+:global(:root[data-theme='dark']) .card { background: linear-gradient(165deg, #17191c, #111315); box-shadow: 0 18px 40px -30px rgba(0, 0, 0, 0.6); }
+
+/* ================= phones: legible text, tappable links ================= */
+/* Nothing under 11 px on a phone — the small uppercase labels were 8 to 10 px
+   and hard to read at arm's length. Measured with a 390 px audit. */
+@media (max-width: 600px) {
+  .kicker { font-size: 0.6875rem; }
 }

@@ -52,6 +52,8 @@ export default {
     blogs: 'બ્લોગ',
     contact: 'સંપર્ક',
     account: 'ખાતું',
+    login: 'લૉગ ઇન',
+    logout: 'લૉગ આઉટ',
     signIn: 'સાઇન ઇન',
     signOut: 'સાઇન આઉટ',
     register: 'ખાતું બનાવો',
@@ -61,6 +63,27 @@ export default {
     language: 'ભાષા',
     changeLanguage: 'ભાષા બદલો',
     backToSite: 'વેબસાઇટ પર પાછા',
+    primary: 'મુખ્ય',
+    openMenu: 'મેનુ ખોલો',
+    closeMenu: 'મેનુ બંધ કરો',
+    siteMenu: 'સાઇટ મેનુ',
+    cart: 'કાર્ટ',
+    wishlist: 'વિશલિસ્ટ',
+    wishlistSaved: 'વિશલિસ્ટ, {count} સાચવેલા',
+    subPages: '{label}નાં પેજ',
+  },
+
+  educationTopics: {
+    'price-and-size': 'હીરાની કિંમત અને સાઇઝ',
+    'cvd-vs-natural': 'CVD અને કુદરતી હીરાની સરખામણી',
+    'why-lab-grown': 'લેબ-ગ્રોન હીરો શા માટે પસંદ કરવો?',
+    shapes: 'શેપ',
+    faq: 'સામાન્ય પ્રશ્નો',
+  },
+
+  continueNext: {
+    continue: 'આગળ વધો',
+    journal: 'જર્નલ',
   },
 
   common: {
@@ -148,6 +171,11 @@ export default {
     shapeGuide: 'શેપ ગાઇડ',
     whyNgd: 'NGD શા માટે',
     faq: 'સામાન્ય પ્રશ્નો',
+    privacy: 'ગોપનીયતા નીતિ',
+    terms: 'નિયમો અને શરતો',
+    follow: 'અમને ફૉલો કરો',
+    journal: 'જર્નલ',
+    feedback: 'ગ્રાહક પ્રતિસાદ',
     rights: 'ચોકસાઈથી તૈયાર · પુરાવા સાથે રજૂ',
     tagline: 'સુરતમાં બનેલા CVD અને HPHT લેબ-ગ્રોન હીરા, દુનિયાભરના ગ્રાહકો માટે.',
   },

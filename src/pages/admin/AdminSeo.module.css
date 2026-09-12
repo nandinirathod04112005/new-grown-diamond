@@ -1,0 +1,318 @@
+/*
+ * SEO Manager. Console tokens only (--panel, --line, --white, --dim, --faint,
+ * --accent, --warn, --bad) from AdminLayout's .shell, so the screen stays the
+ * console's own dark room whichever theme the storefront is in. The one light
+ * surface is the search-result preview, which imitates a results page.
+ */
+
+.lead { max-width: 78ch; font-size: 0.8125rem; line-height: 1.55; color: var(--dim); }
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(24rem, 30rem);
+  gap: 1rem;
+  align-items: start;
+}
+
+.layout[hidden] { display: none; }
+
+/* Below this the editor sits under the list (AdminSeo.jsx scrolls to it). */
+@media (max-width: 80rem) {
+  .layout { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ---------------- the page list ---------------- */
+
+.pick {
+  display: grid;
+  gap: 0.15rem;
+  width: 100%;
+  min-height: var(--target-min, 2.75rem);
+  padding: 0.15rem 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.pick b { color: var(--white); font-weight: 500; overflow-wrap: anywhere; }
+
+.pick small {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--faint);
+}
+
+.pick:hover b, .pick[data-on] b { color: var(--accent); }
+.pick[data-on] { box-shadow: inset 2px 0 0 var(--accent); padding-left: 0.5rem; }
+.pick:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.pills { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+
+.len {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--dim);
+}
+
+.len::before {
+  content: '';
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: var(--faint);
+}
+
+.len[data-tone='good']::before { background: var(--accent); }
+.len[data-tone='warn']::before { background: var(--warn); }
+.len[data-tone='bad']::before { background: var(--bad); }
+
+/* ---------------- the editor ---------------- */
+
+.editorCol { min-width: 0; scroll-margin-top: 4.5rem; }
+
+.placeholder,
+.editor {
+  display: grid;
+  gap: 0.9rem;
+  padding: 1rem 1.1rem 1.1rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--panel);
+}
+
+.placeholder h2 { font-size: 0.9375rem; color: var(--white); }
+.placeholder p { font-size: 0.8125rem; line-height: 1.55; color: var(--faint); }
+.placeholder h2:focus, .editorHead h2:focus { outline: none; }
+
+.editorHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.editorHead > div { display: grid; gap: 0.2rem; min-width: 0; }
+.editorHead h2 { font-size: 1.05rem; color: var(--white); overflow-wrap: anywhere; }
+.editorHead a { min-height: var(--target-min, 2.75rem); text-decoration: none; }
+.stateLine { font-size: 0.75rem; line-height: 1.5; color: var(--dim); }
+
+.boxTitle {
+  font-size: 0.5625rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.boxTitle span { margin-left: 0.4rem; letter-spacing: 0.06em; text-transform: none; }
+
+.builtIn {
+  display: grid;
+  gap: 0.5rem;
+  justify-items: start;
+  padding: 0.75rem 0.8rem;
+  border: 1px dashed var(--line);
+  border-radius: 3px;
+}
+
+.builtIn dl { display: grid; gap: 0.2rem; margin: 0; }
+.builtIn dt { font-size: 0.6875rem; color: var(--faint); }
+.builtIn dd { margin: 0 0 0.35rem; font-size: 0.8125rem; line-height: 1.5; color: var(--white); }
+.builtIn button { min-height: var(--target-min, 2.75rem); }
+
+.field { display: grid; gap: 0.35rem; min-width: 0; }
+
+.field > label {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.25rem 1rem;
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+  color: var(--dim);
+}
+
+.field > label em { font-style: normal; color: var(--faint); }
+
+.field input,
+.field textarea {
+  width: 100%;
+  min-height: var(--target-min, 2.75rem);
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--ink);
+  color: var(--white);
+  font: inherit;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.field textarea { resize: vertical; }
+.field input::placeholder, .field textarea::placeholder { color: var(--faint); }
+
+.field input:focus,
+.field textarea:focus {
+  outline: none;
+  border-color: var(--accent-dim);
+  box-shadow: 0 0 0 2px rgba(127, 216, 210, 0.15);
+}
+
+.field [aria-invalid='true'] { border-color: var(--bad); }
+
+.count { font-variant-numeric: tabular-nums; letter-spacing: 0.02em; color: var(--faint); }
+.count[data-tone='good'], .hint[data-tone='good'] { color: var(--accent); }
+.count[data-tone='warn'], .hint[data-tone='warn'] { color: var(--warn); }
+.count[data-tone='bad'], .hint[data-tone='bad'] { color: var(--bad); }
+
+.hint { font-size: 0.6875rem; line-height: 1.5; color: var(--faint); }
+.hintBad { font-size: 0.6875rem; color: var(--bad); }
+
+.ogImage {
+  width: 100%;
+  max-width: 20rem;
+  aspect-ratio: 1200 / 630;
+  object-fit: cover;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--ink);
+}
+
+/* ---------------- search result preview ---------------- */
+
+.preview { display: grid; gap: 0.45rem; margin: 0; }
+
+.snippet {
+  display: grid;
+  gap: 0.2rem;
+  max-width: 600px;
+  padding: 14px 16px;
+  border-radius: 8px;
+  background: #fff;
+  color: #202124;
+  /* Sized in px, as a results page is: the title truncates at about the
+     width Google's does. */
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.snipSite { display: flex; align-items: center; gap: 10px; min-width: 0; margin-bottom: 4px; }
+
+.snipIcon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid #dadce0;
+  border-radius: 50%;
+  background: #f1f3f4;
+  color: #183e35;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.snipName { display: grid; min-width: 0; line-height: 1.3; }
+.snipName b { font-size: 14px; font-weight: 400; color: #202124; }
+
+.snipName cite {
+  overflow: hidden;
+  font-size: 12px;
+  font-style: normal;
+  color: #4d5156;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.snipTitle {
+  overflow: hidden;
+  font-size: 20px;
+  line-height: 1.3;
+  color: #1a0dab;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.snipDesc {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 14px;
+  line-height: 1.58;
+  color: #4d5156;
+}
+
+.snipOff { font-size: 0.75rem; color: var(--warn); }
+
+/* ---------------- options and actions ---------------- */
+
+.options { display: grid; gap: 0.5rem; padding-top: 0.2rem; border-top: 1px solid var(--line-soft); }
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: var(--target-min, 2.75rem);
+  font-size: 0.8125rem;
+  color: var(--white);
+  cursor: pointer;
+}
+
+.check input { flex: none; width: 1rem; height: 1rem; accent-color: var(--accent); }
+.check:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+.check input:focus-visible { outline: none; }
+
+.problems {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0;
+  padding: 0.55rem 0.7rem 0.55rem 1.5rem;
+  border: 1px solid rgba(224, 141, 122, 0.45);
+  border-radius: 3px;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--bad);
+}
+
+.msgBad {
+  padding: 0.55rem 0.7rem;
+  border: 1px solid rgba(224, 141, 122, 0.45);
+  border-radius: 3px;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--bad);
+}
+
+.actions { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+.actions > button { min-height: var(--target-min, 2.75rem); }
+
+.save {
+  padding: 0.5rem 1.1rem;
+  border: 1px solid var(--accent);
+  border-radius: 3px;
+  background: var(--accent);
+  color: #08201f;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+
+.save:disabled { opacity: 0.45; cursor: not-allowed; }
+.save:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+@media (max-width: 30rem) {
+  .editor, .placeholder { padding: 0.85rem 0.8rem 1rem; }
+  .snippet { padding: 12px; }
+  .snipTitle { font-size: 18px; }
+}

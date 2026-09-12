@@ -329,3 +329,21 @@
   text-transform: uppercase;
   color: var(--accent-lift);
 }
+
+/* ================= theme-follow: light mode ================= */
+:global(:root[data-theme='light']) .stage { background: radial-gradient(120% 80% at 82% 50%, rgba(189, 160, 106, 0.12) 0%, transparent 62%), var(--ink); }
+:global(:root[data-theme='light']) .disc { background: radial-gradient(circle, #efece5 60%, rgba(239, 236, 229, 0) 76%); }
+:global(:root[data-theme='light']) .seg { background: linear-gradient(160deg, #ffffff 0%, #f1efe9 52%, #e6e2d8 100%); }
+:global(:root[data-theme='light']) .markRing, :global(:root[data-theme='light']) .markLine { stroke: rgba(22, 22, 28, 0.55); }
+:global(:root[data-theme='light']) .stone { color: rgba(22, 22, 28, 0.88); }
+:global(:root[data-theme='light']) .stone path { fill: rgba(22, 22, 28, 0.06); }
+:global(:root[data-theme='light']) .stone path:last-child { fill: rgba(22, 22, 28, 0.05); }
+:global(:root[data-theme='light']) .echo { color: rgba(60, 70, 90, 0.4); }
+:global(:root[data-theme='light']) .echo path { fill: rgba(60, 70, 90, 0.08); }
+
+/* ================= phones: legible text, tappable links ================= */
+/* Nothing under 11 px on a phone — the small uppercase labels were 8 to 10 px
+   and hard to read at arm's length. Measured with a 390 px audit. */
+@media (max-width: 600px) {
+  .index li, .kicker { font-size: 0.6875rem; }
+}

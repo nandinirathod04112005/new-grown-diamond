@@ -1,0 +1,123 @@
+.home{--paper:#f8f6f0;--green:#183e35;--muted:#59665e;--line:#dce0d6;background:var(--paper);color:var(--green);padding-top:88px}
+.hero{display:grid;grid-template-columns:1fr 1fr;min-height:690px;padding:0 var(--gutter);max-width:1700px;margin:auto}
+.heroCopy{padding:76px 20px 58px 0;position:relative;z-index:1}
+.eyebrow{font:500 10px/1.6 var(--font-body);letter-spacing:.19em;display:flex;align-items:center;gap:10px}.eyebrow>span{width:6px;height:6px;background:#9a8050;border-radius:50%}
+.hero h1{font:400 clamp(4.5rem,6.8vw,7rem)/.96 var(--font-display);letter-spacing:-.045em;margin:27px 0}.home em{font-weight:400;color:#8c7751}
+.intro{font-size:16px;line-height:1.85;max-width:365px;color:var(--muted)}.actions{display:flex;align-items:center;flex-wrap:wrap;gap:28px;margin-top:32px}
+.primary,.lightButton{display:inline-flex;align-items:center;justify-content:space-between;gap:30px;padding:17px 23px;background:var(--green);color:#fff;font-size:12px;letter-spacing:.035em;min-height:52px;transition:background .2s,transform .2s}.primary:hover{background:#2a5547;transform:translateY(-2px)}
+.textLink{display:inline-flex;align-items:center;gap:17px;font-size:12px;padding:12px 0;border-bottom:1px solid #a6b0a4;white-space:nowrap}
+.heroNote{display:flex;gap:12px;align-items:center;margin-top:44px;color:#59665e;font-size:11px;line-height:1.65}.heroNote b{font-weight:400;color:var(--green)}
+.heroArt{position:relative;display:flex;align-items:center;justify-content:center;isolation:isolate;background:#e9eadf;margin:20px 0 25px;overflow:hidden;border-radius:50% 50% 3px 3px;perspective:1200px;box-shadow:0 35px 90px #173e3514}.heroArt>img{position:absolute;inset:-3%;width:106%;height:106%;object-fit:cover;object-position:63% center;z-index:1;animation:heroBreathe 8s cubic-bezier(.4,0,.2,1) infinite alternate;transition:transform .9s cubic-bezier(.16,1,.3,1),filter .9s ease}.heroArt:hover>img{transform:scale(1.045) rotateX(1deg);filter:saturate(1.08) contrast(1.03)}
+.heroArt::before{content:'';position:absolute;z-index:2;inset:-40%;pointer-events:none;background:linear-gradient(110deg,transparent 38%,rgba(255,255,255,.08) 45%,rgba(255,255,255,.48) 50%,rgba(255,255,255,.08) 55%,transparent 62%);transform:translateX(-60%) rotate(8deg);animation:facetSweep 6.5s ease-in-out infinite}.heroArt::after{content:'';position:absolute;z-index:2;inset:0;pointer-events:none;background:radial-gradient(circle at 73% 44%,transparent 0 13%,rgba(255,255,255,.12) 24%,transparent 44%);mix-blend-mode:screen;animation:lightPulse 4.5s ease-in-out infinite alternate}
+.orbit,.orbitSmall{position:absolute;z-index:3;width:83%;aspect-ratio:1;border:1px solid #d9e0d35c;border-radius:50%;transform:rotate(-25deg) scaleY(.78);animation:orbitTurn 18s linear infinite}.orbitSmall{width:110%;animation-direction:reverse;animation-duration:26s}
+.artTop{position:absolute;z-index:2;top:14%;font-size:8px;letter-spacing:.24em;color:#3d5c4c}.sparkle{position:absolute;z-index:2;right:14%;top:23%;font-size:42px;color:#9c8c67}
+.artLabel{position:absolute;z-index:2;bottom:34px;left:30px;display:grid;gap:10px;font-size:10px;letter-spacing:.12em;line-height:1.65;text-shadow:0 1px 12px #f8f6f0}.artLabel>span+span{font-size:12px;letter-spacing:0;color:#496050}.artArrow{position:absolute;z-index:2;bottom:35px;right:30px;border:1px solid #718774;border-radius:50%;padding:13px;background:#f8f6f0b8;backdrop-filter:blur(8px)}
+.trust{display:flex;justify-content:space-around;gap:20px;padding:24px var(--gutter);border-block:1px solid var(--line);background:#f0f1e9}.trust span{display:flex;align-items:center;gap:12px;font-size:11px;letter-spacing:.035em}.trust svg{width:19px;stroke-width:1.2}
+.section{padding:90px var(--gutter);max-width:1700px;margin:auto}.sectionHead{display:flex;justify-content:space-between;align-items:end;gap:25px;margin-bottom:40px}.home h2{font:400 clamp(2.5rem,4vw,4.5rem)/1.08 var(--font-display);letter-spacing:-.035em;margin-top:16px}.sectionHead>.textLink{margin-bottom:8px}
+.shapes{display:grid;grid-template-columns:repeat(9,1fr);gap:10px}.shape{display:flex;align-items:center;flex-direction:column;padding:20px 6px 16px;gap:14px;border:1px solid transparent;transition:background .2s,border-color .2s}.shape:hover{background:#fff;border-color:var(--line)}.shape img{width:85px;height:90px;object-fit:contain;mix-blend-mode:multiply;transition:transform .3s}.shape:hover img{transform:translateY(-6px)}.shape span{font-size:12px}.shape>svg{color:#85917b}
+.story{display:grid;grid-template-columns:1fr 1fr;gap:7vw;background:#edf0e7;padding:64px var(--gutter);align-items:center}.storyImage{position:relative}.storyImage img{width:100%;aspect-ratio:1.1;object-fit:cover}.storyImage>span{position:absolute;bottom:15px;left:16px;font-size:8px;letter-spacing:.1em;color:white;background:#183e35db;padding:8px}.storyCopy{padding:25px 0}.storyCopy>p:not(.eyebrow){font-size:14px;line-height:1.9;max-width:460px;color:var(--muted);margin:23px 0}.storyCopy>.primary{margin-top:8px}
+.headNote{color:var(--muted);font-size:13px;line-height:1.8}.values{display:grid;grid-template-columns:repeat(3,1fr);border-block:1px solid var(--line)}.values article{padding:35px 35px 35px 0}.values article+article{border-left:1px solid var(--line);padding-left:35px}.values article>div{display:flex;justify-content:space-between;align-items:center;color:#8d927c}.values h3{font:400 29px var(--font-display);margin:25px 0 12px}.values p{font-size:13px;line-height:1.85;color:var(--muted);max-width:32ch}.values span{font-size:10px}
+.jewellery{display:grid;grid-template-columns:1fr 1fr;background:#183e35;color:#f7f5ed;margin:0 var(--gutter)}.jewelleryCopy{padding:70px 5vw}.jewellery h2 em{color:#d3bd90}.jewelleryCopy>p:not(.eyebrow){font-size:14px;line-height:1.9;color:#c2cec6;max-width:350px;margin:25px 0 30px}.jewellery>img{width:100%;height:100%;object-fit:cover;min-height:450px}.lightButton{background:#f8f6ef;color:#183e35}.lightButton:hover{background:#dfd8c5}.lightLink{display:flex;align-items:center;gap:20px;font-size:12px;margin-top:24px}
+.faq{display:grid;grid-template-columns:1fr 1.1fr;gap:8vw}.faq .textLink{margin-top:24px}.question{border-bottom:1px solid var(--line)}.question button{width:100%;display:flex;justify-content:space-between;align-items:center;gap:20px;text-align:left;padding:24px 0;font:400 15px var(--font-body);color:var(--green)}.question button svg{flex-shrink:0}.question p{font-size:13px;color:var(--muted);line-height:1.9;padding:0 25px 24px 0}
+.locations{border-top:1px solid var(--line);padding-top:65px}.officeGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:32px}.officeGrid article{border-top:1px solid #b9c2b4;padding-top:23px;min-width:0}.officeGrid h3{font:400 34px var(--font-display);margin:16px 0}.officeGrid address{font-size:12px;font-style:normal;line-height:1.85;color:var(--muted);min-height:95px}.officeGrid a{display:flex;align-items:center;gap:9px;font-size:11px;min-height:35px;overflow-wrap:anywhere}
+@media(min-width:1700px){.hero{min-height:800px}.heroCopy{padding-top:110px}}
+@media(max-width:1100px){.shapes{grid-template-columns:repeat(5,1fr)}.hero{min-height:620px}.hero h1{font-size:6.7vw}.heroCopy{padding-top:65px}.officeGrid{grid-template-columns:repeat(2,1fr)}.officeGrid address{min-height:65px}}
+@media(max-width:700px){.home{padding-top:80px}.hero{grid-template-columns:1fr}.heroCopy{padding:40px 0 25px}.hero h1{font-size:clamp(3.15rem,13vw,4.35rem);margin:23px 0}.intro{font-size:14px}.heroNote{margin-top:26px}.heroArt{min-height:390px;margin:5px 0 28px;border-radius:45% 45% 3px 3px;transform:none}.heroArt>img{inset:0;width:100%;height:100%;max-width:none;object-fit:cover;animation:none;transform:none}.heroArt::before,.heroArt::after,.orbit,.orbitSmall{animation:none}.artTop{top:13%}.artLabel{bottom:23px;left:22px}.artArrow{bottom:24px;right:22px}.trust{display:grid;grid-template-columns:1fr 1fr;gap:22px 10px}.trust span{font-size:10px;gap:8px}.section{padding-block:55px}.sectionHead{align-items:start;flex-direction:column;gap:15px;margin-bottom:22px}.home h2{font-size:38px}.shapes{grid-template-columns:repeat(3,1fr);gap:4px}.shape{padding:15px 4px}.shape img{width:75px;height:75px}.story{grid-template-columns:1fr;gap:10px;padding-block:35px}.storyImage img{aspect-ratio:1.3}.storyCopy{padding-top:23px}.values{grid-template-columns:1fr}.values article,.values article+article{padding:25px 0;border-left:0}.values article+article{border-top:1px solid var(--line)}.values p{max-width:100%}.values h3{margin-top:18px}.jewellery{grid-template-columns:1fr}.jewelleryCopy{padding:40px 25px}.jewellery>img{min-height:0;height:310px}.jewellery h2{font-size:36px}.faq{grid-template-columns:1fr;gap:25px}.officeGrid{gap:28px 20px}.officeGrid h3{font-size:29px}.officeGrid address{min-height:125px}.officeGrid a{font-size:10px}.eyebrow{font-size:9px}.headNote{display:none}}
+@media(prefers-reduced-motion:reduce){.home *{transition:none!important}.primary:hover,.shape:hover img{transform:none}}
+@keyframes heroBreathe{from{transform:scale(1.01) translate3d(-.4%,0,0)}to{transform:scale(1.055) translate3d(.6%,-.5%,0)}}
+@keyframes facetSweep{0%,22%{transform:translateX(-65%) rotate(8deg)}65%,100%{transform:translateX(65%) rotate(8deg)}}
+@keyframes lightPulse{from{opacity:.25;transform:scale(.92)}to{opacity:.8;transform:scale(1.08)}}
+@keyframes orbitTurn{to{transform:rotate(335deg) scaleY(.78)}}
+@media(prefers-reduced-motion:reduce){.heroArt>img,.heroArt::before,.heroArt::after,.orbit,.orbitSmall{animation:none!important}}
+
+/* Pointer depth and staged entrance for the campaign hero. */
+.heroCopy{transform:translate3d(calc(var(--mx,0) * -7px),calc(var(--my,0) * -5px),0);transition:transform .16s linear}
+.heroCopy>*{animation:copyReveal .9s cubic-bezier(.16,1,.3,1) both}
+.heroCopy>*:nth-child(2){animation-delay:.08s}.heroCopy>*:nth-child(3){animation-delay:.16s}.heroCopy>*:nth-child(4){animation-delay:.24s}.heroCopy>*:nth-child(5){animation-delay:.32s}
+.heroArt{transform:translate3d(calc(var(--mx,0) * 12px),calc(var(--my,0) * 9px),0) rotateY(calc(var(--mx,0) * 1.2deg)) rotateX(calc(var(--my,0) * -1deg));transition:transform .16s linear;animation:artReveal 1.2s cubic-bezier(.16,1,.3,1) both}
+@keyframes copyReveal{from{opacity:0;transform:translateY(28px);filter:blur(8px)}to{opacity:1;transform:none;filter:none}}
+@keyframes artReveal{from{opacity:0;clip-path:inset(48% 0 48% 0);filter:blur(12px)}to{opacity:1;clip-path:inset(0);filter:none}}
+@media(prefers-reduced-motion:reduce){.heroCopy,.heroArt{transform:none;transition:none;animation:none}.heroCopy>*{animation:none}}
+
+/* ================= theme-follow =================
+ * The homepage kept a fixed ivory-and-sage palette, so in dark mode it was the
+ * one light page on a dark site, and its jewellery band was a dark block in
+ * light mode. Under the dark theme the palette tokens take dark values and each
+ * hard-coded light surface gets a dark one; under the light theme the jewellery
+ * band turns light. Light mode is otherwise exactly as it was.
+ */
+:global(:root[data-theme='dark']) .home { --paper: #0c0c0e; --green: #eef0ea; --muted: #a3aaa4; --line: rgba(255, 255, 255, 0.14); }
+:global(:root[data-theme='dark']) .home em { color: #d3bd90; }
+:global(:root[data-theme='dark']) .eyebrow > span { background: #d3bd90; }
+:global(:root[data-theme='dark']) .primary { background: #eef0ea; color: #0c0c0e; }
+:global(:root[data-theme='dark']) .primary:hover { background: #d3bd90; }
+:global(:root[data-theme='dark']) .textLink { border-bottom-color: rgba(255, 255, 255, 0.3); }
+:global(:root[data-theme='dark']) .heroNote { color: #a3aaa4; }
+:global(:root[data-theme='dark']) .heroArt { background: #15171a; box-shadow: 0 35px 90px rgba(0, 0, 0, 0.5); }
+:global(:root[data-theme='dark']) .orbit, :global(:root[data-theme='dark']) .orbitSmall { border-color: rgba(255, 255, 255, 0.14); }
+/* The arch holds the same pale studio photograph in both themes, so the words
+   set on it keep their dark ink in both; light ink here disappeared into it. */
+:global(:root[data-theme='dark']) .artTop { color: #3d5c4c; }
+:global(:root[data-theme='dark']) .artLabel { color: #183e35; }
+:global(:root[data-theme='dark']) .sparkle { color: #d3bd90; }
+:global(:root[data-theme='dark']) .artLabel > span + span { color: #496050; }
+:global(:root[data-theme='dark']) .artArrow { border-color: rgba(255, 255, 255, 0.3); background: rgba(12, 12, 14, 0.72); }
+:global(:root[data-theme='dark']) .trust { background: #121416; }
+:global(:root[data-theme='dark']) .shape:hover { background: #1a1c20; }
+:global(:root[data-theme='dark']) .story { background: #111315; }
+:global(:root[data-theme='dark']) .officeGrid article { border-top-color: rgba(255, 255, 255, 0.14); }
+
+:global(:root[data-theme='light']) .jewellery { background: #e7ece3; color: #183e35; }
+:global(:root[data-theme='light']) .jewellery h2 em { color: #7a6030; }
+:global(:root[data-theme='light']) .jewelleryCopy > p:not(.eyebrow) { color: #4f5d55; }
+:global(:root[data-theme='light']) .lightButton { background: #183e35; color: #f8f6ef; }
+:global(:root[data-theme='light']) .lightButton:hover { background: #2a5547; }
+
+/* ================= phones: legible text, tappable links ================= */
+/* Nothing under 11 px on a phone — the small uppercase labels were 8 to 10 px
+   and hard to read at arm's length. Measured with a 390 px audit. */
+@media (max-width: 600px) {
+  .artLabel, .artTop, .eyebrow, .officeGrid a, .storyImage > span, .trust span { font-size: 0.6875rem; }
+  /* The page never scrolls sideways: `clip`, not `hidden`, so the sticky
+     sections inside keep sticking. */
+  .home { overflow-x: clip; }
+  /* Two columns that may shrink below their longest label, which is what
+     pushed the strip 1.6 px past the screen. */
+  .trust { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .trust span { min-width: 0; }
+  .lightLink { padding-block: 0.7rem; }
+}
+
+/* ================= phones: the pictures =================
+ * The arch photograph was held at 80% of the arch's width on phones, a size
+ * chosen for the old cut-out stone rather than a full-frame photograph, so a
+ * dark band ran down the arch's right side. It fills the arch again, framed on
+ * the stone, which sits 64% of the way across the photograph. */
+@media (max-width: 700px) {
+  .heroArt > img { inset: 0; width: 100%; height: 100%; max-width: none; object-position: 72% 45%; }
+  .heroArt > img { animation: mobileHeroBreathe 10s ease-in-out infinite alternate; }
+  .heroArt::before { animation: mobileFacetSweep 11s ease-in-out infinite; }
+  .orbit { animation: orbitTurn 30s linear infinite; }
+  .orbitSmall { display: none; }
+}
+/* The seed-to-stone picture carries width and height attributes so its box is
+   reserved before it loads; the height attribute alone would fix it at 941 px
+   and override the aspect ratio, so the ratio is given the height back. */
+.storyImage img { height: auto; }
+
+/* ================= phones: the hero's entrance, lighter =================
+ * The same rise and opening, without the blur: animating blur() redraws each
+ * block through a filter on every frame, and on a phone the hero's six blocks
+ * and its photograph doing that at once is what made the opening stutter and
+ * sit smeared for half a second. The glow over the photograph keeps still and
+ * drops its blend mode, which otherwise recomposites the picture under it on
+ * every frame of the photograph's slow breathing. */
+@media (max-width: 700px), (pointer: coarse) {
+  .heroCopy > * { animation-name: copyRevealLite; animation-duration: .75s; }
+  .heroArt { animation-name: artRevealLite; animation-duration: .95s; }
+  .heroArt::after { animation: none; mix-blend-mode: normal; opacity: .45; }
+}
+@keyframes copyRevealLite { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+@keyframes artRevealLite { from { opacity: 0; clip-path: inset(48% 0 48% 0); } to { opacity: 1; clip-path: inset(0); } }
+@keyframes mobileHeroBreathe { from { transform: scale(1.01); } to { transform: scale(1.045); } }
+@keyframes mobileFacetSweep { 0%,25% { transform: translateX(-65%) rotate(8deg); } 70%,100% { transform: translateX(65%) rotate(8deg); } }

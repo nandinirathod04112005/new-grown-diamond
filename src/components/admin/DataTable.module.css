@@ -204,3 +204,17 @@
 @media (prefers-reduced-motion: reduce) {
   .row { animation: none; }
 }
+
+/* Keep dense trade records readable without squeezing their content. */
+.searchBox { min-height: var(--target-min); }
+.search { font-size: 1rem; }
+.clear, .toolBtn, .pageBtn { min-height: var(--target-min); min-width: var(--target-min); font-size: 0.8125rem; }
+.colItem { min-height: var(--target-min); font-size: 0.8125rem; }
+.table { font-size: 0.875rem; font-variant-numeric: tabular-nums; }
+.table th { font-size: 0.75rem; letter-spacing: 0.08em; color: var(--dim); }
+.table td { padding-block: 0.85rem; overflow-wrap: anywhere; }
+.pager { flex-wrap: wrap; }
+@media (max-width: 52rem) {
+  .table td { grid-template-columns: minmax(5rem, 32%) minmax(0, 1fr); }
+  .table td::before { font-size: 0.6875rem; letter-spacing: 0.06em; }
+}

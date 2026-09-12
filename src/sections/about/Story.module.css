@@ -305,3 +305,8 @@
 .stage[data-mural] .title,
 .stage[data-mural] .marker { text-shadow: 0 2px 26px rgba(8, 8, 10, 0.85); }
 .stage[data-mural] .body { text-shadow: 0 1px 16px rgba(8, 8, 10, 0.9); }
+
+/* ================= theme-follow: light mode ================= */
+:global(:root[data-theme='light']) .stage { background: radial-gradient(120% 90% at 62% 45%, #ffffff 0%, var(--ink) 72%); }
+:global(:root[data-theme='light']) .stage[data-mural] { background: #f1efe9; }
+:global(:root[data-theme='light']) .cuts > * { stroke: rgba(30, 34, 40, 0.7); }

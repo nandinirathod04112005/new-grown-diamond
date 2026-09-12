@@ -79,3 +79,11 @@
      floating, so it cannot be clipped by the panel it sits in. */
   .menu { position: static; margin-top: 0.4rem; box-shadow: none; }
 }
+
+/* Laptop widths: the globe alone, the same as the compact form. The trigger
+   keeps its "Change language" name, and the open menu still lists every
+   language in its own script. */
+@media (min-width: 900px) and (max-width: 1199px) {
+  .trigger { padding: 0.3rem 0.45rem; }
+  .current { display: none; }
+}

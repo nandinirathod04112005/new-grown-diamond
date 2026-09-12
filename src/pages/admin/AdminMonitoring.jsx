@@ -19,8 +19,8 @@ const ABSENT = [
 
 /* Exists, and empty for a reason worth stating rather than listing as a gap. */
 const IDLE = [
-  ['analytics_events', 'ready for page views; nothing sends them, so there is no traffic to read'],
-  ['notifications', 'ready for durable alerts; arrivals are read live from the queues instead'],
+  ['analytics_events', 'receives anonymous page views from the live domain; see Website Analytics'],
+  ['notifications', 'holds the read markers of the Notifications inbox; arrivals are read live from the queues'],
 ];
 
 const when = (iso) => {
@@ -34,10 +34,10 @@ const when = (iso) => {
  *
  * Everything here is derived from rows that exist. Where a signal would need a
  * table this database has not got, the page names the table and stops — it
- * does not estimate, sample or simulate. That is why there are no traffic
- * figures on a page called monitoring: there is no analytics table, and a
- * plausible-looking chart would be the single most damaging thing this console
- * could show, because it would be acted on.
+ * does not estimate, sample or simulate. Traffic figures are not repeated
+ * here: they live on Website Analytics, read from analytics_events, and a
+ * second, differently-scoped chart of the same visits would invite the two to
+ * be compared as if they disagreed.
  */
 export default function AdminMonitoring() {
   const [state, setState] = useState({ status: 'loading', data: null, error: null });

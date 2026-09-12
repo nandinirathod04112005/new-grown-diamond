@@ -1,3 +1,6 @@
+import { pickCopy } from '@/i18n/useCopy.js';
+import COPY from './authErrors.copy.js';
+
 /**
  * Did this sign-up fail because Supabase could not send the confirmation mail?
  *
@@ -28,7 +31,17 @@ export function isEmailDeliveryFailure(error) {
   return /error sending|sending .*email|confirmation email|smtp/i.test(msg);
 }
 
-export function authErrorMessage(error, fallback) {
+/**
+ * The sentence for an auth error, in the visitor's language.
+ *
+ * `locale` only chooses the WORDS (authErrors.copy.js); which sentence an
+ * error gets is decided below and is the same in every language. Called
+ * without one it answers in English, exactly as it always has. `fallback` is
+ * the caller's, already in the right language — or the service's own text,
+ * which is passed through as it came.
+ */
+export function authErrorMessage(error, fallback, locale = 'en') {
+  const say = pickCopy(COPY, locale);
   /*
    * The MAILER's limit, not the visitor's.
    *
@@ -52,13 +65,36 @@ export function authErrorMessage(error, fallback) {
    * sent a person with a mistyped password off to register again.
    */
   if (code === 'invalid_credentials' || /invalid login credentials/i.test(message)) {
-    return 'Email or password is incorrect.';
+    return say.invalidCredentials;
   }
   if (['user_already_exists', 'email_exists'].includes(code) || /already registered/i.test(message)) {
-    return 'This email is already registered. Sign in, or use Forgot password to recover your account.';
+    return say.alreadyRegistered;
   }
   if (code === 'email_address_not_authorized' || /email address not authorized/i.test(message)) {
-    return 'Email address not authorized: the email service cannot send to this address. Contact support to configure email delivery.';
+    return say.notAuthorized;
+  }
+  /*
+   * Setting a new password, and the three ways it is actually refused.
+   *
+   * All three were reaching the reset screen as one generic "could not update
+   * your password", which is the least useful thing that could be said about
+   * any of them: the first is a typo the person can fix in two seconds, the
+   * second needs a different password, and the third needs a whole new email.
+   * `same_password` is not hypothetical — it is in this project's auth log
+   * three times over, and each of those is someone being told nothing while
+   * retyping the password they already have.
+   */
+  if (code === 'same_password' || /should be different from the old password/i.test(message)) {
+    return say.samePassword;
+  }
+  if (code === 'weak_password' || /password.*(too weak|is too short|at least \d+ characters)/i.test(message)) {
+    return say.weakPassword;
+  }
+  /* No session left to change a password with: the recovery link has expired,
+     or it was opened a second time and spent the first. */
+  if (['session_not_found', 'session_expired'].includes(code)
+    || /auth session missing|session (from session_id claim in jwt )?does not exist/i.test(message)) {
+    return say.recoveryExpired;
   }
   /*
    * Plain words only. An earlier version said "SMTP/email delivery failed
@@ -68,19 +104,19 @@ export function authErrorMessage(error, fallback) {
    * nothing is lost by leaving them out here.
    */
   if (/smtp|error sending (confirmation|recovery|email)|failed to send.*email/i.test(message)) {
-    return 'The email could not be sent right now. Please try again later, or contact the desk.';
+    return say.sendFailed;
   }
   if (code === 'over_email_send_rate_limit') {
-    return 'Email rate limit exceeded. The email service cannot send another link yet. Please wait before trying again.';
+    return say.mailRateLimit;
   }
   if (error?.status === 429 || /rate_limit|over_.*limit/.test(code)) {
-    return 'Too many attempts. Please wait a few minutes and try again.';
+    return say.tooMany;
   }
   if (error?.status >= 500) {
-    return 'The account service is temporarily unavailable. Please try again shortly.';
+    return say.unavailable;
   }
   if (error?.name === 'AuthRetryableFetchError' || error instanceof TypeError) {
-    return 'Unable to connect. Check your internet connection and try again.';
+    return say.offline;
   }
   return fallback;
 }

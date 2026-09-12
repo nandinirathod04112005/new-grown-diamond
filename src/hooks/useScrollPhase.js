@@ -60,12 +60,39 @@ export function useScrollPhase(phases, progressRef) {
     let frame = 0;
     let running = false;
     let lastPhase = null;
+    let lastSp = -1;
+
+    /*
+     * Where the chapter sits on the page, read when something changes size
+     * rather than on every frame. Asking getBoundingClientRect() inside the
+     * loop forced a layout sixty times a second for as long as the chapter was
+     * anywhere near the screen, scrolling or not; on a phone that was a steady
+     * share of every frame. The page's own height changing (a section above
+     * loading its pictures, fonts arriving) and the chapter's changing are the
+     * only things that move it, so those are what trigger a fresh reading.
+     */
+    let top = 0;
+    let height = 0;
+    const locate = () => {
+      const rect = scene.getBoundingClientRect();
+      top = rect.top + window.scrollY;
+      height = rect.height;
+    };
+    locate();
+    const resized = new ResizeObserver(() => { locate(); lastSp = -1; });
+    resized.observe(document.body);
+    resized.observe(scene);
 
     const measure = (loop = true) => {
-      const rect = scene.getBoundingClientRect();
-      const travel = rect.height - window.innerHeight;
-      const raw = travel > 0 ? -rect.top / travel : 0;
+      const travel = height - window.innerHeight;
+      const raw = travel > 0 ? (window.scrollY - top) / travel : 0;
       const sp = Math.min(1, Math.max(0, raw));
+      /* Unmoved since the last frame: nothing to write, nothing to restyle. */
+      if (sp === lastSp) {
+        if (loop) frame = requestAnimationFrame(measure);
+        return;
+      }
+      lastSp = sp;
 
       const band =
         bounds.find((b) => sp >= b.start && sp < b.end) ?? bounds[bounds.length - 1];
@@ -122,6 +149,7 @@ export function useScrollPhase(phases, progressRef) {
 
     return () => {
       io.disconnect();
+      resized.disconnect();
       stop();
     };
   }, [phases, progressRef]);

@@ -1,7 +1,18 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Copy, FileText, Film, ImageIcon, Trash2, Upload } from 'lucide-react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { Captions, Copy, FileText, Film, ImageIcon, Trash2, TriangleAlert, Upload, X } from 'lucide-react';
 
-import { BUCKETS, listBucket, prettySize, removeFile, uploadWithProgress, usageFor } from '@/lib/supabase/queries/adminMedia.js';
+import {
+  BUCKETS,
+  MEDIA_LIMITS,
+  deleteMediaFile,
+  listBucket,
+  listMediaMeta,
+  prettySize,
+  recordMediaUpload,
+  saveMediaMeta,
+  uploadWithProgress,
+  usageFor,
+} from '@/lib/supabase/queries/adminMedia.js';
 import { ConfirmDialog, Toasts } from '@/components/admin/AdminFeedback.jsx';
 import { ErrorState, Skeleton } from '@/components/admin/AdminBits.jsx';
 import { useToasts } from '@/hooks/useAdminFeedback.js';
@@ -27,40 +38,100 @@ const ICON = { image: ImageIcon, video: Film, document: FileText, other: FileTex
  *                     refused. Deleting on the strength of a failed query is
  *                     precisely the accident this screen exists to prevent.
  *
- * There is no `media` table, so alt text and captions have nowhere to be
- * stored. Rather than offer a field that silently discards what is typed into
- * it, the screen says where that would have to live.
+ * ALT TEXT AND CAPTIONS are stored in public.media, one row per file keyed by
+ * (bucket, path), created on first save. The count and the "missing alt text"
+ * filter cover images only. If the table cannot be read, editing is switched
+ * off and the screen says why, rather than offering a field whose contents
+ * would go nowhere.
  */
 export default function AdminMedia() {
   const [bucket, setBucket] = useState(BUCKETS[0]);
   const [state, setState] = useState({ status: 'loading', files: [], error: null });
   const [usage, setUsage] = useState(undefined); // undefined = not asked, null = unreadable
+  const [meta, setMeta] = useState({ status: 'loading', map: new Map(), error: null });
   const [query, setQuery] = useState('');
   const [kind, setKind] = useState('all');
+  const [onlyMissing, setOnlyMissing] = useState(false);
   const [progress, setProgress] = useState(null);
   const [doomed, setDoomed] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [editing, setEditing] = useState(null);
+  const [saving, setSaving] = useState(false);
   const input = useRef(null);
   const t = useToasts();
 
   const load = useCallback(async () => {
-    const r = await listBucket(bucket.id);
+    const [r, m] = await Promise.all([listBucket(bucket.id), listMediaMeta(bucket.id)]);
     setState({ status: r.ok ? 'ready' : 'error', files: r.files, error: r.error });
+    setMeta({ status: m.ok ? 'ready' : m.missing ? 'missing' : 'error', map: m.map, error: m.error });
     setUsage(await usageFor(bucket));
+    return { files: r.files, metaOk: m.ok };
   }, [bucket]);
 
   // The first write happens after the storage promise settles.
   // oxlint-disable-next-line react/set-state-in-effect
   useEffect(() => { load(); }, [load]);
 
+  const altOf = useCallback((f) => String(meta.map.get(f.path)?.alt_text ?? '').trim(), [meta.map]);
+  const metaReady = meta.status === 'ready';
+  const filterMissing = onlyMissing && metaReady;
+
+  const missingAlt = useMemo(
+    () => (metaReady ? state.files.filter((f) => f.kind === 'image' && !altOf(f)).length : 0),
+    [metaReady, state.files, altOf],
+  );
+
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
     return state.files.filter((f) => (
-      (kind === 'all' || f.kind === kind) && (!q || f.path.toLowerCase().includes(q))
+      (kind === 'all' || f.kind === kind)
+      && (!q || f.path.toLowerCase().includes(q))
+      && (!filterMissing || (f.kind === 'image' && !altOf(f)))
     ));
-  }, [state.files, query, kind]);
+  }, [state.files, query, kind, filterMissing, altOf]);
 
   const usedBy = useCallback((f) => (usage === null ? undefined : usage?.get(f.path)), [usage]);
+
+  /* The next image after `file`, in the order on screen, that still has no
+     alt text — for working through the backlog without closing the dialog. */
+  const nextMissing = useCallback((file, map = meta.map) => {
+    const images = visible.filter((f) => f.kind === 'image');
+    const start = images.findIndex((f) => f.path === file.path);
+    for (let step = 1; step <= images.length; step += 1) {
+      const f = images[(start + step + images.length) % images.length];
+      if (f && f.path !== file.path && !String(map.get(f.path)?.alt_text ?? '').trim()) return f;
+    }
+    return null;
+  }, [visible, meta.map]);
+
+  const saveMeta = useCallback(async (file, values, goNext) => {
+    if (!values.changed) {
+      setEditing(goNext ? nextMissing(file) : null);
+      return;
+    }
+    setSaving(true);
+    try {
+      const previous = meta.map.get(file.path) ?? null;
+      const row = await saveMediaMeta({
+        bucket: bucket.id,
+        path: file.path,
+        altText: values.alt,
+        caption: values.caption,
+        previous,
+        label: file.name,
+      });
+      setMeta((m) => ({ ...m, map: new Map(m.map).set(file.path, row) }));
+      t.ok(row.alt_text ? `Alt text saved for ${file.name}.` : `Saved. ${file.name} still has no alt text.`);
+      /* Worked out against the map as it now is, so the image just described
+         is never offered again as "next". */
+      setEditing(goNext ? nextMissing(file, new Map(meta.map).set(file.path, row)) : null);
+    } catch (err) {
+      console.error('[NGD Admin] alt text save failed:', err);
+      t.error(err.message || 'The alt text could not be saved.');
+    } finally {
+      setSaving(false);
+    }
+  }, [bucket.id, meta.map, nextMissing, t]);
 
   const onPick = useCallback(async (file) => {
     if (!file) return;
@@ -76,8 +147,18 @@ export default function AdminMedia() {
     setProgress(0);
     try {
       await uploadWithProgress(bucket.id, path, file, setProgress);
-      await load();
-      t.ok(`Uploaded ${file.name}.`);
+      await recordMediaUpload(bucket.id, path, file.name);
+      const after = await load();
+      /* The moment someone has just chosen an image is the moment they know
+         what it shows, so the alt text dialog opens straight away. Closing it
+         leaves the image listed under "missing alt text" for later. */
+      const fresh = after.files.find((f) => f.path === path);
+      if (fresh?.kind === 'image' && after.metaOk) {
+        t.ok(`Uploaded ${file.name}. Describe it now, or close the dialog to do it later.`);
+        setEditing(fresh);
+      } else {
+        t.ok(`Uploaded ${file.name}.`);
+      }
     } catch (err) {
       console.error('[NGD Admin] upload failed:', err);
       t.error(err.message || 'That file could not be uploaded.');
@@ -90,7 +171,7 @@ export default function AdminMedia() {
   const confirmDelete = useCallback(async () => {
     setBusy(true);
     try {
-      await removeFile(bucket.id, doomed.path);
+      await deleteMediaFile(bucket.id, doomed.path, doomed.name);
       await load();
       t.ok('File removed.');
       setDoomed(null);
@@ -116,6 +197,9 @@ export default function AdminMedia() {
           <h1>Media Library</h1>
           <p className={styles.sub}>
             {state.status === 'ready' ? `${visible.length} of ${state.files.length} files in ${bucket.label.toLowerCase()}` : 'Reading the bucket…'}
+            {state.status === 'ready' && metaReady && counts.image > 0 && (
+              <> · {missingAlt === 0 ? 'every image has alt text' : `${missingAlt} ${missingAlt === 1 ? 'image' : 'images'} missing alt text`}</>
+            )}
           </p>
         </div>
         <label className={styles.primary}>
@@ -132,12 +216,23 @@ export default function AdminMedia() {
       </header>
 
       <p className={styles.note}>
-        The <code>media</code> table exists now, so alt text, captions and
-        upload attribution have somewhere to live — this screen does not write
-        them yet. Usage below is checked live against{' '}
-        <code>{bucket.usedBy.table}.{bucket.usedBy.column}</code> each time this
-        page loads, so it is always current.
+        Alt text and captions are saved to the <code>media</code> table against
+        each file&apos;s bucket and path. The storefront does not read them yet,
+        so they are ready for when it does. Usage below is checked live against{' '}
+        <code>{bucket.usedBy.table}.{bucket.usedBy.column}</code> and collection
+        covers each time this page loads, so it is always current.
       </p>
+
+      {meta.status === 'missing' && (
+        <p className={styles.note}>
+          The <code>media</code> table is not on this project, so alt text and captions cannot be saved here.
+        </p>
+      )}
+      {meta.status === 'error' && (
+        <p className={styles.note}>
+          Alt text could not be read ({meta.error}), so editing it is switched off until this page is reloaded.
+        </p>
+      )}
 
       {progress !== null && (
         <div className={styles.progress} role="status" aria-live="polite">
@@ -161,6 +256,18 @@ export default function AdminMedia() {
             </button>
           ))}
         </div>
+        {metaReady && (
+          <button
+            type="button"
+            className={styles.flagBtn}
+            data-on={filterMissing ? '' : undefined}
+            aria-pressed={filterMissing}
+            disabled={!missingAlt && !filterMissing}
+            onClick={() => setOnlyMissing((v) => !v)}
+          >
+            <TriangleAlert size={13} aria-hidden="true" /> Missing alt text · {missingAlt}
+          </button>
+        )}
         <input
           className={styles.search}
           type="search"
@@ -176,17 +283,25 @@ export default function AdminMedia() {
 
       {state.status === 'ready' && (
         visible.length === 0
-          ? <p className={styles.empty}>{query || kind !== 'all' ? 'No files match this filter.' : 'This bucket is empty.'}</p>
+          ? (
+            <p className={styles.empty}>
+              {filterMissing && !query && kind === 'all'
+                ? 'Every image in this bucket has alt text.'
+                : query || kind !== 'all' || filterMissing ? 'No files match this filter.' : 'This bucket is empty.'}
+            </p>
+          )
           : (
             <ul className={styles.grid}>
               {visible.map((f, i) => {
                 const owner = usedBy(f);
                 const Icon = ICON[f.kind];
+                const alt = f.kind === 'image' ? altOf(f) : '';
+                const caption = String(meta.map.get(f.path)?.caption ?? '').trim();
                 return (
                   <li key={f.path} className={styles.card} style={{ '--i': i }}>
                     <div className={styles.preview}>
                       {f.kind === 'image'
-                        ? <img src={f.url} alt="" loading="lazy" decoding="async" />
+                        ? <img src={f.url} alt={alt} loading="lazy" decoding="async" />
                         : <Icon size={22} aria-hidden="true" />}
                     </div>
                     <div className={styles.meta}>
@@ -199,8 +314,28 @@ export default function AdminMedia() {
                       ) : (
                         <p className={styles.dim}>Not referenced</p>
                       )}
+                      {f.kind === 'image' && metaReady && (
+                        alt
+                          ? <p className={styles.alt} title={alt}><span>Alt</span> {alt}</p>
+                          : <p className={styles.unknown}>No alt text</p>
+                      )}
+                      {caption && metaReady && (
+                        <p className={styles.alt} title={caption}><span>Caption</span> {caption}</p>
+                      )}
                     </div>
                     <div className={styles.cardActions}>
+                      {f.kind === 'image' && (
+                        <button
+                          type="button"
+                          className={styles.act}
+                          disabled={!metaReady}
+                          title={metaReady ? (alt ? 'Edit alt text and caption' : 'Add alt text and caption') : 'Alt text cannot be edited right now'}
+                          aria-label={`Alt text and caption for ${f.name}`}
+                          onClick={() => setEditing(f)}
+                        >
+                          <Captions size={13} />
+                        </button>
+                      )}
                       <button
                         type="button"
                         className={styles.act}
@@ -247,14 +382,147 @@ export default function AdminMedia() {
             <p><strong>{doomed?.path}</strong> — {prettySize(doomed?.size)}.</p>
             <ul>
               <li>This one is permanent. Storage has no archive and no undo.</li>
-              <li>Nothing currently references it in <code>{bucket.usedBy.table}</code>.</li>
+              <li>Nothing currently references it in <code>{bucket.usedBy.table}</code> or as a collection cover.</li>
+              <li>Its alt text and caption are removed with it.</li>
               <li>A row added since this page loaded would not be seen — reload if in doubt.</li>
             </ul>
           </>
         )}
       />
 
+      {editing && (
+        <MetaDialog
+          file={editing}
+          row={meta.map.get(editing.path) ?? null}
+          saving={saving}
+          hasNext={Boolean(nextMissing(editing))}
+          onSave={saveMeta}
+          onClose={() => setEditing(null)}
+        />
+      )}
+
       <Toasts toasts={t.toasts} dismiss={t.dismiss} />
     </div>
+  );
+}
+
+/**
+ * Alt text and caption for one image.
+ *
+ * The shell — backdrop, Escape, focus returned to the card on close — stays
+ * mounted while "Save and next" walks through the backlog. The form inside is
+ * keyed by path, so each image starts from its own saved values and never
+ * inherits the previous image's words.
+ */
+function MetaDialog({ file, row, saving, hasNext, onSave, onClose }) {
+  const titleId = useId();
+  const close = useRef(onClose);
+  const locked = useRef(saving);
+  useEffect(() => {
+    close.current = onClose;
+    locked.current = saving;
+  });
+
+  useEffect(() => {
+    const opener = document.activeElement;
+    const onKey = (e) => { if (e.key === 'Escape' && !locked.current) close.current?.(); };
+    window.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      if (opener instanceof HTMLElement) opener.focus();
+    };
+  }, []);
+
+  return (
+    <div className={styles.backdrop}>
+      <button
+        type="button"
+        className={styles.backdropHit}
+        aria-label="Close"
+        tabIndex={-1}
+        onClick={() => { if (!saving) onClose(); }}
+      />
+      <div className={styles.dialog} role="dialog" aria-modal="true" aria-labelledby={titleId}>
+        <MetaForm
+          key={file.path}
+          file={file}
+          row={row}
+          saving={saving}
+          hasNext={hasNext}
+          onSave={onSave}
+          onClose={onClose}
+          titleId={titleId}
+        />
+      </div>
+    </div>
+  );
+}
+
+function MetaForm({ file, row, saving, hasNext, onSave, onClose, titleId }) {
+  const [alt, setAlt] = useState(row?.alt_text ?? '');
+  const [caption, setCaption] = useState(row?.caption ?? '');
+  const altField = useRef(null);
+
+  useEffect(() => {
+    const timer = setTimeout(() => altField.current?.focus(), 30);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const changed = alt.trim() !== String(row?.alt_text ?? '').trim()
+    || caption.trim() !== String(row?.caption ?? '').trim();
+  const submit = (goNext) => onSave(file, { alt, caption, changed }, goNext);
+
+  return (
+    <form className={styles.metaForm} onSubmit={(e) => { e.preventDefault(); submit(false); }}>
+      <header className={styles.dialogHead}>
+        <h2 id={titleId}>Alt text and caption</h2>
+        <button type="button" className={styles.act} onClick={onClose} disabled={saving} aria-label="Close">
+          <X size={15} />
+        </button>
+      </header>
+
+      <div className={styles.metaFile}>
+        <img src={file.url} alt="" />
+        <p title={file.path}>{file.path}</p>
+      </div>
+
+      <label className={styles.field}>
+        <span>Alt text <em>{alt.length}/{MEDIA_LIMITS.alt}</em></span>
+        <textarea
+          ref={altField}
+          rows={3}
+          value={alt}
+          maxLength={MEDIA_LIMITS.alt}
+          onChange={(e) => setAlt(e.target.value)}
+        />
+        <span className={styles.hint}>
+          What the image shows, for someone who cannot see it — for example “Oval diamond, about 1.5 carats,
+          in a platinum solitaire setting”. Leave out “image of”.
+        </span>
+      </label>
+
+      <label className={styles.field}>
+        <span>Caption <em>optional</em></span>
+        <textarea
+          rows={2}
+          value={caption}
+          maxLength={MEDIA_LIMITS.caption}
+          onChange={(e) => setCaption(e.target.value)}
+        />
+        <span className={styles.hint}>Visible text shown with the image, where a page uses captions.</span>
+      </label>
+
+      <div className={styles.dialogActions}>
+        <button type="button" className={styles.ghost} onClick={onClose} disabled={saving}>Cancel</button>
+        {hasNext && (
+          <button type="button" className={styles.ghost} onClick={() => submit(true)} disabled={saving}>
+            {changed ? 'Save and next' : 'Skip to next'}
+          </button>
+        )}
+        <button type="submit" className={styles.save} disabled={saving || !changed}>
+          {saving ? 'Saving…' : 'Save'}
+        </button>
+      </div>
+    </form>
   );
 }

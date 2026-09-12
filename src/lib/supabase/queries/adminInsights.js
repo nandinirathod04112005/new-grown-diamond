@@ -40,6 +40,9 @@ const LOGGABLE = {
   jewellery: new Set(['active', 'featured', 'archived_at']),
   blog: new Set(['title', 'slug', 'published', 'published_at', 'cover_path']),
   media: new Set(['path', 'bucket']),
+  /* The moderation decision only; the customer's own words are never logged. */
+  feedback: new Set(['status']),
+  submission: new Set(['status']),
 };
 
 /** The actions the table's own CHECK constraint allows. */

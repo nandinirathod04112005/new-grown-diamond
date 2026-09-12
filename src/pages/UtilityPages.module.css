@@ -1,4 +1,6 @@
 .page { min-height:100vh; padding:clamp(8rem,14vw,12rem) var(--gutter) var(--s-8); background:var(--ink); }
+.page:has(> header[data-backdrop]) { padding-top: 0; }
+.page > header[data-backdrop] { margin-inline: calc(-1 * var(--gutter)); }
 .head { display:grid; gap:var(--s-4); max-width:1000px; margin-bottom:var(--s-8); }
 .head h1 { max-width:12ch; font:300 var(--t-3xl)/.92 var(--font-display); letter-spacing:-.035em; }
 .head > p:last-child { max-width:56ch; color:var(--text-muted); font-size:var(--t-lg); line-height:1.7; }
@@ -57,7 +59,7 @@
   transition: border-color var(--dur-base) var(--ease-primary), background var(--dur-base) var(--ease-primary);
 }
 
-.fieldControl select { color-scheme: dark; }
+.fieldControl select { color-scheme: inherit; }
 .fieldControl textarea { resize: vertical; min-height: 9rem; line-height: 1.6; }
 .fieldControl input:focus-visible,
 .fieldControl select:focus-visible,
@@ -167,3 +169,18 @@
 
 .waFollow:hover,
 .waFollow:focus-visible { border-bottom-color: var(--gold-lift); }
+
+.enquiry { padding-block: var(--showroom-space); gap: 5vw; }
+.form { padding: clamp(1.25rem,3vw,3rem); border: 1px solid var(--ink-line); background: var(--surface-1); }
+.fieldControl input, .fieldControl select, .fieldControl textarea { border: 1px solid var(--line-firm); padding: .9rem; background: var(--ink); }
+.fieldControl > span, .fieldGroup legend { letter-spacing: .07em; }
+.office { padding-block: 3rem; }
+.office h2 { font-size: clamp(2.5rem,4vw,4.5rem); }
+.offices{gap:20px;padding-block:35px}.office{padding:28px;border:1px solid var(--ink-line);background:var(--surface-1)}.office h2{font-size:36px}.office address{line-height:1.8}.enquiryLine{padding-block:24px}.form{border-radius:3px}.fieldControl input:focus,.fieldControl select:focus,.fieldControl textarea:focus{outline:2px solid var(--accent);outline-offset:2px}
+
+/* ================= phones: legible text, tappable links ================= */
+/* Nothing under 11 px on a phone — the small uppercase labels were 8 to 10 px
+   and hard to read at arm's length. Measured with a 390 px audit. */
+@media (max-width: 600px) {
+  .enquiryLine span { font-size: 0.6875rem; }
+}

@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Bell, ChevronRight, Cog, Eye, FileText, Gem, Grid2x2, House, Image, Inbox,
-  Layers, List, Lock, LogOut, Menu, PanelLeftClose, PanelLeftOpen, Search,
-  ShoppingCart, Sparkles, SquarePen, TrendingUp, Users, X,
+  Layers, List, Lock, LogOut, Menu, MessageSquareQuote, Newspaper, PanelLeftClose,
+  PanelLeftOpen, Search, ShoppingCart, Sparkles, SquarePen, TrendingUp, Users, X,
 } from 'lucide-react';
 
 import { useAuth } from '@/hooks/useAuth.js';
 import { gsap, useGSAP } from '@/lib/motion/gsap.js';
 import { prefersReducedMotion } from '@/lib/motion/media.js';
+import { countUnread, onUnreadChange } from '@/lib/supabase/queries/adminNotifications.js';
 import { MODULES, moduleForPath } from './adminModules.js';
 import styles from './AdminLayout.module.css';
 
@@ -15,7 +16,7 @@ const ICONS = {
   grid: Grid2x2, gem: Gem, ring: Sparkles, layers: Layers, users: Users,
   inbox: Inbox, file: FileText, lock: Lock, eye: Eye, cart: ShoppingCart,
   doc: SquarePen, image: Image, home: House, search: Search, chart: TrendingUp,
-  list: List, bell: Bell, cog: Cog,
+  list: List, bell: Bell, cog: Cog, pen: Newspaper, message: MessageSquareQuote,
 };
 
 const RAIL_KEY = 'ngd-admin-rail';
@@ -64,6 +65,18 @@ export default function AdminLayout({ path, children }) {
    * of the menu covering the page it just navigated to, and the cascading
    * render the linter is right to object to.
    */
+  /* New arrivals not yet marked read, or null while it cannot be known (a
+     failed read shows no badge rather than a made-up zero). Re-read on every
+     page change and whenever the inbox marks something read. */
+  const [unread, setUnread] = useState(null);
+  useEffect(() => {
+    let alive = true;
+    const refresh = () => countUnread().then((n) => { if (alive) setUnread(n); }).catch(() => {});
+    refresh();
+    const off = onUnreadChange(refresh);
+    return () => { alive = false; off(); };
+  }, [path]);
+
   const [drawnFor, setDrawnFor] = useState(path);
   if (drawnFor !== path) {
     setDrawnFor(path);
@@ -133,6 +146,9 @@ export default function AdminLayout({ path, children }) {
             <span className={styles.linkLabel}>{m.label}</span>
             {setup && <span className={styles.tag}>Setup</span>}
             {m.state === 'partial' && <span className={styles.tagSoft}>Soon</span>}
+            {m.key === 'notifications' && unread > 0 && (
+              <span className={styles.count} aria-label={`${unread} unread`}>{unread > 99 ? '99+' : unread}</span>
+            )}
           </a>
         );
       })}
@@ -221,20 +237,18 @@ export default function AdminLayout({ path, children }) {
             <span aria-hidden="true">+</span> New diamond
           </a>
 
-          {/*
-            Honest by omission: there is no notifications table, so this opens
-            nothing and claims nothing. It carries no unread dot, because a dot
-            with no source behind it is a fabricated signal.
-          */}
-          <button
-            type="button"
+          {/* The inbox (Notifications). Its dot is backed by a real count of
+              arrivals not yet marked read, and is absent when that count could
+              not be read, never a guess. */}
+          <a
             className={styles.iconBtn}
-            title="Notifications — needs a notifications table (see Settings)"
-            aria-label="Notifications: not yet available"
-            disabled
+            href="/admin/notifications"
+            title="Notifications"
+            aria-label={unread > 0 ? `Notifications: ${unread} unread` : 'Notifications'}
           >
             <Bell size={17} strokeWidth={1.5} />
-          </button>
+            {unread > 0 && <span className={styles.dot} aria-hidden="true" />}
+          </a>
 
           <div className={styles.who} ref={menuRef}>
             <button

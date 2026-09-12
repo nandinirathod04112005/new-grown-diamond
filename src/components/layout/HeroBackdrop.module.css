@@ -43,24 +43,13 @@
      under it. */
   opacity: calc(1 - var(--hp) * 0.55);
   filter: saturate(0.82) contrast(1.04);
-  animation:
-    backdropOpen 1.9s var(--ease-strong) both,
-    backdropDrift 44s var(--ease-inout) 1.9s infinite alternate;
-  will-change: transform, opacity, filter;
+  animation: backdropOpen 0.8s var(--ease-primary);
 }
 
-/* From soft, near and pale to sharp and settled: the photograph arrives the
-   way the eye focuses, not the way a slideshow cuts. */
+/* A slight settling movement keeps the photograph sharp and visible. */
 @keyframes backdropOpen {
-  from { opacity: 0; scale: 1.18; filter: blur(22px) saturate(0.55) contrast(1); }
-  to { opacity: 1; scale: 1; filter: blur(0) saturate(0.82) contrast(1.04); }
-}
-
-/* Forty-four seconds edge to edge — motion you notice only when you look for
-   it, which is the amount a photograph behind text can carry. */
-@keyframes backdropDrift {
-  from { translate: -1.2% 0.6%; }
-  to { translate: 1.2% -0.8%; }
+  from { scale: 1.035; }
+  to { scale: 1; }
 }
 
 /* The page's accent, laid over the highlights only. */
@@ -105,6 +94,7 @@
 /* A slow band of light crossing the frame every fourteen seconds — the one
    thing that says the picture is live without ever moving the picture. */
 .shine {
+  display: none;
   position: absolute;
   inset: -20%;
   background: linear-gradient(105deg, transparent 42%, rgba(255, 255, 255, 0.075) 50%, transparent 58%);
@@ -133,5 +123,20 @@
    focus and the fade-out is shortened so the banner does not sit dark for a
    whole screen of scrolling. */
 @media (max-width: 720px) {
-  .image { opacity: calc(1 - var(--hp) * 0.4); }
+  .image { object-position: var(--focus-mobile, var(--focus, 50% 50%)); }
+  .scrim { background: linear-gradient(180deg, color-mix(in srgb, var(--ink) 58%, transparent), color-mix(in srgb, var(--ink) 78%, transparent) 48%, var(--ink)); }
+}
+
+/* With the copy beside the photograph, preserve more of the image. */
+:global(header[data-backdrop]) .scrim { background: linear-gradient(90deg, color-mix(in srgb, var(--ink) 20%, transparent), transparent 55%), linear-gradient(0deg, color-mix(in srgb, var(--ink) 25%, transparent), transparent 40%); }
+:global(header[data-backdrop]) .image { inset: 0; width: 100%; height: 100%; transform: scale(1.025); opacity: 1; }
+
+:global(header[data-backdrop]) .image { object-fit: contain; }
+
+/* On a phone the framed photograph is a short band under the copy, and shown
+   whole it left dark strips either side of any picture squarer than the band
+   (the cut stone on Shapes, for one). There it fills the band instead,
+   cropped about the page's own focus point. */
+@media (max-width: 899px) {
+  :global(header[data-backdrop]) .image { object-fit: cover; }
 }

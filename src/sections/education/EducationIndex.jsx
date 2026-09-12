@@ -1,5 +1,9 @@
+import { useMemo } from 'react';
 import Reveal from '@/components/motion/Reveal.jsx';
-import { EDUCATION_TOPICS } from '@/pages/siteContent.js';
+import { useLocale } from '@/i18n/localeContext.js';
+import { useCopy } from '@/i18n/useCopy.js';
+import { localizeTopics } from '@/pages/siteContent.i18n.js';
+import COPY from './EducationIndex.copy.js';
 import styles from './EducationIndex.module.css';
 
 /**
@@ -14,12 +18,16 @@ import styles from './EducationIndex.module.css';
  * has drifted from the page it describes is worse than either alone.
  */
 export default function EducationIndex() {
+  const { locale } = useLocale();
+  const c = useCopy(COPY);
+  const topics = useMemo(() => localizeTopics(locale), [locale]);
+
   return (
     <section className={styles.index} aria-labelledby="education-index">
-      <h2 className={styles.title} id="education-index">Read next</h2>
+      <h2 className={styles.title} id="education-index">{c.title}</h2>
 
       <ul className={styles.list}>
-        {EDUCATION_TOPICS.map((topic, i) => (
+        {topics.map((topic, i) => (
           <Reveal as="li" key={topic.href} className={styles.item} delay={i * 80}>
             <a href={topic.href}>
               <span className={styles.label}>{topic.label}</span>

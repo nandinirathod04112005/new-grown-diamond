@@ -1,165 +1,243 @@
-import { useEffect, useRef, useState } from 'react';
-import HeroBackdrop from '@/components/layout/HeroBackdrop.jsx';
-import gradingBench from '@/assets/process/grading-bench.webp';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { ArrowRight, ArrowUpRight, Search, X } from 'lucide-react';
 
-import { usePointerParallax } from '@/hooks/usePointerParallax.js';
-import { listPublishedBlogs } from '@/lib/supabase/queries/blogs.js';
-import { blogCoverUrl } from '@/lib/supabase/storage.js';
+import HeroBackdrop from '@/components/layout/HeroBackdrop.jsx';
+import Rail from '@/components/journal/Rail.jsx';
+import FeedbackWall from '@/components/feedback/FeedbackWall.jsx';
+import { Cover, PostCard, PostMeta } from '@/components/journal/JournalBits.jsx';
+import gradingBench from '@/assets/process/grading-bench.webp';
+import ARCHIVE_COPY from '@/content/journalPosts.copy.js';
+import { useReveal } from '@/hooks/useReveal.js';
+import { useLocale, interpolate } from '@/i18n/localeContext.js';
+import { useCopy } from '@/i18n/useCopy.js';
+import { archivePosts, loadJournal, localizePosts, shorten } from '@/lib/journal.js';
+import { loadFeedbackWall } from '@/lib/supabase/queries/feedback.js';
+import COPY from './BlogsPage.copy.js';
 import styles from './BlogsPage.module.css';
 
 /**
  * The journal.
  *
- * Four states, and each one is told the truth:
+ * The previous site's five articles are always here — they ship with the
+ * site, so the page is never empty and never waits on the database to show
+ * them. Posts published from the Control Centre join them as they load, newest
+ * first (lib/journal.js decides the order and how the two meet).
  *
- *   loading    the request is in flight
- *   missing    public.blogs does not exist yet — a configuration state, not a
- *              fault, so it reads calmly rather than as a red error
- *   empty      the table exists and holds no published posts
- *   ready      posts, newest first
+ * The layout is the old blog's, redrawn: a lead story, articles set in
+ * alternating rows, a carousel with arrows, and a "recently posted" list. A
+ * search box filters everything at once, as the old page's did.
  *
- * Nothing here invents articles to make the page look populated. Placeholder
- * posts written to fill a grid are indistinguishable from real editorial to a
- * visitor, and a trade buyer who follows one and finds nothing has been
- * misled by the site itself. An empty journal that says it is empty costs far
- * less than that.
+ * Client feedback closes the page — only feedback the team has approved.
+ * Until there is some, the band invites it and shows none; it never fills the
+ * space with invented quotes. Clients can send an article for the journal from
+ * the same band.
  */
 export default function BlogsPage() {
-  const [state, setState] = useState({ status: 'loading', posts: [] });
-  const grid = useRef(null);
-  usePointerParallax(grid, 1);
+  const [journal, setJournal] = useState(() => ({ posts: archivePosts(), editorFailed: false }));
+  const [query, setQuery] = useState('');
+  const [voices, setVoices] = useState({ items: [], ready: false });
+  const root = useRef(null);
+  const { locale } = useLocale();
+  const c = useCopy(COPY);
+  const archive = useCopy(ARCHIVE_COPY);
 
   useEffect(() => {
     let alive = true;
-    listPublishedBlogs()
-      .then((r) => {
-        if (!alive) return;
-        if (r.unconfigured) return setState({ status: 'unconfigured', posts: [] });
-        if (r.missing) return setState({ status: 'missing', posts: [] });
-        setState({ status: r.posts.length ? 'ready' : 'empty', posts: r.posts });
-      })
-      .catch((error) => {
-        console.error('[NGD blogs]', error);
-        if (alive) setState({ status: 'error', posts: [] });
+    loadJournal().then((r) => { if (alive) setJournal(r); });
+    loadFeedbackWall({ limit: 6 })
+      .then((r) => { if (alive) setVoices({ items: r.items, ready: true }); })
+      .catch((err) => {
+        console.error('[NGD journal] feedback', err);
+        if (alive) setVoices({ items: [], ready: true });
       });
     return () => { alive = false; };
   }, []);
 
+  /* Archive articles in the reader's language; editor posts as written. */
+  const posts = useMemo(() => localizePosts(journal.posts, locale), [journal.posts, locale]);
+  const q = query.trim().toLowerCase();
+
+  const matches = useMemo(() => (q
+    ? posts.filter((p) => `${p.title} ${p.paragraphs.join(' ')} ${p.author ?? ''}`.toLowerCase().includes(q))
+    : posts), [posts, q]);
+
+  const titleFor = useMemo(() => {
+    const map = new Map(posts.map((p) => [p.slug, p.title]));
+    return (slug) => map.get(slug) ?? null;
+  }, [posts]);
+
+  useReveal(root, [posts.length, q, voices.items.length]);
+
+  const [lead, ...rest] = posts;
+  const rows = rest.slice(0, 2);
+  const more = rest.slice(2);
+
   return (
-    <main className={styles.page}>
+    <main className={styles.page} ref={root}>
       <header className={styles.hero}>
         <div className={styles.field} aria-hidden="true" />
-        {/* The bench the notes are written from, behind the words — the same
-            layer and motion as every other banner. The caustic light that
-            stood in for a photograph is gone: screen-blended over a real one
-            it flared white and took the headline with it. */}
         <HeroBackdrop src={gradingBench} focus="50% 42%" />
         <div className={styles.heroCopy}>
-          <p className={styles.eyebrow}>New Grown Diamond</p>
-          <h1 className={styles.title}>The journal</h1>
-          <p className={styles.intro}>
-            Notes from the floor in Surat — growth runs, cutting decisions,
-            grading, and what the trade is actually asking for.
+          <p className={styles.eyebrow}>{c.eyebrow}</p>
+          <h1 className={styles.title}>{c.title}</h1>
+          <p className={styles.intro}>{archive.intro}</p>
+
+          <form className={styles.search} role="search" onSubmit={(e) => e.preventDefault()}>
+            <label className={styles.vh} htmlFor="journal-search">{c.search}</label>
+            <Search size={17} aria-hidden="true" className={styles.searchIcon} />
+            <input
+              id="journal-search"
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={c.search}
+              autoComplete="off"
+              enterKeyHint="search"
+            />
+            {query && (
+              <button type="button" className={styles.clear} onClick={() => setQuery('')} aria-label={c.clear}>
+                <X size={15} aria-hidden="true" />
+              </button>
+            )}
+          </form>
+          <p className={styles.count} role="status" aria-live="polite">
+            {q
+              ? interpolate(matches.length === 1 ? c.count.matchOne : c.count.matchMany, { n: matches.length, q: query.trim() })
+              : interpolate(posts.length === 1 ? c.count.one : c.count.many, { n: posts.length })}
           </p>
-          <span className={styles.rule} aria-hidden="true" />
         </div>
       </header>
 
-      <section ref={grid} className={styles.body} aria-live="polite">
-        {state.status === 'loading' && (
-          <div className={styles.skeletons} aria-hidden="true">
-            {[0, 1, 2].map((i) => <span key={i} className={styles.skeleton} style={{ '--i': i }} />)}
-          </div>
-        )}
+      {q ? (
+        <section className={styles.results} aria-label={c.results} data-reveal="">
+          {matches.length ? (
+            <ol className={styles.resultGrid}>
+              {matches.map((post, i) => (
+                <li key={post.slug} data-rv="" style={{ '--i': i % 6 }}>
+                  <PostCard post={post} excerpt={shorten(post.excerpt, 150)} />
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <div className={styles.none}>
+              <h2>{interpolate(c.none.title, { q: query.trim() })}</h2>
+              <p>{c.none.hint}</p>
+              <button type="button" className={styles.textLink} onClick={() => setQuery('')}>{c.none.all}</button>
+            </div>
+          )}
+        </section>
+      ) : (
+        <>
+          {lead && (
+            <section className={styles.lead} aria-labelledby="lead-title" data-reveal="">
+              <a className={styles.leadMedia} href={hrefOf(lead)} tabIndex={-1} aria-hidden="true" data-rv="">
+                <span className={styles.plate} />
+                <Cover cover={lead.cover} eager />
+              </a>
+              <div className={styles.leadText} data-rv="">
+                <PostMeta post={lead} lead={c.latest} />
+                <h2 id="lead-title" className={styles.leadTitle}>
+                  <a href={hrefOf(lead)}>{lead.title}</a>
+                </h2>
+                <p className={styles.leadExcerpt}>{shorten(lead.excerpt, 330)}</p>
+                <a className={styles.cta} href={hrefOf(lead)}>
+                  {c.readArticle} <ArrowUpRight size={17} aria-hidden="true" />
+                </a>
+              </div>
+            </section>
+          )}
 
-        {state.status === 'missing' && (
-          <Notice
-            title="The journal is not published yet"
-            body="Writing is under way. Once the first pieces are live they will appear here."
-          />
-        )}
-
-        {state.status === 'empty' && (
-          <Notice
-            title="No posts yet"
-            body="The journal is set up but nothing has been published. Check back shortly."
-          />
-        )}
-
-        {state.status === 'unconfigured' && (
-          <Notice
-            title="The journal is unavailable"
-            body="This deployment is not connected to its database."
-          />
-        )}
-
-        {state.status === 'error' && (
-          <Notice
-            tone="error"
-            title="The journal could not be loaded"
-            body="Something went wrong fetching the posts. Please try again shortly."
-          />
-        )}
-
-        {state.status === 'ready' && (
-          <ol className={styles.grid}>
-            {state.posts.map((post, i) => (
-              <li key={post.slug} className={styles.cell} style={{ '--i': i }}>
-                <article className={styles.card}>
-                  <div className={styles.plane}>
-                    <div className={styles.shot}>
-                      {blogCoverUrl(post.cover_path) ? (
-                        <img
-                          src={blogCoverUrl(post.cover_path)}
-                          alt=""
-                          loading="lazy"
-                          decoding="async"
-                        />
-                      ) : (
-                        <span className={styles.noShot} aria-hidden="true" />
-                      )}
-                    </div>
-                    <span className={styles.gloss} aria-hidden="true" />
-                    <span className={styles.rim} aria-hidden="true" />
-
-                    <div className={styles.text}>
-                      <p className={styles.meta}>
-                        {post.published_at ? formatDate(post.published_at) : 'Undated'}
-                        {post.author_name ? ` · ${post.author_name}` : ''}
-                      </p>
-                      <h2 className={styles.cardTitle}>
-                        <a className={styles.link} href={`/blogs/${encodeURIComponent(post.slug)}`}>{post.title}</a>
-                      </h2>
-                      {post.excerpt ? <p className={styles.excerpt}>{post.excerpt}</p> : null}
-                    </div>
+          {rows.length > 0 && (
+            <section className={styles.rows} aria-labelledby="rows-title" data-reveal="">
+              <header className={styles.sectionHead}>
+                <p className={styles.sectionEyebrow}>{c.rows.eyebrow}</p>
+                <h2 id="rows-title">{c.rows.title}</h2>
+              </header>
+              {rows.map((post, i) => (
+                <article key={post.slug} className={styles.row} data-flip={i % 2 ? '' : undefined}>
+                  <a className={styles.rowMedia} href={hrefOf(post)} tabIndex={-1} aria-hidden="true" data-rv="">
+                    <Cover cover={post.cover} />
+                  </a>
+                  <div className={styles.rowText} data-rv="">
+                    <span className={styles.rowNo} aria-hidden="true">{String(i + 2).padStart(2, '0')}</span>
+                    <PostMeta post={post} />
+                    <h3 className={styles.rowTitle}><a href={hrefOf(post)}>{post.title}</a></h3>
+                    <p className={styles.rowExcerpt}>{shorten(post.excerpt, 300)}</p>
+                    <a className={styles.readLink} href={hrefOf(post)} aria-label={interpolate(c.readLabel, { title: post.title })}>
+                      {c.read} <ArrowRight size={15} aria-hidden="true" />
+                    </a>
                   </div>
                 </article>
-              </li>
-            ))}
-          </ol>
-        )}
+              ))}
+            </section>
+          )}
+
+          {more.length > 0 && (
+            <section className={styles.more} aria-labelledby="more-title" data-reveal="">
+              <header className={styles.sectionHead} data-center="">
+                <p className={styles.sectionEyebrow}>{c.more.eyebrow}</p>
+                <h2 id="more-title">{c.more.title}</h2>
+              </header>
+              <Rail
+                label={c.more.label}
+                items={more}
+                getKey={(p) => p.slug}
+                renderItem={(post) => <PostCard post={post} excerpt={shorten(post.excerpt, 150)} />}
+              />
+            </section>
+          )}
+
+          <section className={styles.recent} aria-labelledby="recent-title" data-reveal="">
+            <header className={styles.sectionHead} data-center="">
+              <h2 id="recent-title">{c.recent}</h2>
+              <span className={styles.ornament} aria-hidden="true"><i /><i /></span>
+            </header>
+            <Rail
+              label={c.recent}
+              variant="titles"
+              items={posts}
+              getKey={(p) => p.slug}
+              renderItem={(post, i) => (
+                <a className={styles.recentLink} href={hrefOf(post)}>
+                  <span className={styles.recentNo} aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+                  <span className={styles.recentTitle}>{post.title}</span>
+                  <span className={styles.recentMeta}>{post.dateLabel ?? interpolate(c.minRead, { n: post.minutes })}</span>
+                </a>
+              )}
+            />
+          </section>
+        </>
+      )}
+
+      <section className={styles.voices} aria-labelledby="voices-title" data-reveal="">
+        <header className={styles.sectionHead} data-center="">
+          <p className={styles.sectionEyebrow}>{c.voices.eyebrow}</p>
+          <h2 id="voices-title">{c.voices.title}</h2>
+          {voices.ready && !voices.items.length && (
+            <p className={styles.voicesNote}>
+              {c.voices.note}
+            </p>
+          )}
+        </header>
+        <FeedbackWall items={voices.items} titleFor={titleFor} />
+        <div className={styles.voicesActions}>
+          <a className={styles.cta} href="/feedback">
+            {c.voices.share} <ArrowUpRight size={17} aria-hidden="true" />
+          </a>
+          {voices.items.length > 0 && (
+            <a className={styles.textLink} href="/feedback#wall">{c.voices.all}</a>
+          )}
+          <a className={styles.textLink} href="/feedback#send-article">{c.voices.write}</a>
+        </div>
       </section>
+
+      {journal.editorFailed && (
+        <p className={styles.quietNote}>{c.editorFailed}</p>
+      )}
     </main>
   );
 }
 
-function Notice({ title, body, tone }) {
-  return (
-    <div className={styles.notice} data-tone={tone}>
-      <h2>{title}</h2>
-      <p>{body}</p>
-      <a className={styles.noticeLink} href="/contact">Talk to the desk →</a>
-    </div>
-  );
-}
-
-/** Fixed locale, so the same date reads identically to every visitor. */
-function formatDate(value) {
-  try {
-    return new Date(value).toLocaleDateString('en-GB', {
-      day: 'numeric', month: 'long', year: 'numeric',
-    });
-  } catch {
-    return 'Undated';
-  }
+function hrefOf(post) {
+  return `/blogs/${encodeURIComponent(post.slug)}`;
 }

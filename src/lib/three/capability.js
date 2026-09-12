@@ -28,8 +28,17 @@ export function supportsInteractiveGem() {
     if (!gl) return false;
     // Software rasterisers report themselves; they render this scene at single
     // digit frame rates, which looks far worse than the photograph alone.
+    //
+    // Recent Chrome no longer always exposes WEBGL_debug_renderer_info, and
+    // reads the real renderer through gl.RENDERER instead. Falling back to an
+    // empty string there let SwiftShader through as a GPU — measured: a
+    // headless phone profile compiled the refraction shader for over four
+    // seconds of blocked main thread on /diamonds.
     const info = gl.getExtension('WEBGL_debug_renderer_info');
-    const renderer = info ? String(gl.getParameter(info.UNMASKED_RENDERER_WEBGL)) : '';
+    const renderer = String(info ? gl.getParameter(info.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER));
+    // The probe's context is released rather than left for the collector:
+    // browsers cap live WebGL contexts, and the real scene needs one.
+    gl.getExtension('WEBGL_lose_context')?.loseContext();
     if (/swiftshader|llvmpipe|software|basic render/i.test(renderer)) return false;
     return true;
   } catch {
@@ -45,10 +54,9 @@ export function supportsInteractiveGem() {
  * one device pixel and without MSAA" — which is the difference between a
  * laptop integrated GPU coping and not.
  *
- * NOTE: this replaces an earlier implementation of the same export that was
- * lost. It is currently dead at runtime — StoneFilm gates every call behind
- * `USE_WEBGL`, which is false — but it must stay correct for the day that flag
- * is flipped back on.
+ * Live on /diamonds: CvdProcess reads it to decide whether the WebGL stone
+ * (ProcessGem) is mounted at all — 'off' means the SVG reactor alone. StoneFilm
+ * also calls it, behind its `USE_WEBGL` flag.
  */
 export function qualityTier() {
   if (!supportsInteractiveGem()) return 'off';
@@ -62,6 +70,14 @@ export function qualityTier() {
   const coarse =
     typeof window !== 'undefined' &&
     window.matchMedia?.('(pointer: coarse)').matches;
+
+  // A PHONE does not get the scene at all. It is an opening flourish, the
+  // section already has an SVG version of it, and on a phone it costs a
+  // ~270 kB (gzip) WebGL library plus a refraction shader compile — seconds of
+  // a mid-range phone's main thread — for a moment of decoration. Tablets and
+  // anything wider keep it.
+  if (coarse && Math.min(window.innerWidth, window.innerHeight) < 700) return 'off';
+
   if (coarse || cores <= 4 || mem <= 4) return 'low';
 
   return 'high';

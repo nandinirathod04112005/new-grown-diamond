@@ -1,87 +1,155 @@
+/* ==================================================================
+   SITE HEADER
+
+   One bar, three groups: the wordmark, the nav, and the controls.
+
+   THIS FILE USED TO BE FOUR HEADERS STACKED ON TOP OF EACH OTHER.
+   Successive passes appended a new block at the end rather than editing the
+   one above, so `.root`, `.mark`, `.link` and `.account` were each declared
+   three or four times and the bar you actually saw was whichever block came
+   last. A `mix-blend-mode: difference` design was still fully written out at
+   the top while a later block quietly turned it off; the `.scrim` layer that
+   the JSX still renders had been switched to `display: none` two blocks down.
+   Reading it could not tell you what the header looked like. It is one pass
+   now, and the dead layers are gone rather than overridden.
+
+   HEIGHT IS FIXED AT 88px (80px on a phone) and must stay there: it is not
+   a token, and AnnouncementBar.module.css and CvdProcess.module.css both
+   hardcode it to position themselves under this bar.
+   ================================================================== */
+
 .root {
   position: fixed;
   inset: 0 0 auto 0;
   z-index: 40;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: var(--s-4) var(--gutter);
-  mix-blend-mode: difference;
+  gap: 0.9rem;
+  min-height: 88px;
+  padding-inline: var(--gutter);
+  background: var(--ink);
+  color: var(--text);
+  border-bottom: 1px solid var(--ink-line);
+  transition: border-color var(--dur-base) var(--ease-primary);
 }
+
+/*
+ * No backdrop-filter.
+ *
+ * There was a `blur(18px)` here sitting behind `background: var(--ink)`, which
+ * is fully opaque in both themes — so the browser was sampling and blurring the
+ * whole strip of page behind the bar on every frame, every page, and then
+ * painting an opaque colour over the result. It cost real GPU work and drew
+ * nothing anybody could see.
+ */
 
 /* Keep the transformed close control above the full-screen sheet. */
 .root[data-open] { z-index: 90; }
 
+/* Once the page has moved, the hairline firms up. The bar cannot change
+   height — see the note at the top of this file — so this is the whole of the
+   scrolled state, and nothing below the header ever moves. */
+.root[data-scrolled] { border-bottom-color: var(--line-firm); }
+
+/* The JSX still renders this; the design it belonged to is gone. */
+.scrim { display: none; }
+
+/* ---------------- the wordmark ---------------- */
+
 /*
- * The scrolled state. A gradient of the page's own scrim colour, fixed under
- * the header and outside its blend, that fades in once the page has moved —
- * so the nav keeps its contrast over a passing photograph or headline without
- * a bar arriving, and without the header ever changing height.
+ * ONE LINE. It was breaking to two — "NEW GROWN / DIAMOND" — at every width
+ * from 390px to 1440px, because a `max-width: 175px` from an older layout was
+ * still capping it. A wordmark folded in half inside an 88px bar is the single
+ * thing that made this header read as unfinished, and it was also why the
+ * wordmark sat taller than everything it was supposed to align with.
+ *
+ * Set at 400 rather than the 600 it carried: Cormorant is a display serif with
+ * a fine, high-contrast axis, and leaning on it at semibold thickens the stems
+ * into something closer to a slab. The letterspacing does the work instead.
  */
-.scrim {
-  position: fixed;
-  inset: 0 0 auto 0;
-  z-index: 39;
-  height: 7.5rem;
-  pointer-events: none;
-  background: linear-gradient(
-    180deg,
-    rgb(var(--scrim) / 0.82) 0%,
-    rgb(var(--scrim) / 0.46) 52%,
-    transparent 100%
-  );
-  opacity: 0;
-  transition: opacity var(--dur-slow) var(--ease-primary);
-}
-
-.scrim[data-on] { opacity: 1; }
-
 .mark {
+  flex: 0 0 auto;
   font-family: var(--font-display);
-  font-size: var(--t-sm);
-  letter-spacing: 0.3em;
+  font-size: 0.85rem;
+  font-weight: 400;
+  letter-spacing: 0.11em;
+  line-height: 1;
   text-transform: uppercase;
-  color: var(--chrome);
+  white-space: nowrap;
+  color: var(--text);
+  transition: color var(--dur-base) var(--ease-primary);
 }
 
-.theme { display: none; }
+.mark:hover,
+.mark:focus-visible { color: var(--accent); }
 
+/* ---------------- the navigation ---------------- */
+
+/*
+ * Centred in the space it is given, rather than parked against the wordmark.
+ *
+ * The bar was `justify-content: space-between` with the nav hard against the
+ * left group, which left a measured 66px hole in English and a 149px hole in
+ * Hindi between the last link and the first control — the shorter the
+ * translation, the wider the hole. Letting the nav take the middle and centre
+ * inside it means the row composes itself in any language.
+ */
 .nav {
+  flex: 1 1 auto;
   display: flex;
-  gap: var(--s-5);
+  justify-content: center;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
 }
+
+/* Hidden first, shown by the query below. These must stay ABOVE that query:
+   they carry the same specificity, so a later `display: none` would win at
+   every width — which is exactly what happened when the controls' base rule
+   sat further down the file and the whole right-hand group vanished. */
 .link { display: none; }
+.theme { display: none; }
+.utilities { display: none; }
 
 @media (min-width: 900px) {
-  .link { display:block; }
-  .theme { display: block; }
+  .link { display: block; }
+  .theme { display: flex; }
+  .utilities { display: flex; }
 }
 
-/* Between the phone menu and a wide desk the row is tight: the mark and
-   "Our story" were wrapping onto second lines at 1024. Closer spacing and a
-   mark that refuses to break keep the header one line tall. */
-@media (min-width: 900px) and (max-width: 1199px) {
-  .nav { gap: var(--s-3); }
-  .link { font-size: 0.75rem; letter-spacing: 0.08em; white-space: nowrap; }
-  .mark { flex: 0 0 auto; margin-right: var(--s-4); white-space: nowrap; letter-spacing: 0.16em; }
+/*
+ * 12px, up from 10px.
+ *
+ * Ten-pixel uppercase at weight 300 is below what this nav can afford to be —
+ * it was less than two-thirds the size of the wordmark beside it, and in Hindi
+ * and Gujarati, where the matras sit above and below the line, 10px stopped
+ * being readable rather than merely small. The weight goes up with it, because
+ * 300 at this size leaves the strokes grey rather than black.
+ */
+.link {
+  position: relative;
+  font-size: 0.69rem;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--text);
+  padding-block: 0.55rem;
+  opacity: 0.82;
+  transition: opacity var(--dur-base) var(--ease-primary);
 }
+
+.link:hover,
+.link:focus-visible,
+.link[aria-current='page'] { opacity: 1; }
 
 /* Underline grows from the left, retreats to the right — the reference site's
    link treatment, and the reason the two halves use different curves. */
-.link {
-  position: relative;
-  font-size: var(--t-sm);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--chrome);
-  padding-block: var(--s-1);
-}
-
 .link::after {
   content: '';
   position: absolute;
   left: 0;
-  bottom: 0;
+  bottom: 0.15rem;
   width: 100%;
   height: 1px;
   background: currentColor;
@@ -100,33 +168,250 @@
 .link[aria-current='page']::after {
   transform: scaleX(1);
   transform-origin: left center;
+  background: var(--accent);
 }
 
-/* ---------------- mobile menu ---------------- */
+/*
+ * Devanagari and Gujarati, a step larger and untracked.
+ *
+ * The site-wide Indic rule in global.css already forces `letter-spacing:
+ * normal` — tracking pulls a conjunct apart at the joins — so the uppercase
+ * treatment above is giving these scripts nothing but a smaller face. They get
+ * the size back here. `text-transform: uppercase` is also a no-op in both, so
+ * the nav simply reads as sentence case, which is correct for them.
+ */
+:global(:root[data-script='devanagari']) .link,
+:global(:root[data-script='gujarati']) .link { font-size: 0.85rem; }
 
-/* The toggle. `mix-blend-mode: difference` on the header keeps it legible over
-   both the ink pages and the ivory vitrine without a second colour scheme. */
+:global(:root[data-script='devanagari']) .mark,
+:global(:root[data-script='gujarati']) .mark { letter-spacing: 0.12em; }
+
+/* ---------------- the controls ---------------- */
+
+/*
+ * ONE SHAPE FOR ALL OF THEM.
+ *
+ * The right of the bar was six controls in three different shapes: square
+ * rectangles for the wishlist, cart and account, a filled square for Login,
+ * and two fully round pills for the language and theme controls — each at its
+ * own height, with its own padding, from three different stylesheets. It read
+ * as a toolbar bolted to the end of the header rather than as part of it.
+ *
+ * Every control is now the same height, the same 2px corner and the same
+ * hairline. 2px rather than the 999px pills: a fully round control belongs to
+ * a softer, sans-serif house style than this one, and next to a Cormorant
+ * wordmark it reads as borrowed.
+ *
+ * The language and theme controls are reached from here by element rather than
+ * by class — they own their own stylesheets, and this is the one place that
+ * knows they have to agree with four other controls.
+ */
+.utilities,
+.theme {
+  align-items: center;
+  flex: 0 0 auto;
+}
+
+.utilities { gap: 0.4rem; }
+
+/* The settings pair sits behind a hairline, so the row reads as two groups —
+   places to go, then how the site is shown — instead of six loose buttons. */
+.theme {
+  gap: 0.4rem;
+  margin-left: 0.55rem;
+  padding-left: 0.7rem;
+  border-left: 1px solid var(--ink-line);
+}
+
+/* The two triggers only — `.theme button` unqualified would also catch
+   anything inside the language menu when it is open. */
+.cart,
+.account,
+.theme > button,
+.theme > * > button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 2.25rem;
+  min-height: 2.25rem;
+  padding-inline: 0.75rem;
+  border: 1px solid var(--ink-line);
+  border-radius: 2px;
+  background: transparent;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.6875rem;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  line-height: 1;
+  text-transform: uppercase;
+  opacity: 0.86;
+  cursor: pointer;
+  transition:
+    opacity var(--dur-base) var(--ease-primary),
+    border-color var(--dur-base) var(--ease-primary),
+    background var(--dur-base) var(--ease-primary);
+}
+
+.cart:hover, .cart:focus-visible,
+.account:hover, .account:focus-visible,
+.theme > button:hover, .theme > button:focus-visible,
+.theme > * > button:hover, .theme > * > button:focus-visible {
+  opacity: 1;
+  border-color: var(--accent);
+}
+
+.cart[aria-current='page'],
+.account[aria-current='page'] { border-color: var(--accent); opacity: 1; }
+
+/* The count. Filled, so a number that changes is noticed without the control
+   having to move or grow. */
+.cart b {
+  display: grid;
+  place-items: center;
+  min-width: 1.15rem;
+  height: 1.15rem;
+  padding-inline: 0.25rem;
+  border-radius: 999px;
+  background: var(--text);
+  color: var(--ink);
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+/* The wishlist is a heart and a number; it needs no word and no extra width. */
+.wish { padding-inline: 0.6rem; }
+.wish svg { display: block; }
+.wish[aria-current='page'] svg { fill: currentColor; }
+
+/*
+ * Login is the one filled control in the row — the single thing here worth
+ * pressing when nobody is signed in — and the only one carrying the accent.
+ */
+.login {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--ink);
+  font-weight: 500;
+  opacity: 1;
+}
+
+.login:hover,
+.login:focus-visible {
+  background: var(--accent-lift, var(--accent));
+  border-color: var(--accent-lift, var(--accent));
+  color: var(--ink);
+}
+
+.logout { background: transparent; }
+
+/*
+ * The theme control's word — DARK / LIGHT — is hidden below 1400px.
+ *
+ * It repeats what the sun and moon already say, and it is the cheapest 45px in
+ * the bar. The accessible name on the button is untouched, so nothing is lost
+ * to a screen reader; the language control beside it already drops to the
+ * globe alone at these widths, so the pair stays consistent. It is the LAST
+ * span in the button, after the dial.
+ */
+.theme > button > span:last-child { display: none; }
+
+/*
+ * Wide screens get the design at its intended size: the wordmark's full
+ * tracking, larger nav, and the theme word back.
+ */
+@media (min-width: 1400px) {
+  .root { gap: 1.15rem; }
+  .mark { font-size: 1rem; letter-spacing: 0.16em; }
+  .nav { gap: 0.95rem; }
+  .link { font-size: 0.73rem; letter-spacing: 0.1em; }
+  .theme > button > span:last-child { display: inline; }
+}
+
+/* ---------------- laptop widths ---------------- */
+
+/*
+ * 900 to 1199px is where this bar is genuinely tight: the wordmark, six nav
+ * links and six controls in under 1200px. The words give way to the figures
+ * they already carry — the accessible names stay in the markup — and the
+ * spacing closes up, rather than the type shrinking to the 9px it used to.
+ */
+.accountIcon { display: none; }
+
+@media (min-width: 900px) and (max-width: 1199px) {
+  .root { gap: 0.6rem; }
+  /* Measured at 900px: the nav needed 346px and had 319px. The 27px comes out
+     of the wordmark's tracking and the gaps between links — not out of the
+     link type, which is the thing this whole pass exists to make readable. */
+  .mark { font-size: 0.7rem; letter-spacing: 0.06em; }
+  .nav { gap: 0.3rem; }
+  .link { font-size: 0.64rem; letter-spacing: 0.04em; }
+  .utilities { gap: 0.15rem; }
+  .wish { padding-inline: 0.4rem; }
+  .cart b { min-width: 1rem; height: 1rem; }
+  .theme { margin-left: 0.35rem; padding-left: 0.45rem; gap: 0.2rem; }
+  .cart, .account, .theme > button, .theme > * > button { padding-inline: 0.45rem; }
+  .utilities .accountLink { display: inline-flex; }
+  .accountIcon { display: block; }
+  .accountText {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+/* ---------------- phone ---------------- */
+
+@media (max-width: 899px) {
+  .root { min-height: 80px; gap: 0.75rem; }
+  .mark { font-size: 0.9rem; letter-spacing: 0.14em; }
+  /* The language control lives in the sheet on a phone, within thumb reach. */
+  .theme > :first-child { display: none; }
+  .theme {
+    display: flex;
+    margin-left: auto;
+    padding-left: 0;
+    border-left: 0;
+  }
+  .utilities { display: none; }
+}
+
+/* ---------------- the phone menu ---------------- */
+
+/* Two bars, not three: they cross into an X rather than one vanishing, which
+   reads as the same object changing state. */
+/* Hidden by default and shown only on a phone — declared this way round so
+   that no later rule in this file can quietly bring it back on a desktop,
+   which is what happened when it was `display: grid` here and hidden by a
+   query further up. */
 .burger {
   position: relative;
+  flex: 0 0 auto;
   width: 2.75rem;
   height: 2.75rem;
-  display: grid;
+  display: none;
   place-content: center;
   gap: 6px;
+  background: none;
+  border: 0;
+  cursor: pointer;
 }
 
-@media (min-width: 900px) { .burger { display: none; } }
+@media (max-width: 899px) { .burger { display: grid; } }
 
 .burger span {
   display: block;
   width: 22px;
   height: 1px;
-  background: var(--chrome);
+  background: var(--text);
   transition: transform var(--dur-slow) var(--ease-primary), opacity var(--dur-base) var(--ease-primary);
 }
 
-/* Two bars, not three: they cross into an X rather than one vanishing, which
-   reads as the same object changing state. */
 .root[data-open] .burger span:first-child { transform: translateY(3.5px) rotate(45deg); }
 .root[data-open] .burger span:last-child { transform: translateY(-3.5px) rotate(-45deg); }
 
@@ -148,12 +433,11 @@
   align-content: safe center;
   overflow-y: auto;
   overscroll-behavior: contain;
-  gap: var(--s-6);
+  gap: var(--s-5);
   /* Top padding clears the fixed header, whose close control sits above this
      sheet and must not land on the first link. */
-  padding: calc(var(--s-7) + 4.5rem) var(--gutter) var(--s-7);
-  background: rgb(var(--scrim) / 0.97);
-  backdrop-filter: blur(14px);
+  padding: 6.5rem var(--gutter) var(--s-7);
+  background: var(--ink);
   /* Wipes down from the top rather than fading — a fade reads as a loading
      state, a wipe reads as a panel arriving. */
   clip-path: inset(0 0 100% 0);
@@ -184,21 +468,26 @@
   transition-delay: calc(180ms + var(--i) * 55ms);
 }
 
-.sheetIndex { font-size: 0.625rem; letter-spacing: 0.2em; color: var(--gold); }
+.sheetIndex {
+  font-size: 0.625rem;
+  letter-spacing: 0.2em;
+  color: var(--accent);
+}
 
 .sheetLabel {
   font-family: var(--font-display);
-  font-size: clamp(1.9rem, 1rem + 6vw, 3rem);
+  font-size: clamp(2.2rem, 7vw, 3.8rem);
   font-weight: 300;
-  color: var(--ivory);
-  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  line-height: 1.05;
 }
 
 .sheetLink:hover .sheetLabel,
 .sheetLink:focus-visible .sheetLabel,
-.sheetLink[aria-current='page'] .sheetLabel { color: var(--gold-lift); }
+.sheetLink[aria-current='page'] .sheetLabel { color: var(--accent); }
 
-.subList a[aria-current='page'] { color: var(--gold-lift); }
+.subList a[aria-current='page'] { color: var(--accent); }
 
 /*
  * The pages nested under a sheet link.
@@ -233,65 +522,164 @@
 .subList li:last-child a { border-bottom: 0; }
 
 .subList a:hover,
-.subList a:focus-visible { color: var(--gold-lift); }
+.subList a:focus-visible { color: var(--accent); }
 
-.sheetFoot {
-  display: grid;
-  gap: var(--s-2);
-  font-size: var(--t-xs);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--text-muted);
+.sheetButton {
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid var(--ink-line);
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
 }
-
-.sheetFoot a { color: var(--gold-lift); }
-
-@media (prefers-reduced-motion: reduce) {
-  .sheet, .sheetLink, .subList, .burger span { transition: none; }
-}
-
-/*
- * The account link. Sized and coloured like the theme control rather than like
- * a nav link, because it belongs to the same family of personal settings — and
- * it inherits the fixed chrome ink, since the header blends with difference
- * and nothing inside it may use a token that flips with the theme.
- */
-.account {
-  display: none;
-  padding: 0.4rem 0.8rem;
-  border: 1px solid var(--ink-line);
-  border-radius: 999px;
-  color: var(--chrome);
-  opacity: 0.72;
-  font-size: 0.5625rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  transition:
-    opacity var(--dur-base) var(--ease-primary),
-    border-color var(--dur-base) var(--ease-primary);
-}
-
-.account:hover,
-.account:focus-visible { opacity: 1; border-color: currentColor; }
-
-/* Below this the full-screen sheet carries it, so the bar stays uncrowded. */
-@media (min-width: 900px) { .account { display: inline-block; } }
-
-/*
- * The two presentation controls share a row. `gap` rather than a margin on the
- * switcher so the pair stays centred as a unit when the header compresses.
- */
-.theme { display: flex; align-items: center; gap: 0.5rem; }
 
 /* In the sheet the switcher sits above the contact block, within thumb reach
    at the bottom of a phone rather than up beside the close button. */
 .sheetLang { padding: var(--s-3) 0 0; }
 
+.sheetFoot {
+  display: grid;
+  gap: var(--s-2);
+  font-size: var(--t-xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
+.sheetFoot a { color: var(--accent); }
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet, .sheetLink, .subList, .burger span, .link::after { transition: none; }
+}
+
+/* ---------------- 4D storefront header refresh ---------------- */
+.root {
+  gap: 1rem;
+  background: color-mix(in srgb, var(--ink) 94%, transparent);
+  border-bottom-color: color-mix(in srgb, var(--text) 10%, transparent);
+  box-shadow: 0 10px 34px rgba(10, 28, 24, 0.045);
+  isolation: isolate;
+}
+
+.root::before {
+  content: '';
+  position: absolute;
+  inset: auto 0 -1px;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent 3%, color-mix(in srgb, var(--accent) 55%, transparent) 28%, transparent 62%);
+  transform: scaleX(.72);
+  transform-origin: left;
+  opacity: .65;
+  transition: transform 700ms var(--ease-primary), opacity 300ms ease;
+}
+.root[data-scrolled]::before { transform: scaleX(1); opacity: 1; }
+
+.mark {
+  display: inline-flex;
+  align-items: center;
+  gap: .7rem;
+  min-width: 12rem;
+  font-family: var(--font-body);
+}
+
+.markGlyph {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 62%, var(--ink-line));
+  border-radius: 50%;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  letter-spacing: 0;
+  transition: rotate 600ms var(--ease-primary), border-color 300ms ease;
+}
+.mark:hover .markGlyph, .mark:focus-visible .markGlyph { rotate: 12deg; border-color: var(--accent); }
+
+.markWords {
+  display: grid;
+  gap: .16rem;
+  font-size: .64rem;
+  font-weight: 500;
+  letter-spacing: .17em;
+  line-height: 1;
+}
+.markWords b { font: inherit; color: color-mix(in srgb, var(--text) 68%, var(--accent)); }
+
+.nav { gap: clamp(.5rem, 1vw, 1rem); }
+.link { padding: .75rem .15rem; }
+
+.utilities {
+  padding: .25rem;
+  gap: .25rem;
+  border: 1px solid var(--ink-line);
+  background: color-mix(in srgb, var(--ink-raised) 74%, transparent);
+}
+.utilities .cart,
+.utilities .account { border-color: transparent; }
+.utilities .cart:hover,
+.utilities .account:hover,
+.utilities .cart:focus-visible,
+.utilities .account:focus-visible { background: var(--ink-raised); }
+.utilities .login { border-color: var(--accent); }
+
+.mobileCart { display: none; }
+
+@media (min-width: 1200px) and (max-width: 1399px) {
+  .mark { min-width: 10.5rem; }
+  .markWords { font-size: .59rem; letter-spacing: .13em; }
+  .nav { gap: .55rem; }
+}
+
+@media (min-width: 900px) and (max-width: 1199px) {
+  .mark { min-width: 2.35rem; }
+  .markWords { display: none; }
+}
+
 @media (max-width: 899px) {
-  .root { gap: 0.65rem; padding-block: 1rem; }
-  .mark { flex: 1; min-width: 0; font-size: 0.6875rem; letter-spacing: 0.2em; }
-  .burger { flex-shrink: 0; }
-  .sheet { padding-top: 6.5rem; gap: var(--s-5); }
-  .sheetFoot { letter-spacing: 0.06em; overflow-wrap: anywhere; }
-  .theme > :first-child { display: none; }
+  .root { padding-inline: max(var(--gutter), env(safe-area-inset-left)); gap: .35rem; }
+  .mark { min-width: 0; margin-right: auto; gap: .6rem; }
+  .markGlyph { width: 2.25rem; height: 2.25rem; }
+  .markWords { font-size: .58rem; letter-spacing: .12em; }
+  .theme { margin-left: 0; }
+  .mobileCart {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    color: var(--text);
+  }
+  .mobileCart b {
+    position: absolute;
+    top: .15rem;
+    right: .05rem;
+    display: grid;
+    place-items: center;
+    min-width: 1rem;
+    height: 1rem;
+    padding: 0 .2rem;
+    border-radius: 999px;
+    background: var(--accent);
+    color: var(--ink);
+    font-size: .58rem;
+    line-height: 1;
+  }
+  .burger { border-left: 1px solid var(--ink-line); }
+  .sheet { padding-top: calc(6.25rem + env(safe-area-inset-top)); }
+  .sheetLabel { font-size: clamp(2rem, 9vw, 3rem); }
+}
+
+@media (max-width: 370px) {
+  .markWords { display: none; }
+  .mark { min-width: 2.25rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .root::before, .markGlyph { transition: none; }
 }

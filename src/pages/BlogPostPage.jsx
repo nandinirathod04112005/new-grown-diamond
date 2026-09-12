@@ -1,86 +1,105 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 
-import { getPublishedBlog } from '@/lib/supabase/queries/blogs.js';
-import { blogCoverUrl } from '@/lib/supabase/storage.js';
+import Rail from '@/components/journal/Rail.jsx';
+import ShareLinks from '@/components/journal/ShareLinks.jsx';
+import { Cover, PostCard, PostMeta } from '@/components/journal/JournalBits.jsx';
+import FeedbackForm from '@/components/feedback/FeedbackForm.jsx';
+import FeedbackWall from '@/components/feedback/FeedbackWall.jsx';
+import { useReveal } from '@/hooks/useReveal.js';
+import { useLocale } from '@/i18n/localeContext.js';
+import { useCopy } from '@/i18n/useCopy.js';
+import { archivePost, archivePosts, loadJournal, loadPost, localizePost, localizePosts, shorten } from '@/lib/journal.js';
+import { loadFeedbackWall } from '@/lib/supabase/queries/feedback.js';
+import COPY from './BlogPostPage.copy.js';
 import styles from './BlogPostPage.module.css';
 
 /**
- * One journal post.
+ * One journal article.
  *
- * The cards on /blogs have pointed at /blogs/:slug since the journal was
- * built; this is the page that was never behind them. It reads the same
- * published record the index reads (queries/blogs.js, `getPublishedBlog`),
- * under the same access rule — published rows only — and renders nothing it
- * did not get from that row.
+ * An archive article is on screen at the first paint — it ships with the site
+ * — and is swapped for the Control Centre's version if one has been published
+ * under the same address. An editor-only post waits for the database, with the
+ * states the journal has always stated plainly: not found (a stale link, which
+ * is offered the index rather than a dead end) and could not load.
  *
- * Five states, each told plainly: loading, the table not being there yet, the
- * deployment not being connected, a request that failed, and a slug that
- * matches no published post. The last is the one a stale link lands on, and
- * it offers the index rather than a dead end.
- *
- * The body is stored as plain text. It is rendered as paragraphs split on
- * blank lines, with single line breaks kept — through text nodes, never as
- * markup, so nothing in the column can become an element on the page.
+ * Around the text: sharing, the articles either side of this one, feedback on
+ * this article (sent to the desk, and shown here once approved), and more
+ * to read. The body is plain text rendered through text nodes, never as markup,
+ * so nothing stored in a post can become an element on the page.
  */
 export default function BlogPostPage({ slug }) {
-  const [state, setState] = useState({ slug: null, status: 'loading', post: null });
+  const [state, setState] = useState(() => ({ slug, status: 'pending', post: null }));
+  const [journal, setJournal] = useState(() => archivePosts());
+  const [voices, setVoices] = useState({ slug: null, items: [] });
+  const root = useRef(null);
+  const { locale } = useLocale();
+  const c = useCopy(COPY);
 
   useEffect(() => {
     let alive = true;
-    getPublishedBlog(slug)
-      .then(({ post, missing, unconfigured }) => {
-        if (!alive) return;
-        if (unconfigured) setState({ slug, status: 'unconfigured', post: null });
-        else if (missing) setState({ slug, status: 'missing', post: null });
-        else setState(post ? { slug, status: 'ready', post } : { slug, status: 'notfound', post: null });
-      })
+    loadPost(slug).then((r) => { if (alive) setState({ slug, ...r }); });
+    loadJournal().then((r) => { if (alive) setJournal(r.posts); });
+    loadFeedbackWall({ blogSlug: slug, limit: 12 })
+      .then((wall) => { if (alive) setVoices({ slug, items: wall.items }); })
       .catch((err) => {
-        console.error('[NGD journal]', err);
-        if (alive) setState({ slug, status: 'error', post: null });
+        console.error('[NGD journal] feedback', err);
+        if (alive) setVoices({ slug, items: [] });
       });
     return () => { alive = false; };
   }, [slug]);
 
-  // Derived, not set in an effect: a new slug is loading until its own
-  // result lands, and the previous post is never shown under the new address.
-  const status = state.slug === slug ? state.status : 'loading';
-  const post = state.slug === slug ? state.post : null;
+  /*
+   * Derived, not set in an effect. Until this slug's own answer lands, an
+   * archive article shows immediately and anything else is loading — the
+   * previous article is never shown under the new address.
+   */
+  const settled = state.slug === slug && state.status !== 'pending';
+  const fallback = archivePost(slug);
+  const status = settled ? state.status : fallback ? 'ready' : 'loading';
+  const found = settled ? state.post : fallback;
+  /* In the reader's language: an archive article translated, an editor post as written. */
+  const post = useMemo(() => localizePost(found, locale), [found, locale]);
+  const feedback = voices.slug === slug ? voices : { items: [] };
 
   useEffect(() => {
     if (status === 'ready' && post) document.title = `${post.title} — New Grown Diamond`;
   }, [status, post]);
 
+  const posts = useMemo(() => localizePosts(journal, locale), [journal, locale]);
+  const index = posts.findIndex((p) => p.slug === slug);
+  const newer = index > 0 ? posts[index - 1] : null;
+  const older = index >= 0 && index < posts.length - 1 ? posts[index + 1] : null;
+  const others = useMemo(() => posts.filter((p) => p.slug !== slug), [posts, slug]);
+
+  useReveal(root, [status, slug, feedback.items.length, others.length]);
+
   if (status === 'loading') {
     return (
       <main className={styles.page}>
         <div className={styles.article} aria-busy="true">
-          <p className={styles.eyebrow}>Journal</p>
+          <p className={styles.crumbs}>{c.journal}</p>
           <div className={styles.skeleton} aria-hidden="true">
             <span /><span /><span />
           </div>
-          <p className="u-visually-hidden" role="status">Loading the post</p>
+          <p className="u-visually-hidden" role="status">{c.loading}</p>
         </div>
       </main>
     );
   }
 
-  if (status !== 'ready') {
-    const copy = {
-      missing: ['The journal is not published yet', 'Writing is under way. Once the first pieces are live they will appear here.'],
-      unconfigured: ['The journal is unavailable', 'This deployment is not connected to its database.'],
-      error: ['This post could not be loaded', 'Something went wrong fetching it. Please try again shortly.'],
-      notfound: ['This post is not in the journal', 'The address may have changed, or the piece may not be published yet.'],
-    }[status];
+  if (status !== 'ready' || !post) {
+    const copy = { error: c.notice.error, notfound: c.notice.notfound }[status] ?? c.notice.fallback;
     return (
       <main className={styles.page}>
         <div className={styles.article}>
-          <p className={styles.eyebrow}>Journal</p>
+          <p className={styles.crumbs}><a href="/blogs">{c.journal}</a></p>
           <div className={styles.notice} data-tone={status === 'error' ? 'error' : undefined}>
-            <h1>{copy[0]}</h1>
-            <p>{copy[1]}</p>
+            <h1>{copy.title}</h1>
+            <p>{copy.body}</p>
             <div className={styles.actions}>
-              <a className="u-button u-button--ghost" href="/blogs">All posts</a>
-              <a className={styles.textLink} href="/contact">Talk to the desk <span aria-hidden="true">→</span></a>
+              <a className={styles.ghost} href="/blogs"><ArrowLeft size={15} aria-hidden="true" /> {c.all}</a>
+              <a className={styles.textLink} href="/contact">{c.desk}</a>
             </div>
           </div>
         </div>
@@ -88,56 +107,105 @@ export default function BlogPostPage({ slug }) {
     );
   }
 
-  const cover = blogCoverUrl(post.cover_path);
-  const paragraphs = String(post.body ?? '')
-    .split(/\n\s*\n/)
-    .map((p) => p.trim())
-    .filter(Boolean);
+  const [first, ...restParas] = post.paragraphs;
+  const lines = (text) => text.split('\n').map((line, i) => (
+    <span key={i}>{i > 0 ? <br /> : null}{line}</span>
+  ));
 
   return (
-    <main className={styles.page}>
+    <main className={styles.page} ref={root}>
       <article className={styles.article}>
         <header className={styles.head}>
-          <p className={styles.eyebrow}>
-            <a href="/blogs">Journal</a>
-            {post.published_at ? <> · <time dateTime={post.published_at}>{formatDate(post.published_at)}</time></> : null}
-            {post.author_name ? <> · {post.author_name}</> : null}
-          </p>
+          <nav className={styles.crumbs} aria-label={c.breadcrumb}>
+            <a href="/blogs">{c.journal}</a>
+            <span aria-hidden="true">/</span>
+            <span aria-current="page">{c.article}</span>
+          </nav>
           <h1 className={styles.title}>{post.title}</h1>
-          {post.excerpt ? <p className={styles.standfirst}>{post.excerpt}</p> : null}
+          <PostMeta post={post} className={styles.meta} />
         </header>
 
-        {cover ? (
-          <figure className={styles.cover}>
-            <img src={cover} alt="" loading="eager" fetchPriority="high" decoding="async" />
+        {post.cover && (
+          <figure className={styles.cover} data-fit={post.cover.fit} data-rv="">
+            <Cover cover={post.cover} eager />
           </figure>
-        ) : null}
-
-        {paragraphs.length > 0 ? (
-          <div className={styles.body}>
-            {paragraphs.map((p, i) => (
-              <p key={i}>
-                {p.split('\n').map((line, li) => (
-                  <span key={li}>{li > 0 ? <br /> : null}{line}</span>
-                ))}
-              </p>
-            ))}
-          </div>
-        ) : (
-          <p className={styles.standfirst}>This post has no body text yet.</p>
         )}
 
-        <footer className={styles.foot}>
-          <a className="u-button u-button--ghost" href="/blogs"><span aria-hidden="true">←</span> All posts</a>
-          <a className={styles.textLink} href="/contact">Talk to the desk <span aria-hidden="true">→</span></a>
-        </footer>
+        <div className={styles.layout}>
+          <aside className={styles.aside} aria-label={c.share}>
+            <div className={styles.asideInner}>
+              <ShareLinks title={post.title} layout="column" />
+            </div>
+          </aside>
+
+          <div className={styles.body}>
+            {first ? <p className={styles.opening}>{lines(first)}</p> : <p>{c.empty}</p>}
+            {post.figure && (
+              <figure className={styles.figure} data-rv="">
+                <Cover cover={post.figure} />
+              </figure>
+            )}
+            {restParas.map((p, i) => <p key={i}>{lines(p)}</p>)}
+
+            <div className={styles.shareRow}>
+              <ShareLinks title={post.title} />
+            </div>
+          </div>
+        </div>
+
+        {(newer || older) && (
+          <nav className={styles.pager} aria-label={c.pager.label}>
+            {newer ? (
+              <a className={styles.pagerLink} href={`/blogs/${encodeURIComponent(newer.slug)}`} rel="prev">
+                <span className={styles.pagerDir}><ArrowLeft size={15} aria-hidden="true" /> {c.pager.newer}</span>
+                <span className={styles.pagerTitle}>{newer.title}</span>
+              </a>
+            ) : <span />}
+            {older ? (
+              <a className={styles.pagerLink} data-next="" href={`/blogs/${encodeURIComponent(older.slug)}`} rel="next">
+                <span className={styles.pagerDir}>{c.pager.older} <ArrowRight size={15} aria-hidden="true" /></span>
+                <span className={styles.pagerTitle}>{older.title}</span>
+              </a>
+            ) : <span />}
+          </nav>
+        )}
       </article>
+
+      <section className={styles.feedback} aria-labelledby="article-feedback-title" data-reveal="">
+        <header className={styles.sectionHead}>
+          <p className={styles.eyebrow}>{c.feedback.eyebrow}</p>
+          <h2 id="article-feedback-title">{c.feedback.title}</h2>
+          <p className={styles.sectionNote}>
+            {c.feedback.note}
+          </p>
+        </header>
+        <div className={styles.feedbackGrid}>
+          <FeedbackForm blogSlug={post.slug} articleTitle={post.title} />
+          <div className={styles.feedbackList}>
+            {feedback.items.length
+              ? <FeedbackWall items={feedback.items} />
+              : <p className={styles.quiet}>{c.feedback.none}</p>}
+          </div>
+        </div>
+      </section>
+
+      {others.length > 0 && (
+        <section className={styles.related} aria-labelledby="related-title" data-reveal="">
+          <header className={styles.sectionHead}>
+            <p className={styles.eyebrow}>{c.related.eyebrow}</p>
+            <h2 id="related-title">{c.related.title}</h2>
+          </header>
+          <Rail
+            label={c.related.title}
+            items={others}
+            getKey={(p) => p.slug}
+            renderItem={(p) => <PostCard post={p} excerpt={shorten(p.excerpt, 130)} />}
+          />
+          <p className={styles.backRow}>
+            <a className={styles.ghost} href="/blogs"><ArrowLeft size={15} aria-hidden="true" /> {c.all}</a>
+          </p>
+        </section>
+      )}
     </main>
   );
-}
-
-function formatDate(iso) {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return '';
-  return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
 }

@@ -112,8 +112,8 @@ export default function DiamondField({ progressRef, className = '' }) {
        * getting on for half the stage — large, unobstructed, and legible for
        * the same reason the headline is.
        */
-      const MARK_Y = 0.90;
-      const MARK_W = 0.46;
+      const MARK_Y = 0.62;
+      const MARK_W = 0.30;
 
       const word = sample((c, w, h) => {
         c.clearRect(0, 0, w, h);

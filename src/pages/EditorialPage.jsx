@@ -1,5 +1,10 @@
 import PageHero from '@/components/layout/PageHero.jsx';
 import Reveal from '@/components/motion/Reveal.jsx';
+import { useLocale } from '@/i18n/localeContext.js';
+import { useCopy } from '@/i18n/useCopy.js';
+import { usePageIntro } from '@/hooks/useSiteSettings.js';
+import { localizePage } from './siteContent.i18n.js';
+import COPY from './EditorialPage.copy.js';
 import styles from './EditorialPage.module.css';
 /**
  * Editorial template.
@@ -13,18 +18,32 @@ import styles from './EditorialPage.module.css';
  * A page may carry no sections at all — Shapes states its content beside its
  * turning wheel instead — so the list and its rules are skipped entirely
  * rather than rendering an empty bordered block.
+ *
+ * `page` arrives in English; `path` says which page it is, so its words can be
+ * found in the visitor's language. Fields without a translation stay English.
+ *
+ * The eyebrow, title and intro can then be overridden per language from the
+ * Control Centre (Website Content → Page introductions). usePageIntro reads
+ * the saved override from the browser's copy on the first render and holds it
+ * for the life of the route, so the hero never changes under the reader.
  */
-export default function EditorialPage({ page, children, after, motif, accent, backdrop }) {
+export default function EditorialPage({ path, page: source, children, after, motif, accent, backdrop, backdropFocus, backdropMobileFocus, hero }) {
+  const { locale } = useLocale();
+  const c = useCopy(COPY);
+  const page = usePageIntro(path, localizePage(path, source, locale), locale);
+
   return (
     <main className={styles.page}>
-      <PageHero
+      {hero || <PageHero
         eyebrow={page.eyebrow}
         title={page.title}
         intro={page.intro}
         motif={motif}
         accent={accent}
         backdrop={backdrop}
-      />
+        backdropFocus={backdropFocus}
+        backdropMobileFocus={backdropMobileFocus}
+      />}
 
       {children}
 
@@ -43,7 +62,7 @@ export default function EditorialPage({ page, children, after, motif, accent, ba
 
       {after}
 
-      <a className={styles.cta} href="/contact"><span>Discuss your requirement</span><strong>→</strong></a>
+      <a className={styles.cta} href="/contact"><span>{c.cta}</span><strong>→</strong></a>
     </main>
   );
 }

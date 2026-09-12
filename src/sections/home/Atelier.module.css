@@ -1,21 +1,30 @@
 /*
- * The opening screen.
+ * The opening screen, rebuilt.
  *
  * THIS FILE DESCRIBES THE FINISHED HERO, not a starting state. Everything here
- * is the arrived composition; the entrance timeline in Atelier.jsx animates
- * from a start state toward what is written below. That order matters: with no
- * JavaScript, a failed bundle or reduced motion, the visitor gets the complete
- * screen rather than an invisible one waiting for a script that never came.
+ * is the arrived composition; the timeline in Atelier.jsx animates from a start
+ * state toward what is written below. That order matters: with no JavaScript, a
+ * blocked bundle or reduced motion, a visitor gets the complete screen rather
+ * than an invisible one waiting for a script that never came.
  *
- * Three transforms live on three different elements so they cannot overwrite
- * one another — .lift is scroll, .drift is pointer, .photo is the entrance.
- * Nothing sets `transform` on more than one of those at a time.
- *
- * The stage stays dark in both themes. In light mode this reads as an inset
- * cinematic panel, which is a deliberate luxury convention rather than an
- * oversight: the photograph is lit against black, and dropping it onto a pale
- * page would leave a grey rectangle with no light in it.
+ * The stage stays dark in both themes. In light mode it reads as an inset
+ * cinematic panel, which is a luxury convention rather than an oversight: the
+ * stone is lit against black, and dropping it onto a pale page would leave a
+ * grey rectangle with no light in it.
  */
+
+/*
+ * Registered, or it cannot be animated: without a declared type the browser
+ * does not know this holds a length, so a keyframed value jumps or simply
+ * holds. It inherits, which is what lets every layer in the panel read the
+ * same seam without any of them being told about the others.
+ */
+@property --seam {
+  syntax: '<percentage>';
+  inherits: true;
+  initial-value: 46%;
+}
+
 .hero {
   position: relative;
   isolation: isolate;
@@ -23,7 +32,7 @@
   min-height: 100svh;
   display: grid;
   align-items: center;
-  background: var(--stage-ink, #0b0b0d);
+  background: var(--stage-ink, #06070c);
   /* Written by useHeroProgress: 0 at rest, 1 once the hero has left. */
   --hp: 0;
   /* Written by usePointerParallax, both -1..1. */
@@ -31,510 +40,281 @@
   --my: 0;
 }
 
-/* A hairline where the stage meets the page below, so the panel ends
-   deliberately rather than fading into whatever follows. */
-.hero::after {
+/* One soft source above the composition, and a warmer one low behind the
+   panel. Everything else on this screen is dark. */
+.hero::before {
   content: '';
   position: absolute;
-  inset: auto 0 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(189, 160, 106, 0.5), transparent);
-}
-
-/* ---------------- the scroll layer ---------------- */
-/*
- * Only --hp drives this, and only over the first stretch of the scene. The
- * visual rises and grows a little while the copy moves less, which is what
- * separates the two planes as the page leaves. Capped well below 1 so the
- * movement is a drift, not a departure.
- */
-.lift {
-  position: relative;
-  width: 100%;
-  /* 0 -> 1 across roughly the first 70% of the hero's own height. */
-  --t: clamp(0, calc(var(--hp) / 0.7), 1);
-}
-
-/* ---------------- the pointer layer ---------------- */
-.drift {
-  position: relative;
-  width: 100%;
-  transform-style: preserve-3d;
-  perspective: 1400px;
-}
-
-@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
-  .drift {
-    /* Three degrees and fourteen pixels. Enough to feel like a room, little
-       enough that the headline never swims while it is being read. */
-    transform:
-      translate3d(calc(var(--mx) * -14px), calc(var(--my) * -9px), 0)
-      rotateY(calc(var(--mx) * 3deg))
-      rotateX(calc(var(--my) * -2.2deg));
-    transition: transform 240ms var(--ease-primary);
-  }
-}
-
-/* ---------------- the light ---------------- */
-.ambient {
-  position: absolute;
-  inset: -12% -6%;
-  z-index: 0;
-  pointer-events: none;
-  /* Simplified away as the next section arrives. */
-  opacity: calc(1 - var(--t) * 0.75);
-}
-
-.ambient span {
-  position: absolute;
-  display: block;
-  border-radius: 50%;
-  filter: blur(90px);
-}
-
-/* The key: a cool source behind the stone. */
-.key {
-  right: 4%;
-  top: 2%;
-  width: min(52vw, 40rem);
-  height: min(52vw, 40rem);
-  background: radial-gradient(closest-side, rgba(150, 178, 214, 0.20), transparent 72%);
-  transform: translate3d(calc(var(--mx) * 26px), calc(var(--my) * 18px), 0);
-  transition: transform 420ms var(--ease-primary);
-}
-
-/* The fill: a champagne bounce low and left, under the words. */
-.fill {
-  left: -4%;
-  bottom: -8%;
-  width: min(46vw, 34rem);
-  height: min(46vw, 34rem);
-  background: radial-gradient(closest-side, rgba(189, 160, 106, 0.16), transparent 70%);
-  transform: translate3d(calc(var(--mx) * 20px), calc(var(--my) * 14px), 0);
-  transition: transform 420ms var(--ease-primary);
-}
-
-/* ---------------- the house, written in stones ---------------- */
-/*
- * Behind the words and the gem both, and quiet: the swarm carries the brand
- * and then the shape, and neither is worth reading over the headline. It
- * simplifies away with the rest of the decoration as the next section arrives.
- */
-.swarm {
-  /*
-   * In FRONT of the composition, not behind it. Behind, the opaque case ate
-   * two of the three letters. In front, screen-blended at a little over half
-   * strength, the stones read as light lying across the stage — they add to
-   * what is under them and can never darken the headline.
-   */
-  z-index: 5;
-  opacity: calc(0.62 - var(--t) * 0.42);
-  mix-blend-mode: screen;
-}
-
-@media (max-width: 899px) {
-  /* A narrow column cannot hold three letters and a stone at a readable size,
-     so the swarm is dimmer still and lets the headline have the space. */
-  .swarm { opacity: calc(0.5 - var(--t) * 0.3); }
-}
-
-/* ---------------- the turning stones ---------------- */
-/*
- * Two of the house stone, behind everything, turning.
- *
- * A round brilliant seen face-up is radially symmetric about this axis, so
- * rotating it is honest — there is no hidden side being invented. They are
- * dim enough to read as light in the room rather than as pictures, run in
- * opposite directions on clocks that do not divide into one another, and are
- * hidden entirely from anyone who asked for less motion.
- */
-.orbit {
-  position: absolute;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  overflow: hidden;
-  /* Faded away as the next section arrives, with the rest of the decoration. */
-  opacity: calc((1 - var(--t) * 0.8) * 1);
-}
-
-.orbit img {
-  position: absolute;
-  display: block;
-  object-fit: contain;
-  mix-blend-mode: screen;
-  filter: blur(0.4px);
-}
-
-.orbitBig {
-  width: min(86vh, 46rem);
-  height: min(86vh, 46rem);
-  left: -14%;
-  top: 50%;
-  translate: 0 -50%;
-  opacity: 0.13;
-  animation: orbitTurn 150s linear infinite;
-}
-
-.orbitSmall {
-  width: min(34vh, 17rem);
-  height: min(34vh, 17rem);
-  right: -3%;
-  bottom: 6%;
-  opacity: 0.2;
-  animation: orbitTurn 92s linear infinite reverse;
-}
-
-@keyframes orbitTurn {
-  from { rotate: 0deg; }
-  to   { rotate: 360deg; }
-}
-
-/* ---------------- the plan ---------------- */
-/*
- * The stone as a cutter would set it out: girdle, table, crown facets,
- * pavilion mains to the culet. Drawn stroke by stroke by the entrance, then
- * one arrowhead runs the outline. It sits behind the words at low contrast —
- * it is a watermark with a story, not a diagram competing to be read.
- */
-.plan {
-  position: absolute;
-  z-index: 0;
-  /* Behind the words and to their left, clear of the buttons: it is a
-     watermark, and a watermark that crosses a call to action is a mistake. */
-  left: clamp(-6rem, -5vw, -2rem);
-  top: 42%;
-  translate: 0 -50%;
-  width: min(26vw, 18rem);
-  height: auto;
-  pointer-events: none;
-  color: rgba(189, 160, 106, 0.9);
-  opacity: calc(0.3 - var(--t) * 0.3);
-  overflow: visible;
-}
-
-.planLine {
-  fill: none;
-  stroke: rgba(189, 160, 106, 0.34);
-  stroke-width: 1;
-  vector-effect: non-scaling-stroke;
-  stroke-linecap: round;
-}
-
-.planTrace {
-  fill: none;
-  stroke: rgba(223, 199, 151, 0.75);
-  stroke-width: 1.4;
-  vector-effect: non-scaling-stroke;
-  stroke-linecap: round;
-}
-
-/* ---------------- the shaft, the pool, the fragments ---------------- */
-/*
- * Built from the reference: a stone held in a shaft of light, above the pool
- * of colour it throws on the floor, with fragments drifting in the beam.
- *
- * Three elements, three clocks, all CSS. None of them touches the
- * photograph's transform — the gem keeps its own entrance and its own breath,
- * and the weather happens around it. Every one of them stops under reduced
- * motion, and the composition still reads with all three switched off.
- */
-
-/* The shaft. A trapezoid, widening as it falls, heavily blurred — a crisp
-   edge here reads as a shape drawn on the page rather than as light. */
-.beam {
-  position: absolute;
-  z-index: 1;
-  top: -12%;
-  left: 50%;
-  translate: -50% 0;
-  width: 46%;
-  height: 86%;
-  pointer-events: none;
-  clip-path: polygon(41% 0%, 59% 0%, 88% 100%, 12% 100%);
-  background: linear-gradient(
-    180deg,
-    rgba(196, 214, 255, 0.34) 0%,
-    rgba(150, 168, 235, 0.14) 34%,
-    rgba(120, 132, 210, 0.05) 62%,
-    transparent 86%
-  );
-  filter: blur(26px);
-  mix-blend-mode: screen;
-  animation: beamBreathe 11s ease-in-out infinite;
-}
-
-@keyframes beamBreathe {
-  0%, 100% { opacity: 0.72; transform: scaleX(1); }
-  50%      { opacity: 1; transform: scaleX(1.08); }
-}
-
-/*
- * The pool the stone throws. A conic sweep of prismatic colour, squashed into
- * an ellipse and blurred until the individual hues stop being identifiable —
- * which is the difference between dispersed light and a rainbow sticker.
- * It turns slowly, so the colour moves through itself rather than sitting.
- */
-.pool {
-  position: absolute;
-  z-index: 1;
-  left: 50%;
-  bottom: 2%;
-  translate: -50% 0;
-  width: 78%;
-  height: 26%;
-  pointer-events: none;
-  border-radius: 50%;
-  mix-blend-mode: screen;
-  opacity: 0.66;
-  filter: blur(18px);
   background:
-    radial-gradient(closest-side, rgba(226, 236, 255, 0.55), transparent 72%),
-    conic-gradient(
-      from 0deg,
-      rgba(120, 160, 255, 0.40),
-      rgba(196, 150, 255, 0.34),
-      rgba(255, 210, 160, 0.30),
-      rgba(150, 240, 226, 0.32),
-      rgba(120, 160, 255, 0.40)
-    );
-  animation: poolTurn 34s linear infinite, poolPulse 7s ease-in-out infinite;
+    radial-gradient(56% 40% at 50% 6%, rgba(120, 150, 220, 0.20), transparent 70%),
+    radial-gradient(70% 44% at 50% 92%, rgba(150, 122, 66, 0.14), transparent 72%);
+  opacity: calc(1 - var(--hp) * 0.7);
 }
 
-@keyframes poolTurn { from { rotate: 0deg; } to { rotate: 360deg; } }
-@keyframes poolPulse {
-  0%, 100% { opacity: 0.52; }
-  50%      { opacity: 0.82; }
-}
-
-/*
- * The aura. It sits behind the gem and breathes on the same period as the
- * levitation, so the light swells as the stone rises — one event, not two
- * things happening near each other.
- */
-.aura {
-  position: absolute;
+.inner {
+  position: relative;
   z-index: 1;
-  left: 50%;
-  top: 44%;
-  translate: -50% -50%;
-  width: 62%;
-  aspect-ratio: 1;
-  pointer-events: none;
-  border-radius: 50%;
-  mix-blend-mode: screen;
-  background: radial-gradient(closest-side, rgba(150, 168, 255, 0.34), rgba(96, 108, 210, 0.12) 46%, transparent 72%);
-  filter: blur(34px);
-  animation: auraBreathe 14s var(--ease-primary) infinite;
+  width: 100%;
+  max-width: 78rem;
+  margin-inline: auto;
+  padding: clamp(5.5rem, 10vh, 7.5rem) var(--gutter) clamp(1.5rem, 4vh, 2.5rem);
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  gap: clamp(0.9rem, 2vh, 1.4rem);
 }
 
-@keyframes auraBreathe {
-  0%, 100% { opacity: 0.55; scale: 0.94; }
-  50%      { opacity: 1; scale: 1.08; }
+/* ---------------- the label ---------------- */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0.42rem 0.9rem;
+  border: 1px solid rgba(238, 236, 231, 0.16);
+  border-radius: 999px;
+  background: rgba(238, 236, 231, 0.03);
+  font-size: var(--t-xs);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(238, 236, 231, 0.62);
+}
+
+.tagDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent-lift, #dfc797);
+  box-shadow: 0 0 10px rgba(223, 199, 151, 0.8);
+  animation: tagPulse 3.4s ease-in-out infinite;
+}
+
+@keyframes tagPulse {
+  0%, 100% { opacity: 0.45; }
+  50%      { opacity: 1; }
+}
+
+/* ---------------- the words ---------------- */
+.head {
+  display: grid;
+  justify-items: center;
+  margin: 0;
+  /* Moves a little slower than the panel as the hero leaves: the depth cue. */
+  transform: translate3d(0, calc(var(--hp) * -18px), 0);
+}
+
+/* One mask per WORD. The word is translated inside a box that clips it, so it
+   rises out of nothing rather than sliding in from somewhere visible. */
+.line {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: baseline;
+  column-gap: 0.26em;
+}
+
+.mask {
+  display: block;
+  overflow: hidden;
+  padding-block: 0.06em;
+}
+
+.word {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: clamp(2.5rem, 0.9rem + 4.4vw, 5rem);
+  line-height: 0.98;
+  letter-spacing: -0.036em;
+}
+
+.lead { color: var(--ivory); }
+.gold { color: #cdb17f; font-style: italic; }
+
+.sub {
+  margin: 0;
+  max-width: 46ch;
+  font-size: var(--t-sm);
+  line-height: 1.75;
+  letter-spacing: 0.02em;
+  color: rgba(238, 236, 231, 0.56);
+}
+
+/* ---------------- the buttons ---------------- */
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: clamp(0.25rem, 1.4vh, 0.8rem);
 }
 
 /*
- * SCINTILLATION: the flashes.
- *
- * Each is a four-point star that goes from nothing to full and back inside
- * about four per cent of its cycle — that sharpness is the whole effect. A
- * slow fade reads as a lamp being turned up; a diamond does not do that, it
- * catches and lets go. Eight of them on clocks from six to twelve and a half
- * seconds, none of which divide into another, so they never flash together.
+ * The fill arrives from the left rather than the colour simply changing, and
+ * the arrow steps with it. Transforms and opacity only, so a hover costs no
+ * layout.
  */
-.glints {
+.cta {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 3.25rem;
+  padding: 0 1.4rem;
+  border: 1px solid rgba(238, 236, 231, 0.26);
+  border-radius: 999px;
+  color: var(--ivory);
+  font-size: var(--t-xs);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: color 320ms var(--ease-primary), border-color 320ms var(--ease-primary);
+}
+
+.cta::before {
+  content: '';
   position: absolute;
   inset: 0;
-  z-index: 4;
-  pointer-events: none;
-  mix-blend-mode: screen;
+  z-index: -1;
+  background: var(--ivory);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 420ms var(--ease-primary);
 }
 
-.glints i {
+.cta:hover, .cta:focus-visible { color: #0a0a0c; border-color: var(--ivory); }
+.cta:hover::before, .cta:focus-visible::before { transform: scaleX(1); }
+
+/* The lead button starts filled, so the two read as primary and secondary
+   without needing different words. */
+.ctaLead { border-color: var(--ivory); color: #0a0a0c; }
+.ctaLead::before { transform: scaleX(1); }
+.ctaLead:hover, .ctaLead:focus-visible { color: var(--ivory); border-color: rgba(238, 236, 231, 0.5); }
+.ctaLead:hover::before, .ctaLead:focus-visible::before { transform: scaleX(0); transform-origin: right center; }
+
+/* Keyboard gets the same clarity as hover, plus a ring that survives the fill. */
+.cta:focus-visible { outline: 2px solid var(--accent-lift); outline-offset: 3px; }
+
+.arrow {
+  position: relative;
+  width: 1.05rem;
+  height: 1px;
+  background: currentColor;
+  transition: transform 320ms var(--ease-primary);
+}
+
+.arrow::after {
+  content: '';
   position: absolute;
-  left: var(--x);
-  top: var(--y);
-  width: var(--s);
-  height: var(--s);
-  margin: calc(var(--s) / -2) 0 0 calc(var(--s) / -2);
-  clip-path: polygon(50% 0%, 57% 43%, 100% 50%, 57% 57%, 50% 100%, 43% 57%, 0% 50%, 43% 43%);
-  background: radial-gradient(closest-side, #fff, rgba(214, 230, 255, 0.7) 40%, transparent 72%);
-  opacity: 0;
-  scale: 0.2;
-  animation: glint var(--dur) linear var(--delay) infinite;
+  right: 0;
+  top: 50%;
+  width: 0.4rem;
+  height: 0.4rem;
+  border-top: 1px solid currentColor;
+  border-right: 1px solid currentColor;
+  transform: translate(0, -50%) rotate(45deg);
 }
 
-@keyframes glint {
-  0%, 92%   { opacity: 0; scale: 0.2; rotate: 0deg; }
-  95%       { opacity: 1; scale: 1; rotate: 22deg; }
-  100%      { opacity: 0; scale: 0.35; rotate: 40deg; }
+.cta:hover .arrow, .cta:focus-visible .arrow { transform: translateX(4px); }
+
+/* ---------------- the panel ---------------- */
+/*
+ * The stone gets the full width. The seam travels across it rather than
+ * sitting still, because a fixed division reads as a graphic where a moving
+ * one reads as the cut being made.
+ */
+.panel {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  width: 100%;
+  margin: clamp(1.2rem, 3vh, 2.4rem) 0 0;
+  /*
+   * Capped by the viewport, not only by its ratio. At 21:9 across a 1118px
+   * column the panel is 479 tall, which pushed it clean off the bottom of a
+   * 900px screen — the whole point of this layout is that the stone is visible
+   * under the words without scrolling.
+   */
+  aspect-ratio: 21 / 9;
+  max-height: min(30svh, 22rem);
+  border: 1px solid rgba(238, 236, 231, 0.10);
+  border-radius: 20px;
+  background:
+    radial-gradient(64% 58% at 62% 46%, rgba(34, 62, 128, 0.34), transparent 70%),
+    linear-gradient(180deg, #07080f 0%, #04050a 56%, #080a12 100%);
+  animation: seamTravel 21s ease-in-out infinite;
+  /* Rises and grows slightly as the hero leaves; the words move less. */
+  transform:
+    translate3d(calc(var(--mx) * -8px), calc(var(--hp) * -46px), 0)
+    scale(calc(1 + var(--hp) * 0.05));
+  transition: transform 260ms var(--ease-primary);
+  will-change: transform;
+}
+
+@keyframes seamTravel {
+  0%, 100% { --seam: 38%; }
+  50%      { --seam: 62%; }
 }
 
 /*
- * THE PRISM. Two glows, one cyan and one violet, that part and rejoin — the
- * visible form of the thing that makes a diamond a diamond, which is that it
- * bends colours by different amounts. They run in counterphase on the same
- * period, so the split opens and closes rather than drifting.
+ * THE ROUGH HALF: the photograph, cooled and darkened so it reads as the raw
+ * crystal, and masked off exactly where the cut begins.
  */
-.prism {
-  position: absolute;
-  z-index: 1;
-  left: 50%;
-  top: 44%;
-  translate: -50% -50%;
-  width: 46%;
-  aspect-ratio: 1;
-  pointer-events: none;
-  border-radius: 50%;
-  mix-blend-mode: screen;
-  filter: blur(30px);
-  opacity: 0.5;
-}
-
-.prism[data-side='cool'] {
-  background: radial-gradient(closest-side, rgba(120, 230, 255, 0.34), transparent 68%);
-  animation: prismCool 17s ease-in-out infinite;
-}
-
-.prism[data-side='warm'] {
-  background: radial-gradient(closest-side, rgba(206, 140, 255, 0.30), transparent 68%);
-  animation: prismWarm 17s ease-in-out infinite;
-}
-
-@keyframes prismCool {
-  0%, 100% { transform: translate3d(0, 0, 0); opacity: 0.28; }
-  50%      { transform: translate3d(-22px, -8px, 0); opacity: 0.62; }
-}
-
-@keyframes prismWarm {
-  0%, 100% { transform: translate3d(0, 0, 0); opacity: 0.24; }
-  50%      { transform: translate3d(22px, 8px, 0); opacity: 0.56; }
-}
-
-/*
- * THE RAYS the stone throws. A conic gradient of thin spokes, masked to fade
- * out well before the edge so it reads as light leaving the gem rather than as
- * a wheel drawn on top of it. Two minutes for a turn: at that rate the eye
- * never catches it moving, it only ever notices the room has changed.
- */
-.rays {
-  position: absolute;
-  z-index: 0;
-  left: 50%;
-  top: 44%;
-  translate: -50% -50%;
-  width: 130%;
-  aspect-ratio: 1;
-  pointer-events: none;
-  mix-blend-mode: screen;
-  opacity: 0.30;
-  background: repeating-conic-gradient(
-    from 0deg,
-    rgba(190, 208, 255, 0.20) 0deg 1.2deg,
-    transparent 1.2deg 13deg
-  );
-  mask-image: radial-gradient(closest-side, transparent 12%, #000 26%, transparent 62%);
-  -webkit-mask-image: radial-gradient(closest-side, transparent 12%, #000 26%, transparent 62%);
-  filter: blur(1.5px);
-  animation: raysTurn 120s linear infinite;
-}
-
-@keyframes raysTurn { from { rotate: 0deg; } to { rotate: 360deg; } }
-
-/* Fragments in the shaft. Each is a small faceted sliver on its own clock. */
-.shards {
+.rough {
   position: absolute;
   inset: 0;
-  z-index: 3;
-  pointer-events: none;
-  mix-blend-mode: screen;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: 50% 50%;
+  opacity: 0.66;
+  filter: saturate(0.3) brightness(0.62) contrast(1.18);
+  mask-image: linear-gradient(90deg, #000 calc(var(--seam) - 3%), transparent var(--seam));
+  -webkit-mask-image: linear-gradient(90deg, #000 calc(var(--seam) - 3%), transparent var(--seam));
 }
 
-.shards {
-  /* Lifted with the scroll, faster than the stone, so the shaft gains depth
-     as the hero leaves rather than travelling as one flat plane. */
-  transform: translate3d(0, calc(var(--t) * -34px), 0);
-}
-
-.shards i {
-  position: absolute;
-  left: var(--x);
-  top: var(--y);
-  width: var(--s);
-  height: calc(var(--s) * 1.6);
-  clip-path: polygon(50% 0%, 100% 38%, 62% 100%, 12% 72%);
-  background: linear-gradient(150deg, rgba(232, 240, 255, 0.92), rgba(150, 178, 240, 0.35));
-  rotate: var(--rot);
-  opacity: 0;
-  animation: shardDrift var(--dur) ease-in-out var(--delay) infinite;
-}
-
-/* Up, and a little across, fading in and out so none of them ever pops. */
-@keyframes shardDrift {
-  0%        { opacity: 0; transform: translate3d(0, 14px, 0) scale(0.86); }
-  18%       { opacity: 0.85; }
-  70%       { opacity: 0.55; }
-  100%      { opacity: 0; transform: translate3d(6px, -30px, 0) scale(1.05); }
-}
-
-/* ---------------- the blades ---------------- */
 /*
- * A DIAMOND DRAWN AS A COMB OF LIT PLATES.
+ * THE CUT HALF: a rank of thin plates with the light living along their EDGES
+ * rather than on their faces, which is what makes it read as an assembly
+ * rather than as a picture. Cut to a brilliant's outline.
  *
- * The reference does one thing and does it well: a rank of thin plates
- * receding into the dark, with the light living along their EDGES rather than
- * on their faces, so the object reads as an assembly rather than as a picture.
- * That is a repeating gradient and a perspective, and it costs nothing.
- *
- * Cut to a brilliant's outline — table across the top, shoulders to the
- * girdle, then down to the culet — so the comb is a diamond rather than a
- * comb. The stone's own photograph still sits behind it and shows through the
- * gaps, which is what stops this being a flat graphic.
+ * It fills the panel, and that is load-bearing rather than tidy: a mask
+ * percentage is measured against the element it sits on, so a seam at 46% of a
+ * centred box and 46% of the full-width photograph are two different lines on
+ * screen. Same box, same percentage, one seam. For the same reason it carries
+ * no transform — a transform moves the painted content and its mask together,
+ * and the masked edge would slide off the line.
  */
 .blades {
-  /*
-   * Fills the panel, and that is load-bearing rather than tidy. A mask
-   * percentage is measured against the ELEMENT it is on, so a seam at 46% of a
-   * centred 84%-wide box and a seam at 46% of the full-width photograph are
-   * two different lines on screen — which is why the first attempt showed
-   * blades scattered across the whole panel instead of confined to one side.
-   * Same box, same percentage, one seam.
-   */
   position: absolute;
-  z-index: 3;
   inset: 0;
+  z-index: 2;
   pointer-events: none;
   overflow: hidden;
-  /* The brilliant, in the panel's own coordinates. */
-  clip-path: polygon(31% 14%, 69% 14%, 85% 40%, 50% 90%, 15% 40%);
-  /*
-   * NO TRANSFORM HERE. A transform moves the painted content and its mask
-   * together, so the rotated assembly's masked edge no longer sat on the seam
-   * line — blades appeared a hundred pixels to the left of the division they
-   * were supposed to respect. The recession now comes from the gradient's own
-   * angle and its darkening toward the culet, which costs nothing and cannot
-   * drift out of alignment.
-   */
+  clip-path: polygon(33% 16%, 67% 16%, 82% 42%, 50% 88%, 18% 42%);
   background:
-    /* the plates: a bright edge, then the dark face behind it */
     repeating-linear-gradient(
       99deg,
       rgba(196, 226, 255, 0.95) 0 1.2px,
       rgba(96, 150, 230, 0.45) 1.2px 2.4px,
       rgba(6, 9, 20, 0.92) 2.4px 10px
     ),
-    /* the depth: darker toward the culet, where the plates crowd */
     linear-gradient(190deg, rgba(26, 44, 92, 0.7), rgba(4, 6, 14, 0.96));
   mix-blend-mode: screen;
-  opacity: 1;
-  /* The complement of the photograph's mask, to the percentage point. */
+  /* The exact complement of the photograph's mask. */
   mask-image: linear-gradient(90deg, transparent calc(var(--seam) - 3%), #000 var(--seam));
   -webkit-mask-image: linear-gradient(90deg, transparent calc(var(--seam) - 3%), #000 var(--seam));
 }
 
-/* The sweep. One pass of light travelling across the rank, which is the whole
-   reason the object reads as lit rather than as drawn. */
-.bladeLight {
+/* One pass of light across the rank: the reason it reads as lit rather than
+   as drawn. Long apart, so it stays an event. */
+.sweep {
   position: absolute;
   inset: -30% -60%;
   display: block;
@@ -557,621 +337,115 @@
   74%, 100% { transform: translate3d(46%, 0, 0); opacity: 0; }
 }
 
-/* What the assembly throws back into the panel behind it. */
-.bladeGlow {
-  position: absolute;
-  z-index: 2;
-  left: 50%;
-  top: 46%;
-  translate: -50% -50%;
-  width: 86%;
-  aspect-ratio: 1.1;
-  pointer-events: none;
-  border-radius: 50%;
-  mix-blend-mode: screen;
-  filter: blur(46px);
-  background: radial-gradient(closest-side, rgba(86, 146, 246, 0.55), rgba(44, 78, 168, 0.2) 48%, transparent 74%);
-  animation: bladeGlow 9s ease-in-out infinite;
-}
-
-@keyframes seamTravel {
-  0%, 100% { --seam: 38%; }
-  50%      { --seam: 60%; }
-}
-
-/* The line itself: a hairline of light where the two states meet. */
+/* The line the stone is divided on. */
 .seam {
   position: absolute;
   z-index: 4;
-  top: 8%;
-  bottom: 8%;
+  top: 10%;
+  bottom: 10%;
   left: var(--seam);
   width: 1px;
   pointer-events: none;
-  background: linear-gradient(180deg, transparent, rgba(226, 238, 255, 0.85) 22%, rgba(226, 238, 255, 0.85) 78%, transparent);
+  background: linear-gradient(180deg, transparent, rgba(226, 238, 255, 0.85) 20%, rgba(226, 238, 255, 0.85) 80%, transparent);
   box-shadow: 0 0 14px rgba(180, 210, 255, 0.55);
 }
 
-@keyframes bladeGlow {
+/* What the assembly throws back into the panel. */
+.glow {
+  position: absolute;
+  z-index: 1;
+  left: 56%;
+  top: 48%;
+  translate: -50% -50%;
+  width: 62%;
+  aspect-ratio: 1.2;
+  pointer-events: none;
+  border-radius: 50%;
+  mix-blend-mode: screen;
+  filter: blur(50px);
+  background: radial-gradient(closest-side, rgba(86, 146, 246, 0.5), rgba(44, 78, 168, 0.18) 48%, transparent 74%);
+  animation: panelGlow 9s ease-in-out infinite;
+}
+
+@keyframes panelGlow {
   0%, 100% { opacity: 0.55; scale: 0.96; }
   50%      { opacity: 1; scale: 1.06; }
 }
 
-@media (max-width: 899px) {
-  /* A narrower panel wants a taller stone. */
-  .blades { clip-path: polygon(26% 16%, 74% 16%, 90% 42%, 50% 92%, 10% 42%); }
-}
-
-/* ---------------- the dot matrix ---------------- */
-/*
- * The canvas covers the photograph and hands over to it. `--formed` is written
- * by the component each frame, so the two are exact complements: while the
- * dots are gathering the picture is not yet there, and once they have gathered
- * it is. Neither can be visible alone by accident.
- */
-.dots { z-index: 2; }
-
-/* ---------------- the composition ---------------- */
-.inner {
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  max-width: var(--measure-wide, 92rem);
-  margin-inline: auto;
-  padding: clamp(6rem, 12vh, 9rem) var(--gutter) clamp(3rem, 8vh, 5rem);
-  display: grid;
-  gap: clamp(1.5rem, 4vw, 4rem);
-  grid-template-columns: minmax(0, 1fr);
-  align-items: center;
-}
-
-@media (min-width: 900px) {
-  .inner {
-    grid-template-columns: minmax(0, 44fr) minmax(0, 56fr);
-  }
-}
-
-/* ---------------- the words ---------------- */
-.copy {
-  position: relative;
-  display: grid;
-  justify-items: start;
-  gap: clamp(1rem, 2.4vh, 1.6rem);
-  /* Moves at a third of the visual's rate: the depth cue. */
-  transform: translate3d(0, calc(var(--t) * -22px), 0);
-}
-
-.head {
-  display: grid;
-  margin: 0;
-}
-
-/* One mask per WORD now, and the mask is what makes the entrance possible: the
-   word is translated inside a box that clips it, so it rises out of nothing
-   rather than sliding in from somewhere the reader can see. */
-.line {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  /* The space between words, since the masks are inline blocks and the
-     original spaces are gone. */
-  column-gap: 0.26em;
-}
-
-.wordMask {
-  display: block;
-  overflow: hidden;
-  padding-block: 0.06em;
-}
-
-.lineInner {
-  display: block;
-  font-family: var(--font-display);
-  font-weight: 300;
-  font-size: clamp(2.6rem, 1.1rem + 4.4vw, 5.6rem);
-  line-height: 0.98;
-  letter-spacing: -0.035em;
-  text-wrap: balance;
-}
-
-.lead { color: var(--ivory); }
-.gold { color: #cdb17f; font-style: italic; }
-
-.rule {
-  position: relative;
-  width: min(100%, 15rem);
-  height: 1px;
-  transform-origin: left center;
-  background: linear-gradient(90deg, rgba(189, 160, 106, 0.85), rgba(189, 160, 106, 0));
-}
-
-/* A point of light running the rule, once every nine seconds. One pixel tall
-   and gone in a fifth of the cycle, so it is a glint rather than a loading
-   bar — which is exactly what a repeating highlight becomes if it lingers. */
-.rule::after {
-  content: '';
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 3.5rem;
-  background: linear-gradient(90deg, transparent, rgba(255, 244, 222, 0.95), transparent);
-  animation: ruleGlint 9s var(--ease-primary) 2.4s infinite;
-}
-
-@keyframes ruleGlint {
-  0%, 78%   { transform: translateX(-4rem); opacity: 0; }
-  82%       { opacity: 1; }
-  96%, 100% { transform: translateX(15rem); opacity: 0; }
-}
-
-.sub {
-  margin: 0;
-  max-width: 34ch;
-}
-
-.subMask {
-  display: block;
-  overflow: hidden;
-}
-
-.subInner {
-  display: block;
-  font-size: var(--t-sm);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  line-height: 1.7;
-  color: rgba(238, 236, 231, 0.62);
-}
-
-/* ---------------- the buttons ---------------- */
-.actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-top: clamp(0.25rem, 1.5vh, 0.75rem);
-}
-
-/*
- * The fill arrives from the left rather than the colour simply changing, and
- * the arrow steps with it. Both are transforms and opacity only, so a hover
- * costs no layout.
- */
-.cta {
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
-  min-height: 3.25rem;
-  padding: 0 1.35rem;
-  border: 1px solid rgba(238, 236, 231, 0.26);
-  color: var(--ivory);
-  font-size: var(--t-xs);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  text-decoration: none;
-  transition: color 320ms var(--ease-primary), border-color 320ms var(--ease-primary);
-}
-
-.cta::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background: var(--ivory);
-  transform: scaleX(0);
-  transform-origin: left center;
-  transition: transform 420ms var(--ease-primary);
-}
-
-.cta:hover,
-.cta:focus-visible {
-  color: #0a0a0c;
-  border-color: var(--ivory);
-}
-
-.cta:hover::before,
-.cta:focus-visible::before {
-  transform: scaleX(1);
-}
-
-/* The lead button starts filled, so the two read as primary and secondary
-   without needing different words. */
-.ctaLead {
-  border-color: var(--ivory);
-  color: #0a0a0c;
-}
-
-.ctaLead::before { transform: scaleX(1); }
-
-.ctaLead:hover,
-.ctaLead:focus-visible {
-  color: var(--ivory);
-  border-color: rgba(238, 236, 231, 0.5);
-}
-
-.ctaLead:hover::before,
-.ctaLead:focus-visible::before {
-  transform: scaleX(0);
-  transform-origin: right center;
-}
-
-/* Keyboard gets the same clarity as hover, plus a ring that survives the fill. */
-.cta:focus-visible {
-  outline: 2px solid var(--accent-lift);
-  outline-offset: 3px;
-}
-
-.arrow {
-  width: 1.1rem;
-  height: 1px;
-  background: currentColor;
-  position: relative;
-  transition: transform 320ms var(--ease-primary);
-}
-
-.arrow::after {
-  content: '';
-  position: absolute;
-  right: 0;
-  top: 50%;
-  width: 0.42rem;
-  height: 0.42rem;
-  border-top: 1px solid currentColor;
-  border-right: 1px solid currentColor;
-  transform: translate(0, -50%) rotate(45deg);
-}
-
-.cta:hover .arrow,
-.cta:focus-visible .arrow {
-  transform: translateX(4px);
-}
-
-/* ---------------- the stone ---------------- */
-.visual {
-  position: relative;
-  margin: 0;
-  /* The scroll transform lives here, and nowhere else on this branch. */
-  transform: translate3d(0, calc(var(--t) * -58px), 0) scale(calc(1 + var(--t) * 0.08));
-  transform-origin: 60% 45%;
-  will-change: transform;
-}
-
-/*
- * The aperture is the element the entrance clips, so it must not also be the
- * element that scales — that is why the photograph inside it is a separate
- * node. A faceted polygon rather than a circle or an inset: this is a diamond
- * being uncovered, and the shape of the opening should say so.
- */
-/*
- * Registered, because an unregistered custom property cannot be animated: the
- * browser has no idea it holds a length, so it jumps between keyframes or
- * simply holds. The first attempt at the seam did exactly that.
- */
-@property --seam {
-  syntax: '<percentage>';
-  inherits: true;
-  initial-value: 46%;
-}
-
-/*
- * THE SEAM: rough on one side of it, cut on the other.
- *
- * One number divides the panel. Left of it the photograph shows through,
- * cooled and darkened so it reads as the raw crystal; right of it the lit
- * assembly takes over as the finished stone. Both are masked by the SAME
- * value, so the two halves are exact complements and no gap or overlap can
- * open between them however slowly it moves.
- *
- * It breathes rather than sitting still, because a fixed seam reads as a
- * graphic and a moving one reads as the cut being made.
- */
-.aperture {
-  position: relative;
-  overflow: hidden;
-  --seam: 46%;
-  animation: seamTravel 19s ease-in-out infinite;
-  /* The room the stone is suspended in: the reference's indigo, darkest at the
-     edges so the shaft and the pool are the only light in it. */
-  /* The reference's card is near-black with one blue source in it, not a
-     coloured panel. Everything that is blue here is light, not paint. */
-  background:
-    radial-gradient(70% 50% at 54% 46%, rgba(34, 62, 128, 0.34), transparent 68%),
-    linear-gradient(180deg, #06070d 0%, #04050a 55%, #070810 100%);
-  /*
-   * Vertical sides, faceted only at top and bottom. The first version cut in
-   * from 112% on the diagonal, which looked right on an empty frame and sliced
-   * the stone's right-hand facets off the moment a real photograph was in it.
-   * At the subject's x the roof now takes about two per cent, which reads as a
-   * bevel rather than a crop.
-   */
-  clip-path: polygon(50% 0%, 100% 8%, 100% 92%, 50% 100%, 0% 92%, 0% 8%);
-}
-
-/*
- * The stone's own pointer layer, a little stronger than the stage behind it.
- * Two planes moving at different rates is what makes a flat photograph sit
- * inside the frame rather than on it.
- */
-.sway {
-  display: block;
-  transform: translate3d(calc(var(--mx) * 9px), calc(var(--my) * 6px), 0);
-  transition: transform 320ms var(--ease-primary);
-}
-
-/*
- * The breath. Fourteen seconds for one cycle, a hair over half a degree of
- * roll and eight pixels of rise — slow enough that nobody watching the
- * headline notices it moving, present enough that the stone is never dead.
- */
-.float {
-  display: block;
-  animation: stoneBreath 18s ease-in-out infinite;
-  transform-origin: 50% 52%;
-  /* The turn needs depth or it is a flip: without perspective a rotateY is an
-     orthographic squash and reads as a closing door. */
-  transform-style: preserve-3d;
-  perspective: 1200px;
-}
-
-/*
- * Suspended, not resting. The reference's stone hangs in its shaft, so the
- * loop is a levitation: it rises and settles, and turns a degree and a half
- * either way as it does. Still slow enough that it never competes with the
- * headline being read beside it.
- */
-/*
- * THE TURN, and what it can honestly be.
- *
- * This is a photograph: one angle, with every facet fixed. Spun flat it would
- * read as a coin on a turntable. Turned about its own vertical axis under
- * perspective, though, it behaves the way a real object does when it is moved
- * a little in the light — the silhouette narrows and widens and the near side
- * comes forward. Eighteen degrees each way is as far as that holds; past it
- * the eye starts asking to see the back, and a still photograph has none.
- */
-@keyframes stoneBreath {
-  0%   { transform: translate3d(0, 0, 0) rotateY(-18deg) rotate(-0.8deg) scale(1); }
-  25%  { transform: translate3d(2px, -14px, 0) rotateY(-6deg) rotate(0.5deg) scale(1.012); }
-  50%  { transform: translate3d(0, -19px, 0) rotateY(9deg) rotate(1.1deg) scale(1.02); }
-  75%  { transform: translate3d(-2px, -9px, 0) rotateY(18deg) rotate(0.4deg) scale(1.012); }
-  100% { transform: translate3d(0, 0, 0) rotateY(-18deg) rotate(-0.8deg) scale(1); }
-}
-
-/*
- * Light crossing the facets. A narrow, steeply raked band that travels once
- * and then waits — the waiting is the point, because a sweep on a short loop
- * stops being light and becomes a barber's pole. Screen blending means it can
- * only ever add light, so it cannot grey the photograph down.
- */
-.sweep {
-  position: absolute;
-  inset: -20% -40%;
-  pointer-events: none;
+/* The house written in its own small stones, low in the panel. */
+.mark {
+  z-index: 5;
+  opacity: calc(0.6 - var(--hp) * 0.5);
   mix-blend-mode: screen;
-  opacity: 0;
-  background: linear-gradient(
-    104deg,
-    transparent 42%,
-    rgba(255, 250, 236, 0.10) 47%,
-    rgba(255, 250, 236, 0.30) 50%,
-    rgba(214, 226, 245, 0.12) 53%,
-    transparent 58%
-  );
-  animation: facetSweep 9s var(--ease-primary) 3.4s infinite;
 }
 
-@keyframes facetSweep {
-  0%        { transform: translate3d(-42%, 0, 0); opacity: 0; }
-  6%        { opacity: 1; }
-  26%       { opacity: 1; }
-  32%, 100% { transform: translate3d(42%, 0, 0); opacity: 0; }
-}
-
-/*
- * The faceted edge of the case. Drawn by the entrance timeline, then left as a
- * hairline that brightens very slowly — the only continuously animated colour
- * on the screen, and it moves less than the eye can follow deliberately.
- */
-.rim {
+/* ---------------- the key ---------------- */
+.caption {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  overflow: visible;
-}
-
-.rimLine {
-  fill: none;
-  stroke: rgba(189, 160, 106, 0.55);
-  stroke-width: 1;
-  vector-effect: non-scaling-stroke;
-  animation: rimGlow 11s ease-in-out infinite;
-}
-
-@keyframes rimGlow {
-  0%, 100% { stroke: rgba(189, 160, 106, 0.34); }
-  50%      { stroke: rgba(223, 199, 151, 0.72); }
-}
-
-.photo {
-  display: block;
-  width: 100%;
-  height: auto;
-  aspect-ratio: 1536 / 1024;
-  /* Contained, not covered: the gem arrives on transparency and the room
-     around it is CSS, so cropping it would cut the subject rather than the
-     background. */
-  object-fit: contain;
-  object-position: 50% 46%;
-  transform-origin: 50% 46%;
-  /* The light it throws. Two shadows rather than one: a tight white core and a
-     wide violet spill, which is what the reference's glow actually is. */
-  filter:
-    drop-shadow(0 0 18px rgba(206, 224, 255, 0.34))
-    drop-shadow(0 0 64px rgba(122, 132, 235, 0.30));
-  /*
-   * Held back while the dots are still gathering, and fully present once they
-   * have. --formed is 0 until the DotMatrix mounts, so with no canvas — no
-   * script, an old browser, reduced motion — this resolves to 1 and the
-   * photograph is simply there.
-   */
-  /*
-   * THE ROUGH SIDE. The photograph now holds the left of the seam, cooled and
-   * darkened so it reads as the raw crystal rather than as a finished stone,
-   * and masked off exactly where the assembly begins. At full strength across
-   * the whole panel it swallowed the blades, which are screen-blended light;
-   * confined to its own half it can be strong again.
-   */
-  opacity: 0.62;
-  filter: saturate(0.35) brightness(0.62) contrast(1.15);
-  mask-image: linear-gradient(90deg, #000 calc(var(--seam) - 3%), transparent var(--seam));
-  -webkit-mask-image: linear-gradient(90deg, #000 calc(var(--seam) - 3%), transparent var(--seam));
-}
-
-/* A quiet, honest label. The image is a render, and the page says so rather
-   than implying a photograph of stock. */
-.note {
-  margin-top: 0.9rem;
+  z-index: 6;
+  left: 50%;
+  bottom: clamp(0.7rem, 2vh, 1.2rem);
+  translate: -50% 0;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin: 0;
   font-size: var(--t-xs);
-  letter-spacing: 0.2em;
+  letter-spacing: 0.24em;
   text-transform: uppercase;
-  color: rgba(238, 236, 231, 0.34);
-  text-align: right;
+  color: rgba(238, 236, 231, 0.42);
+}
+
+.captionRule {
+  width: clamp(2rem, 6vw, 4rem);
+  height: 1px;
+  background: linear-gradient(90deg, rgba(238, 236, 231, 0.1), rgba(226, 238, 255, 0.6), rgba(238, 236, 231, 0.1));
 }
 
 /* ---------------- in a hand ---------------- */
 @media (max-width: 899px) {
-  .hero {
-    /* svh, and no more than one screen: a hero taller than the phone is a
-       hero whose buttons nobody finds. */
-    min-height: 100svh;
-  }
-
   .inner {
-    padding: clamp(5rem, 11vh, 7rem) var(--gutter) clamp(2rem, 5vh, 3rem);
-    gap: clamp(1.25rem, 3vh, 2rem);
-    align-content: center;
+    padding: clamp(5.5rem, 12vh, 7rem) var(--gutter) clamp(2rem, 5vh, 3rem);
+    gap: 0.85rem;
   }
 
-  .copy { gap: 0.9rem; }
-
-  .lineInner {
-    font-size: clamp(2.1rem, 8.4vw, 3.2rem);
-    letter-spacing: -0.03em;
-  }
-
-  .photo {
-    aspect-ratio: 1;
-    object-position: 50% 48%;
-    max-height: 44svh;
-    object-fit: contain;
-  }
-
-  .aura { width: 78%; }
-  /* Fewer flashes and a smaller ray wheel in a narrow column. */
-  .glints i:nth-child(2n) { display: none; }
-  .rays { width: 160%; opacity: 0.22; }
-
-  .visual {
-    /* Half the desktop travel, so the phone gets a hint of depth rather than
-       a departure. */
-    transform: translate3d(0, calc(var(--t) * -26px), 0) scale(calc(1 + var(--t) * 0.04));
-  }
-
-  /* Half the travel on a small screen, where the same movement reads twice
-     as large, and no pointer layer because there is no pointer. */
-  .float { animation-duration: 18s; }
-  .sway { transform: none; }
-
-  /*
-   * One turning stone, smaller and dimmer; the plan would crowd the headline
-   * on a narrow column, so it stands down entirely.
-   *
-   * Written as `.orbit img.x` rather than `.x`: `.orbit img` sets display on
-   * these already, and a single class cannot outrank it whatever the media
-   * query says. The second stone stayed on screen because of exactly that.
-   */
-  .orbit img.orbitBig { width: 62vh; height: 62vh; left: -26%; opacity: 0.09; }
-  .orbit img.orbitSmall { display: none; }
-  .plan { display: none; }
-
-  .note { text-align: center; }
+  .word { font-size: clamp(2.2rem, 9.4vw, 3.4rem); }
+  .sub { font-size: 0.8rem; max-width: 34ch; }
 
   .actions { width: 100%; }
+  .cta { flex: 1 1 100%; justify-content: space-between; min-height: 3rem; padding: 0 1.1rem; }
 
-  /* Full width and stacked. Side by side, the longer label wrapped to a
-     second row on its own and the pair sat unevenly. */
-  .cta {
-    flex: 1 1 100%;
-    justify-content: space-between;
-    min-height: 3rem;
-    padding: 0 1rem;
-    font-size: 0.68rem;
-    letter-spacing: 0.1em;
-  }
+  .panel { aspect-ratio: 4 / 3; max-height: 30svh; border-radius: 16px; }
+
+  /* A narrower panel wants a taller stone. */
+  .blades { clip-path: polygon(26% 16%, 74% 16%, 90% 42%, 50% 92%, 10% 42%); }
 }
 
-/* ---------------- reduced motion ---------------- */
+/* ---------------- asked to hold still ---------------- */
 /*
- * The arrived composition, immediately and permanently. --hp is never written
- * by the hook under reduced motion and --mx/--my never move, so the two
- * transforms above already resolve to their resting values; these rules remove
- * the transitions so nothing eases even once.
+ * Every loop stops and the seam holds at its resting line. The composition is
+ * complete without movement — the stylesheet above is the finished state and
+ * the timeline is skipped rather than fast-forwarded. The sweep is removed
+ * rather than paused: parked mid-pass it reads as a stripe across the stone.
  */
 @media (prefers-reduced-motion: reduce) {
-  .drift,
-  .key,
-  .fill,
-  .sway,
+  .panel,
+  .tagDot,
+  .glow {
+    animation: none;
+  }
+
+  .sweep { display: none; }
+
+  .panel,
+  .head {
+    transform: none;
+    transition: none;
+  }
+
   .cta,
   .cta::before,
   .arrow {
     transition: none;
   }
-
-  /* Every loop stops. The rim stays drawn and the sweep is simply absent —
-     the composition is finished, it just does not breathe. */
-  .float,
-  .rimLine {
-    animation: none;
-  }
-
-  .sweep { display: none; }
-  .sway { transform: none; }
-
-  /* The shaft and the pool stay, still; the fragments go, because a dozen
-     frozen slivers read as dirt on the lens rather than as light. */
-  .beam,
-  .pool,
-  .aura,
-  .rays,
-  .prism,
-  .bladeGlow,
-  .aperture { animation: none; }
-
-  /* The sweep is the effect; frozen it is a stripe across the stone. */
-  .bladeLight { display: none; }
-
-  .rule::after { display: none; }
-
-
-  /* The flashes go entirely. A diamond's sparkle IS the movement; frozen,
-     eight stars stuck on the stone read as damage. */
-  .glints { display: none; }
-  .shards { display: none; }
-
-  /* The turning pair stops and stays; the plan is simply drawn. */
-  .orbit img.orbitBig,
-  .orbit img.orbitSmall { animation: none; }
-
-  .photo { opacity: 1; }
-
-  .visual,
-  .copy {
-    transform: none;
-  }
-
-  .photo { will-change: auto; }
 }

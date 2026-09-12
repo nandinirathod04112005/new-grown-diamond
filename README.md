@@ -109,6 +109,12 @@ npm run dev
 
 Open the local URL printed by Vite.
 
+### Live client review
+
+`npm.cmd run dev` starts the app on port 5173, bound to the local network. Open `http://localhost:5173` on this computer or use Vite's printed Network URL on another device on the same network. Saving source changes triggers Vite's live updates. Keep the development process running.
+
+`npm.cmd run share` is prepared for an explicitly approved public review session through the installed Cloudflare Tunnel client. It creates a temporary public URL for the running development server, including its development assets. The computer, Vite and tunnel must stay running; restarting the tunnel produces a new URL. This is not a permanent hosted deployment.
+
 ## Environment variables
 
 Create `.env.local` in the project root. Environment files are ignored and must never be committed.

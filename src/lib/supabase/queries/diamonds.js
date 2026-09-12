@@ -16,7 +16,7 @@ import { diffFor, recordAudit } from './adminInsights.js';
  * pages.
  */
 
-/** @typedef {{publicId:string,stockNumber:string,shape:string,carat:number,colour:string,clarity:string,cut:string,polish:string,symmetry:string,fluorescence:string,lab:string,growth:string,availability:string,imageUrl:string,featured:boolean}} DiamondCard */
+/** @typedef {{publicId:string,stockNumber:string,shape:string,carat:number,colour:string,clarity:string,cut:string,polish:string,symmetry:string,fluorescence:string,lab:string,growth:string,availability:string,imageUrl:string,featured:boolean,reportNumber:string,price:number|null,currency:string}} DiamondCard */
 
 function toCard(row) {
   return {
@@ -36,6 +36,12 @@ function toCard(row) {
     imageUrl: diamondImageUrl(row.image_path),
     featured: Boolean(row.featured),
     certificate_url: row.certificate_url || '',
+    reportNumber: row.report_number || '',
+    /* Null unless the admin has chosen to publish this stone's price. The
+       decision is made once, here, so no component can show a hidden price
+       by forgetting to check the flag. */
+    price: row.price_visible && Number(row.total_price) > 0 ? Number(row.total_price) : null,
+    currency: row.currency || 'USD',
   };
 }
 

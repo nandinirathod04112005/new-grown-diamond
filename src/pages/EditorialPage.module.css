@@ -1,4 +1,6 @@
 .page { min-height: 100vh; padding: 8rem var(--gutter) var(--s-8); background: var(--ink); }
+.page:has(> header[data-backdrop]) { padding-top: 0; }
+.page > header[data-backdrop] { margin-inline: calc(-1 * var(--gutter)); }
 .hero { min-height: 78vh; display: grid; align-items: center; gap: var(--s-6); border-bottom: 1px solid var(--ink-line); }
 .heroCopy { position: relative; z-index: 1; display: grid; gap: var(--s-4); }
 .hero h1 { max-width: 12ch; font: 300 var(--t-3xl)/0.92 var(--font-display); letter-spacing: -0.035em; }
@@ -10,7 +12,7 @@
 .section { display:grid; gap:var(--s-3); padding:var(--s-6) 0; border-bottom:1px solid var(--ink-line); }
 .number { color:var(--gold); font-size:var(--t-xs); letter-spacing:.25em; }
 .section h2 { font:300 var(--t-xl)/1 var(--font-display); }
-.section > p:last-child { max-width:58ch; color:var(--text-muted); line-height:1.8; }
+.section > p:not(.number) { max-width:58ch; color:var(--text-muted); font-size:var(--t-body); line-height:1.8; }
 .cta { max-width:1100px; margin:auto; padding:var(--s-5) 0; border-block:1px solid var(--gold); display:flex; justify-content:space-between; font-size:var(--t-lg); color:var(--gold-lift); }
 @keyframes arrive { from { transform:scale(1.15); clip-path:inset(0 100% 0 0); } to { transform:none; clip-path:inset(0); } }
 @media (min-width:900px) { .hero { grid-template-columns:1.2fr .8fr; } .section { grid-template-columns:5rem minmax(12rem,.7fr) 1fr; align-items:start; } }
@@ -74,3 +76,13 @@
 @media (prefers-reduced-motion: reduce) {
   .section, .mark { transition: none; transform: none; opacity: 1; }
 }
+
+/* Reading spreads with expressive headings and a quieter prose column. */
+.sections { max-width: none; margin-block: var(--showroom-space); }
+.section { padding-block: clamp(2.5rem, 5vw, 5rem); gap: 2rem; }
+.section h2 { font-size: clamp(2.3rem, 3.6vw, 4.3rem); line-height: 1.02; letter-spacing: -.025em; }
+.section .number { font-family: var(--font-display); font-size: 2.5rem; line-height: 1; letter-spacing: -.03em; }
+.mark { display: none; }
+.cta { max-width: none; padding-block: 2rem; font-size: clamp(1.6rem, 3vw, 3rem); font-family: var(--font-display); border-color: var(--ink-line); }
+@media(min-width:900px) { .section { grid-template-columns: .2fr 1fr 1.1fr; } .section > p:not(.number) { padding-top: .4rem; } }
+.section{border-color:var(--ink-line)}.section h2{font-size:clamp(2.1rem,3.2vw,3.6rem);line-height:1.12}.section .number{color:var(--accent);font-size:2rem}.cta{background:var(--surface-2);padding:25px;font-size:clamp(1.5rem,2.7vw,2.7rem)}

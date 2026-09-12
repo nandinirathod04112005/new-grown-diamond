@@ -4,12 +4,16 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host 0.0.0.0 --port 5173 --strictPort",
+    "share": "cloudflared tunnel --url http://127.0.0.1:5173 --http-host-header localhost",
+    "review:build": "vite build --watch",
+    "review:serve": "vite preview --host 0.0.0.0 --port 4173 --strictPort",
+    "review:share": "cloudflared tunnel --url http://127.0.0.1:4173 --http-host-header localhost",
     "build": "vite build && node scripts/generate-seo-pages.mjs",
     "seo:validate": "node scripts/validate-seo.mjs",
     "lint": "oxlint",
-    "preview": "vite preview"
     "check:backend": "node scripts/check-backend.mjs",
+    "preview": "vite preview"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",

@@ -12,7 +12,8 @@ export function SplitTextReveal({ children, as: Tag = 'span', className = '' }) 
   const words = String(children).split(/(\s+)/);
   let index = 0;
   return (
-    <Tag className={`${styles.split} ${className}`} aria-label={String(children)}>
+    <Tag className={`${styles.split} ${className}`}>
+      <span className="u-visually-hidden">{children}</span>
       {words.map((word, key) => word.trim() ? (
         <span aria-hidden="true" className={styles.word} style={{ '--word-index': index++ }} key={key}>{word}</span>
       ) : <span aria-hidden="true" key={key}>{word}</span>)}
